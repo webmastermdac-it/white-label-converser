@@ -4,7 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import {
   LayoutDashboard, MessageSquare, Settings, Code2,
-  ChevronLeft, ChevronRight, Bot, LogOut, Inbox
+  ChevronLeft, ChevronRight, Bot, LogOut, Inbox, PlayCircle
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -13,6 +13,7 @@ const clientNav = [
   { label: "Leads", href: "/dashboard/leads", icon: Inbox },
   { label: "Chat History", href: "/dashboard/chats", icon: MessageSquare },
   { label: "Bot Settings", href: "/dashboard/settings", icon: Settings },
+  { label: "Test Chatbot", href: "/dashboard/preview", icon: PlayCircle },
   { label: "Embed Code", href: "/dashboard/embed", icon: Code2 },
 ];
 

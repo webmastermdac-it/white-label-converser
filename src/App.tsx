@@ -20,6 +20,7 @@ import ClientLeads from "@/pages/client/ClientLeads";
 import ClientChats from "@/pages/client/ClientChats";
 import ClientBotSettings from "@/pages/client/ClientBotSettings";
 import ClientEmbed from "@/pages/client/ClientEmbed";
+import ClientChatPreview from "@/pages/client/ClientChatPreview";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -65,6 +66,7 @@ const App = () => (
               <Route path="leads" element={<ClientLeads />} />
               <Route path="chats" element={<ClientChats />} />
               <Route path="settings" element={<ClientBotSettings />} />
+              <Route path="preview" element={<ClientChatPreview />} />
               <Route path="embed" element={<ClientEmbed />} />
             </Route>
 
