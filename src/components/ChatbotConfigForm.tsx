@@ -312,13 +312,17 @@ const ChatbotConfigForm: React.FC<ChatbotConfigFormProps> = ({ clientId, onSaved
                 clientId={clientId}
                 configId={config.id}
                 currentKnowledgeBase={config.knowledge_base}
-                onSave={(kb) => {
+                onSave={async (kb) => {
                   set("knowledge_base", kb);
-                  supabase
+                  const { error } = await supabase
                     .from("chatbot_configs")
                     .update({ knowledge_base: kb })
                     .eq("id", config.id);
-                  toast({ title: "Knowledge Base salvata!" });
+                  if (error) {
+                    toast({ title: "Errore", description: error.message, variant: "destructive" });
+                  } else {
+                    toast({ title: "Knowledge Base salvata!" });
+                  }
                 }}
               />
             ) : (
