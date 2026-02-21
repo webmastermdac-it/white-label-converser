@@ -104,7 +104,8 @@ const Login = () => {
           </form>
 
           <p className="text-center text-muted-foreground text-sm mt-6">
-            {t("contactAdmin")}
+            {t("registerNoAccount")}{" "}
+            <Link to="/register" className="text-primary hover:underline">{t("registerFreeLink")}</Link>
           </p>
         </div>
 

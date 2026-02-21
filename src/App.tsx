@@ -29,6 +29,8 @@ import ResetPassword from "@/pages/ResetPassword";
 import UpdatePassword from "@/pages/UpdatePassword";
 import PrivacyPolicy from "@/pages/PrivacyPolicy";
 import Terms from "@/pages/Terms";
+import Register from "@/pages/Register";
+import ClientUpgrade from "@/pages/client/ClientUpgrade";
 
 const queryClient = new QueryClient();
 
@@ -42,6 +44,7 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/update-password" element={<UpdatePassword />} />
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
@@ -80,6 +83,7 @@ const App = () => (
               <Route path="settings" element={<ClientBotSettings />} />
               <Route path="preview" element={<ClientChatPreview />} />
               <Route path="embed" element={<ClientEmbed />} />
+              <Route path="upgrade" element={<ClientUpgrade />} />
             </Route>
 
             <Route path="*" element={<NotFound />} />

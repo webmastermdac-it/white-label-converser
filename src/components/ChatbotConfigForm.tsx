@@ -333,6 +333,7 @@ const ChatbotConfigForm: React.FC<ChatbotConfigFormProps> = ({ clientId, onSaved
                 clientId={clientId}
                 configId={config.id}
                 currentKnowledgeBase={config.knowledge_base}
+                plan={clientPlan}
                 onSave={async (kb) => {
                   set("knowledge_base", kb);
                   const { error } = await supabase
@@ -360,7 +361,7 @@ const ChatbotConfigForm: React.FC<ChatbotConfigFormProps> = ({ clientId, onSaved
                         {t("upgradeWizardDesc")}
                       </p>
                       <a
-                        href="/#pricing"
+                        href="/dashboard/upgrade"
                         className="inline-block mt-2 text-xs font-medium text-primary hover:underline"
                       >
                         {t("upgradeToProLink")}
