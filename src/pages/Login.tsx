@@ -44,7 +44,7 @@ const Login = () => {
             <Bot className="w-8 h-8 text-white" />
           </div>
           <h1 className="text-3xl font-bold text-foreground" style={{ fontFamily: 'Syne, sans-serif' }}>
-            MDAC <span className="text-gradient">ChatBot</span>
+            Genius <span className="text-gradient">Chatbot</span>
           </h1>
           <p className="text-muted-foreground mt-1">Builder Platform</p>
         </div>
@@ -104,7 +104,7 @@ const Login = () => {
         </div>
 
         <p className="text-center text-muted-foreground/50 text-xs mt-6">
-          MDAC ChatBot Builder © 2024
+          Genius Chatbot Builder © 2025
         </p>
       </div>
     </div>

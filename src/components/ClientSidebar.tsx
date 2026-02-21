@@ -43,7 +43,7 @@ const ClientSidebar = () => {
         {!collapsed && (
           <div className="overflow-hidden">
             <span className="font-bold text-foreground text-sm" style={{ fontFamily: 'Syne, sans-serif' }}>
-              MDAC <span className="text-gradient">ChatBot</span>
+              Genius <span className="text-gradient">Chatbot</span>
             </span>
             <p className="text-xs text-muted-foreground">Client Portal</p>
           </div>
