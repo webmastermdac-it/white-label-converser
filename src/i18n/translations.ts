@@ -614,6 +614,60 @@ export const translations = {
     en: "Language",
     it: "Lingua",
   },
+
+  // ── Password Reset ─────────────────────────────────────
+  forgotPassword: {
+    en: "Forgot your password?",
+    it: "Hai dimenticato la password?",
+  },
+  resetPasswordTitle: {
+    en: "Reset Password",
+    it: "Reimposta Password",
+  },
+  sendResetLink: {
+    en: "Send reset link",
+    it: "Invia link di reset",
+  },
+  resetEmailSent: {
+    en: "Email sent! Check your inbox.",
+    it: "Email inviata! Controlla la tua casella di posta.",
+  },
+  backToLogin: {
+    en: "Back to login",
+    it: "Torna al login",
+  },
+  updatePasswordTitle: {
+    en: "Set New Password",
+    it: "Imposta Nuova Password",
+  },
+  newPassword: {
+    en: "New password",
+    it: "Nuova password",
+  },
+  confirmPassword: {
+    en: "Confirm password",
+    it: "Conferma password",
+  },
+  updatePassword: {
+    en: "Update password",
+    it: "Aggiorna password",
+  },
+  passwordMinLength: {
+    en: "Password must be at least 8 characters.",
+    it: "La password deve avere almeno 8 caratteri.",
+  },
+  passwordsMismatch: {
+    en: "Passwords do not match.",
+    it: "Le password non coincidono.",
+  },
+  passwordUpdatedSuccess: {
+    en: "Password updated successfully!",
+    it: "Password aggiornata con successo!",
+  },
+  verifyingLink: {
+    en: "Verifying link…",
+    it: "Verifica del link…",
+  },
 } as const;
 
 export type TranslationKey = keyof typeof translations;
