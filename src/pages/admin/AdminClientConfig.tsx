@@ -1,22 +1,42 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import ChatbotConfigForm from "@/components/ChatbotConfigForm";
-import { Loader2, ArrowLeft } from "lucide-react";
+import { Loader2, ArrowLeft, Eye, RefreshCw } from "lucide-react";
 import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const AdminClientConfig = () => {
   const { clientId } = useParams<{ clientId: string }>();
   const [clientName, setClientName] = useState("");
   const [loading, setLoading] = useState(true);
+  const [embedToken, setEmbedToken] = useState("");
+  const [previewKey, setPreviewKey] = useState(0);
 
   useEffect(() => {
     if (!clientId) return;
-    supabase.from("clients").select("name").eq("id", clientId).single().then(({ data }) => {
-      setClientName(data?.name || "Client");
+    Promise.all([
+      supabase.from("clients").select("name").eq("id", clientId).single(),
+      supabase.from("chatbot_configs").select("embed_token").eq("client_id", clientId).single(),
+    ]).then(([clientRes, configRes]) => {
+      setClientName(clientRes.data?.name || "Client");
+      setEmbedToken(configRes.data?.embed_token || "");
       setLoading(false);
     });
   }, [clientId]);
+
+  const iframeSrc = embedToken
+    ? `data:text/html;charset=utf-8,${encodeURIComponent(`<!DOCTYPE html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Widget Preview</title>
+<style>body{margin:0;background:#f0f0f0;font-family:sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;color:#666;}
+.hint{text-align:center;padding:2rem;}.hint p{font-size:14px;margin:8px 0;}.hint small{opacity:.6;font-size:12px;}</style>
+</head><body>
+<div class="hint"><p>👇 Clicca sul pulsante in basso a destra per aprire il chatbot</p><small>Anteprima live del widget</small></div>
+<script src="${window.location.origin}/widget.js" data-token="${embedToken}" async></script>
+</body></html>`)}`
+    : "";
 
   if (loading || !clientId) {
     return <div className="flex items-center justify-center p-12"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>;
@@ -32,7 +52,48 @@ const AdminClientConfig = () => {
           {clientName} — Chatbot Config
         </h1>
       </div>
-      <ChatbotConfigForm clientId={clientId} />
+
+      <Tabs defaultValue="config">
+        <TabsList className="bg-secondary border border-border">
+          <TabsTrigger value="config">Configurazione</TabsTrigger>
+          <TabsTrigger value="preview" className="gap-2">
+            <Eye className="w-3.5 h-3.5" /> Anteprima Widget
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="config">
+          <ChatbotConfigForm clientId={clientId} />
+        </TabsContent>
+
+        <TabsContent value="preview">
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <p className="text-muted-foreground text-sm">
+                Testa il chatbot esattamente come apparirà sul sito del cliente
+              </p>
+              <Button variant="outline" size="sm" onClick={() => setPreviewKey(k => k + 1)} className="gap-2 border-border">
+                <RefreshCw className="w-3.5 h-3.5" /> Ricarica
+              </Button>
+            </div>
+            {embedToken ? (
+              <div className="glass rounded-xl overflow-hidden border border-border" style={{ minHeight: 550 }}>
+                <iframe
+                  key={previewKey}
+                  src={iframeSrc}
+                  className="w-full h-full border-0"
+                  style={{ minHeight: 550 }}
+                  title="Widget Preview"
+                  sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
+                />
+              </div>
+            ) : (
+              <div className="glass rounded-xl p-8 text-center">
+                <p className="text-muted-foreground">Nessun chatbot configurato per questo cliente.</p>
+              </div>
+            )}
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
