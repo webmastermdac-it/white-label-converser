@@ -181,19 +181,19 @@ const ChatbotConfigForm: React.FC<ChatbotConfigFormProps> = ({ clientId, onSaved
   return (
     <div className="space-y-6">
       {/* Section Tabs */}
-      <div className="flex gap-2 flex-wrap">
+      <div className="flex gap-2 flex-wrap overflow-x-auto -mx-1 px-1 pb-1">
         {sections.map((s) => (
           <button
             key={s.id}
             onClick={() => setActiveSection(s.id)}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-150 ${
+            className={`flex items-center gap-2 px-3 md:px-4 py-2.5 md:py-2 rounded-lg text-sm font-medium transition-all duration-150 min-h-[44px] whitespace-nowrap ${
               activeSection === s.id
                 ? "bg-primary/15 text-primary border border-primary/30"
                 : "bg-secondary text-muted-foreground hover:text-foreground hover:bg-secondary/80"
             }`}
           >
-            <s.icon className="w-3.5 h-3.5" />
-            {s.label}
+            <s.icon className="w-4 h-4 md:w-3.5 md:h-3.5" />
+            <span className="hidden sm:inline">{s.label}</span>
           </button>
         ))}
       </div>
@@ -243,7 +243,7 @@ const ChatbotConfigForm: React.FC<ChatbotConfigFormProps> = ({ clientId, onSaved
                 <button
                   key={pos}
                   onClick={() => set("launcher_position", pos)}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                  className={`flex-1 px-4 py-3 md:py-2 rounded-lg text-sm font-medium transition-all min-h-[44px] ${
                     config.launcher_position === pos
                       ? "bg-primary/15 text-primary ring-1 ring-primary/30"
                       : "bg-secondary text-muted-foreground hover:text-foreground"
@@ -460,10 +460,12 @@ const ChatbotConfigForm: React.FC<ChatbotConfigFormProps> = ({ clientId, onSaved
       )}
 
       {/* Save */}
-      <Button onClick={save} disabled={saving} className="gradient-primary text-white border-0 glow-sm">
-        {saving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
-        {t("saveConfig")}
-      </Button>
+      <div className="sticky bottom-0 md:static bg-background/80 backdrop-blur-sm py-3 md:py-0 -mx-4 px-4 md:mx-0 md:px-0 border-t border-border md:border-0">
+        <Button onClick={save} disabled={saving} className="gradient-primary text-white border-0 glow-sm w-full md:w-auto h-12 md:h-10">
+          {saving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
+          {t("saveConfig")}
+        </Button>
+      </div>
     </div>
   );
 };

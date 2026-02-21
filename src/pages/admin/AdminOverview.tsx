@@ -19,7 +19,7 @@ const StatCard = ({
 }: {
   label: string; value: number | string; icon: React.ElementType; trend?: string; to?: string;
 }) => (
-  <div className="glass rounded-xl p-5 flex flex-col gap-3 hover:border-primary/30 transition-all duration-200 group">
+  <div className="glass rounded-xl p-4 md:p-5 flex flex-col gap-2 md:gap-3 hover:border-primary/30 transition-all duration-200 group">
     <div className="flex items-center justify-between">
       <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
         <Icon className="w-5 h-5 text-primary" />
@@ -31,8 +31,8 @@ const StatCard = ({
       )}
     </div>
     <div>
-      <p className="text-3xl font-bold text-foreground">{value}</p>
-      <p className="text-sm text-muted-foreground mt-0.5">{label}</p>
+      <p className="text-2xl md:text-3xl font-bold text-foreground">{value}</p>
+      <p className="text-xs md:text-sm text-muted-foreground mt-0.5">{label}</p>
     </div>
     {trend && (
       <div className="flex items-center gap-1 text-xs text-green-400">
@@ -83,7 +83,7 @@ const AdminOverview = () => {
   }, []);
 
   return (
-    <div className="p-6 space-y-6 animate-fade-in-up">
+    <div className="p-4 md:p-6 space-y-4 md:space-y-6 animate-fade-in-up">
       <div>
         <h1 className="text-2xl font-bold text-foreground" style={{ fontFamily: 'Syne, sans-serif' }}>
           {t("agencyOverview")}
@@ -110,8 +110,8 @@ const AdminOverview = () => {
         ) : recentLeads.length === 0 ? (
           <p className="text-muted-foreground text-sm text-center py-8">{t("noLeadsYet")}</p>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+          <div className="overflow-x-auto -mx-4 md:mx-0">
+            <table className="w-full text-sm min-w-[500px]">
               <thead>
                 <tr className="text-left text-xs text-muted-foreground border-b border-border">
                   <th className="pb-2 font-medium">{t("client")}</th>

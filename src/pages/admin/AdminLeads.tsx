@@ -75,13 +75,13 @@ const AdminLeads = () => {
   });
 
   return (
-    <div className="p-6 space-y-6 animate-fade-in-up">
-      <div className="flex items-center justify-between">
+    <div className="p-4 md:p-6 space-y-4 md:space-y-6 animate-fade-in-up">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-foreground" style={{ fontFamily: 'Syne, sans-serif' }}>{t("allLeads")}</h1>
+          <h1 className="text-xl md:text-2xl font-bold text-foreground" style={{ fontFamily: 'Syne, sans-serif' }}>{t("allLeads")}</h1>
           <p className="text-muted-foreground text-sm mt-1">{leads.length} {t("totalLeadsCount")}</p>
         </div>
-        <Button variant="outline" onClick={exportCSV} className="border-border text-muted-foreground hover:text-foreground">
+        <Button variant="outline" onClick={exportCSV} className="border-border text-muted-foreground hover:text-foreground w-full sm:w-auto">
           <Download className="w-4 h-4 mr-2" /> {t("exportCSV")}
         </Button>
       </div>
@@ -89,10 +89,10 @@ const AdminLeads = () => {
       <div className="flex gap-3">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder={t("searchLeads")} className="pl-9 bg-secondary border-border" />
+          <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder={t("searchLeads")} className="pl-9 bg-secondary border-border h-12 text-base md:h-10 md:text-sm" />
         </div>
         <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-36 bg-secondary border-border">
+          <SelectTrigger className="w-28 md:w-36 bg-secondary border-border h-12 md:h-10">
             <Filter className="w-3.5 h-3.5 mr-1.5 text-muted-foreground" />
             <SelectValue />
           </SelectTrigger>
@@ -104,7 +104,8 @@ const AdminLeads = () => {
         </Select>
       </div>
 
-      <div className="glass rounded-xl overflow-hidden">
+      {/* Desktop table */}
+      <div className="glass rounded-xl overflow-hidden hidden md:block">
         {loading ? (
           <div className="p-8 text-center"><Loader2 className="w-6 h-6 animate-spin text-primary mx-auto" /></div>
         ) : filtered.length === 0 ? (
@@ -156,8 +157,40 @@ const AdminLeads = () => {
         )}
       </div>
 
+      {/* Mobile card list */}
+      <div className="md:hidden space-y-3">
+        {loading ? (
+          <div className="p-8 text-center"><Loader2 className="w-6 h-6 animate-spin text-primary mx-auto" /></div>
+        ) : filtered.length === 0 ? (
+          <div className="p-12 text-center text-muted-foreground">{t("noLeadsFound")}</div>
+        ) : (
+          filtered.map((lead) => (
+            <div key={lead.id} className="glass rounded-xl p-4 space-y-2" onClick={() => setSelectedLead(lead)}>
+              <div className="flex items-start justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm">{lead.language === "en" ? "🇬🇧" : "🇮🇹"}</span>
+                  <p className="font-medium text-foreground text-sm">👤 {lead.name}</p>
+                </div>
+                <span className={`text-xs px-2 py-1 rounded-full font-medium ${
+                  lead.status === "new" ? "status-new" :
+                  lead.status === "contacted" ? "status-contacted" : "status-closed"
+                }`}>{lead.status.toUpperCase()}</span>
+              </div>
+              <p className="text-xs text-muted-foreground">{lead.email}</p>
+              {lead.phone && <p className="text-xs text-muted-foreground">{lead.phone}</p>}
+              <div className="flex items-center justify-between pt-1">
+                <p className="text-xs text-muted-foreground">📅 {new Date(lead.created_at).toLocaleString()}</p>
+                {lead.transcript && lead.transcript.length > 0 && (
+                  <button className="text-xs text-primary hover:underline min-h-[44px] flex items-center">{t("viewTranscript", "Vedi trascrizione")}</button>
+                )}
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+
       <Dialog open={!!selectedLead} onOpenChange={() => setSelectedLead(null)}>
-        <DialogContent className="bg-card border-border text-foreground max-w-2xl max-h-[80vh] overflow-y-auto">
+        <DialogContent className="bg-card border-border text-foreground max-w-2xl max-h-[80vh] overflow-y-auto w-full fixed inset-0 md:inset-auto md:relative rounded-none md:rounded-lg">
           <DialogHeader>
             <DialogTitle>Lead: {selectedLead?.name}</DialogTitle>
           </DialogHeader>

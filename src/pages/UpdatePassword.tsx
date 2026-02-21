@@ -64,7 +64,7 @@ const UpdatePassword = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
+    <div className="min-h-screen bg-background flex items-center justify-center px-4 md:p-4">
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-1/4 left-1/4 w-96 h-96 rounded-full bg-primary/5 blur-3xl" />
         <div className="absolute bottom-1/4 right-1/4 w-64 h-64 rounded-full bg-primary/8 blur-3xl" />
@@ -72,7 +72,7 @@ const UpdatePassword = () => {
 
       <div className="relative w-full max-w-md">
         <div className="text-center mb-8 animate-fade-in-up">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl gradient-primary mb-4 glow-primary">
+          <div className="inline-flex items-center justify-center w-16 h-16 max-w-[120px] rounded-2xl gradient-primary mb-4 glow-primary">
             <Bot className="w-8 h-8 text-white" />
           </div>
           <h1 className="text-3xl font-bold text-foreground" style={{ fontFamily: 'Syne, sans-serif' }}>
@@ -80,7 +80,7 @@ const UpdatePassword = () => {
           </h1>
         </div>
 
-        <div className="glass rounded-2xl p-8 animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
+        <div className="glass rounded-none md:rounded-2xl p-6 md:p-8 animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
           <h2 className="text-xl font-semibold text-foreground mb-6">{t("updatePasswordTitle")}</h2>
 
           {!ready ? (
@@ -100,7 +100,7 @@ const UpdatePassword = () => {
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••"
                     required
-                    className="bg-secondary border-border text-foreground placeholder:text-muted-foreground h-11 pr-10"
+                    className="bg-secondary border-border text-foreground placeholder:text-muted-foreground h-12 text-base pr-10"
                   />
                   <button
                     type="button"
@@ -121,7 +121,7 @@ const UpdatePassword = () => {
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   placeholder="••••••••"
                   required
-                  className="bg-secondary border-border text-foreground placeholder:text-muted-foreground h-11"
+                  className="bg-secondary border-border text-foreground placeholder:text-muted-foreground h-12 text-base"
                 />
               </div>
 
@@ -130,7 +130,7 @@ const UpdatePassword = () => {
               <Button
                 type="submit"
                 disabled={isLoading}
-                className="w-full h-11 gradient-primary text-white font-semibold rounded-lg glow-sm hover:opacity-90 transition-opacity border-0"
+                className="w-full h-12 gradient-primary text-white font-semibold rounded-lg glow-sm hover:opacity-90 transition-opacity border-0"
               >
                 {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : t("updatePassword")}
               </Button>
