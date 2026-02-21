@@ -28,8 +28,7 @@ const ClientChatPreview = () => {
 
   const widgetScriptUrl = `${window.location.origin}/widget.js`;
 
-  const iframeSrcDoc = embedToken
-    ? `<!DOCTYPE html>
+  const previewHtml = `<!DOCTYPE html>
 <html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Widget Preview</title>
 <style>body{margin:0;background:#f0f0f0;font-family:sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;color:#666;}
@@ -37,8 +36,16 @@ const ClientChatPreview = () => {
 </head><body>
 <div class="hint"><p>👇 ${t("widgetPreviewDesc")}</p></div>
 <script src="${widgetScriptUrl}" data-token="${embedToken}" async><\/script>
-</body></html>`
-    : "";
+</body></html>`;
+
+  const iframeSrcDoc = embedToken ? previewHtml : "";
+
+  const openInNewTab = () => {
+    if (!embedToken) return;
+    const blob = new Blob([previewHtml], { type: "text/html" });
+    const url = URL.createObjectURL(blob);
+    window.open(url, "_blank");
+  };
 
   return (
     <div className="p-6 space-y-4 animate-fade-in-up h-full flex flex-col">
@@ -54,7 +61,7 @@ const ClientChatPreview = () => {
             <RefreshCw className="w-3.5 h-3.5" />
             {t("reload")}
           </Button>
-          <Button variant="outline" size="sm" className="gap-2 border-border" onClick={() => window.open(widgetScriptUrl, "_blank")} disabled={!embedToken}>
+          <Button variant="outline" size="sm" className="gap-2 border-border" onClick={openInNewTab} disabled={!embedToken}>
             <ExternalLink className="w-3.5 h-3.5" />
             {t("openNewTab")}
           </Button>
