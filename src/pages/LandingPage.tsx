@@ -181,8 +181,8 @@ export default function LandingPage() {
             <img
               src={genieMascot}
               alt="Genius Chatbot Genie"
-              className="w-72 sm:w-96 drop-shadow-2xl"
-              style={{ animation: "floatMascot 4s ease-in-out infinite" }}
+              className="w-72 sm:w-96"
+              style={{ filter: "drop-shadow(0 0 30px hsl(349 78% 62% / 0.45)) drop-shadow(0 0 60px hsl(349 78% 62% / 0.2))", animation: "floatMascot 4s ease-in-out infinite" }}
             />
           </div>
         </div>
