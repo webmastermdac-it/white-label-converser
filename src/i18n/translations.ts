@@ -668,6 +668,10 @@ export const translations = {
     en: "Verifying link…",
     it: "Verifica del link…",
   },
+  viewTranscript: {
+    en: "View transcript",
+    it: "Vedi trascrizione",
+  },
 } as const;
 
 export type TranslationKey = keyof typeof translations;

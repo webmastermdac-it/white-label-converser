@@ -68,13 +68,13 @@ const ClientLeads = () => {
   });
 
   return (
-    <div className="p-6 space-y-6 animate-fade-in-up">
-      <div className="flex items-center justify-between">
+    <div className="p-4 md:p-6 space-y-4 md:space-y-6 animate-fade-in-up">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-foreground" style={{ fontFamily: 'Syne, sans-serif' }}>{t("leads")}</h1>
+          <h1 className="text-xl md:text-2xl font-bold text-foreground" style={{ fontFamily: 'Syne, sans-serif' }}>{t("leads")}</h1>
           <p className="text-muted-foreground text-sm mt-1">{leads.length} {t("totalLeadsCount")}</p>
         </div>
-        <Button variant="outline" onClick={exportCSV} className="border-border text-muted-foreground hover:text-foreground">
+        <Button variant="outline" onClick={exportCSV} className="border-border text-muted-foreground hover:text-foreground w-full sm:w-auto">
           <Download className="w-4 h-4 mr-2" /> {t("exportCSV")}
         </Button>
       </div>
@@ -82,10 +82,10 @@ const ClientLeads = () => {
       <div className="flex gap-3">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder={t("searchLeads")} className="pl-9 bg-secondary border-border" />
+          <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder={t("searchLeads")} className="pl-9 bg-secondary border-border h-12 text-base md:h-10 md:text-sm" />
         </div>
         <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-36 bg-secondary border-border">
+          <SelectTrigger className="w-28 md:w-36 bg-secondary border-border h-12 md:h-10">
             <Filter className="w-3.5 h-3.5 mr-1 text-muted-foreground" /><SelectValue />
           </SelectTrigger>
           <SelectContent className="bg-card border-border">
@@ -96,7 +96,8 @@ const ClientLeads = () => {
         </Select>
       </div>
 
-      <div className="glass rounded-xl overflow-hidden">
+      {/* Desktop table */}
+      <div className="glass rounded-xl overflow-hidden hidden md:block">
         {loading ? (
           <div className="p-8 text-center"><Loader2 className="w-6 h-6 animate-spin text-primary mx-auto" /></div>
         ) : filtered.length === 0 ? (
@@ -106,9 +107,9 @@ const ClientLeads = () => {
             <thead>
               <tr className="border-b border-border bg-secondary/30">
                 <th className="text-left px-5 py-3 text-xs font-medium text-muted-foreground uppercase">{t("lead")}</th>
-                <th className="text-left px-5 py-3 text-xs font-medium text-muted-foreground uppercase hidden md:table-cell">{t("phone")}</th>
+                <th className="text-left px-5 py-3 text-xs font-medium text-muted-foreground uppercase">{t("phone")}</th>
                 <th className="text-left px-5 py-3 text-xs font-medium text-muted-foreground uppercase">{t("status")}</th>
-                <th className="text-left px-5 py-3 text-xs font-medium text-muted-foreground uppercase hidden md:table-cell">{t("date")}</th>
+                <th className="text-left px-5 py-3 text-xs font-medium text-muted-foreground uppercase">{t("date")}</th>
                 <th className="text-right px-5 py-3 text-xs font-medium text-muted-foreground uppercase">{t("actions")}</th>
               </tr>
             </thead>
@@ -121,13 +122,13 @@ const ClientLeads = () => {
                     </p>
                     <p className="text-xs text-muted-foreground">{lead.email}</p>
                   </td>
-                  <td className="px-5 py-4 text-sm text-muted-foreground hidden md:table-cell">{lead.phone || "—"}</td>
+                  <td className="px-5 py-4 text-sm text-muted-foreground">{lead.phone || "—"}</td>
                   <td className="px-5 py-4">
                     <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${
                       lead.status === "new" ? "status-new" : lead.status === "contacted" ? "status-contacted" : "status-closed"
                     }`}>{lead.status}</span>
                   </td>
-                  <td className="px-5 py-4 text-xs text-muted-foreground hidden md:table-cell">{new Date(lead.created_at).toLocaleDateString()}</td>
+                  <td className="px-5 py-4 text-xs text-muted-foreground">{new Date(lead.created_at).toLocaleDateString()}</td>
                   <td className="px-5 py-4 text-right">
                     <Select value={lead.status} onValueChange={(v) => { updateStatus(lead.id, v); }}>
                       <SelectTrigger className="w-28 h-7 text-xs bg-secondary border-border" onClick={(e) => e.stopPropagation()}>
@@ -147,8 +148,40 @@ const ClientLeads = () => {
         )}
       </div>
 
+      {/* Mobile card list */}
+      <div className="md:hidden space-y-3">
+        {loading ? (
+          <div className="p-8 text-center"><Loader2 className="w-6 h-6 animate-spin text-primary mx-auto" /></div>
+        ) : filtered.length === 0 ? (
+          <div className="p-12 text-center text-muted-foreground">{t("noLeadsFound")}</div>
+        ) : (
+          filtered.map((lead) => (
+            <div key={lead.id} className="glass rounded-xl p-4 space-y-2" onClick={() => setSelectedLead(lead)}>
+              <div className="flex items-start justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm">{lead.language === "en" ? "🇬🇧" : "🇮🇹"}</span>
+                  <p className="font-medium text-foreground text-sm">👤 {lead.name}</p>
+                </div>
+                <span className={`text-xs px-2 py-1 rounded-full font-medium ${
+                  lead.status === "new" ? "status-new" :
+                  lead.status === "contacted" ? "status-contacted" : "status-closed"
+                }`}>{lead.status.toUpperCase()}</span>
+              </div>
+              <p className="text-xs text-muted-foreground">{lead.email}</p>
+              {lead.phone && <p className="text-xs text-muted-foreground">{lead.phone}</p>}
+              <div className="flex items-center justify-between pt-1">
+                <p className="text-xs text-muted-foreground">📅 {new Date(lead.created_at).toLocaleString()}</p>
+                {lead.transcript && lead.transcript.length > 0 && (
+                  <button className="text-xs text-primary hover:underline min-h-[44px] flex items-center">{t("viewTranscript", "Vedi trascrizione")}</button>
+                )}
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+
       <Dialog open={!!selectedLead} onOpenChange={() => setSelectedLead(null)}>
-        <DialogContent className="bg-card border-border text-foreground max-w-2xl max-h-[80vh] overflow-y-auto">
+        <DialogContent className="bg-card border-border text-foreground max-w-2xl max-h-[80vh] overflow-y-auto w-full fixed inset-0 md:inset-auto md:relative rounded-none md:rounded-lg">
           <DialogHeader>
             <DialogTitle>Lead: {selectedLead?.name}</DialogTitle>
           </DialogHeader>

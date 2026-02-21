@@ -282,7 +282,6 @@ const KnowledgeBaseWizard: React.FC<Props> = ({ clientId, configId, currentKnowl
           <Textarea
             value={buildFinalKB()}
             onChange={(e) => {
-              // When user edits directly, reset everything and use the raw text
               setKnowledgeBase(e.target.value);
               setDocuments([]);
               setScrapedContent("");
@@ -290,7 +289,7 @@ const KnowledgeBaseWizard: React.FC<Props> = ({ clientId, configId, currentKnowl
               setTone("");
             }}
             rows={14}
-            className="bg-secondary border-border resize-none font-mono text-sm"
+            className="bg-secondary border-border resize-none font-mono text-base md:text-sm min-h-[200px]"
           />
 
           <div className="text-xs text-muted-foreground text-right">
@@ -301,15 +300,15 @@ const KnowledgeBaseWizard: React.FC<Props> = ({ clientId, configId, currentKnowl
           <div className="space-y-3 p-4 rounded-xl bg-secondary/50 border border-border">
             <div className="space-y-2">
               <Label className="text-xs">Aggiungi un'informazione importante</Label>
-              <div className="flex gap-2">
+              <div className="flex flex-col sm:flex-row gap-2">
                 <Input
                   value={quickAdd}
                   onChange={(e) => setQuickAdd(e.target.value)}
                   placeholder="Es: Accettiamo pagamenti con carta e contanti"
-                  className="bg-background border-border text-sm flex-1"
+                  className="bg-background border-border text-base md:text-sm flex-1 h-12 md:h-10"
                   onKeyDown={(e) => e.key === "Enter" && handleQuickAdd()}
                 />
-                <Button size="sm" variant="outline" onClick={handleQuickAdd} disabled={!quickAdd.trim()}>
+                <Button size="sm" variant="outline" onClick={handleQuickAdd} disabled={!quickAdd.trim()} className="min-h-[44px] md:min-h-0">
                   Aggiungi
                 </Button>
               </div>
@@ -343,19 +342,18 @@ const KnowledgeBaseWizard: React.FC<Props> = ({ clientId, configId, currentKnowl
       )}
 
       {/* Navigation */}
-      <div className="flex justify-between items-center pt-2">
+      <div className="flex justify-between items-center pt-2 md:static fixed bottom-0 inset-x-0 bg-background/90 backdrop-blur-sm p-4 md:p-0 border-t border-border md:border-0 z-10">
         <div>
           {step > 1 && (
-            <Button variant="ghost" onClick={() => goTo(step - 1)}>
+            <Button variant="ghost" onClick={() => goTo(step - 1)} className="min-h-[44px]">
               <ArrowLeft className="w-4 h-4 mr-1" /> Indietro
             </Button>
           )}
         </div>
 
         <div className="flex gap-2">
-          {/* Skip button for steps 2 and 3 */}
           {(step === 2 || step === 3) && (
-            <Button variant="ghost" onClick={() => goTo(step + 1)} className="text-muted-foreground">
+            <Button variant="ghost" onClick={() => goTo(step + 1)} className="text-muted-foreground min-h-[44px]">
               <SkipForward className="w-4 h-4 mr-1" /> Salta
             </Button>
           )}
@@ -364,6 +362,7 @@ const KnowledgeBaseWizard: React.FC<Props> = ({ clientId, configId, currentKnowl
             <Button
               onClick={() => goTo(step + 1)}
               disabled={step === 1 && !canProceedStep1}
+              className="min-h-[44px]"
             >
               Avanti <ArrowRight className="w-4 h-4 ml-1" />
             </Button>
@@ -373,7 +372,7 @@ const KnowledgeBaseWizard: React.FC<Props> = ({ clientId, configId, currentKnowl
             <Button
               onClick={handleSave}
               disabled={saving}
-              className="gradient-primary text-white border-0 glow-sm"
+              className="gradient-primary text-white border-0 glow-sm min-h-[44px]"
             >
               {saving ? (
                 <Loader2 className="w-4 h-4 animate-spin mr-2" />
@@ -385,6 +384,8 @@ const KnowledgeBaseWizard: React.FC<Props> = ({ clientId, configId, currentKnowl
           )}
         </div>
       </div>
+      {/* Spacer for fixed bottom nav on mobile */}
+      <div className="h-16 md:h-0" />
     </div>
   );
 };
