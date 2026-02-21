@@ -108,7 +108,7 @@
 
   // ── Styles ──────────────────────────────────────────────
   function buildStyles(cfg) {
-    var pc = cfg.primary_color || "#E94560";
+    var pc = cfg.primary_color || "#F59E0B";
     var bg = cfg.background_color || "#1A1A2E";
     var tc = cfg.text_color || "#FFFFFF";
     var pos = cfg.launcher_position === "bottom-left" ? "left:20px;" : "right:20px;";
@@ -142,6 +142,9 @@
 .mdac-dot:nth-child(3){animation-delay:.3s;}\
 @keyframes mdac-bounce{to{transform:translateY(-6px);opacity:.4;}}\
 .mdac-input-area{display:flex;gap:8px;padding:10px 12px;border-top:1px solid #e5e7eb;background:#fff;}\
+.mdac-footer{text-align:center;padding:4px 0 6px;background:#fff;border-top:1px solid #f3f4f6;}\
+.mdac-footer a{font-size:10px;color:#9ca3af;text-decoration:none;font-weight:500;}\
+.mdac-footer a:hover{color:" + pc + ";text-decoration:underline;}\
 .mdac-input{flex:1;border:1px solid #e5e7eb;border-radius:10px;padding:8px 12px;font-size:13px;outline:none;transition:border .15s;}\
 .mdac-input:focus{border-color:" + pc + ";}\
 .mdac-send{width:36px;height:36px;border-radius:10px;background:" + pc + ";color:#fff;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:opacity .15s;}\
@@ -168,20 +171,24 @@
   function render() {
     if (!config) return;
 
-    var pc = config.primary_color || "#E94560";
-    var avatar = config.avatar || "🤖";
+    var pc = config.primary_color || "#F59E0B";
+    var avatar = config.avatar || "genie";
+    var isGenie = avatar === "genie";
+    var genieImgTag = '<img src="' + (scriptTag.src ? new URL("/images/genius-icon.png", scriptTag.src).href : "/images/genius-icon.png") + '" style="width:28px;height:28px;" alt="Genius" />';
+    var avatarDisplay = isGenie ? genieImgTag : esc(avatar);
+    var avatarSmall = isGenie ? '<img src="' + (scriptTag.src ? new URL("/images/genius-icon.png", scriptTag.src).href : "/images/genius-icon.png") + '" style="width:18px;height:18px;" alt="G" />' : esc(avatar);
 
     var html = '<style>' + buildStyles(config) + '</style>';
 
     // Launcher
-    html += '<button class="mdac-launcher" id="mdac-toggle">' + esc(avatar) + '</button>';
+    html += '<button class="mdac-launcher" id="mdac-toggle">' + avatarDisplay + '</button>';
 
     // Panel
     html += '<div class="mdac-panel' + (isOpen ? ' open' : '') + '" id="mdac-panel">';
 
     // Header
     html += '<div class="mdac-header">';
-    html += '<div class="mdac-header-avatar">' + esc(avatar) + '</div>';
+    html += '<div class="mdac-header-avatar">' + avatarDisplay + '</div>';
     html += '<div class="mdac-header-info"><div class="mdac-header-name">' + esc(config.name || "Assistente") + '</div><div class="mdac-header-powered">Powered by Genius</div></div>';
     html += '<button class="mdac-close" id="mdac-close">&times;</button>';
     html += '</div>';
@@ -193,7 +200,7 @@
       var cls = m.role === "user" ? "user" : "bot";
       html += '<div class="mdac-msg ' + cls + '">';
       if (m.role !== "user") {
-        html += '<div class="mdac-msg-avatar">' + esc(avatar) + '</div>';
+        html += '<div class="mdac-msg-avatar">' + avatarSmall + '</div>';
       }
       html += '<div class="mdac-bubble">' + esc(m.content) + '</div>';
       if (m.role === "user") {
@@ -204,7 +211,7 @@
 
     // Typing indicator
     if (isLoading) {
-      html += '<div class="mdac-msg bot"><div class="mdac-msg-avatar">' + esc(avatar) + '</div><div class="mdac-bubble"><div class="mdac-typing"><div class="mdac-dot"></div><div class="mdac-dot"></div><div class="mdac-dot"></div></div></div></div>';
+      html += '<div class="mdac-msg bot"><div class="mdac-msg-avatar">' + avatarSmall + '</div><div class="mdac-bubble"><div class="mdac-typing"><div class="mdac-dot"></div><div class="mdac-dot"></div><div class="mdac-dot"></div></div></div></div>';
     }
 
     // Lead form
@@ -228,13 +235,16 @@
 
     html += '</div>'; // end messages
 
-    // Input area
+    // Input area + footer
     html += '<div class="mdac-input-area">';
     html += '<input class="mdac-input" id="mdac-input" placeholder="' + t.placeholder + '" ' + (isLoading ? 'disabled' : '') + ' />';
     html += '<button class="mdac-send" id="mdac-send" ' + (isLoading ? 'disabled' : '') + '>';
     html += '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>';
     html += '</button>';
     html += '</div>';
+
+    // Footer
+    html += '<div class="mdac-footer"><a href="https://chatbot.your-genius.com" target="_blank" rel="noopener">Genius Chatbot</a></div>';
 
     html += '</div>'; // end panel
 

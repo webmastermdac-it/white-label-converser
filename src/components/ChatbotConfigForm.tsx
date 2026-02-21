@@ -35,10 +35,13 @@ interface ChatbotConfigFormProps {
   onSaved?: () => void;
 }
 
+const GENIE_ICON_URL = "/images/genius-icon.png";
+const GENIE_AVATAR = "genie";
+
 const defaultConfig: Config = {
   name: "My Chatbot",
-  avatar: "🤖",
-  primary_color: "#E94560",
+  avatar: GENIE_AVATAR,
+  primary_color: "#F59E0B",
   background_color: "#1A1A2E",
   text_color: "#FFFFFF",
   welcome_message: "Ciao! Come posso aiutarti oggi?",
@@ -52,7 +55,7 @@ const defaultConfig: Config = {
   launcher_position: "bottom-right",
 };
 
-const EMOJIS = ["🤖", "💬", "✨", "🎯", "🚀", "💡", "🤝", "⭐", "🌟", "🎪"];
+const EMOJIS = [GENIE_AVATAR, "🤖", "💬", "✨", "🎯", "🚀", "💡", "🤝", "⭐", "🌟", "🎪"];
 const POSITIONS = ["bottom-right", "bottom-left"];
 
 const ChatbotConfigForm: React.FC<ChatbotConfigFormProps> = ({ clientId, onSaved }) => {
@@ -223,7 +226,11 @@ const ChatbotConfigForm: React.FC<ChatbotConfigFormProps> = ({ clientId, onSaved
                       : "bg-secondary hover:bg-accent"
                   }`}
                 >
-                  {emoji}
+                  {emoji === GENIE_AVATAR ? (
+                    <img src={GENIE_ICON_URL} alt="Genius" className="w-7 h-7 mx-auto" />
+                  ) : (
+                    emoji
+                  )}
                 </button>
               ))}
             </div>
@@ -285,7 +292,11 @@ const ChatbotConfigForm: React.FC<ChatbotConfigFormProps> = ({ clientId, onSaved
           {/* Preview */}
           <div className="mt-4 p-4 rounded-xl border border-border" style={{ backgroundColor: config.background_color }}>
             <div className="flex items-center gap-2 mb-3">
-              <span className="text-2xl">{config.avatar}</span>
+              <span className="text-2xl">
+                {config.avatar === GENIE_AVATAR ? (
+                  <img src={GENIE_ICON_URL} alt="Genius" className="w-8 h-8" />
+                ) : config.avatar}
+              </span>
               <span className="font-medium" style={{ color: config.text_color }}>{config.name}</span>
             </div>
             <div className="text-xs px-3 py-2 rounded-xl inline-block" style={{ backgroundColor: config.primary_color, color: "#fff" }}>
