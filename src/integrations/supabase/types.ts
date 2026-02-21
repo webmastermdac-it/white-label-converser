@@ -75,6 +75,9 @@ export type Database = {
           id: string
           is_active: boolean | null
           knowledge_base: string | null
+          knowledge_base_documents: Json | null
+          knowledge_base_scraped: string | null
+          knowledge_base_sections: Json | null
           launcher_position: string | null
           name: string
           notification_email: string | null
@@ -95,6 +98,9 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           knowledge_base?: string | null
+          knowledge_base_documents?: Json | null
+          knowledge_base_scraped?: string | null
+          knowledge_base_sections?: Json | null
           launcher_position?: string | null
           name?: string
           notification_email?: string | null
@@ -115,6 +121,9 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           knowledge_base?: string | null
+          knowledge_base_documents?: Json | null
+          knowledge_base_scraped?: string | null
+          knowledge_base_sections?: Json | null
           launcher_position?: string | null
           name?: string
           notification_email?: string | null

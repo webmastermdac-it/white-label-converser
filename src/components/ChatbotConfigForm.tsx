@@ -7,7 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Save, Bot, Palette, MessageSquare, Zap, Mail } from "lucide-react";
+import { Loader2, Save, Bot, Palette, MessageSquare, Zap, Mail, Star } from "lucide-react";
+import KnowledgeBaseBuilder from "@/components/knowledge-base/KnowledgeBaseBuilder";
 
 interface Config {
   id?: string;
@@ -51,10 +52,12 @@ const POSITIONS = ["bottom-right", "bottom-left"];
 
 const ChatbotConfigForm: React.FC<ChatbotConfigFormProps> = ({ clientId, onSaved }) => {
   const { toast } = useToast();
+  const { role } = useAuth();
   const [config, setConfig] = useState<Config>(defaultConfig);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [activeSection, setActiveSection] = useState("identity");
+  const [clientPlan, setClientPlan] = useState<string>("free");
 
   useEffect(() => {
     const fetchConfig = async () => {
@@ -82,6 +85,18 @@ const ChatbotConfigForm: React.FC<ChatbotConfigFormProps> = ({ clientId, onSaved
           embed_token: data.embed_token,
         });
       }
+
+      // Fetch client plan
+      const { data: clientData } = await supabase
+        .from("clients")
+        .select("plan")
+        .eq("id", clientId)
+        .single();
+
+      if (clientData) {
+        setClientPlan(clientData.plan || "free");
+      }
+
       setLoading(false);
     };
 
@@ -131,6 +146,8 @@ const ChatbotConfigForm: React.FC<ChatbotConfigFormProps> = ({ clientId, onSaved
   };
 
   const set = (key: keyof Config, value: any) => setConfig((prev) => ({ ...prev, [key]: value }));
+
+  const isProOrAdmin = clientPlan === "pro" || role === "super_admin";
 
   const sections = [
     { id: "identity", label: "Identity", icon: Bot },
@@ -289,16 +306,57 @@ const ChatbotConfigForm: React.FC<ChatbotConfigFormProps> = ({ clientId, onSaved
               Knowledge Base / System Prompt
               <span className="ml-2 text-xs text-muted-foreground">(used as AI system prompt)</span>
             </Label>
-            <Textarea
-              value={config.knowledge_base}
-              onChange={(e) => set("knowledge_base", e.target.value)}
-              placeholder={`Write everything the bot should know:\n\nCompany: Acme Corp\nServices: Web design, SEO, Social Media\nTone: professional but friendly\nFAQs:\n- Q: What are your prices? A: Starting from €500/month\n...\n\nForbidden topics: competitors, internal pricing`}
-              rows={14}
-              className="bg-secondary border-border resize-none font-mono text-sm"
-            />
-            <p className="text-xs text-muted-foreground">
-              This text becomes the AI's system prompt. The more detailed, the better the bot performs.
-            </p>
+
+            {isProOrAdmin && config.id ? (
+              <KnowledgeBaseBuilder
+                clientId={clientId}
+                configId={config.id}
+                botName={config.name}
+                fallbackMessage={config.fallback_message}
+                onKnowledgeBaseUpdated={(kb) => {
+                  set("knowledge_base", kb);
+                  // Auto-save the knowledge base
+                  supabase
+                    .from("chatbot_configs")
+                    .update({ knowledge_base: kb })
+                    .eq("id", config.id);
+                }}
+              />
+            ) : (
+              <>
+                {/* Upgrade banner for non-Pro users */}
+                {!isProOrAdmin && (
+                  <div className="flex items-start gap-3 p-4 rounded-xl bg-primary/10 border border-primary/20 mb-3">
+                    <Star className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-foreground">
+                        ⭐ Upgrade to Pro per sbloccare il Knowledge Base Builder
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Upload documenti, scraping sito web, template per settore, wizard guidato e molto altro.
+                      </p>
+                      <a
+                        href="/#pricing"
+                        className="inline-block mt-2 text-xs font-medium text-primary hover:underline"
+                      >
+                        Upgrade to Pro →
+                      </a>
+                    </div>
+                  </div>
+                )}
+
+                <Textarea
+                  value={config.knowledge_base}
+                  onChange={(e) => set("knowledge_base", e.target.value)}
+                  placeholder={`Write everything the bot should know:\n\nCompany: Acme Corp\nServices: Web design, SEO, Social Media\nTone: professional but friendly\nFAQs:\n- Q: What are your prices? A: Starting from €500/month\n...\n\nForbidden topics: competitors, internal pricing`}
+                  rows={14}
+                  className="bg-secondary border-border resize-none font-mono text-sm"
+                />
+                <p className="text-xs text-muted-foreground">
+                  This text becomes the AI's system prompt. The more detailed, the better the bot performs.
+                </p>
+              </>
+            )}
           </div>
         </div>
       )}
