@@ -23,6 +23,20 @@ serve(async (req) => {
       });
     }
 
+    // 0. Check if client with this email already exists
+    const { data: existing } = await supabaseAdmin
+      .from("clients")
+      .select("id")
+      .eq("email", email)
+      .maybeSingle();
+
+    if (existing) {
+      return new Response(
+        JSON.stringify({ error: "Un cliente con questa email esiste già" }),
+        { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     // 1. Create the client record
     const { data: clientData, error: clientError } = await supabaseAdmin
       .from("clients")
