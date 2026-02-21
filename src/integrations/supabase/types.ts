@@ -20,6 +20,7 @@ export type Database = {
           client_id: string
           ended_at: string | null
           id: string
+          language: string | null
           messages: Json | null
           session_token: string
           source_url: string | null
@@ -30,6 +31,7 @@ export type Database = {
           client_id: string
           ended_at?: string | null
           id?: string
+          language?: string | null
           messages?: Json | null
           session_token?: string
           source_url?: string | null
@@ -40,6 +42,7 @@ export type Database = {
           client_id?: string
           ended_at?: string | null
           id?: string
+          language?: string | null
           messages?: Json | null
           session_token?: string
           source_url?: string | null
@@ -72,6 +75,8 @@ export type Database = {
           email_notifications_enabled: boolean | null
           embed_token: string
           fallback_message: string | null
+          fallback_msg_en: string | null
+          fallback_msg_it: string | null
           id: string
           is_active: boolean | null
           knowledge_base: string | null
@@ -95,6 +100,8 @@ export type Database = {
           email_notifications_enabled?: boolean | null
           embed_token?: string
           fallback_message?: string | null
+          fallback_msg_en?: string | null
+          fallback_msg_it?: string | null
           id?: string
           is_active?: boolean | null
           knowledge_base?: string | null
@@ -118,6 +125,8 @@ export type Database = {
           email_notifications_enabled?: boolean | null
           embed_token?: string
           fallback_message?: string | null
+          fallback_msg_en?: string | null
+          fallback_msg_it?: string | null
           id?: string
           is_active?: boolean | null
           knowledge_base?: string | null
@@ -188,6 +197,7 @@ export type Database = {
           created_at: string
           email: string
           id: string
+          language: string | null
           message: string | null
           name: string
           phone: string | null
@@ -202,6 +212,7 @@ export type Database = {
           created_at?: string
           email: string
           id?: string
+          language?: string | null
           message?: string | null
           name: string
           phone?: string | null
@@ -216,6 +227,7 @@ export type Database = {
           created_at?: string
           email?: string
           id?: string
+          language?: string | null
           message?: string | null
           name?: string
           phone?: string | null

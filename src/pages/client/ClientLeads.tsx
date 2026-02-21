@@ -22,6 +22,7 @@ interface Lead {
   source_url: string;
   transcript: any[];
   created_at: string;
+  language?: string;
 }
 
 const ClientLeads = () => {
@@ -113,7 +114,9 @@ const ClientLeads = () => {
               {filtered.map((lead) => (
                 <tr key={lead.id} className="hover:bg-secondary/20 transition-colors cursor-pointer" onClick={() => setSelectedLead(lead)}>
                   <td className="px-5 py-4">
-                    <p className="font-medium text-foreground text-sm">{lead.name}</p>
+                    <p className="font-medium text-foreground text-sm">
+                      {lead.language === "en" ? "🇬🇧" : "🇮🇹"} {lead.name}
+                    </p>
                     <p className="text-xs text-muted-foreground">{lead.email}</p>
                   </td>
                   <td className="px-5 py-4 text-sm text-muted-foreground hidden md:table-cell">{lead.phone || "—"}</td>

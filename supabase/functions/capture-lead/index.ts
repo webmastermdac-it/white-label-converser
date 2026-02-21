@@ -20,8 +20,9 @@ serve(async (req) => {
     );
 
     const body = await req.json();
-    const { embed_token, session_token, source_url } = body;
-    // Support both flat fields and nested lead object from widget
+    const { embed_token, session_token, source_url, language } = body;
+    const lang = language === "en" ? "en" : "it";
+
     const lead = body.lead || {};
     const name = body.name || lead.name;
     const email = body.email || lead.email;
@@ -42,7 +43,7 @@ serve(async (req) => {
       });
     }
 
-    // Insert lead
+    // Insert lead with language
     const { data: leadData, error: leadError } = await supabase
       .from("leads")
       .insert({
@@ -55,6 +56,7 @@ serve(async (req) => {
         transcript,
         source_url: source_url || "",
         status: "new",
+        language: lang,
       })
       .select()
       .single();
@@ -67,10 +69,12 @@ serve(async (req) => {
         .eq("session_token", session_token);
     }
 
-    // Send email notification
+    // Send bilingual email notification
     if (botConfig.email_notifications_enabled && botConfig.notification_email) {
       const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
       if (RESEND_API_KEY) {
+        const isEn = lang === "en";
+
         const transcriptHtml = (transcript || [])
           .map((m: any) => {
             const isUser = m.role === "user";
@@ -80,7 +84,7 @@ serve(async (req) => {
                   ? `background:${botConfig.primary_color || "#E94560"};color:#fff;border-bottom-right-radius:4px;`
                   : `background:#f3f4f6;color:#1a1a2e;border:1px solid #e5e7eb;border-bottom-left-radius:4px;`
                 }">
-                <div style="font-size:11px;font-weight:600;margin-bottom:3px;opacity:0.7;">${isUser ? "👤 Utente" : "🤖 " + escHtml(botConfig.name)}</div>
+                <div style="font-size:11px;font-weight:600;margin-bottom:3px;opacity:0.7;">${isUser ? (isEn ? "👤 User" : "👤 Utente") : "🤖 " + escHtml(botConfig.name)}</div>
                 ${escHtml(m.content)}
               </div>
             </div>`;
@@ -89,48 +93,63 @@ serve(async (req) => {
 
         const dashboardUrl = "https://id-preview--edbbbdba-afd9-4dc6-9f8a-3c34c421c770.lovable.app/dashboard/leads";
 
+        const i18n = isEn ? {
+          title: "🔔 New Lead Captured!",
+          detailsTitle: "📋 Contact Details",
+          nameLabel: "Name",
+          emailLabel: "Email",
+          phoneLabel: "Phone",
+          messageLabel: "Message",
+          pageLabel: "Page",
+          transcriptTitle: "💬 Chat Transcript",
+          ctaLabel: "View in Dashboard →",
+          footer: "Genius Chatbot Builder — A product by MDAC S.r.l.",
+          subject: `🔔 New Lead: ${name} - ${botConfig.name}`,
+        } : {
+          title: "🔔 Nuovo Lead Catturato!",
+          detailsTitle: "📋 Dettagli Contatto",
+          nameLabel: "Nome",
+          emailLabel: "Email",
+          phoneLabel: "Telefono",
+          messageLabel: "Messaggio",
+          pageLabel: "Pagina",
+          transcriptTitle: "💬 Trascrizione Chat",
+          ctaLabel: "Vedi nel Dashboard →",
+          footer: "Genius Chatbot Builder — Un prodotto MDAC S.r.l.",
+          subject: `🔔 Nuovo Lead: ${name} - ${botConfig.name}`,
+        };
+
         const emailHtml = `<!DOCTYPE html><html><head><meta charset="utf-8"></head><body style="margin:0;padding:0;background:#f5f5f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
 <div style="max-width:600px;margin:24px auto;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
-  
-  <!-- Header -->
   <div style="background:${botConfig.primary_color || "#E94560"};padding:24px 28px;">
-    <h1 style="margin:0;font-size:22px;color:#ffffff;">🔔 Nuovo Lead Catturato!</h1>
+    <h1 style="margin:0;font-size:22px;color:#ffffff;">${i18n.title}</h1>
     <p style="margin:6px 0 0;font-size:14px;color:rgba(255,255,255,0.8);">${escHtml(botConfig.name)}</p>
   </div>
-
-  <!-- Lead Details Card -->
   <div style="padding:28px;">
-    <h2 style="margin:0 0 16px;font-size:16px;color:#1a1a2e;">📋 Dettagli Contatto</h2>
+    <h2 style="margin:0 0 16px;font-size:16px;color:#1a1a2e;">${i18n.detailsTitle}</h2>
     <div style="background:#f9fafb;border-radius:12px;padding:16px;border:1px solid #e5e7eb;">
       <table style="width:100%;border-collapse:collapse;">
-        <tr><td style="padding:8px 0;color:#6b7280;font-size:13px;width:100px;">Nome</td><td style="padding:8px 0;font-weight:600;font-size:14px;color:#1a1a2e;">${escHtml(name)}</td></tr>
-        <tr><td style="padding:8px 0;color:#6b7280;font-size:13px;">Email</td><td style="padding:8px 0;font-size:14px;"><a href="mailto:${escHtml(email)}" style="color:${botConfig.primary_color || "#E94560"};text-decoration:none;">${escHtml(email)}</a></td></tr>
-        <tr><td style="padding:8px 0;color:#6b7280;font-size:13px;">Telefono</td><td style="padding:8px 0;font-size:14px;color:#1a1a2e;">${escHtml(phone) || "—"}</td></tr>
-        <tr><td style="padding:8px 0;color:#6b7280;font-size:13px;">Messaggio</td><td style="padding:8px 0;font-size:14px;color:#1a1a2e;">${escHtml(message) || "—"}</td></tr>
-        <tr><td style="padding:8px 0;color:#6b7280;font-size:13px;">Pagina</td><td style="padding:8px 0;font-size:13px;color:#6b7280;">${escHtml(source_url || "—")}</td></tr>
+        <tr><td style="padding:8px 0;color:#6b7280;font-size:13px;width:100px;">${i18n.nameLabel}</td><td style="padding:8px 0;font-weight:600;font-size:14px;color:#1a1a2e;">${escHtml(name)}</td></tr>
+        <tr><td style="padding:8px 0;color:#6b7280;font-size:13px;">${i18n.emailLabel}</td><td style="padding:8px 0;font-size:14px;"><a href="mailto:${escHtml(email)}" style="color:${botConfig.primary_color || "#E94560"};text-decoration:none;">${escHtml(email)}</a></td></tr>
+        <tr><td style="padding:8px 0;color:#6b7280;font-size:13px;">${i18n.phoneLabel}</td><td style="padding:8px 0;font-size:14px;color:#1a1a2e;">${escHtml(phone) || "—"}</td></tr>
+        <tr><td style="padding:8px 0;color:#6b7280;font-size:13px;">${i18n.messageLabel}</td><td style="padding:8px 0;font-size:14px;color:#1a1a2e;">${escHtml(message) || "—"}</td></tr>
+        <tr><td style="padding:8px 0;color:#6b7280;font-size:13px;">${i18n.pageLabel}</td><td style="padding:8px 0;font-size:13px;color:#6b7280;">${escHtml(source_url || "—")}</td></tr>
       </table>
     </div>
-
     ${transcript?.length > 0 ? `
-    <!-- Transcript -->
-    <h2 style="margin:28px 0 12px;font-size:16px;color:#1a1a2e;">💬 Trascrizione Chat</h2>
+    <h2 style="margin:28px 0 12px;font-size:16px;color:#1a1a2e;">${i18n.transcriptTitle}</h2>
     <div style="background:#f9fafb;border-radius:12px;padding:16px;border:1px solid #e5e7eb;max-height:400px;overflow-y:auto;">
       ${transcriptHtml}
     </div>` : ""}
-
-    <!-- CTA -->
     <div style="text-align:center;margin-top:28px;">
       <a href="${dashboardUrl}" style="display:inline-block;background:${botConfig.primary_color || "#E94560"};color:#ffffff;text-decoration:none;padding:12px 32px;border-radius:10px;font-weight:600;font-size:14px;">
-        Vedi nel Dashboard →
+        ${i18n.ctaLabel}
       </a>
     </div>
   </div>
-
-  <!-- Footer -->
   <div style="background:#f9fafb;padding:16px 28px;text-align:center;border-top:1px solid #e5e7eb;">
-    <p style="margin:0;font-size:12px;color:#9ca3af;">Genius Chatbot Builder</p>
+    <p style="margin:0;font-size:12px;color:#9ca3af;">${i18n.footer}</p>
   </div>
-
 </div>
 </body></html>`;
 
@@ -141,7 +160,7 @@ serve(async (req) => {
             body: JSON.stringify({
               from: "Genius Chatbot <onboarding@resend.dev>",
               to: [botConfig.notification_email],
-              subject: `🔔 Nuovo Lead: ${name} - ${botConfig.name}`,
+              subject: i18n.subject,
               html: emailHtml,
             }),
           });

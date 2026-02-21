@@ -20,6 +20,8 @@ interface Config {
   welcome_message: string;
   knowledge_base: string;
   fallback_message: string;
+  fallback_msg_it: string;
+  fallback_msg_en: string;
   calendly_url: string;
   notification_email: string;
   email_notifications_enabled: boolean;
@@ -41,6 +43,8 @@ const defaultConfig: Config = {
   welcome_message: "Ciao! Come posso aiutarti oggi?",
   knowledge_base: "",
   fallback_message: "Non ho questa informazione, ma posso metterti in contatto con un nostro consulente!",
+  fallback_msg_it: "Non ho questa informazione, ma posso metterti in contatto con un nostro consulente!",
+  fallback_msg_en: "I don't have this information, but I can connect you with one of our consultants!",
   calendly_url: "",
   notification_email: "",
   email_notifications_enabled: true,
@@ -78,6 +82,8 @@ const ChatbotConfigForm: React.FC<ChatbotConfigFormProps> = ({ clientId, onSaved
           welcome_message: data.welcome_message || "",
           knowledge_base: data.knowledge_base || "",
           fallback_message: data.fallback_message || "",
+          fallback_msg_it: (data as any).fallback_msg_it || defaultConfig.fallback_msg_it,
+          fallback_msg_en: (data as any).fallback_msg_en || defaultConfig.fallback_msg_en,
           calendly_url: data.calendly_url || "",
           notification_email: data.notification_email || "",
           email_notifications_enabled: data.email_notifications_enabled ?? true,
@@ -118,11 +124,13 @@ const ChatbotConfigForm: React.FC<ChatbotConfigFormProps> = ({ clientId, onSaved
             welcome_message: config.welcome_message,
             knowledge_base: config.knowledge_base,
             fallback_message: config.fallback_message,
+            fallback_msg_it: config.fallback_msg_it,
+            fallback_msg_en: config.fallback_msg_en,
             calendly_url: config.calendly_url,
             notification_email: config.notification_email,
             email_notifications_enabled: config.email_notifications_enabled,
             launcher_position: config.launcher_position,
-          })
+          } as any)
           .eq("id", config.id);
 
         if (error) throw error;
@@ -369,17 +377,28 @@ const ChatbotConfigForm: React.FC<ChatbotConfigFormProps> = ({ clientId, onSaved
         <div className="glass rounded-xl p-6 space-y-5 animate-fade-in-up">
           <h3 className="font-semibold text-foreground">Fallback Behavior & Lead Capture</h3>
 
-          <div className="space-y-2">
-            <Label>Fallback Message</Label>
+          <div className="space-y-3">
+            <Label>Fallback Message 🇮🇹 Italiano</Label>
             <Textarea
-              value={config.fallback_message}
-              onChange={(e) => set("fallback_message", e.target.value)}
+              value={config.fallback_msg_it}
+              onChange={(e) => set("fallback_msg_it", e.target.value)}
               placeholder="Non ho questa informazione, ma posso metterti in contatto con un nostro consulente!"
               rows={3}
               className="bg-secondary border-border resize-none"
             />
+          </div>
+
+          <div className="space-y-3">
+            <Label>Fallback Message 🇬🇧 English</Label>
+            <Textarea
+              value={config.fallback_msg_en}
+              onChange={(e) => set("fallback_msg_en", e.target.value)}
+              placeholder="I don't have this information, but I can connect you with one of our consultants!"
+              rows={3}
+              className="bg-secondary border-border resize-none"
+            />
             <p className="text-xs text-muted-foreground">
-              Shown when the AI doesn't know the answer. A lead capture form will appear automatically.
+              The correct message is shown based on the visitor's browser language. A lead capture form will appear automatically.
             </p>
           </div>
 
