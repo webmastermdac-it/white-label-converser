@@ -21,7 +21,7 @@
     return scripts[scripts.length - 1];
   })();
   var EMBED_TOKEN = scriptTag.getAttribute("data-token");
-  if (!EMBED_TOKEN) { console.error("[MDAC Widget] Missing data-token"); return; }
+  if (!EMBED_TOKEN) { console.error("[Genius Widget] Missing data-token"); return; }
 
   // ── Supabase URL (same origin as widget or infer from script src) ──
   var SUPABASE_URL = (function () {
@@ -36,8 +36,8 @@
   })();
 
   // ── Session ─────────────────────────────────────────────
-  var SESSION_KEY = "mdac_widget_session_" + EMBED_TOKEN;
-  var MSG_KEY = "mdac_widget_msgs_" + EMBED_TOKEN;
+  var SESSION_KEY = "genius_widget_session_" + EMBED_TOKEN;
+  var MSG_KEY = "genius_widget_msgs_" + EMBED_TOKEN;
 
   function getSessionToken() {
     var t = sessionStorage.getItem(SESSION_KEY);
@@ -65,7 +65,7 @@
 
   // ── Create Shadow DOM ───────────────────────────────────
   var host = document.createElement("div");
-  host.id = "mdac-chat-widget";
+  host.id = "genius-chat-widget";
   host.style.cssText = "all:initial;position:fixed;z-index:2147483647;";
   document.body.appendChild(host);
 
@@ -147,7 +147,7 @@
     // Header
     html += '<div class="mdac-header">';
     html += '<div class="mdac-header-avatar">' + esc(avatar) + '</div>';
-    html += '<div class="mdac-header-info"><div class="mdac-header-name">' + esc(config.name || "Assistente") + '</div><div class="mdac-header-powered">Powered by MDAC</div></div>';
+    html += '<div class="mdac-header-info"><div class="mdac-header-name">' + esc(config.name || "Assistente") + '</div><div class="mdac-header-powered">Powered by Genius</div></div>';
     html += '<button class="mdac-close" id="mdac-close">&times;</button>';
     html += '</div>';
 
@@ -337,7 +337,7 @@
   })
     .then(function (r) { return r.json(); })
     .then(function (data) {
-      if (!data || !data.length) { console.error("[MDAC Widget] Invalid embed token"); return; }
+      if (!data || !data.length) { console.error("[Genius Widget] Invalid embed token"); return; }
       config = data[0];
 
       // Restore messages from sessionStorage or start with welcome
@@ -352,6 +352,6 @@
       render();
     })
     .catch(function (err) {
-      console.error("[MDAC Widget] Failed to load config:", err);
+      console.error("[Genius Widget] Failed to load config:", err);
     });
 })();

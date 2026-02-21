@@ -128,7 +128,7 @@ serve(async (req) => {
 
   <!-- Footer -->
   <div style="background:#f9fafb;padding:16px 28px;text-align:center;border-top:1px solid #e5e7eb;">
-    <p style="margin:0;font-size:12px;color:#9ca3af;">MDAC ChatBot Builder</p>
+    <p style="margin:0;font-size:12px;color:#9ca3af;">Genius Chatbot Builder</p>
   </div>
 
 </div>
@@ -139,7 +139,7 @@ serve(async (req) => {
             method: "POST",
             headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
             body: JSON.stringify({
-              from: "MDAC ChatBot <onboarding@resend.dev>",
+              from: "Genius Chatbot <onboarding@resend.dev>",
               to: [botConfig.notification_email],
               subject: `🔔 Nuovo Lead: ${name} - ${botConfig.name}`,
               html: emailHtml,

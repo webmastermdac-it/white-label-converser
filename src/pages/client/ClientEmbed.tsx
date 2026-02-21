@@ -33,7 +33,7 @@ const ClientEmbed = () => {
   const widgetUrl = `https://${projectId}.supabase.co/storage/v1/object/public/widget/widget.js`;
   const fallbackUrl = `${window.location.origin}/widget.js`;
 
-  const snippet = `<!-- ${botName || "MDAC ChatBot"} -->
+  const snippet = `<!-- ${botName || "Genius Chatbot"} -->
 <script 
   src="${fallbackUrl}" 
   data-token="${embedToken}"
