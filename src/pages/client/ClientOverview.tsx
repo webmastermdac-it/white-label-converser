@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/hooks/useLanguage";
 import { Inbox, MessageSquare, Bot, TrendingUp, ArrowUpRight, Activity, Settings, Code2, Copy, Sparkles } from "lucide-react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -17,6 +18,7 @@ interface RecentLead {
 
 const ClientOverview = () => {
   const { clientId } = useAuth();
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [searchParams] = useSearchParams();
@@ -26,7 +28,6 @@ const ClientOverview = () => {
   const [loading, setLoading] = useState(true);
   const [clientPlan, setClientPlan] = useState("free");
 
-  // Payment success toast
   useEffect(() => {
     if (searchParams.get("payment") === "success") {
       toast({ title: "🎉 Pagamento completato!", description: "Benvenuto in Genius Chatbot." });
@@ -68,32 +69,31 @@ const ClientOverview = () => {
   const copyEmbed = () => {
     const snippet = `<script src="${window.location.origin}/widget.js" data-token="${embedToken}" async></script>`;
     navigator.clipboard.writeText(snippet);
-    toast({ title: "Copiato!", description: "Codice embed copiato negli appunti." });
+    toast({ title: t("copied"), description: t("embedCopied") });
   };
 
   return (
     <div className="p-6 space-y-6 animate-fade-in-up">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground" style={{ fontFamily: 'Syne, sans-serif' }}>Dashboard</h1>
-          <p className="text-muted-foreground text-sm mt-1">Le performance del tuo chatbot a colpo d'occhio</p>
+          <h1 className="text-2xl font-bold text-foreground" style={{ fontFamily: 'Syne, sans-serif' }}>{t("dashboard")}</h1>
+          <p className="text-muted-foreground text-sm mt-1">{t("performanceAtGlance")}</p>
         </div>
         <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium ${
           stats.isActive ? "bg-green-500/10 text-green-400" : "bg-muted text-muted-foreground"
         }`}>
           <Activity className="w-3 h-3" />
-          {stats.isActive ? "Bot Attivo" : "Bot Inattivo"}
+          {stats.isActive ? t("botActive") : t("botInactive")}
         </div>
       </div>
 
-      {/* Upgrade Banner */}
       {clientPlan === "free" && (
         <div className="flex items-center justify-between p-4 rounded-xl bg-amber-500/10 border border-amber-500/20">
           <div className="flex items-center gap-3">
             <Sparkles className="w-5 h-5 text-amber-400" />
             <div>
-              <p className="text-sm font-medium text-foreground">Upgrade to Pro to unlock all features</p>
-              <p className="text-xs text-muted-foreground">Chatbot illimitati, conversazioni illimitate e molto altro</p>
+              <p className="text-sm font-medium text-foreground">{t("upgradeToProTitle")}</p>
+              <p className="text-xs text-muted-foreground">{t("upgradeToProDesc")}</p>
             </div>
           </div>
           <a href="/#pricing">
@@ -102,12 +102,11 @@ const ClientOverview = () => {
         </div>
       )}
 
-      {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
         {[
-          { label: "Lead Totali", value: stats.leads, icon: Inbox, to: "/dashboard/leads" },
-          { label: "Lead Questa Settimana", value: stats.leadsThisWeek, icon: TrendingUp },
-          { label: "Sessioni Chat", value: stats.chats, icon: MessageSquare, to: "/dashboard/chats" },
+          { label: t("totalLeads"), value: stats.leads, icon: Inbox, to: "/dashboard/leads" },
+          { label: t("leadsThisWeek"), value: stats.leadsThisWeek, icon: TrendingUp },
+          { label: t("chatSessions"), value: stats.chats, icon: MessageSquare, to: "/dashboard/chats" },
         ].map((stat) => (
           <div key={stat.label} className="glass rounded-xl p-5 group hover:border-primary/30 transition-all">
             <div className="flex items-center justify-between mb-3">
@@ -126,27 +125,25 @@ const ClientOverview = () => {
         ))}
       </div>
 
-      {/* Quick Actions */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <Button variant="outline" className="h-auto py-4 flex flex-col items-center gap-2 border-border hover:border-primary/40" onClick={() => navigate("/dashboard/leads")}>
           <Inbox className="w-5 h-5 text-primary" />
-          <span className="text-sm font-medium">Vai ai Lead</span>
+          <span className="text-sm font-medium">{t("goToLeads")}</span>
         </Button>
         <Button variant="outline" className="h-auto py-4 flex flex-col items-center gap-2 border-border hover:border-primary/40" onClick={() => navigate("/dashboard/bot")}>
           <Settings className="w-5 h-5 text-primary" />
-          <span className="text-sm font-medium">Configura Bot</span>
+          <span className="text-sm font-medium">{t("configureBot")}</span>
         </Button>
         <Button variant="outline" className="h-auto py-4 flex flex-col items-center gap-2 border-border hover:border-primary/40" onClick={copyEmbed} disabled={!embedToken}>
           <Copy className="w-5 h-5 text-primary" />
-          <span className="text-sm font-medium">Copia Embed Code</span>
+          <span className="text-sm font-medium">{t("copyEmbedCode")}</span>
         </Button>
       </div>
 
-      {/* Recent Leads */}
       <div className="glass rounded-xl p-5">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="font-semibold text-foreground">Ultimi Lead</h2>
-          <Link to="/dashboard/leads" className="text-xs text-primary hover:underline">Vedi tutti →</Link>
+          <h2 className="font-semibold text-foreground">{t("recentLeads")}</h2>
+          <Link to="/dashboard/leads" className="text-xs text-primary hover:underline">{t("viewAll")}</Link>
         </div>
         {loading ? (
           <div className="space-y-2">
@@ -155,8 +152,8 @@ const ClientOverview = () => {
         ) : recentLeads.length === 0 ? (
           <div className="py-10 text-center">
             <Bot className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
-            <p className="text-muted-foreground text-sm">Nessun lead ancora. Deploya il chatbot per iniziare!</p>
-            <Link to="/dashboard/embed" className="text-primary text-sm hover:underline mt-1 inline-block">Ottieni codice embed →</Link>
+            <p className="text-muted-foreground text-sm">{t("noLeadsDeploy")}</p>
+            <Link to="/dashboard/embed" className="text-primary text-sm hover:underline mt-1 inline-block">{t("getEmbedCode")}</Link>
           </div>
         ) : (
           <div className="space-y-2">
