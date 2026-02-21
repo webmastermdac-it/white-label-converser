@@ -92,6 +92,16 @@ const AdminClients = () => {
     }
   };
 
+  const updatePlan = async (clientId: string, newPlan: string) => {
+    const { error } = await supabase.from("clients").update({ plan: newPlan }).eq("id", clientId);
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Piano aggiornato", description: `Piano cambiato in ${newPlan}` });
+      fetchClients();
+    }
+  };
+
   return (
     <div className="p-6 space-y-6 animate-fade-in-up">
       <div className="flex items-center justify-between">
@@ -203,13 +213,16 @@ const AdminClients = () => {
                     </div>
                   </td>
                   <td className="px-5 py-4">
-                    <span className={`text-xs px-2.5 py-1 rounded-full font-medium capitalize ${
-                      client.plan === "pro" ? "bg-amber-500/10 text-amber-400" :
-                      client.plan === "starter" ? "bg-blue-500/10 text-blue-400" :
-                      "bg-muted text-muted-foreground"
-                    }`}>
-                      {client.plan}
-                    </span>
+                    <Select value={client.plan} onValueChange={(v) => updatePlan(client.id, v)}>
+                      <SelectTrigger className="w-28 h-8 bg-secondary border-border text-xs capitalize">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="bg-card border-border">
+                        {plans.map((p) => (
+                          <SelectItem key={p} value={p} className="capitalize text-xs">{p}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </td>
                   <td className="px-5 py-4 text-sm text-muted-foreground">
                     {new Date(client.created_at).toLocaleDateString()}
