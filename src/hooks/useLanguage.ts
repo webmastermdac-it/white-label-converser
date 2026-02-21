@@ -1,5 +1,6 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useContext, createContext, type ReactNode } from "react";
 import { translations, type TranslationKey } from "@/i18n/translations";
+import React from "react";
 
 type Lang = "it" | "en";
 
@@ -9,7 +10,15 @@ function detectLang(): Lang {
   return navigator.language?.startsWith("it") ? "it" : "en";
 }
 
-export function useLanguage() {
+interface LanguageContextType {
+  lang: Lang;
+  setLang: (l: Lang) => void;
+  t: (enOrKey: string, it?: string) => string;
+}
+
+const LanguageContext = createContext<LanguageContextType | null>(null);
+
+export function LanguageProvider({ children }: { children: ReactNode }) {
   const [lang, setLangState] = useState<Lang>(detectLang);
 
   const setLang = useCallback((l: Lang) => {
@@ -17,17 +26,34 @@ export function useLanguage() {
     setLangState(l);
   }, []);
 
-  // Overloaded: t(key) for translation keys, t(en, it) for inline pairs
   const t = useCallback((enOrKey: string, it?: string) => {
     if (it !== undefined) {
-      // Legacy inline pair mode: t("English text", "Italian text")
       return lang === "it" ? it : enOrKey;
     }
-    // Key-based mode: t("overview")
     const entry = translations[enOrKey as TranslationKey];
     if (entry) return entry[lang];
     return enOrKey;
   }, [lang]);
 
-  return { lang, setLang, t };
+  return React.createElement(LanguageContext.Provider, { value: { lang, setLang, t } }, children);
+}
+
+export function useLanguage() {
+  const ctx = useContext(LanguageContext);
+  if (!ctx) {
+    // Fallback for components outside provider (shouldn't happen in practice)
+    const [lang, setLangState] = useState<Lang>(detectLang);
+    const setLang = useCallback((l: Lang) => {
+      localStorage.setItem("genius-lang", l);
+      setLangState(l);
+    }, []);
+    const t = useCallback((enOrKey: string, it?: string) => {
+      if (it !== undefined) return lang === "it" ? it : enOrKey;
+      const entry = translations[enOrKey as TranslationKey];
+      if (entry) return entry[lang];
+      return enOrKey;
+    }, [lang]);
+    return { lang, setLang, t };
+  }
+  return ctx;
 }
