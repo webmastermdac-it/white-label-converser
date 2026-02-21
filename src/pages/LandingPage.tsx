@@ -6,6 +6,12 @@ import { Play, Star, Menu, X, Check, Loader2 } from "lucide-react";
 import geniusLogo from "@/assets/genius.png";
 import genieMascot from "@/assets/genie-dark.png";
 import { supabase } from "@/integrations/supabase/client";
+import logoSpedali from "@/assets/logos/spedali-civili.png";
+import logoUnimi from "@/assets/logos/unimi.png";
+import logoDtm from "@/assets/logos/dtm.png";
+import logoSaniplast from "@/assets/logos/saniplast.png";
+import logoZerotrenta from "@/assets/logos/zerotrenta.png";
+import logoCurtense from "@/assets/logos/curtense.png";
 
 /* ─── Scroll fade-in observer ─── */
 function useFadeIn() {
@@ -199,9 +205,16 @@ export default function LandingPage() {
           <p className="text-white/40 text-sm mb-8 tracking-wider uppercase">
             {t("Trusted by forward-thinking businesses since 2004", "La fiducia delle imprese dal 2004")}
           </p>
-          <div className="flex justify-center gap-8 flex-wrap">
-            {[1, 2, 3, 4, 5].map((i) => (
-              <div key={i} className="w-28 h-10 rounded bg-white/5 border border-white/10" />
+          <div className="flex justify-center items-center gap-10 flex-wrap opacity-60">
+            {[
+              { src: logoSpedali, alt: "Spedali Civili di Brescia" },
+              { src: logoUnimi, alt: "Università degli Studi di Milano" },
+              { src: logoDtm, alt: "DTM" },
+              { src: logoSaniplast, alt: "Saniplast" },
+              { src: logoZerotrenta, alt: "Zerotrenta" },
+              { src: logoCurtense, alt: "Curtense" },
+            ].map((logo) => (
+              <img key={logo.alt} src={logo.src} alt={logo.alt} className="h-8 sm:h-10 w-auto grayscale hover:grayscale-0 transition-all duration-300 hover:opacity-100" />
             ))}
           </div>
         </div>
