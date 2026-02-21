@@ -203,7 +203,11 @@ const AdminClients = () => {
                     </div>
                   </td>
                   <td className="px-5 py-4">
-                    <span className="text-xs px-2.5 py-1 rounded-full bg-primary/10 text-primary font-medium capitalize">
+                    <span className={`text-xs px-2.5 py-1 rounded-full font-medium capitalize ${
+                      client.plan === "pro" ? "bg-amber-500/10 text-amber-400" :
+                      client.plan === "starter" ? "bg-blue-500/10 text-blue-400" :
+                      "bg-muted text-muted-foreground"
+                    }`}>
                       {client.plan}
                     </span>
                   </td>

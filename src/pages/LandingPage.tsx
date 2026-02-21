@@ -2,9 +2,10 @@ import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { useLanguage } from "@/hooks/useLanguage";
 import { Button } from "@/components/ui/button";
-import { Play, Star, Menu, X, Check } from "lucide-react";
+import { Play, Star, Menu, X, Check, Loader2 } from "lucide-react";
 import geniusLogo from "@/assets/genius.png";
 import genieMascot from "@/assets/genie-dark.png";
+import { supabase } from "@/integrations/supabase/client";
 
 /* ─── Scroll fade-in observer ─── */
 function useFadeIn() {
@@ -38,6 +39,29 @@ export default function LandingPage() {
   const [videoOpen, setVideoOpen] = useState(false);
   const [yearly, setYearly] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
+
+  const handleCheckout = async (plan: "starter" | "pro") => {
+    const interval = yearly ? "year" : "month";
+    setCheckoutLoading(`${plan}-${interval}`);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const email = session?.user?.email;
+      if (!email) {
+        window.location.href = "/login";
+        return;
+      }
+      const { data, error } = await supabase.functions.invoke("create-checkout-session", {
+        body: { plan, interval, email },
+      });
+      if (error) throw error;
+      if (data?.url) window.location.href = data.url;
+    } catch (err: any) {
+      console.error("Checkout error:", err);
+    } finally {
+      setCheckoutLoading(null);
+    }
+  };
 
   useEffect(() => {
     const h = () => setScrolled(window.scrollY > 20);
@@ -276,11 +300,14 @@ export default function LandingPage() {
                   <li key={i} className="flex items-start gap-2"><Check className="w-4 h-4 text-[#E94560] shrink-0 mt-0.5" />{item}</li>
                 ))}
               </ul>
-              <Link to="/login" className="block">
-                <Button variant="outline" className="w-full border-white/20 text-white hover:bg-white/10 rounded-full h-11">
-                  {t("Get Started", "Inizia Ora")}
-                </Button>
-              </Link>
+              <Button
+                variant="outline"
+                className="w-full border-white/20 text-white hover:bg-white/10 rounded-full h-11"
+                onClick={() => handleCheckout("starter")}
+                disabled={!!checkoutLoading}
+              >
+                {checkoutLoading?.startsWith("starter") ? <Loader2 className="w-4 h-4 animate-spin" /> : t("Get Started", "Inizia Ora")}
+              </Button>
             </div>
 
             {/* Pro */}
@@ -305,11 +332,13 @@ export default function LandingPage() {
                   <li key={i} className="flex items-start gap-2"><Check className="w-4 h-4 text-[#E94560] shrink-0 mt-0.5" />{item}</li>
                 ))}
               </ul>
-              <Link to="/login" className="block">
-                <Button className="w-full bg-[#E94560] hover:bg-[#d63b54] text-white rounded-full h-11">
-                  {t("Start Free Trial", "Inizia Gratis")}
-                </Button>
-              </Link>
+              <Button
+                className="w-full bg-[#E94560] hover:bg-[#d63b54] text-white rounded-full h-11"
+                onClick={() => handleCheckout("pro")}
+                disabled={!!checkoutLoading}
+              >
+                {checkoutLoading?.startsWith("pro") ? <Loader2 className="w-4 h-4 animate-spin" /> : t("Start Free Trial", "Inizia Gratis")}
+              </Button>
             </div>
           </div>
         </div>

@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { Inbox, MessageSquare, Bot, TrendingUp, ArrowUpRight, Activity, Settings, Code2, Copy } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { Inbox, MessageSquare, Bot, TrendingUp, ArrowUpRight, Activity, Settings, Code2, Copy, Sparkles } from "lucide-react";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
@@ -19,10 +19,20 @@ const ClientOverview = () => {
   const { clientId } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [searchParams] = useSearchParams();
   const [stats, setStats] = useState({ leads: 0, leadsThisWeek: 0, chats: 0, isActive: false });
   const [recentLeads, setRecentLeads] = useState<RecentLead[]>([]);
   const [embedToken, setEmbedToken] = useState("");
   const [loading, setLoading] = useState(true);
+  const [clientPlan, setClientPlan] = useState("free");
+
+  // Payment success toast
+  useEffect(() => {
+    if (searchParams.get("payment") === "success") {
+      toast({ title: "🎉 Pagamento completato!", description: "Benvenuto in Genius Chatbot." });
+      window.history.replaceState({}, "", "/dashboard");
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     if (!clientId) return;
@@ -30,13 +40,14 @@ const ClientOverview = () => {
     const fetchData = async () => {
       const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
 
-      const [leadsCount, weekLeads, chatsCount, botStatus, recent, botConfig] = await Promise.all([
+      const [leadsCount, weekLeads, chatsCount, botStatus, recent, botConfig, clientData] = await Promise.all([
         supabase.from("leads").select("id", { count: "exact", head: true }).eq("client_id", clientId),
         supabase.from("leads").select("id", { count: "exact", head: true }).eq("client_id", clientId).gte("created_at", weekAgo),
         supabase.from("chat_sessions").select("id", { count: "exact", head: true }).eq("client_id", clientId),
         supabase.from("chatbot_configs").select("is_active").eq("client_id", clientId).single(),
         supabase.from("leads").select("id, name, email, status, created_at").eq("client_id", clientId).order("created_at", { ascending: false }).limit(5),
         supabase.from("chatbot_configs").select("embed_token").eq("client_id", clientId).single(),
+        supabase.from("clients").select("plan").eq("id", clientId).single(),
       ]);
 
       setStats({
@@ -47,6 +58,7 @@ const ClientOverview = () => {
       });
       setRecentLeads((recent.data as any) || []);
       setEmbedToken(botConfig.data?.embed_token || "");
+      setClientPlan(clientData.data?.plan || "free");
       setLoading(false);
     };
 
@@ -73,6 +85,22 @@ const ClientOverview = () => {
           {stats.isActive ? "Bot Attivo" : "Bot Inattivo"}
         </div>
       </div>
+
+      {/* Upgrade Banner */}
+      {clientPlan === "free" && (
+        <div className="flex items-center justify-between p-4 rounded-xl bg-amber-500/10 border border-amber-500/20">
+          <div className="flex items-center gap-3">
+            <Sparkles className="w-5 h-5 text-amber-400" />
+            <div>
+              <p className="text-sm font-medium text-foreground">Upgrade to Pro to unlock all features</p>
+              <p className="text-xs text-muted-foreground">Chatbot illimitati, conversazioni illimitate e molto altro</p>
+            </div>
+          </div>
+          <a href="/#pricing">
+            <Button size="sm" className="bg-amber-500 hover:bg-amber-600 text-white">Upgrade</Button>
+          </a>
+        </div>
+      )}
 
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
