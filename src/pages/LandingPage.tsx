@@ -4,7 +4,7 @@ import { useLanguage } from "@/hooks/useLanguage";
 import { Button } from "@/components/ui/button";
 import { Play, Star, Menu, X, Check, Loader2 } from "lucide-react";
 import geniusLogo from "@/assets/genius.png";
-import genieMascot from "@/assets/genie-mascot-nobg.png";
+import genieMascot from "@/assets/genie-dark.png";
 import { supabase } from "@/integrations/supabase/client";
 
 /* ─── Scroll fade-in observer ─── */
@@ -177,16 +177,17 @@ export default function LandingPage() {
           </div>
 
           {/* Mascot */}
-          <div className="flex-1 flex justify-center md:justify-end max-w-md w-full relative">
-            <div
-              className="absolute inset-0 rounded-full"
-              style={{ background: "radial-gradient(circle, hsl(228 47% 6% / 0) 30%, hsl(228 47% 6%) 70%)", pointerEvents: "none" }}
-            />
+          <div className="flex-1 flex justify-center md:justify-end max-w-md w-full">
             <img
               src={genieMascot}
               alt="Genius Chatbot Genie"
-              className="w-72 sm:w-96 relative z-10"
-              style={{ animation: "floatMascot 4s ease-in-out infinite" }}
+              className="w-72 sm:w-96"
+              style={{
+                animation: "floatMascot 4s ease-in-out infinite",
+                filter: "drop-shadow(0 0 30px hsl(349 78% 62% / 0.25))",
+                mask: "radial-gradient(ellipse 80% 80% at center, black 50%, transparent 75%)",
+                WebkitMask: "radial-gradient(ellipse 80% 80% at center, black 50%, transparent 75%)",
+              }}
             />
           </div>
         </div>
