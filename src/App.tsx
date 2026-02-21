@@ -25,6 +25,8 @@ import AdminChats from "@/pages/admin/AdminChats";
 import ClientEmbed from "@/pages/client/ClientEmbed";
 import ClientChatPreview from "@/pages/client/ClientChatPreview";
 import NotFound from "@/pages/NotFound";
+import ResetPassword from "@/pages/ResetPassword";
+import UpdatePassword from "@/pages/UpdatePassword";
 
 const queryClient = new QueryClient();
 
@@ -38,6 +40,8 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             <Route path="/login" element={<Login />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/update-password" element={<UpdatePassword />} />
             <Route path="/" element={<LandingPage />} />
 
             {/* Admin Routes */}

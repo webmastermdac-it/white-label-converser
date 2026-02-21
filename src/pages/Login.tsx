@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Navigate } from "react-router-dom";
+import { Navigate, Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/hooks/useLanguage";
 import { Button } from "@/components/ui/button";
@@ -86,6 +86,12 @@ const Login = () => {
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
+            </div>
+
+            <div className="flex justify-end">
+              <Link to="/reset-password" className="text-sm text-primary hover:underline">
+                {t("forgotPassword")}
+              </Link>
             </div>
 
             <Button
