@@ -9,6 +9,7 @@ import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Save, Bot, Palette, MessageSquare, Zap, Mail, Star } from "lucide-react";
 import KnowledgeBaseWizard from "@/components/knowledge-base/KnowledgeBaseWizard";
+import { useLanguage } from "@/hooks/useLanguage";
 
 interface Config {
   id?: string;
@@ -57,6 +58,7 @@ const POSITIONS = ["bottom-right", "bottom-left"];
 const ChatbotConfigForm: React.FC<ChatbotConfigFormProps> = ({ clientId, onSaved }) => {
   const { toast } = useToast();
   const { role } = useAuth();
+  const { t } = useLanguage();
   const [config, setConfig] = useState<Config>(defaultConfig);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -145,7 +147,7 @@ const ChatbotConfigForm: React.FC<ChatbotConfigFormProps> = ({ clientId, onSaved
         setConfig((prev) => ({ ...prev, id: data.id, embed_token: data.embed_token }));
       }
 
-      toast({ title: "Saved!", description: "Chatbot configuration updated." });
+      toast({ title: t("saved"), description: t("configUpdated") });
       onSaved?.();
     } catch (err: any) {
       toast({ title: "Error", description: err.message, variant: "destructive" });
@@ -158,11 +160,11 @@ const ChatbotConfigForm: React.FC<ChatbotConfigFormProps> = ({ clientId, onSaved
   const isProOrAdmin = clientPlan === "pro" || role === "super_admin";
 
   const sections = [
-    { id: "identity", label: "Identity", icon: Bot },
-    { id: "appearance", label: "Appearance", icon: Palette },
-    { id: "messages", label: "Messages", icon: MessageSquare },
-    { id: "fallback", label: "Fallback & Leads", icon: Zap },
-    { id: "notifications", label: "Notifications", icon: Mail },
+    { id: "identity", label: t("identity"), icon: Bot },
+    { id: "appearance", label: t("appearance"), icon: Palette },
+    { id: "messages", label: t("chatMessages"), icon: MessageSquare },
+    { id: "fallback", label: t("fallbackAndLeads"), icon: Zap },
+    { id: "notifications", label: t("notifications"), icon: Mail },
   ];
 
   if (loading) {
@@ -196,10 +198,10 @@ const ChatbotConfigForm: React.FC<ChatbotConfigFormProps> = ({ clientId, onSaved
       {/* Identity */}
       {activeSection === "identity" && (
         <div className="glass rounded-xl p-6 space-y-5 animate-fade-in-up">
-          <h3 className="font-semibold text-foreground">Bot Identity</h3>
+          <h3 className="font-semibold text-foreground">{t("identity")}</h3>
 
           <div className="space-y-2">
-            <Label>Bot Name</Label>
+            <Label>{t("botName")}</Label>
             <Input
               value={config.name}
               onChange={(e) => set("name", e.target.value)}
@@ -209,7 +211,7 @@ const ChatbotConfigForm: React.FC<ChatbotConfigFormProps> = ({ clientId, onSaved
           </div>
 
           <div className="space-y-2">
-            <Label>Avatar (Emoji)</Label>
+            <Label>{t("avatarEmoji")}</Label>
             <div className="flex flex-wrap gap-2">
               {EMOJIS.map((emoji) => (
                 <button
@@ -228,7 +230,7 @@ const ChatbotConfigForm: React.FC<ChatbotConfigFormProps> = ({ clientId, onSaved
           </div>
 
           <div className="space-y-2">
-            <Label>Launcher Position</Label>
+            <Label>{t("launcherPosition")}</Label>
             <div className="flex gap-2">
               {POSITIONS.map((pos) => (
                 <button
@@ -251,12 +253,12 @@ const ChatbotConfigForm: React.FC<ChatbotConfigFormProps> = ({ clientId, onSaved
       {/* Appearance */}
       {activeSection === "appearance" && (
         <div className="glass rounded-xl p-6 space-y-5 animate-fade-in-up">
-          <h3 className="font-semibold text-foreground">Brand Colors</h3>
+          <h3 className="font-semibold text-foreground">{t("brandColors")}</h3>
 
           {[
-            { label: "Primary Color", key: "primary_color" as keyof Config },
-            { label: "Background Color", key: "background_color" as keyof Config },
-            { label: "Text Color", key: "text_color" as keyof Config },
+            { label: t("primaryColor"), key: "primary_color" as keyof Config },
+            { label: t("backgroundColor"), key: "background_color" as keyof Config },
+            { label: t("textColor"), key: "text_color" as keyof Config },
           ].map(({ label, key }) => (
             <div key={key} className="space-y-2">
               <Label>{label}</Label>
@@ -287,7 +289,7 @@ const ChatbotConfigForm: React.FC<ChatbotConfigFormProps> = ({ clientId, onSaved
               <span className="font-medium" style={{ color: config.text_color }}>{config.name}</span>
             </div>
             <div className="text-xs px-3 py-2 rounded-xl inline-block" style={{ backgroundColor: config.primary_color, color: "#fff" }}>
-              Chat Preview
+              {t("chatPreview")}
             </div>
           </div>
         </div>
@@ -296,10 +298,10 @@ const ChatbotConfigForm: React.FC<ChatbotConfigFormProps> = ({ clientId, onSaved
       {/* Messages */}
       {activeSection === "messages" && (
         <div className="glass rounded-xl p-6 space-y-5 animate-fade-in-up">
-          <h3 className="font-semibold text-foreground">Chat Messages</h3>
+          <h3 className="font-semibold text-foreground">{t("chatMessages")}</h3>
 
           <div className="space-y-2">
-            <Label>Welcome Message</Label>
+            <Label>{t("welcomeMessage")}</Label>
             <Textarea
               value={config.welcome_message}
               onChange={(e) => set("welcome_message", e.target.value)}
@@ -311,8 +313,8 @@ const ChatbotConfigForm: React.FC<ChatbotConfigFormProps> = ({ clientId, onSaved
 
           <div className="space-y-2">
             <Label>
-              Knowledge Base / System Prompt
-              <span className="ml-2 text-xs text-muted-foreground">(used as AI system prompt)</span>
+              {t("knowledgeBase")}
+              <span className="ml-2 text-xs text-muted-foreground">({t("usedAsSystemPrompt")})</span>
             </Label>
 
             {isProOrAdmin && config.id ? (
@@ -340,17 +342,17 @@ const ChatbotConfigForm: React.FC<ChatbotConfigFormProps> = ({ clientId, onSaved
                   <div className="flex items-start gap-3 p-4 rounded-xl bg-primary/10 border border-primary/20 mb-3">
                     <Star className="w-5 h-5 text-primary shrink-0 mt-0.5" />
                     <div className="flex-1">
-                      <p className="text-sm font-medium text-foreground">
-                        ⭐ Upgrade a Pro per sbloccare il Wizard Knowledge Base
+                       <p className="text-sm font-medium text-foreground">
+                        {t("upgradeWizardTitle")}
                       </p>
                       <p className="text-xs text-muted-foreground mt-1">
-                        Template per settore, upload documenti, analisi sito web e revisione guidata.
+                        {t("upgradeWizardDesc")}
                       </p>
                       <a
                         href="/#pricing"
                         className="inline-block mt-2 text-xs font-medium text-primary hover:underline"
                       >
-                        Upgrade to Pro →
+                        {t("upgradeToProLink")}
                       </a>
                     </div>
                   </div>
@@ -359,12 +361,12 @@ const ChatbotConfigForm: React.FC<ChatbotConfigFormProps> = ({ clientId, onSaved
                 <Textarea
                   value={config.knowledge_base}
                   onChange={(e) => set("knowledge_base", e.target.value)}
-                  placeholder={`Write everything the bot should know:\n\nCompany: Acme Corp\nServices: Web design, SEO, Social Media\nTone: professional but friendly\nFAQs:\n- Q: What are your prices? A: Starting from €500/month\n...\n\nForbidden topics: competitors, internal pricing`}
+                  placeholder={t("kbPlaceholder")}
                   rows={14}
                   className="bg-secondary border-border resize-none font-mono text-sm"
                 />
                 <p className="text-xs text-muted-foreground">
-                  This text becomes the AI's system prompt. The more detailed, the better the bot performs.
+                  {t("kbHelp")}
                 </p>
               </>
             )}
@@ -375,10 +377,10 @@ const ChatbotConfigForm: React.FC<ChatbotConfigFormProps> = ({ clientId, onSaved
       {/* Fallback */}
       {activeSection === "fallback" && (
         <div className="glass rounded-xl p-6 space-y-5 animate-fade-in-up">
-          <h3 className="font-semibold text-foreground">Fallback Behavior & Lead Capture</h3>
+          <h3 className="font-semibold text-foreground">{t("fallbackBehavior")}</h3>
 
           <div className="space-y-3">
-            <Label>Fallback Message 🇮🇹 Italiano</Label>
+            <Label>{t("fallbackMsgIt")}</Label>
             <Textarea
               value={config.fallback_msg_it}
               onChange={(e) => set("fallback_msg_it", e.target.value)}
@@ -389,7 +391,7 @@ const ChatbotConfigForm: React.FC<ChatbotConfigFormProps> = ({ clientId, onSaved
           </div>
 
           <div className="space-y-3">
-            <Label>Fallback Message 🇬🇧 English</Label>
+            <Label>{t("fallbackMsgEn")}</Label>
             <Textarea
               value={config.fallback_msg_en}
               onChange={(e) => set("fallback_msg_en", e.target.value)}
@@ -398,12 +400,12 @@ const ChatbotConfigForm: React.FC<ChatbotConfigFormProps> = ({ clientId, onSaved
               className="bg-secondary border-border resize-none"
             />
             <p className="text-xs text-muted-foreground">
-              The correct message is shown based on the visitor's browser language. A lead capture form will appear automatically.
+              {t("fallbackDesc")}
             </p>
           </div>
 
           <div className="space-y-2">
-            <Label>Calendly URL (optional)</Label>
+            <Label>{t("calendlyUrl")}</Label>
             <Input
               value={config.calendly_url}
               onChange={(e) => set("calendly_url", e.target.value)}
@@ -411,7 +413,7 @@ const ChatbotConfigForm: React.FC<ChatbotConfigFormProps> = ({ clientId, onSaved
               className="bg-secondary border-border"
             />
             <p className="text-xs text-muted-foreground">
-              When set, a "Book a Consultation" button appears after fallback.
+              {t("calendlyDesc")}
             </p>
           </div>
         </div>
@@ -420,12 +422,12 @@ const ChatbotConfigForm: React.FC<ChatbotConfigFormProps> = ({ clientId, onSaved
       {/* Notifications */}
       {activeSection === "notifications" && (
         <div className="glass rounded-xl p-6 space-y-5 animate-fade-in-up">
-          <h3 className="font-semibold text-foreground">Email Notifications</h3>
+          <h3 className="font-semibold text-foreground">{t("emailNotifications")}</h3>
 
           <div className="flex items-center justify-between p-4 bg-secondary rounded-xl">
             <div>
-              <p className="text-sm font-medium text-foreground">Enable Email Notifications</p>
-              <p className="text-xs text-muted-foreground">Send email on every new lead</p>
+              <p className="text-sm font-medium text-foreground">{t("enableEmailNotifs")}</p>
+              <p className="text-xs text-muted-foreground">{t("sendEmailOnLead")}</p>
             </div>
             <Switch
               checked={config.email_notifications_enabled}
@@ -434,7 +436,7 @@ const ChatbotConfigForm: React.FC<ChatbotConfigFormProps> = ({ clientId, onSaved
           </div>
 
           <div className="space-y-2">
-            <Label>Notification Email</Label>
+            <Label>{t("notificationEmail")}</Label>
             <Input
               type="email"
               value={config.notification_email}
@@ -449,7 +451,7 @@ const ChatbotConfigForm: React.FC<ChatbotConfigFormProps> = ({ clientId, onSaved
       {/* Save */}
       <Button onClick={save} disabled={saving} className="gradient-primary text-white border-0 glow-sm">
         {saving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
-        Save Configuration
+        {t("saveConfig")}
       </Button>
     </div>
   );

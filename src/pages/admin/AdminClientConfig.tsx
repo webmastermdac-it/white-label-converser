@@ -6,9 +6,11 @@ import { Loader2, ArrowLeft, Eye, RefreshCw } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useLanguage } from "@/hooks/useLanguage";
 
 const AdminClientConfig = () => {
   const { clientId } = useParams<{ clientId: string }>();
+  const { t } = useLanguage();
   const [clientName, setClientName] = useState("");
   const [loading, setLoading] = useState(true);
   const [embedToken, setEmbedToken] = useState("");
@@ -48,18 +50,18 @@ const AdminClientConfig = () => {
     <div className="p-6 space-y-6 animate-fade-in-up">
       <div>
         <Link to="/admin/clients" className="flex items-center gap-2 text-muted-foreground hover:text-foreground text-sm mb-4">
-          <ArrowLeft className="w-4 h-4" /> Back to Clients
+          <ArrowLeft className="w-4 h-4" /> {t("clients", "Clienti")}
         </Link>
         <h1 className="text-2xl font-bold text-foreground" style={{ fontFamily: 'Syne, sans-serif' }}>
-          {clientName} — Chatbot Config
+          {clientName} — {t("botSettingsTitle")}
         </h1>
       </div>
 
       <Tabs defaultValue="config">
         <TabsList className="bg-secondary border border-border">
-          <TabsTrigger value="config">Configurazione</TabsTrigger>
+          <TabsTrigger value="config">{t("botSettings")}</TabsTrigger>
           <TabsTrigger value="preview" className="gap-2">
-            <Eye className="w-3.5 h-3.5" /> Anteprima Widget
+            <Eye className="w-3.5 h-3.5" /> {t("widgetPreview")}
           </TabsTrigger>
         </TabsList>
 
@@ -71,10 +73,10 @@ const AdminClientConfig = () => {
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <p className="text-muted-foreground text-sm">
-                Testa il chatbot esattamente come apparirà sul sito del cliente
+                {t("widgetPreviewDesc")}
               </p>
               <Button variant="outline" size="sm" onClick={() => setPreviewKey(k => k + 1)} className="gap-2 border-border">
-                <RefreshCw className="w-3.5 h-3.5" /> Ricarica
+                <RefreshCw className="w-3.5 h-3.5" /> {t("reload")}
               </Button>
             </div>
             {embedToken ? (
@@ -90,7 +92,7 @@ const AdminClientConfig = () => {
               </div>
             ) : (
               <div className="glass rounded-xl p-8 text-center">
-                <p className="text-muted-foreground">Nessun chatbot configurato per questo cliente.</p>
+                <p className="text-muted-foreground">{t("noChatbotConfigured")}</p>
               </div>
             )}
           </div>
