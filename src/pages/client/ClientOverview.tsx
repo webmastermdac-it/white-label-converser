@@ -2,10 +2,11 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/hooks/useLanguage";
-import { Inbox, MessageSquare, Bot, TrendingUp, ArrowUpRight, Activity, Settings, Code2, Copy, Sparkles } from "lucide-react";
+import { Inbox, MessageSquare, Bot, TrendingUp, ArrowUpRight, Activity, Settings, Code2, Copy, Sparkles, Star } from "lucide-react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import { Progress } from "@/components/ui/progress";
 import { format } from "date-fns";
 
 interface RecentLead {
@@ -27,10 +28,16 @@ const ClientOverview = () => {
   const [embedToken, setEmbedToken] = useState("");
   const [loading, setLoading] = useState(true);
   const [clientPlan, setClientPlan] = useState("free");
+  const [monthlyChats, setMonthlyChats] = useState(0);
+  const [monthlyLeads, setMonthlyLeads] = useState(0);
 
   useEffect(() => {
     if (searchParams.get("payment") === "success") {
-      toast({ title: "🎉 Pagamento completato!", description: "Benvenuto in Genius Chatbot." });
+      const plan = searchParams.get("plan") || "";
+      toast({
+        title: t("upgradeCompleteTitle"),
+        description: t("upgradeCompleteDesc").replace("[plan]", plan || "Premium"),
+      });
       window.history.replaceState({}, "", "/dashboard");
     }
   }, [searchParams]);
@@ -40,8 +47,11 @@ const ClientOverview = () => {
 
     const fetchData = async () => {
       const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+      const monthStart = new Date();
+      monthStart.setDate(1);
+      monthStart.setHours(0, 0, 0, 0);
 
-      const [leadsCount, weekLeads, chatsCount, botStatus, recent, botConfig, clientData] = await Promise.all([
+      const [leadsCount, weekLeads, chatsCount, botStatus, recent, botConfig, clientData, monthChats, monthLeadsCount] = await Promise.all([
         supabase.from("leads").select("id", { count: "exact", head: true }).eq("client_id", clientId),
         supabase.from("leads").select("id", { count: "exact", head: true }).eq("client_id", clientId).gte("created_at", weekAgo),
         supabase.from("chat_sessions").select("id", { count: "exact", head: true }).eq("client_id", clientId),
@@ -49,6 +59,8 @@ const ClientOverview = () => {
         supabase.from("leads").select("id, name, email, status, created_at").eq("client_id", clientId).order("created_at", { ascending: false }).limit(5),
         supabase.from("chatbot_configs").select("embed_token").eq("client_id", clientId).single(),
         supabase.from("clients").select("plan").eq("id", clientId).single(),
+        supabase.from("chat_sessions").select("id", { count: "exact", head: true }).eq("client_id", clientId).gte("started_at", monthStart.toISOString()),
+        supabase.from("leads").select("id", { count: "exact", head: true }).eq("client_id", clientId).gte("created_at", monthStart.toISOString()),
       ]);
 
       setStats({
@@ -60,6 +72,8 @@ const ClientOverview = () => {
       setRecentLeads((recent.data as any) || []);
       setEmbedToken(botConfig.data?.embed_token || "");
       setClientPlan(clientData.data?.plan || "free");
+      setMonthlyChats(monthChats.count || 0);
+      setMonthlyLeads(monthLeadsCount.count || 0);
       setLoading(false);
     };
 
@@ -71,6 +85,9 @@ const ClientOverview = () => {
     navigator.clipboard.writeText(snippet);
     toast({ title: t("copied"), description: t("embedCopied") });
   };
+
+  const chatLimit = clientPlan === "free" ? 50 : clientPlan === "starter" ? 500 : null;
+  const leadLimit = clientPlan === "free" ? 10 : null;
 
   return (
     <div className="p-4 md:p-6 space-y-4 md:space-y-6 animate-fade-in-up">
@@ -87,18 +104,89 @@ const ClientOverview = () => {
         </div>
       </div>
 
+      {/* Upgrade Banner for Free users */}
       {clientPlan === "free" && (
-        <div className="flex items-center justify-between p-4 rounded-xl bg-amber-500/10 border border-amber-500/20">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-4 rounded-xl bg-amber-500/10 border border-amber-500/20">
           <div className="flex items-center gap-3">
-            <Sparkles className="w-5 h-5 text-amber-400" />
+            <Star className="w-5 h-5 text-amber-400 shrink-0" />
             <div>
-              <p className="text-sm font-medium text-foreground">{t("upgradeToProTitle")}</p>
-              <p className="text-xs text-muted-foreground">{t("upgradeToProDesc")}</p>
+              <p className="text-sm font-medium text-foreground">
+                {t("upgradeBannerTitle")} — {monthlyChats}/50 {t("upgradeBannerConv")}
+              </p>
+              <p className="text-xs text-muted-foreground">{t("upgradeBannerDesc")}</p>
             </div>
           </div>
-          <a href="/#pricing">
-            <Button size="sm" className="bg-amber-500 hover:bg-amber-600 text-white">Upgrade</Button>
-          </a>
+          <div className="flex gap-2 shrink-0">
+            <Link to="/dashboard/upgrade">
+              <Button size="sm" className="bg-amber-500 hover:bg-amber-600 text-white">
+                {t("upgradeToStarter", "Starter →")}
+              </Button>
+            </Link>
+            <Link to="/dashboard/upgrade">
+              <Button size="sm" variant="outline" className="border-amber-500/40 text-amber-400 hover:bg-amber-500/10">
+                Pro →
+              </Button>
+            </Link>
+          </div>
+        </div>
+      )}
+
+      {/* Usage Stats */}
+      {(clientPlan === "free" || clientPlan === "starter") && (
+        <div className="glass rounded-xl p-5">
+          <h2 className="font-semibold text-foreground mb-4">{t("usageThisMonth")}</h2>
+          <div className="space-y-4">
+            <div>
+              <div className="flex justify-between text-sm mb-1">
+                <span className="text-muted-foreground">{t("usageConversations")}</span>
+                <span className={`font-medium ${chatLimit && monthlyChats / chatLimit > 0.8 ? "text-destructive" : "text-foreground"}`}>
+                  {monthlyChats} / {chatLimit || "∞"}
+                </span>
+              </div>
+              {chatLimit && (
+                <Progress
+                  value={Math.min((monthlyChats / chatLimit) * 100, 100)}
+                  className={`h-2 ${monthlyChats / chatLimit > 0.8 ? "[&>div]:bg-destructive" : ""}`}
+                />
+              )}
+              {!chatLimit && <p className="text-xs text-green-400">✅ {t("usageUnlimited")}</p>}
+            </div>
+            <div>
+              <div className="flex justify-between text-sm mb-1">
+                <span className="text-muted-foreground">Lead</span>
+                <span className={`font-medium ${leadLimit && monthlyLeads / leadLimit > 0.8 ? "text-destructive" : "text-foreground"}`}>
+                  {leadLimit ? `${monthlyLeads} / ${leadLimit}` : `${monthlyLeads}`}
+                </span>
+              </div>
+              {leadLimit && (
+                <Progress
+                  value={Math.min((monthlyLeads / leadLimit) * 100, 100)}
+                  className={`h-2 ${monthlyLeads / leadLimit > 0.8 ? "[&>div]:bg-destructive" : ""}`}
+                />
+              )}
+              {!leadLimit && <p className="text-xs text-green-400">✅ {t("usageUnlimited")}</p>}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {clientPlan === "pro" && (
+        <div className="glass rounded-xl p-5">
+          <h2 className="font-semibold text-foreground mb-3">{t("usageThisMonth")}</h2>
+          <div className="grid grid-cols-3 gap-4 text-sm">
+            <div>
+              <p className="text-muted-foreground">{t("usageConversations")}</p>
+              <p className="font-medium text-foreground">{monthlyChats} — ✅ {t("usageUnlimited")}</p>
+            </div>
+            <div>
+              <p className="text-muted-foreground">Lead</p>
+              <p className="font-medium text-foreground">{monthlyLeads} — ✅ {t("usageUnlimited")}</p>
+            </div>
+            <div>
+              <p className="text-muted-foreground">Chatbot</p>
+              <p className="font-medium text-foreground">✅ {t("usageUnlimited")}</p>
+            </div>
+          </div>
         </div>
       )}
 
@@ -130,7 +218,7 @@ const ClientOverview = () => {
           <Inbox className="w-5 h-5 text-primary" />
           <span className="text-sm font-medium">{t("goToLeads")}</span>
         </Button>
-        <Button variant="outline" className="h-auto py-4 flex flex-col items-center gap-2 border-border hover:border-primary/40" onClick={() => navigate("/dashboard/bot")}>
+        <Button variant="outline" className="h-auto py-4 flex flex-col items-center gap-2 border-border hover:border-primary/40" onClick={() => navigate("/dashboard/settings")}>
           <Settings className="w-5 h-5 text-primary" />
           <span className="text-sm font-medium">{t("configureBot")}</span>
         </Button>

@@ -3,7 +3,7 @@ import ClientSidebar from "@/components/ClientSidebar";
 import MobileNav from "@/components/MobileNav";
 import { useLanguage } from "@/hooks/useLanguage";
 import {
-  LayoutDashboard, Inbox, MessageSquare, Settings, PlayCircle, Code2
+  LayoutDashboard, Inbox, MessageSquare, Settings, PlayCircle, Code2, ArrowUpCircle
 } from "lucide-react";
 
 const ClientLayout = () => {
@@ -16,6 +16,7 @@ const ClientLayout = () => {
     { label: t("botSettings"), href: "/dashboard/settings", icon: Settings },
     { label: t("testChatbot"), href: "/dashboard/preview", icon: PlayCircle },
     { label: t("embedCode"), href: "/dashboard/embed", icon: Code2 },
+    { label: "Upgrade", href: "/dashboard/upgrade", icon: ArrowUpCircle },
   ];
 
   return (

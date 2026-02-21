@@ -17,6 +17,7 @@ interface Props {
   configId: string;
   currentKnowledgeBase: string;
   onSave: (kb: string) => void;
+  plan?: string;
 }
 
 const STEPS = [
@@ -62,7 +63,7 @@ const blankTemplate: IndustryTemplate = {
   },
 };
 
-const KnowledgeBaseWizard: React.FC<Props> = ({ clientId, configId, currentKnowledgeBase, onSave }) => {
+const KnowledgeBaseWizard: React.FC<Props> = ({ clientId, configId, currentKnowledgeBase, onSave, plan = "pro" }) => {
   const { toast } = useToast();
   const [step, setStep] = useState(1);
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
@@ -210,22 +211,31 @@ const KnowledgeBaseWizard: React.FC<Props> = ({ clientId, configId, currentKnowl
             <p className="text-sm text-muted-foreground mt-1">Scegli un template per il tuo settore o inizia da zero</p>
           </div>
 
+          {plan === "free" ? (
+            <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 text-sm text-muted-foreground">
+              <p className="font-medium text-foreground mb-1">⭐ Template per settore disponibili da Starter</p>
+              <p>Con il piano Free puoi usare solo il template vuoto.</p>
+            </div>
+          ) : null}
+
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {allTemplates.map((t) => (
+            {allTemplates
+              .filter((tmpl) => plan !== "free" || tmpl.id === "blank")
+              .map((tmpl) => (
               <button
-                key={t.id}
-                onClick={() => handleTemplateSelect(t.id)}
+                key={tmpl.id}
+                onClick={() => handleTemplateSelect(tmpl.id)}
                 className={`p-4 rounded-xl text-left transition-all border ${
-                  selectedTemplate === t.id
+                  selectedTemplate === tmpl.id
                     ? "border-primary bg-primary/10 ring-1 ring-primary/30"
                     : "border-border bg-secondary hover:border-primary/30"
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  <span className="text-2xl">{t.icon}</span>
+                  <span className="text-2xl">{tmpl.icon}</span>
                   <div>
-                    <h4 className="text-sm font-semibold text-foreground">{t.name}</h4>
-                    <p className="text-xs text-muted-foreground">{t.description}</p>
+                    <h4 className="text-sm font-semibold text-foreground">{tmpl.name}</h4>
+                    <p className="text-xs text-muted-foreground">{tmpl.description}</p>
                   </div>
                 </div>
               </button>
@@ -244,11 +254,19 @@ const KnowledgeBaseWizard: React.FC<Props> = ({ clientId, configId, currentKnowl
             </p>
           </div>
 
-          <DocumentUpload
-            clientId={clientId}
-            documents={documents}
-            onChange={handleDocumentsChange}
-          />
+          {plan === "free" ? (
+            <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 text-sm text-muted-foreground">
+              <p className="font-medium text-foreground mb-1">⭐ Upload documenti disponibile da Starter</p>
+              <p>Upgradia il tuo piano per caricare PDF e Word.</p>
+              <a href="/dashboard/upgrade" className="text-primary hover:underline text-xs mt-1 inline-block">Upgrade →</a>
+            </div>
+          ) : (
+            <DocumentUpload
+              clientId={clientId}
+              documents={documents}
+              onChange={handleDocumentsChange}
+            />
+          )}
         </div>
       )}
 

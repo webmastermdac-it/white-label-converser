@@ -113,7 +113,7 @@ export default function LandingPage() {
             >
               {lang === "it" ? "EN" : "IT"}
             </button>
-            <Link to="/login" className="hidden sm:block">
+            <Link to="/register" className="hidden sm:block">
               <Button className="bg-[#E94560] hover:bg-[#d63b54] text-white text-sm h-9 px-5 rounded-full">
                 {t("Start Free Trial", "Inizia Gratis")}
               </Button>
@@ -130,7 +130,7 @@ export default function LandingPage() {
             {navLinks.map((l) => (
               <button key={l.id} onClick={() => scrollTo(l.id)} className="block text-sm text-white/70 hover:text-white">{l.label}</button>
             ))}
-            <Link to="/login" onClick={() => setMobileMenu(false)}>
+            <Link to="/register" onClick={() => setMobileMenu(false)}>
               <Button className="w-full bg-[#E94560] hover:bg-[#d63b54] text-white rounded-full mt-2">
                 {t("Start Free Trial", "Inizia Gratis")}
               </Button>
@@ -171,7 +171,7 @@ export default function LandingPage() {
               )}
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
-              <Link to="/login">
+              <Link to="/register">
                 <Button className="bg-[#E94560] hover:bg-[#d63b54] text-white text-base h-12 px-8 rounded-full shadow-lg shadow-[#E94560]/25">
                   {t("Start Free Trial", "Inizia Gratis")}
                 </Button>
@@ -298,7 +298,35 @@ export default function LandingPage() {
             {yearly && <span className="text-xs bg-[#E94560]/20 text-[#E94560] px-2 py-0.5 rounded-full font-medium">{t("2 months free", "2 mesi gratis")}</span>}
           </div>
 
-          <div className="grid md:grid-cols-2 gap-8 max-w-3xl mx-auto">
+          <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+            {/* Free */}
+            <div className="bg-white/[0.03] border border-white/10 rounded-2xl p-8 space-y-6">
+              <div>
+                <h3 className="text-xl font-bold" style={{ fontFamily: "'Syne', sans-serif" }}>Free</h3>
+                <div className="mt-3">
+                  <span className="text-4xl font-extrabold">€0</span>
+                  <span className="text-white/40 text-sm">/{t("month", "mese")}</span>
+                </div>
+              </div>
+              <ul className="space-y-3 text-sm text-white/70">
+                {[
+                  t("1 chatbot", "1 chatbot"),
+                  t("50 conversations/month", "50 conversazioni/mese"),
+                  t("10 leads/month", "10 lead/mese"),
+                  t("\"Powered by Genius\" branding", "Branding \"Powered by Genius\""),
+                  t("Basic knowledge base", "Knowledge base base"),
+                  t("Email support", "Supporto email"),
+                ].map((item, i) => (
+                  <li key={i} className="flex items-start gap-2"><Check className="w-4 h-4 text-[#E94560] shrink-0 mt-0.5" />{item}</li>
+                ))}
+              </ul>
+              <Link to="/register">
+                <Button variant="outline" className="w-full border-white/20 text-white hover:bg-white/10 rounded-full h-11">
+                  {t("Start Free", "Inizia Gratis")}
+                </Button>
+              </Link>
+            </div>
+
             {/* Starter */}
             <div className="bg-white/[0.03] border border-white/10 rounded-2xl p-8 space-y-6">
               <div>
@@ -312,21 +340,20 @@ export default function LandingPage() {
                 {[
                   t("1 chatbot", "1 chatbot"),
                   t("500 conversations/month", "500 conversazioni/mese"),
-                  t("Lead capture + email notifications", "Cattura lead + notifiche email"),
-                  t("Basic customization", "Personalizzazione base"),
-                  t("Email support", "Supporto email"),
+                  t("Unlimited leads", "Lead illimitati"),
+                  t("Remove branding", "Rimozione branding"),
+                  t("PDF/Word upload", "Upload documenti PDF/Word"),
+                  t("Industry templates", "Template per settore"),
+                  t("Priority support", "Supporto prioritario"),
                 ].map((item, i) => (
                   <li key={i} className="flex items-start gap-2"><Check className="w-4 h-4 text-[#E94560] shrink-0 mt-0.5" />{item}</li>
                 ))}
               </ul>
-              <Button
-                variant="outline"
-                className="w-full border-white/20 text-white hover:bg-white/10 rounded-full h-11"
-                onClick={() => handleCheckout("starter")}
-                disabled={!!checkoutLoading}
-              >
-                {checkoutLoading?.startsWith("starter") ? <Loader2 className="w-4 h-4 animate-spin" /> : t("Get Started", "Inizia Ora")}
-              </Button>
+              <Link to="/register">
+                <Button variant="outline" className="w-full border-white/20 text-white hover:bg-white/10 rounded-full h-11">
+                  {t("Start Free Then Upgrade", "Inizia Gratis poi Upgradi")}
+                </Button>
+              </Link>
             </div>
 
             {/* Pro */}
@@ -343,21 +370,19 @@ export default function LandingPage() {
                 {[
                   t("Unlimited chatbots", "Chatbot illimitati"),
                   t("Unlimited conversations", "Conversazioni illimitate"),
-                  t("Calendly integration", "Integrazione Calendly"),
-                  t("Full customization + avatar upload", "Personalizzazione completa + upload avatar"),
-                  t("Analytics dashboard", "Dashboard analytics"),
-                  t("Priority support", "Supporto prioritario"),
+                  t("Unlimited leads", "Lead illimitati"),
+                  t("All Pro features", "Tutte le funzionalità Pro"),
+                  t("Advanced analytics", "Analytics avanzate"),
+                  t("Dedicated support", "Supporto dedicato"),
                 ].map((item, i) => (
                   <li key={i} className="flex items-start gap-2"><Check className="w-4 h-4 text-[#E94560] shrink-0 mt-0.5" />{item}</li>
                 ))}
               </ul>
-              <Button
-                className="w-full bg-[#E94560] hover:bg-[#d63b54] text-white rounded-full h-11"
-                onClick={() => handleCheckout("pro")}
-                disabled={!!checkoutLoading}
-              >
-                {checkoutLoading?.startsWith("pro") ? <Loader2 className="w-4 h-4 animate-spin" /> : t("Start Free Trial", "Inizia Gratis")}
-              </Button>
+              <Link to="/register">
+                <Button className="w-full bg-[#E94560] hover:bg-[#d63b54] text-white rounded-full h-11">
+                  {t("Start Free Then Upgrade", "Inizia Gratis poi Upgradi")}
+                </Button>
+              </Link>
             </div>
           </div>
         </div>
@@ -411,7 +436,7 @@ export default function LandingPage() {
           <p className="text-white/80 max-w-lg mx-auto">
             {t("Start your free trial today — no credit card required.", "Inizia la tua prova gratuita oggi — nessuna carta di credito richiesta.")}
           </p>
-          <Link to="/login">
+          <Link to="/register">
             <Button className="bg-white text-[#E94560] hover:bg-white/90 h-12 px-10 rounded-full text-base font-bold shadow-lg mt-2">
               {t("Start Free Trial", "Inizia Gratis")}
             </Button>

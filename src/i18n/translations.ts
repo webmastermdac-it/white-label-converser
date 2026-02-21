@@ -672,6 +672,222 @@ export const translations = {
     en: "View transcript",
     it: "Vedi trascrizione",
   },
+
+  // ── Registration ───────────────────────────────────────
+  registerTitle: {
+    en: "Create your free account",
+    it: "Crea il tuo account gratuito",
+  },
+  registerFullName: {
+    en: "Full Name",
+    it: "Nome Completo",
+  },
+  registerButton: {
+    en: "Create free account",
+    it: "Crea account gratuito",
+  },
+  registerEmailExists: {
+    en: "Email already registered. Sign in or use a different email.",
+    it: "Email già registrata. Accedi o usa un'altra email.",
+  },
+  registerAcceptTerms: {
+    en: "You must accept the terms to continue.",
+    it: "Devi accettare i termini per continuare.",
+  },
+  registerAcceptTermsLabel: {
+    en: "I accept the",
+    it: "Accetto i",
+  },
+  registerTermsLink: {
+    en: "Terms of Service",
+    it: "Termini di Servizio",
+  },
+  registerAndLabel: {
+    en: "and",
+    it: "e la",
+  },
+  registerMissingFields: {
+    en: "This field is required.",
+    it: "Questo campo è obbligatorio.",
+  },
+  registerSuccessTitle: {
+    en: "🎉 Account created!",
+    it: "🎉 Account creato!",
+  },
+  registerSuccessDesc: {
+    en: "Start by configuring your chatbot.",
+    it: "Inizia configurando il tuo chatbot.",
+  },
+  registerNoAccount: {
+    en: "No account?",
+    it: "Non hai un account?",
+  },
+  registerFreeLink: {
+    en: "Register for free",
+    it: "Registrati gratis",
+  },
+  registerHasAccount: {
+    en: "Already have an account?",
+    it: "Hai già un account?",
+  },
+
+  // ── Upgrade ────────────────────────────────────────────
+  upgradeTitle: {
+    en: "Upgrade your plan",
+    it: "Upgradia il tuo piano",
+  },
+  upgradeDesc: {
+    en: "Choose the plan that fits your business",
+    it: "Scegli il piano adatto al tuo business",
+  },
+  upgradeMonthly: {
+    en: "Monthly",
+    it: "Mensile",
+  },
+  upgradeYearly: {
+    en: "Yearly",
+    it: "Annuale",
+  },
+  upgradeYear: {
+    en: "year",
+    it: "anno",
+  },
+  upgradeMonth: {
+    en: "month",
+    it: "mese",
+  },
+  upgradeCurrentPlan: {
+    en: "Current plan",
+    it: "Piano attuale",
+  },
+  upgradeMostPopular: {
+    en: "Most Popular",
+    it: "Più Popolare",
+  },
+  upgradeUpgradeTo: {
+    en: "Upgrade to",
+    it: "Upgradia a",
+  },
+  upgradeIncluded: {
+    en: "Included",
+    it: "Incluso",
+  },
+  upgradeCoupon: {
+    en: "Have a discount code?",
+    it: "Hai già un codice sconto?",
+  },
+  upgradeCouponPlaceholder: {
+    en: "Enter code...",
+    it: "Inserisci il codice...",
+  },
+  upgradeApply: {
+    en: "Apply",
+    it: "Applica",
+  },
+  upgrade1Bot: {
+    en: "1 chatbot",
+    it: "1 chatbot",
+  },
+  upgrade50Conv: {
+    en: "50 conversations/month",
+    it: "50 conversazioni/mese",
+  },
+  upgrade10Leads: {
+    en: "10 leads/month",
+    it: "10 lead/mese",
+  },
+  upgradeBranding: {
+    en: "\"Powered by Genius\" branding",
+    it: "Branding \"Powered by Genius\"",
+  },
+  upgradeBasicKB: {
+    en: "Basic knowledge base",
+    it: "Knowledge base base",
+  },
+  upgradeEmailSupport: {
+    en: "Email support",
+    it: "Supporto email",
+  },
+  upgrade500Conv: {
+    en: "500 conversations/month",
+    it: "500 conversazioni/mese",
+  },
+  upgradeUnlimitedLeads: {
+    en: "Unlimited leads",
+    it: "Lead illimitati",
+  },
+  upgradeNoBranding: {
+    en: "Remove branding",
+    it: "Rimozione branding",
+  },
+  upgradeDocUpload: {
+    en: "PDF/Word upload",
+    it: "Upload documenti PDF/Word",
+  },
+  upgradeSectorTemplates: {
+    en: "Industry templates",
+    it: "Template per settore",
+  },
+  upgradePrioritySupport: {
+    en: "Priority support",
+    it: "Supporto prioritario",
+  },
+  upgradeUnlimitedBots: {
+    en: "Unlimited chatbots",
+    it: "Chatbot illimitati",
+  },
+  upgradeUnlimitedConv: {
+    en: "Unlimited conversations",
+    it: "Conversazioni illimitate",
+  },
+  upgradeAllFeatures: {
+    en: "All Pro features",
+    it: "Tutte le funzionalità Pro",
+  },
+  upgradeAdvancedAnalytics: {
+    en: "Advanced analytics",
+    it: "Analytics avanzate",
+  },
+  upgradeDedicatedSupport: {
+    en: "Dedicated support",
+    it: "Supporto dedicato",
+  },
+  upgradeToStarter: {
+    en: "Starter →",
+    it: "Starter →",
+  },
+  upgradeCompleteTitle: {
+    en: "🎉 Upgrade complete!",
+    it: "🎉 Upgrade completato!",
+  },
+  upgradeCompleteDesc: {
+    en: "Welcome to the [plan] plan.",
+    it: "Benvenuto nel piano [plan].",
+  },
+  upgradeBannerTitle: {
+    en: "⭐ Free plan",
+    it: "⭐ Piano Free",
+  },
+  upgradeBannerConv: {
+    en: "conversations this month",
+    it: "conversazioni questo mese",
+  },
+  upgradeBannerDesc: {
+    en: "Upgrade to unlock more features",
+    it: "Upgradia per sbloccare più funzionalità",
+  },
+  usageThisMonth: {
+    en: "Usage this month",
+    it: "Utilizzo questo mese",
+  },
+  usageConversations: {
+    en: "Conversations",
+    it: "Conversazioni",
+  },
+  usageUnlimited: {
+    en: "Unlimited",
+    it: "Illimitato",
+  },
 } as const;
 
 export type TranslationKey = keyof typeof translations;

@@ -5,7 +5,7 @@ import { useLanguage } from "@/hooks/useLanguage";
 import { Button } from "@/components/ui/button";
 import {
   LayoutDashboard, MessageSquare, Settings, Code2,
-  ChevronLeft, ChevronRight, Bot, LogOut, Inbox, PlayCircle, Globe
+  ChevronLeft, ChevronRight, Bot, LogOut, Inbox, PlayCircle, Globe, ArrowUpCircle
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -22,6 +22,7 @@ const ClientSidebar = () => {
     { label: t("botSettings"), href: "/dashboard/settings", icon: Settings },
     { label: t("testChatbot"), href: "/dashboard/preview", icon: PlayCircle },
     { label: t("embedCode"), href: "/dashboard/embed", icon: Code2 },
+    { label: "Upgrade", href: "/dashboard/upgrade", icon: ArrowUpCircle },
   ];
 
   const handleSignOut = async () => {

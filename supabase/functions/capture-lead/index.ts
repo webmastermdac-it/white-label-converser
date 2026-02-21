@@ -43,7 +43,31 @@ serve(async (req) => {
       });
     }
 
-    // Insert lead with language
+    // Check lead limits for free plan
+    const { data: clientData } = await supabase
+      .from("clients")
+      .select("plan")
+      .eq("id", botConfig.client_id)
+      .single();
+
+    const clientPlan = clientData?.plan || "free";
+    let leadLimitReached = false;
+
+    if (clientPlan === "free") {
+      const monthStart = new Date();
+      monthStart.setDate(1);
+      monthStart.setHours(0, 0, 0, 0);
+      const { count } = await supabase
+        .from("leads")
+        .select("id", { count: "exact", head: true })
+        .eq("client_id", botConfig.client_id)
+        .gte("created_at", monthStart.toISOString());
+
+      if ((count || 0) >= 10) {
+        leadLimitReached = true;
+      }
+    }
+
     const { data: leadData, error: leadError } = await supabase
       .from("leads")
       .insert({
@@ -69,8 +93,8 @@ serve(async (req) => {
         .eq("session_token", session_token);
     }
 
-    // Send bilingual email notification
-    if (botConfig.email_notifications_enabled && botConfig.notification_email) {
+    // Send bilingual email notification (skip if lead limit reached on free plan)
+    if (botConfig.email_notifications_enabled && botConfig.notification_email && !leadLimitReached) {
       const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
       if (RESEND_API_KEY) {
         const isEn = lang === "en";
