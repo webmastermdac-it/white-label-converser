@@ -177,12 +177,16 @@ export default function LandingPage() {
           </div>
 
           {/* Mascot */}
-          <div className="flex-1 flex justify-center md:justify-end max-w-md w-full">
+          <div className="flex-1 flex justify-center md:justify-end max-w-md w-full relative">
+            <div
+              className="absolute inset-0 rounded-full"
+              style={{ background: "radial-gradient(circle, hsl(228 47% 6% / 0) 30%, hsl(228 47% 6%) 70%)", pointerEvents: "none" }}
+            />
             <img
               src={genieMascot}
               alt="Genius Chatbot Genie"
-              className="w-72 sm:w-96"
-              style={{ filter: "drop-shadow(0 0 30px hsl(349 78% 62% / 0.45)) drop-shadow(0 0 60px hsl(349 78% 62% / 0.2))", animation: "floatMascot 4s ease-in-out infinite" }}
+              className="w-72 sm:w-96 relative z-10"
+              style={{ animation: "floatMascot 4s ease-in-out infinite" }}
             />
           </div>
         </div>
