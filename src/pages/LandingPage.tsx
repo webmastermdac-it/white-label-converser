@@ -4,7 +4,7 @@ import { useLanguage } from "@/hooks/useLanguage";
 import { Button } from "@/components/ui/button";
 import { Play, Star, Menu, X, Check, Loader2 } from "lucide-react";
 import geniusLogo from "@/assets/genius.png";
-import genieMascot from "@/assets/genie-dark.png";
+import genieMascot from "@/assets/genie-mascot-nobg.png";
 import { supabase } from "@/integrations/supabase/client";
 
 /* ─── Scroll fade-in observer ─── */
