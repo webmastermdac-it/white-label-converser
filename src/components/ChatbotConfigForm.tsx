@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Save, Bot, Palette, MessageSquare, Zap, Mail, Star } from "lucide-react";
-import KnowledgeBaseBuilder from "@/components/knowledge-base/KnowledgeBaseBuilder";
+import KnowledgeBaseWizard from "@/components/knowledge-base/KnowledgeBaseWizard";
 
 interface Config {
   id?: string;
@@ -308,18 +308,17 @@ const ChatbotConfigForm: React.FC<ChatbotConfigFormProps> = ({ clientId, onSaved
             </Label>
 
             {isProOrAdmin && config.id ? (
-              <KnowledgeBaseBuilder
+              <KnowledgeBaseWizard
                 clientId={clientId}
                 configId={config.id}
-                botName={config.name}
-                fallbackMessage={config.fallback_message}
-                onKnowledgeBaseUpdated={(kb) => {
+                currentKnowledgeBase={config.knowledge_base}
+                onSave={(kb) => {
                   set("knowledge_base", kb);
-                  // Auto-save the knowledge base
                   supabase
                     .from("chatbot_configs")
                     .update({ knowledge_base: kb })
                     .eq("id", config.id);
+                  toast({ title: "Knowledge Base salvata!" });
                 }}
               />
             ) : (
@@ -330,10 +329,10 @@ const ChatbotConfigForm: React.FC<ChatbotConfigFormProps> = ({ clientId, onSaved
                     <Star className="w-5 h-5 text-primary shrink-0 mt-0.5" />
                     <div className="flex-1">
                       <p className="text-sm font-medium text-foreground">
-                        ⭐ Upgrade to Pro per sbloccare il Knowledge Base Builder
+                        ⭐ Upgrade a Pro per sbloccare il Wizard Knowledge Base
                       </p>
                       <p className="text-xs text-muted-foreground mt-1">
-                        Upload documenti, scraping sito web, template per settore, wizard guidato e molto altro.
+                        Template per settore, upload documenti, analisi sito web e revisione guidata.
                       </p>
                       <a
                         href="/#pricing"
