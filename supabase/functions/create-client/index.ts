@@ -23,16 +23,26 @@ serve(async (req) => {
       });
     }
 
-    // 0. Check if client with this email already exists
-    const { data: existing } = await supabaseAdmin
+    // 0. Check if client or auth user with this email already exists
+    const { data: existingClient } = await supabaseAdmin
       .from("clients")
       .select("id")
       .eq("email", email)
       .maybeSingle();
 
-    if (existing) {
+    if (existingClient) {
       return new Response(
         JSON.stringify({ error: "Un cliente con questa email esiste già" }),
+        { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Check auth users too
+    const { data: existingUsers } = await supabaseAdmin.auth.admin.listUsers();
+    const authExists = existingUsers?.users?.some((u: any) => u.email === email);
+    if (authExists) {
+      return new Response(
+        JSON.stringify({ error: "Un utente con questa email esiste già nel sistema" }),
         { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
