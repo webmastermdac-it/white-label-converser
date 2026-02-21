@@ -9,12 +9,12 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { messages, embed_token, session_token, source_url } = await req.json();
+    const { messages, embed_token, session_token, source_url, language } = await req.json();
+    const lang = language === "en" ? "en" : "it";
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
 
-    // Fetch bot config by embed token
     const { createClient } = await import("https://esm.sh/@supabase/supabase-js@2");
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
@@ -50,7 +50,6 @@ serve(async (req) => {
     }
 
     if (plan === "starter") {
-      // Check monthly session count
       const monthStart = new Date();
       monthStart.setDate(1);
       monthStart.setHours(0, 0, 0, 0);
@@ -68,14 +67,22 @@ serve(async (req) => {
       }
     }
 
+    // Pick correct fallback message based on language
+    const fallbackMessage = lang === "en"
+      ? (botConfig.fallback_msg_en || botConfig.fallback_message || "I don't have this information, but I can connect you with one of our consultants!")
+      : (botConfig.fallback_msg_it || botConfig.fallback_message || "Non ho questa informazione, ma posso metterti in contatto con un nostro consulente!");
+
+    const langInstruction = lang === "en"
+      ? "\n\nIMPORTANT: Always reply in English, regardless of the language the user writes in."
+      : "\n\nIMPORTANTE: Rispondi SEMPRE in italiano, indipendentemente dalla lingua con cui ti scrive l'utente.";
+
     const systemPrompt = `${botConfig.knowledge_base || "You are a helpful assistant."}
 
 IMPORTANT INSTRUCTIONS:
-- If you don't know the answer or are uncertain, say the following EXACT phrase (or very similar): "${botConfig.fallback_message}"
+- If you don't know the answer or are uncertain, say the following EXACT phrase (or very similar): "${fallbackMessage}"
 - After saying the fallback message, include the special marker: [TRIGGER_LEAD_FORM]
 - Never make up information not provided in your knowledge base
-- Be concise, helpful, and professional
-- Respond in the same language as the user`;
+- Be concise, helpful, and professional${langInstruction}`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -102,7 +109,6 @@ IMPORTANT INSTRUCTIONS:
     const aiData = await response.json();
     const aiMessage = aiData.choices?.[0]?.message?.content || "";
 
-    // Detect fallback trigger
     const triggerLeadForm = aiMessage.includes("[TRIGGER_LEAD_FORM]") ||
       aiMessage.toLowerCase().includes("non ho questa informazione") ||
       aiMessage.toLowerCase().includes("non so") ||
@@ -110,7 +116,7 @@ IMPORTANT INSTRUCTIONS:
 
     const cleanMessage = aiMessage.replace("[TRIGGER_LEAD_FORM]", "").trim();
 
-    // Save/update chat session
+    // Save/update chat session with language
     if (session_token) {
       const allMessages = [...messages, { role: "assistant", content: cleanMessage }];
       const { data: existingSession } = await supabase
@@ -123,6 +129,7 @@ IMPORTANT INSTRUCTIONS:
         await supabase.from("chat_sessions").update({
           messages: allMessages,
           ended_at: null,
+          language: lang,
         }).eq("session_token", session_token);
       } else {
         await supabase.from("chat_sessions").insert({
@@ -131,6 +138,7 @@ IMPORTANT INSTRUCTIONS:
           messages: allMessages,
           session_token,
           source_url: source_url || "",
+          language: lang,
         });
       }
     }
@@ -139,7 +147,7 @@ IMPORTANT INSTRUCTIONS:
       JSON.stringify({
         message: cleanMessage,
         trigger_lead_form: triggerLeadForm,
-        fallback_message: triggerLeadForm ? botConfig.fallback_message : null,
+        fallback_message: triggerLeadForm ? fallbackMessage : null,
         calendly_url: triggerLeadForm ? botConfig.calendly_url : null,
         bot_id: botConfig.id,
         client_id: botConfig.client_id,

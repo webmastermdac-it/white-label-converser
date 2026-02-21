@@ -15,6 +15,42 @@
     return d.innerHTML;
   }
 
+  // ── Language detection ─────────────────────────────────
+  var widgetLang = (navigator.language || "it").startsWith("en") ? "en" : "it";
+
+  var i18n = {
+    it: {
+      placeholder: "Scrivi un messaggio...",
+      leadLabel: "📋 Lascia i tuoi contatti",
+      namePlaceholder: "Nome *",
+      emailPlaceholder: "Email *",
+      phonePlaceholder: "Telefono",
+      messagePlaceholder: "Messaggio",
+      submitBtn: "Invia richiesta",
+      calendlyBtn: "📅 Prenota una consulenza",
+      successMsg: "✅ Richiesta inviata! Ti contatteremo presto.",
+      thankYou: "Grazie! Ti contatteremo presto. 🎉",
+      errorMsg: "Errore di connessione. Riprova.",
+      errorReply: "Errore nella risposta.",
+    },
+    en: {
+      placeholder: "Type a message...",
+      leadLabel: "📋 Leave your contact details",
+      namePlaceholder: "Name *",
+      emailPlaceholder: "Email *",
+      phonePlaceholder: "Phone",
+      messagePlaceholder: "Message",
+      submitBtn: "Submit request",
+      calendlyBtn: "📅 Book a consultation",
+      successMsg: "✅ Request sent! We'll contact you soon.",
+      thankYou: "Thank you! We'll contact you soon. 🎉",
+      errorMsg: "Connection error. Please retry.",
+      errorReply: "Error in the response.",
+    },
+  };
+
+  var t = i18n[widgetLang];
+
   // ── Detect script tag & token ───────────────────────────
   var scriptTag = document.currentScript || (function () {
     var scripts = document.getElementsByTagName("script");
@@ -23,12 +59,11 @@
   var EMBED_TOKEN = scriptTag.getAttribute("data-token");
   if (!EMBED_TOKEN) { console.error("[Genius Widget] Missing data-token"); return; }
 
-  // ── Supabase URL (same origin as widget or infer from script src) ──
+  // ── Supabase URL ──
   var SUPABASE_URL = (function () {
     var src = scriptTag.getAttribute("src") || "";
     try {
       var u = new URL(src, window.location.origin);
-      // If served from lovable preview or custom domain, use project URL
       return "https://hbzgpxaxrqbbvcyvklln.supabase.co";
     } catch (e) {
       return "https://hbzgpxaxrqbbvcyvklln.supabase.co";
@@ -40,9 +75,9 @@
   var MSG_KEY = "genius_widget_msgs_" + EMBED_TOKEN;
 
   function getSessionToken() {
-    var t = sessionStorage.getItem(SESSION_KEY);
-    if (!t) { t = uuidv4(); sessionStorage.setItem(SESSION_KEY, t); }
-    return t;
+    var tk = sessionStorage.getItem(SESSION_KEY);
+    if (!tk) { tk = uuidv4(); sessionStorage.setItem(SESSION_KEY, tk); }
+    return tk;
   }
 
   function saveMessages(msgs) {
@@ -175,27 +210,27 @@
     // Lead form
     if (showLeadForm && !leadSent) {
       html += '<div class="mdac-lead-form" id="mdac-lead-form">';
-      html += '<label>📋 Lascia i tuoi contatti</label>';
-      html += '<input type="text" id="mdac-lead-name" placeholder="Nome *" />';
-      html += '<input type="email" id="mdac-lead-email" placeholder="Email *" />';
-      html += '<input type="tel" id="mdac-lead-phone" placeholder="Telefono" />';
-      html += '<textarea id="mdac-lead-message" placeholder="Messaggio"></textarea>';
-      html += '<button class="mdac-lead-btn" id="mdac-lead-submit">Invia richiesta</button>';
+      html += '<label>' + t.leadLabel + '</label>';
+      html += '<input type="text" id="mdac-lead-name" placeholder="' + t.namePlaceholder + '" />';
+      html += '<input type="email" id="mdac-lead-email" placeholder="' + t.emailPlaceholder + '" />';
+      html += '<input type="tel" id="mdac-lead-phone" placeholder="' + t.phonePlaceholder + '" />';
+      html += '<textarea id="mdac-lead-message" placeholder="' + t.messagePlaceholder + '"></textarea>';
+      html += '<button class="mdac-lead-btn" id="mdac-lead-submit">' + t.submitBtn + '</button>';
       if (config.calendly_url) {
-        html += '<button class="mdac-calendly" id="mdac-calendly">📅 Prenota una consulenza</button>';
+        html += '<button class="mdac-calendly" id="mdac-calendly">' + t.calendlyBtn + '</button>';
       }
       html += '</div>';
     }
 
     if (leadSent) {
-      html += '<div class="mdac-success">✅ Richiesta inviata! Ti contatteremo presto.</div>';
+      html += '<div class="mdac-success">' + t.successMsg + '</div>';
     }
 
     html += '</div>'; // end messages
 
     // Input area
     html += '<div class="mdac-input-area">';
-    html += '<input class="mdac-input" id="mdac-input" placeholder="Scrivi un messaggio..." ' + (isLoading ? 'disabled' : '') + ' />';
+    html += '<input class="mdac-input" id="mdac-input" placeholder="' + t.placeholder + '" ' + (isLoading ? 'disabled' : '') + ' />';
     html += '<button class="mdac-send" id="mdac-send" ' + (isLoading ? 'disabled' : '') + '>';
     html += '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>';
     html += '</button>';
@@ -219,7 +254,6 @@
     if (sendBtn) sendBtn.onclick = sendMessage;
     if (inputEl) {
       inputEl.onkeydown = function (e) { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); } };
-      // Auto-focus when open
       if (isOpen && !isLoading) setTimeout(function () { inputEl.focus(); }, 50);
     }
     if (leadSubmitBtn) leadSubmitBtn.onclick = submitLead;
@@ -228,7 +262,7 @@
     // Scroll to bottom
     if (messagesEl) messagesEl.scrollTop = messagesEl.scrollHeight;
 
-    // Pre-fill lead message with last user message
+    // Pre-fill lead message
     if (showLeadForm && !leadSent) {
       var msgEl = shadow.getElementById("mdac-lead-message");
       if (msgEl && !msgEl.value) {
@@ -259,19 +293,21 @@
         embed_token: EMBED_TOKEN,
         session_token: sessionToken,
         source_url: window.location.href,
+        language: widgetLang,
       }),
     })
       .then(function (r) { return r.json(); })
       .then(function (data) {
-        var botMsg = data.message || "Errore nella risposta.";
+        var botMsg = data.message || t.errorReply;
         messages.push({ role: "assistant", content: botMsg });
 
-        // Fallback detection
         if (data.trigger_lead_form ||
           /non ho (questa )?informazion/i.test(botMsg) ||
           /non so rispondere/i.test(botMsg) ||
           /contatt/i.test(botMsg) ||
-          /non sono in grado/i.test(botMsg)) {
+          /non sono in grado/i.test(botMsg) ||
+          /i don't have/i.test(botMsg) ||
+          /i can connect you/i.test(botMsg)) {
           showLeadForm = true;
         }
 
@@ -280,7 +316,7 @@
         render();
       })
       .catch(function () {
-        messages.push({ role: "assistant", content: "Errore di connessione. Riprova." });
+        messages.push({ role: "assistant", content: t.errorMsg });
         saveMessages(messages);
         isLoading = false;
         render();
@@ -314,12 +350,13 @@
         lead: lead,
         source_url: window.location.href,
         transcript: messages,
+        language: widgetLang,
       }),
     })
       .then(function () {
         leadSent = true;
         showLeadForm = false;
-        messages.push({ role: "assistant", content: "Grazie! Ti contatteremo presto. 🎉" });
+        messages.push({ role: "assistant", content: t.thankYou });
         saveMessages(messages);
         render();
       })
@@ -340,12 +377,11 @@
       if (!data || !data.length) { console.error("[Genius Widget] Invalid embed token"); return; }
       config = data[0];
 
-      // Restore messages from sessionStorage or start with welcome
       var saved = loadMessages();
       if (saved && saved.length) {
         messages = saved;
       } else {
-        messages = [{ role: "assistant", content: config.welcome_message || "Ciao! Come posso aiutarti?" }];
+        messages = [{ role: "assistant", content: config.welcome_message || (widgetLang === "en" ? "Hi! How can I help you?" : "Ciao! Come posso aiutarti?") }];
         saveMessages(messages);
       }
 
