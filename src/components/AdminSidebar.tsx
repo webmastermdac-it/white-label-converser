@@ -1,25 +1,27 @@
 import { useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/hooks/useLanguage";
 import { Button } from "@/components/ui/button";
 import {
   Users, Settings, BarChart3, MessageSquare, ChevronLeft,
-  ChevronRight, Bot, LogOut, Shield, Inbox
+  ChevronRight, Bot, LogOut, Shield, Inbox, Globe
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-
-const adminNav = [
-  { label: "Overview", href: "/admin", icon: BarChart3, end: true },
-  { label: "Clients", href: "/admin/clients", icon: Users },
-  { label: "All Leads", href: "/admin/leads", icon: Inbox },
-  { label: "Chat Sessions", href: "/admin/chats", icon: MessageSquare },
-  { label: "Settings", href: "/admin/settings", icon: Settings },
-];
 
 const AdminSidebar = () => {
   const [collapsed, setCollapsed] = useState(false);
   const { user, signOut } = useAuth();
+  const { lang, setLang, t } = useLanguage();
   const navigate = useNavigate();
+
+  const adminNav = [
+    { label: t("overview"), href: "/admin", icon: BarChart3, end: true },
+    { label: t("clients"), href: "/admin/clients", icon: Users },
+    { label: t("allLeads"), href: "/admin/leads", icon: Inbox },
+    { label: t("chatSessions"), href: "/admin/chats", icon: MessageSquare },
+    { label: t("settings"), href: "/admin/settings", icon: Settings },
+  ];
 
   const handleSignOut = async () => {
     await signOut();
@@ -79,12 +81,21 @@ const AdminSidebar = () => {
         ))}
       </nav>
 
-      {/* User */}
+      {/* Language + User */}
       <div className="p-3 border-t border-sidebar-border">
         {!collapsed && (
-          <div className="px-3 py-2 mb-2">
-            <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
-          </div>
+          <>
+            <button
+              onClick={() => setLang(lang === "it" ? "en" : "it")}
+              className="flex items-center gap-2 px-3 py-2 mb-2 w-full rounded-lg text-xs text-muted-foreground hover:text-foreground hover:bg-sidebar-accent transition-colors"
+            >
+              <Globe className="w-3.5 h-3.5" />
+              {lang === "it" ? "🇮🇹 Italiano" : "🇬🇧 English"}
+            </button>
+            <div className="px-3 py-2 mb-2">
+              <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
+            </div>
+          </>
         )}
         <Button
           variant="ghost"
@@ -96,7 +107,7 @@ const AdminSidebar = () => {
           )}
         >
           <LogOut className="w-4 h-4" />
-          {!collapsed && "Sign Out"}
+          {!collapsed && t("signOut")}
         </Button>
       </div>
     </aside>

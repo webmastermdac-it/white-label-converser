@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Users, Bot, Inbox, MessageSquare, TrendingUp, ArrowUpRight, Calendar } from "lucide-react";
+import { useLanguage } from "@/hooks/useLanguage";
+import { Users, Bot, Inbox, MessageSquare, TrendingUp, ArrowUpRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { format } from "date-fns";
 
@@ -43,6 +44,7 @@ const StatCard = ({
 );
 
 const AdminOverview = () => {
+  const { t } = useLanguage();
   const [stats, setStats] = useState({
     totalClients: 0, totalLeads: 0, totalChats: 0, totalBots: 0, leadsToday: 0, chatsThisWeek: 0
   });
@@ -84,40 +86,39 @@ const AdminOverview = () => {
     <div className="p-6 space-y-6 animate-fade-in-up">
       <div>
         <h1 className="text-2xl font-bold text-foreground" style={{ fontFamily: 'Syne, sans-serif' }}>
-          Agency Overview
+          {t("agencyOverview")}
         </h1>
-        <p className="text-muted-foreground text-sm mt-1">Panoramica globale della piattaforma</p>
+        <p className="text-muted-foreground text-sm mt-1">{t("platformOverview")}</p>
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard label="Clienti Totali" value={stats.totalClients} icon={Users} to="/admin/clients" />
-        <StatCard label="Bot Attivi" value={stats.totalBots} icon={Bot} />
-        <StatCard label="Lead Totali" value={stats.totalLeads} icon={Inbox} to="/admin/leads" trend={`+${stats.leadsToday} oggi`} />
-        <StatCard label="Chat Questa Settimana" value={stats.chatsThisWeek} icon={MessageSquare} to="/admin/chats" />
+        <StatCard label={t("totalClients")} value={stats.totalClients} icon={Users} to="/admin/clients" />
+        <StatCard label={t("activeBots")} value={stats.totalBots} icon={Bot} />
+        <StatCard label={t("totalLeads")} value={stats.totalLeads} icon={Inbox} to="/admin/leads" trend={`+${stats.leadsToday} ${t("today")}`} />
+        <StatCard label={t("chatsThisWeek")} value={stats.chatsThisWeek} icon={MessageSquare} to="/admin/chats" />
       </div>
 
-      {/* Recent Leads Table */}
       <div className="glass rounded-xl p-5">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="font-semibold text-foreground">Ultimi 10 Lead</h2>
-          <Link to="/admin/leads" className="text-xs text-primary hover:underline">Vedi tutti →</Link>
+          <h2 className="font-semibold text-foreground">{t("last10Leads")}</h2>
+          <Link to="/admin/leads" className="text-xs text-primary hover:underline">{t("viewAll")}</Link>
         </div>
         {loading ? (
           <div className="space-y-3">
             {[...Array(5)].map((_, i) => <div key={i} className="h-12 bg-secondary rounded-lg animate-pulse" />)}
           </div>
         ) : recentLeads.length === 0 ? (
-          <p className="text-muted-foreground text-sm text-center py-8">Nessun lead ancora. Deploya il primo chatbot per iniziare.</p>
+          <p className="text-muted-foreground text-sm text-center py-8">{t("noLeadsYet")}</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-left text-xs text-muted-foreground border-b border-border">
-                  <th className="pb-2 font-medium">Cliente</th>
-                  <th className="pb-2 font-medium">Lead</th>
-                  <th className="pb-2 font-medium">Email</th>
-                  <th className="pb-2 font-medium">Stato</th>
-                  <th className="pb-2 font-medium text-right">Data</th>
+                  <th className="pb-2 font-medium">{t("client")}</th>
+                  <th className="pb-2 font-medium">{t("lead")}</th>
+                  <th className="pb-2 font-medium">{t("email")}</th>
+                  <th className="pb-2 font-medium">{t("status")}</th>
+                  <th className="pb-2 font-medium text-right">{t("date")}</th>
                 </tr>
               </thead>
               <tbody>

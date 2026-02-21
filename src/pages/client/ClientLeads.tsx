@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/hooks/useLanguage";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
@@ -27,6 +28,7 @@ interface Lead {
 
 const ClientLeads = () => {
   const { clientId } = useAuth();
+  const { t } = useLanguage();
   const { toast } = useToast();
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
@@ -53,7 +55,7 @@ const ClientLeads = () => {
   };
 
   const exportCSV = () => {
-    const headers = ["Name", "Email", "Phone", "Message", "Status", "Source", "Date"];
+    const headers = [t("lead", "Name"), t("email"), t("phone"), t("message"), t("status"), t("source"), t("date")];
     const rows = filtered.map((l) => [l.name, l.email, l.phone, l.message, l.status, l.source_url, new Date(l.created_at).toLocaleString()]);
     const csv = [headers, ...rows].map((r) => r.map((c) => `"${c}"`).join(",")).join("\n");
     const blob = new Blob([csv], { type: "text/csv" });
@@ -69,18 +71,18 @@ const ClientLeads = () => {
     <div className="p-6 space-y-6 animate-fade-in-up">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground" style={{ fontFamily: 'Syne, sans-serif' }}>Leads</h1>
-          <p className="text-muted-foreground text-sm mt-1">{leads.length} total leads captured</p>
+          <h1 className="text-2xl font-bold text-foreground" style={{ fontFamily: 'Syne, sans-serif' }}>{t("leads")}</h1>
+          <p className="text-muted-foreground text-sm mt-1">{leads.length} {t("totalLeadsCount")}</p>
         </div>
         <Button variant="outline" onClick={exportCSV} className="border-border text-muted-foreground hover:text-foreground">
-          <Download className="w-4 h-4 mr-2" /> Export CSV
+          <Download className="w-4 h-4 mr-2" /> {t("exportCSV")}
         </Button>
       </div>
 
       <div className="flex gap-3">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search..." className="pl-9 bg-secondary border-border" />
+          <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder={t("searchLeads")} className="pl-9 bg-secondary border-border" />
         </div>
         <Select value={statusFilter} onValueChange={setStatusFilter}>
           <SelectTrigger className="w-36 bg-secondary border-border">
@@ -88,7 +90,7 @@ const ClientLeads = () => {
           </SelectTrigger>
           <SelectContent className="bg-card border-border">
             {["all", "new", "contacted", "closed"].map((s) => (
-              <SelectItem key={s} value={s} className="capitalize">{s === "all" ? "All Status" : s}</SelectItem>
+              <SelectItem key={s} value={s} className="capitalize">{s === "all" ? t("allStatus") : s}</SelectItem>
             ))}
           </SelectContent>
         </Select>
@@ -98,16 +100,16 @@ const ClientLeads = () => {
         {loading ? (
           <div className="p-8 text-center"><Loader2 className="w-6 h-6 animate-spin text-primary mx-auto" /></div>
         ) : filtered.length === 0 ? (
-          <div className="p-12 text-center text-muted-foreground">No leads found.</div>
+          <div className="p-12 text-center text-muted-foreground">{t("noLeadsFound")}</div>
         ) : (
           <table className="w-full">
             <thead>
               <tr className="border-b border-border bg-secondary/30">
-                <th className="text-left px-5 py-3 text-xs font-medium text-muted-foreground uppercase">Lead</th>
-                <th className="text-left px-5 py-3 text-xs font-medium text-muted-foreground uppercase hidden md:table-cell">Phone</th>
-                <th className="text-left px-5 py-3 text-xs font-medium text-muted-foreground uppercase">Status</th>
-                <th className="text-left px-5 py-3 text-xs font-medium text-muted-foreground uppercase hidden md:table-cell">Date</th>
-                <th className="text-right px-5 py-3 text-xs font-medium text-muted-foreground uppercase">Update</th>
+                <th className="text-left px-5 py-3 text-xs font-medium text-muted-foreground uppercase">{t("lead")}</th>
+                <th className="text-left px-5 py-3 text-xs font-medium text-muted-foreground uppercase hidden md:table-cell">{t("phone")}</th>
+                <th className="text-left px-5 py-3 text-xs font-medium text-muted-foreground uppercase">{t("status")}</th>
+                <th className="text-left px-5 py-3 text-xs font-medium text-muted-foreground uppercase hidden md:table-cell">{t("date")}</th>
+                <th className="text-right px-5 py-3 text-xs font-medium text-muted-foreground uppercase">{t("actions")}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
@@ -153,15 +155,15 @@ const ClientLeads = () => {
           {selectedLead && (
             <div className="space-y-4 pt-2">
               <div className="grid grid-cols-2 gap-4">
-                <div><p className="text-xs text-muted-foreground">Email</p><p className="text-sm text-foreground mt-1">{selectedLead.email}</p></div>
-                <div><p className="text-xs text-muted-foreground">Phone</p><p className="text-sm text-foreground mt-1">{selectedLead.phone || "—"}</p></div>
-                <div className="col-span-2"><p className="text-xs text-muted-foreground">Message</p><p className="text-sm text-foreground mt-1">{selectedLead.message || "—"}</p></div>
-                <div><p className="text-xs text-muted-foreground">Source</p><p className="text-sm text-foreground mt-1 truncate">{selectedLead.source_url || "—"}</p></div>
-                <div><p className="text-xs text-muted-foreground">Date</p><p className="text-sm text-foreground mt-1">{new Date(selectedLead.created_at).toLocaleString()}</p></div>
+                <div><p className="text-xs text-muted-foreground">{t("email")}</p><p className="text-sm text-foreground mt-1">{selectedLead.email}</p></div>
+                <div><p className="text-xs text-muted-foreground">{t("phone")}</p><p className="text-sm text-foreground mt-1">{selectedLead.phone || "—"}</p></div>
+                <div className="col-span-2"><p className="text-xs text-muted-foreground">{t("message")}</p><p className="text-sm text-foreground mt-1">{selectedLead.message || "—"}</p></div>
+                <div><p className="text-xs text-muted-foreground">{t("source")}</p><p className="text-sm text-foreground mt-1 truncate">{selectedLead.source_url || "—"}</p></div>
+                <div><p className="text-xs text-muted-foreground">{t("date")}</p><p className="text-sm text-foreground mt-1">{new Date(selectedLead.created_at).toLocaleString()}</p></div>
               </div>
               {selectedLead.transcript.length > 0 && (
                 <div>
-                  <p className="text-xs text-muted-foreground mb-2">Chat Transcript</p>
+                  <p className="text-xs text-muted-foreground mb-2">{t("chatTranscript")}</p>
                   <div className="space-y-2 max-h-60 overflow-y-auto p-3 bg-secondary rounded-lg">
                     {selectedLead.transcript.map((msg: any, i: number) => (
                       <div key={i} className={`text-xs p-2 rounded-lg ${msg.role === "user" ? "bg-primary/10 text-foreground ml-4" : "bg-card text-muted-foreground mr-4"}`}>

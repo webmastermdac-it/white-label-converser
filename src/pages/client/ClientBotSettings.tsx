@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/hooks/useLanguage";
 import ChatbotConfigForm from "@/components/ChatbotConfigForm";
 import { Loader2 } from "lucide-react";
 
 const ClientBotSettings = () => {
   const { clientId } = useAuth();
+  const { t } = useLanguage();
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
@@ -19,8 +21,8 @@ const ClientBotSettings = () => {
   return (
     <div className="p-6 space-y-6 animate-fade-in-up">
       <div>
-        <h1 className="text-2xl font-bold text-foreground" style={{ fontFamily: 'Syne, sans-serif' }}>Bot Settings</h1>
-        <p className="text-muted-foreground text-sm mt-1">Configure your chatbot's appearance and behavior</p>
+        <h1 className="text-2xl font-bold text-foreground" style={{ fontFamily: 'Syne, sans-serif' }}>{t("botSettingsTitle")}</h1>
+        <p className="text-muted-foreground text-sm mt-1">{t("botSettingsDesc")}</p>
       </div>
       <ChatbotConfigForm clientId={clientId} />
     </div>

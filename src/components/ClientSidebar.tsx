@@ -1,26 +1,28 @@
 import { useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/hooks/useLanguage";
 import { Button } from "@/components/ui/button";
 import {
   LayoutDashboard, MessageSquare, Settings, Code2,
-  ChevronLeft, ChevronRight, Bot, LogOut, Inbox, PlayCircle
+  ChevronLeft, ChevronRight, Bot, LogOut, Inbox, PlayCircle, Globe
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-
-const clientNav = [
-  { label: "Overview", href: "/dashboard", icon: LayoutDashboard, end: true },
-  { label: "Leads", href: "/dashboard/leads", icon: Inbox },
-  { label: "Chat History", href: "/dashboard/chats", icon: MessageSquare },
-  { label: "Bot Settings", href: "/dashboard/settings", icon: Settings },
-  { label: "Test Chatbot", href: "/dashboard/preview", icon: PlayCircle },
-  { label: "Embed Code", href: "/dashboard/embed", icon: Code2 },
-];
 
 const ClientSidebar = () => {
   const [collapsed, setCollapsed] = useState(false);
   const { user, signOut } = useAuth();
+  const { lang, setLang, t } = useLanguage();
   const navigate = useNavigate();
+
+  const clientNav = [
+    { label: t("overview"), href: "/dashboard", icon: LayoutDashboard, end: true },
+    { label: t("leads"), href: "/dashboard/leads", icon: Inbox },
+    { label: t("chatHistory"), href: "/dashboard/chats", icon: MessageSquare },
+    { label: t("botSettings"), href: "/dashboard/settings", icon: Settings },
+    { label: t("testChatbot"), href: "/dashboard/preview", icon: PlayCircle },
+    { label: t("embedCode"), href: "/dashboard/embed", icon: Code2 },
+  ];
 
   const handleSignOut = async () => {
     await signOut();
@@ -35,7 +37,6 @@ const ClientSidebar = () => {
       )}
       style={{ background: "hsl(var(--sidebar-background))" }}
     >
-      {/* Logo */}
       <div className="flex items-center gap-3 px-4 py-5 border-b border-sidebar-border">
         <div className="flex-shrink-0 w-9 h-9 rounded-xl gradient-primary flex items-center justify-center glow-sm">
           <Bot className="w-5 h-5 text-white" />
@@ -45,7 +46,7 @@ const ClientSidebar = () => {
             <span className="font-bold text-foreground text-sm" style={{ fontFamily: 'Syne, sans-serif' }}>
               Genius <span className="text-gradient">Chatbot</span>
             </span>
-            <p className="text-xs text-muted-foreground">Client Portal</p>
+            <p className="text-xs text-muted-foreground">{t("clientPortal")}</p>
           </div>
         )}
         <button
@@ -56,7 +57,6 @@ const ClientSidebar = () => {
         </button>
       </div>
 
-      {/* Nav */}
       <nav className="flex-1 px-2 py-4 space-y-1 overflow-y-auto">
         {clientNav.map((item) => (
           <NavLink
@@ -78,12 +78,20 @@ const ClientSidebar = () => {
         ))}
       </nav>
 
-      {/* User */}
       <div className="p-3 border-t border-sidebar-border">
         {!collapsed && (
-          <div className="px-3 py-2 mb-2">
-            <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
-          </div>
+          <>
+            <button
+              onClick={() => setLang(lang === "it" ? "en" : "it")}
+              className="flex items-center gap-2 px-3 py-2 mb-2 w-full rounded-lg text-xs text-muted-foreground hover:text-foreground hover:bg-sidebar-accent transition-colors"
+            >
+              <Globe className="w-3.5 h-3.5" />
+              {lang === "it" ? "🇮🇹 Italiano" : "🇬🇧 English"}
+            </button>
+            <div className="px-3 py-2 mb-2">
+              <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
+            </div>
+          </>
         )}
         <Button
           variant="ghost"
@@ -95,7 +103,7 @@ const ClientSidebar = () => {
           )}
         >
           <LogOut className="w-4 h-4" />
-          {!collapsed && "Sign Out"}
+          {!collapsed && t("signOut")}
         </Button>
       </div>
     </aside>

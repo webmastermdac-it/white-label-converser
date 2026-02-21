@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/hooks/useLanguage";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Loader2, MessageSquare, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -16,6 +17,7 @@ interface ChatSession {
 
 const ClientChats = () => {
   const { clientId } = useAuth();
+  const { t } = useLanguage();
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -39,7 +41,7 @@ const ClientChats = () => {
   );
 
   const duration = (s: ChatSession) => {
-    if (!s.ended_at) return "Active";
+    if (!s.ended_at) return t("active");
     const ms = new Date(s.ended_at).getTime() - new Date(s.started_at).getTime();
     const mins = Math.floor(ms / 60000);
     return mins < 1 ? "< 1 min" : `${mins} min`;
@@ -48,13 +50,13 @@ const ClientChats = () => {
   return (
     <div className="p-6 space-y-6 animate-fade-in-up">
       <div>
-        <h1 className="text-2xl font-bold text-foreground" style={{ fontFamily: 'Syne, sans-serif' }}>Chat History</h1>
-        <p className="text-muted-foreground text-sm mt-1">{sessions.length} conversations recorded</p>
+        <h1 className="text-2xl font-bold text-foreground" style={{ fontFamily: 'Syne, sans-serif' }}>{t("chatHistory")}</h1>
+        <p className="text-muted-foreground text-sm mt-1">{sessions.length} {t("conversationsRecorded")}</p>
       </div>
 
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-        <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search by source URL..." className="pl-9 bg-secondary border-border" />
+        <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder={t("searchBySource")} className="pl-9 bg-secondary border-border" />
       </div>
 
       <div className="glass rounded-xl overflow-hidden">
@@ -63,16 +65,16 @@ const ClientChats = () => {
         ) : filtered.length === 0 ? (
           <div className="p-12 text-center">
             <MessageSquare className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
-            <p className="text-muted-foreground">No chat sessions yet.</p>
+            <p className="text-muted-foreground">{t("noSessionsYet")}</p>
           </div>
         ) : (
           <table className="w-full">
             <thead>
               <tr className="border-b border-border bg-secondary/30">
-                <th className="text-left px-5 py-3 text-xs font-medium text-muted-foreground uppercase">Session</th>
-                <th className="text-left px-5 py-3 text-xs font-medium text-muted-foreground uppercase hidden md:table-cell">Messages</th>
-                <th className="text-left px-5 py-3 text-xs font-medium text-muted-foreground uppercase hidden md:table-cell">Duration</th>
-                <th className="text-left px-5 py-3 text-xs font-medium text-muted-foreground uppercase">Date</th>
+                <th className="text-left px-5 py-3 text-xs font-medium text-muted-foreground uppercase">{t("session")}</th>
+                <th className="text-left px-5 py-3 text-xs font-medium text-muted-foreground uppercase hidden md:table-cell">{t("messages")}</th>
+                <th className="text-left px-5 py-3 text-xs font-medium text-muted-foreground uppercase hidden md:table-cell">{t("duration")}</th>
+                <th className="text-left px-5 py-3 text-xs font-medium text-muted-foreground uppercase">{t("date")}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
@@ -95,11 +97,11 @@ const ClientChats = () => {
       <Dialog open={!!selected} onOpenChange={() => setSelected(null)}>
         <DialogContent className="bg-card border-border text-foreground max-w-lg max-h-[70vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Chat Transcript</DialogTitle>
+            <DialogTitle>{t("chatTranscript")}</DialogTitle>
           </DialogHeader>
           {selected && (
             <div className="space-y-3 pt-2">
-              <p className="text-xs text-muted-foreground">Source: {selected.source_url || "Direct"}</p>
+              <p className="text-xs text-muted-foreground">{t("source")}: {selected.source_url || "Direct"}</p>
               <div className="space-y-2">
                 {selected.messages.map((msg: any, i: number) => (
                   <div key={i} className={`text-sm p-3 rounded-xl max-w-[85%] ${
