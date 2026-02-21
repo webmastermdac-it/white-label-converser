@@ -63,8 +63,12 @@ const AdminClients = () => {
         body: { name: form.name, email: form.email, password: form.password, plan: form.plan }
       });
 
-      if (error || data?.error) {
-        throw new Error(error?.message || data?.error);
+      // Parse response - edge function returns JSON in data
+      if (error) {
+        throw new Error(error.message || "Errore nella creazione del cliente");
+      }
+      if (data?.error) {
+        throw new Error(data.error);
       }
 
       toast({ title: "Client created!", description: `${form.name} has been added successfully.` });
