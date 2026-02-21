@@ -12,6 +12,7 @@ import logoDtm from "@/assets/logos/dtm.png";
 import logoSaniplast from "@/assets/logos/saniplast.png";
 import logoZerotrenta from "@/assets/logos/zerotrenta.png";
 import logoCurtense from "@/assets/logos/curtense.png";
+import CookieBanner from "@/components/CookieBanner";
 
 /* ─── Scroll fade-in observer ─── */
 function useFadeIn() {
@@ -435,9 +436,9 @@ export default function LandingPage() {
 
             {/* Center */}
             <div className="flex flex-col items-start md:items-center gap-2">
-              <a href="#" className="text-sm text-white/50 hover:text-white transition-colors">Privacy Policy</a>
-              <a href="#" className="text-sm text-white/50 hover:text-white transition-colors">{t("Terms of Service", "Termini di Servizio")}</a>
-              <a href="#" className="text-sm text-white/50 hover:text-white transition-colors">{t("Contact", "Contatti")}</a>
+              <Link to="/privacy-policy" className="text-sm text-white/50 hover:text-white transition-colors">Privacy Policy</Link>
+              <Link to="/terms" className="text-sm text-white/50 hover:text-white transition-colors">{t("Terms of Service", "Termini di Servizio")}</Link>
+              <a href="mailto:mdac@mdac.it" className="text-sm text-white/50 hover:text-white transition-colors">{t("Contact", "Contatti")}</a>
             </div>
 
             {/* Right */}
@@ -485,6 +486,9 @@ export default function LandingPage() {
           50% { transform: translateY(-30px) scale(1.5); opacity: 0.5; }
         }
       `}</style>
+
+      {/* Cookie Banner */}
+      <CookieBanner />
     </div>
   );
 }
