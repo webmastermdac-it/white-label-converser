@@ -33,6 +33,41 @@ serve(async (req) => {
       });
     }
 
+    // --- Plan limit enforcement ---
+    const { data: client } = await supabase
+      .from("clients")
+      .select("plan")
+      .eq("id", botConfig.client_id)
+      .single();
+
+    const plan = client?.plan || "free";
+
+    if (plan === "free") {
+      return new Response(JSON.stringify({
+        error: "plan_limit",
+        message: "This chatbot requires an active subscription. Please upgrade your plan.",
+      }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
+    if (plan === "starter") {
+      // Check monthly session count
+      const monthStart = new Date();
+      monthStart.setDate(1);
+      monthStart.setHours(0, 0, 0, 0);
+      const { count } = await supabase
+        .from("chat_sessions")
+        .select("id", { count: "exact", head: true })
+        .eq("client_id", botConfig.client_id)
+        .gte("started_at", monthStart.toISOString());
+
+      if ((count || 0) >= 500) {
+        return new Response(JSON.stringify({
+          error: "plan_limit",
+          message: "Monthly conversation limit reached. Please upgrade to Pro for unlimited conversations.",
+        }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+    }
+
     const systemPrompt = `${botConfig.knowledge_base || "You are a helpful assistant."}
 
 IMPORTANT INSTRUCTIONS:
