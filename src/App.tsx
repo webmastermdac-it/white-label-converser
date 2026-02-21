@@ -10,6 +10,7 @@ import ClientLayout from "@/layouts/ClientLayout";
 
 // Pages
 import Login from "@/pages/Login";
+import LandingPage from "@/pages/LandingPage";
 import AdminOverview from "@/pages/admin/AdminOverview";
 import AdminClients from "@/pages/admin/AdminClients";
 import AdminLeads from "@/pages/admin/AdminLeads";
@@ -35,7 +36,7 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             <Route path="/login" element={<Login />} />
-            <Route path="/" element={<Navigate to="/login" replace />} />
+            <Route path="/" element={<LandingPage />} />
 
             {/* Admin Routes */}
             <Route
