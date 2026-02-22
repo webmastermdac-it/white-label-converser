@@ -24,6 +24,7 @@ import ClientBotSettings from "@/pages/client/ClientBotSettings";
 import AdminChats from "@/pages/admin/AdminChats";
 import AdminPlans from "@/pages/admin/AdminPlans";
 import AdminAnalytics from "@/pages/admin/AdminAnalytics";
+import AdminEcommerce from "@/pages/admin/AdminEcommerce";
 import ClientEmbed from "@/pages/client/ClientEmbed";
 import ClientChatPreview from "@/pages/client/ClientChatPreview";
 import NotFound from "@/pages/NotFound";
@@ -34,6 +35,7 @@ import Terms from "@/pages/Terms";
 import Register from "@/pages/Register";
 import ClientUpgrade from "@/pages/client/ClientUpgrade";
 import ClientAnalytics from "@/pages/client/ClientAnalytics";
+import ClientEcommerce from "@/pages/client/ClientEcommerce";
 
 const queryClient = new QueryClient();
 
@@ -71,6 +73,7 @@ const App = () => (
               <Route path="settings" element={<AdminSettings />} />
               <Route path="plans" element={<AdminPlans />} />
               <Route path="analytics" element={<AdminAnalytics />} />
+              <Route path="ecommerce" element={<AdminEcommerce />} />
             </Route>
 
             {/* Client Routes */}
@@ -90,6 +93,7 @@ const App = () => (
               <Route path="embed" element={<ClientEmbed />} />
               <Route path="upgrade" element={<ClientUpgrade />} />
               <Route path="analytics" element={<ClientAnalytics />} />
+              <Route path="ecommerce" element={<ClientEcommerce />} />
             </Route>
 
             <Route path="*" element={<NotFound />} />

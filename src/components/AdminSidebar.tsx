@@ -5,7 +5,7 @@ import { useLanguage } from "@/hooks/useLanguage";
 import { Button } from "@/components/ui/button";
 import {
   Users, Settings, BarChart3, MessageSquare, ChevronLeft,
-  ChevronRight, Bot, LogOut, Shield, Inbox, Globe, CreditCard, TrendingUp
+  ChevronRight, Bot, LogOut, Shield, Inbox, Globe, CreditCard, TrendingUp, Store
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -23,6 +23,7 @@ const AdminSidebar = () => {
     { label: t("settings"), href: "/admin/settings", icon: Settings },
     { label: "Piani", href: "/admin/plans", icon: CreditCard },
     { label: "Analytics", href: "/admin/analytics", icon: TrendingUp },
+    { label: "Ecommerce", href: "/admin/ecommerce", icon: Store },
   ];
 
   const handleSignOut = async () => {

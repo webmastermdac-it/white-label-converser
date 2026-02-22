@@ -3,7 +3,7 @@ import AdminSidebar from "@/components/AdminSidebar";
 import MobileNav from "@/components/MobileNav";
 import { useLanguage } from "@/hooks/useLanguage";
 import {
-  BarChart3, Users, Inbox, MessageSquare, Settings, CreditCard, TrendingUp
+  BarChart3, Users, Inbox, MessageSquare, Settings, CreditCard, TrendingUp, Store
 } from "lucide-react";
 
 const AdminLayout = () => {
@@ -17,6 +17,7 @@ const AdminLayout = () => {
     { label: t("settings"), href: "/admin/settings", icon: Settings },
     { label: "Piani", href: "/admin/plans", icon: CreditCard },
     { label: "Analytics", href: "/admin/analytics", icon: TrendingUp },
+    { label: "Ecommerce", href: "/admin/ecommerce", icon: Store },
   ];
 
   return (

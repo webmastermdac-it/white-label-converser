@@ -78,13 +78,24 @@ serve(async (req) => {
       ? "\n\nIMPORTANT: Always reply in English, regardless of the language the user writes in."
       : "\n\nIMPORTANTE: Rispondi SEMPRE in italiano, indipendentemente dalla lingua con cui ti scrive l'utente.";
 
-    const systemPrompt = `${botConfig.knowledge_base || "You are a helpful assistant."}
+    // Check if client has product catalog
+    let productKnowledge = "";
+    if (botConfig.knowledge_base_products) {
+      productKnowledge = botConfig.knowledge_base_products;
+    }
+
+    const productInstruction = productKnowledge ? (lang === "en"
+      ? `\n\nYou have access to the store's updated product catalog. When users ask about products: search the catalog and answer accurately, always mention the exact price and availability, if there are variants list them with prices and stock, if a product is out of stock say so and suggest similar available products, never invent products not in the catalog, you can provide a direct link to the product if available.`
+      : `\n\nHai accesso al catalogo prodotti aggiornato del negozio. Quando l'utente chiede di prodotti: cerca nel catalogo e rispondi con precisione, indica sempre il prezzo esatto e la disponibilità, se ci sono varianti elencale con prezzi e stock, se il prodotto è esaurito dillo e suggerisci prodotti simili disponibili, non inventare prodotti che non sono nel catalogo, puoi fornire il link diretto al prodotto se disponibile.`)
+      : "";
+
+    const systemPrompt = `${botConfig.knowledge_base || "You are a helpful assistant."}${productKnowledge ? "\n\n" + productKnowledge : ""}
 
 IMPORTANT INSTRUCTIONS:
 - If you don't know the answer or are uncertain, say the following EXACT phrase (or very similar): "${fallbackMessage}"
 - After saying the fallback message, include the special marker: [TRIGGER_LEAD_FORM]
 - Never make up information not provided in your knowledge base
-- Be concise, helpful, and professional${langInstruction}`;
+- Be concise, helpful, and professional${langInstruction}${productInstruction}`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
