@@ -162,7 +162,7 @@ const ClientUpgrade = () => {
                   {checkoutLoading?.startsWith(plan.id) ? (
                     <Loader2 className="w-4 h-4 animate-spin" />
                   ) : (
-                    `${t("upgradeUpgradeTo", "Upgradia a")} ${plan.name}`
+                    `${t("upgradeUpgradeTo", "Passa a")} ${plan.name}`
                   )}
                 </Button>
               ) : isCurrent ? (
@@ -171,7 +171,7 @@ const ClientUpgrade = () => {
                 </Button>
               ) : (
                 <Button variant="outline" className="w-full" disabled>
-                  {plan.id === "free" ? t("upgradeIncluded", "Incluso") : t("upgradeUpgradeTo", "Upgradia a") + " " + plan.name}
+                  {plan.id === "free" ? t("upgradeIncluded", "Incluso") : t("upgradeUpgradeTo", "Passa a") + " " + plan.name}
                 </Button>
               )}
             </div>

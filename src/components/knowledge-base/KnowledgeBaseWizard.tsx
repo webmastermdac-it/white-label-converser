@@ -271,7 +271,7 @@ const KnowledgeBaseWizard: React.FC<Props> = ({ clientId, configId, currentKnowl
               <p className="font-medium text-foreground mb-1">
                 ⭐ {t("Document upload available from Starter", "Upload documenti disponibile da Starter")}
               </p>
-              <p>{t("Upgrade your plan to upload PDF and Word files.", "Upgradia il tuo piano per caricare PDF e Word.")}</p>
+              <p>{t("Upgrade your plan to upload PDF and Word files.", "Passa a un piano superiore per caricare PDF e Word.")}</p>
               <a href="/dashboard/upgrade" className="text-primary hover:underline text-xs mt-1 inline-block">
                 {t("Upgrade", "Upgrade")} →
               </a>

@@ -734,7 +734,7 @@ export const translations = {
   // ── Upgrade ────────────────────────────────────────────
   upgradeTitle: {
     en: "Upgrade your plan",
-    it: "Upgradia il tuo piano",
+    it: "Cambia piano",
   },
   upgradeDesc: {
     en: "Choose the plan that fits your business",
@@ -766,7 +766,7 @@ export const translations = {
   },
   upgradeUpgradeTo: {
     en: "Upgrade to",
-    it: "Upgradia a",
+    it: "Passa a",
   },
   upgradeIncluded: {
     en: "Included",
@@ -874,7 +874,7 @@ export const translations = {
   },
   upgradeBannerDesc: {
     en: "Upgrade to unlock more features",
-    it: "Upgradia per sbloccare più funzionalità",
+    it: "Passa a un piano superiore per sbloccare più funzionalità",
   },
   usageThisMonth: {
     en: "Usage this month",
