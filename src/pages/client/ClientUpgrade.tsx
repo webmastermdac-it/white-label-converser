@@ -9,11 +9,13 @@ import { Check, Loader2 } from "lucide-react";
 
 const ClientUpgrade = () => {
   const { clientId } = useAuth();
-  const { t } = useLanguage();
+  const { lang } = useLanguage();
   const { plan: clientPlan } = usePlan();
   const [yearly, setYearly] = useState(false);
   const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
   const [couponCode, setCouponCode] = useState("");
+
+  const isIt = lang === "it";
 
   const handleUpgrade = async (plan: "starter" | "pro") => {
     const interval = yearly ? "year" : "month";
@@ -40,12 +42,12 @@ const ClientUpgrade = () => {
       name: "Free",
       price: { month: "0", year: "0" },
       features: [
-        t("upgrade1Bot", "1 chatbot"),
-        t("upgrade50Conv", "50 conversazioni/mese"),
-        t("upgrade10Leads", "10 lead/mese"),
-        t("upgradeBranding", "Branding \"Powered by Genius\""),
-        t("upgradeBasicKB", "Knowledge base base"),
-        t("upgradeEmailSupport", "Supporto email"),
+        "1 chatbot",
+        isIt ? "50 conversazioni/mese" : "50 conversations/month",
+        isIt ? "10 lead/mese" : "10 leads/month",
+        isIt ? "Branding 'Powered by Genius'" : "'Powered by Genius' branding",
+        isIt ? "Knowledge base base" : "Basic knowledge base",
+        isIt ? "Supporto email" : "Email support",
       ],
     },
     {
@@ -53,13 +55,13 @@ const ClientUpgrade = () => {
       name: "Starter",
       price: { month: "49", year: "490" },
       features: [
-        t("upgrade1Bot", "1 chatbot"),
-        t("upgrade500Conv", "500 conversazioni/mese"),
-        t("upgradeUnlimitedLeads", "Lead illimitati"),
-        t("upgradeNoBranding", "Rimozione branding"),
-        t("upgradeDocUpload", "Upload documenti PDF/Word"),
-        t("upgradeSectorTemplates", "Template per settore"),
-        t("upgradePrioritySupport", "Supporto prioritario"),
+        "1 chatbot",
+        isIt ? "500 conversazioni/mese" : "500 conversations/month",
+        isIt ? "Lead illimitati" : "Unlimited leads",
+        isIt ? "Rimozione branding" : "Remove branding",
+        isIt ? "Upload documenti PDF/Word" : "PDF/Word document upload",
+        isIt ? "Template per settore" : "Sector templates",
+        isIt ? "Supporto prioritario" : "Priority support",
       ],
     },
     {
@@ -68,12 +70,12 @@ const ClientUpgrade = () => {
       popular: true,
       price: { month: "149", year: "1490" },
       features: [
-        t("upgradeUnlimitedBots", "Chatbot illimitati"),
-        t("upgradeUnlimitedConv", "Conversazioni illimitate"),
-        t("upgradeUnlimitedLeads", "Lead illimitati"),
-        t("upgradeAllFeatures", "Tutte le funzionalità Pro"),
-        t("upgradeAdvancedAnalytics", "Analytics avanzate"),
-        t("upgradeDedicatedSupport", "Supporto dedicato"),
+        isIt ? "Chatbot illimitati" : "Unlimited chatbots",
+        isIt ? "Conversazioni illimitate" : "Unlimited conversations",
+        isIt ? "Lead illimitati" : "Unlimited leads",
+        isIt ? "Tutte le funzionalità Pro" : "All Pro features",
+        isIt ? "Analytics avanzate" : "Advanced analytics",
+        isIt ? "Supporto dedicato" : "Dedicated support",
       ],
     },
   ];
@@ -82,15 +84,17 @@ const ClientUpgrade = () => {
     <div className="p-4 md:p-6 space-y-6 animate-fade-in-up">
       <div>
         <h1 className="text-2xl font-bold text-foreground" style={{ fontFamily: "Syne, sans-serif" }}>
-          {t("upgradeTitle")}
+          {isIt ? "Scegli il tuo piano" : "Choose your plan"}
         </h1>
-        <p className="text-muted-foreground text-sm mt-1">{t("upgradeDesc")}</p>
+        <p className="text-muted-foreground text-sm mt-1">
+          {isIt ? "Inizia gratis, passa a un piano superiore quando sei pronto." : "Start free, upgrade when you're ready."}
+        </p>
       </div>
 
       {/* Toggle */}
       <div className="flex items-center justify-center gap-3">
         <span className={`text-sm ${!yearly ? "text-foreground" : "text-muted-foreground"}`}>
-          {t("upgradeMonthly", "Mensile")}
+          {isIt ? "Mensile" : "Monthly"}
         </span>
         <button
           onClick={() => setYearly(!yearly)}
@@ -99,7 +103,7 @@ const ClientUpgrade = () => {
           <div className={`absolute top-0.5 w-6 h-6 rounded-full bg-white transition-transform ${yearly ? "translate-x-7" : "translate-x-0.5"}`} />
         </button>
         <span className={`text-sm ${yearly ? "text-foreground" : "text-muted-foreground"}`}>
-          {t("upgradeYearly", "Annuale")}
+          {isIt ? "Annuale" : "Yearly"}
         </span>
         {yearly && <span className="text-xs bg-primary/20 text-primary px-2 py-0.5 rounded-full font-medium">-17%</span>}
       </div>
@@ -121,12 +125,12 @@ const ClientUpgrade = () => {
             >
               {isCurrent && (
                 <div className="absolute -top-3 left-4 bg-primary text-white text-xs font-bold px-3 py-1 rounded-full">
-                  {t("upgradeCurrentPlan", "Piano attuale")}
+                  {isIt ? "Piano attuale" : "Current plan"}
                 </div>
               )}
               {plan.popular && !isCurrent && (
                 <div className="absolute -top-3 right-4 bg-primary text-white text-xs font-bold px-3 py-1 rounded-full">
-                  {t("upgradeMostPopular", "Più Popolare")}
+                  {isIt ? "Più Popolare" : "Most Popular"}
                 </div>
               )}
 
@@ -139,7 +143,7 @@ const ClientUpgrade = () => {
                     €{yearly ? plan.price.year : plan.price.month}
                   </span>
                   <span className="text-muted-foreground text-sm">
-                    /{yearly ? t("upgradeYear", "anno") : t("upgradeMonth", "mese")}
+                    /{yearly ? (isIt ? "anno" : "year") : (isIt ? "mese" : "month")}
                   </span>
                 </div>
               </div>
@@ -162,16 +166,16 @@ const ClientUpgrade = () => {
                   {checkoutLoading?.startsWith(plan.id) ? (
                     <Loader2 className="w-4 h-4 animate-spin" />
                   ) : (
-                    `${t("upgradeUpgradeTo", "Passa a")} ${plan.name}`
+                    `${isIt ? "Passa a" : "Upgrade to"} ${plan.name}`
                   )}
                 </Button>
               ) : isCurrent ? (
                 <Button variant="outline" className="w-full" disabled>
-                  {t("upgradeCurrentPlan", "Piano attuale")}
+                  {isIt ? "Piano attuale" : "Current plan"}
                 </Button>
               ) : (
                 <Button variant="outline" className="w-full" disabled>
-                  {plan.id === "free" ? t("upgradeIncluded", "Incluso") : t("upgradeUpgradeTo", "Passa a") + " " + plan.name}
+                  {plan.id === "free" ? (isIt ? "Incluso" : "Included") : `${isIt ? "Passa a" : "Upgrade to"} ${plan.name}`}
                 </Button>
               )}
             </div>
@@ -182,17 +186,17 @@ const ClientUpgrade = () => {
       {/* Coupon */}
       <div className="glass rounded-xl p-4">
         <label className="text-sm text-muted-foreground block mb-2">
-          {t("upgradeCoupon", "Hai già un codice sconto?")}
+          {isIt ? "Hai già un codice sconto?" : "Have a discount code?"}
         </label>
         <div className="flex gap-2">
           <Input
             value={couponCode}
             onChange={(e) => setCouponCode(e.target.value)}
-            placeholder={t("upgradeCouponPlaceholder", "Inserisci il codice...")}
+            placeholder={isIt ? "Inserisci il codice..." : "Enter code..."}
             className="bg-secondary border-border text-base"
           />
           <Button variant="outline" disabled={!couponCode.trim()}>
-            {t("upgradeApply", "Applica")}
+            {isIt ? "Applica" : "Apply"}
           </Button>
         </div>
       </div>
