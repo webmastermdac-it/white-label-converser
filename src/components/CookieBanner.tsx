@@ -28,7 +28,7 @@ export default function CookieBanner() {
             "We use technical cookies for site functionality. No profiling cookies without your consent.",
             "Utilizziamo cookie tecnici per il funzionamento del sito. Nessun cookie di profilazione senza il tuo consenso."
           )}{" "}
-          <Link to="/privacy-policy" className="text-[#E94560] hover:underline">
+          <Link to="/privacy-policy" className="text-[#F5A623] hover:underline">
             Privacy Policy
           </Link>
         </p>
@@ -41,7 +41,7 @@ export default function CookieBanner() {
           </button>
           <button
             onClick={() => handleChoice(true)}
-            className="text-sm px-5 py-2 rounded-full bg-[#E94560] text-white font-semibold hover:bg-[#d63b54] transition-colors"
+            className="text-sm px-5 py-2 rounded-full bg-[#F5A623] text-black font-semibold hover:bg-[#E09800] transition-colors"
           >
             {t("Accept", "Accetta")}
           </button>
