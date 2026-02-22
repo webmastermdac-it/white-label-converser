@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/hooks/useLanguage";
+import { usePlan } from "@/hooks/usePlan";
 import { Inbox, MessageSquare, Bot, TrendingUp, ArrowUpRight, Activity, Settings, Code2, Copy, Sparkles, Star } from "lucide-react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -22,25 +23,52 @@ const ClientOverview = () => {
   const { t } = useLanguage();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const { plan: clientPlan, isFree, isStarterOrAbove, refetch: refetchPlan } = usePlan();
   const [stats, setStats] = useState({ leads: 0, leadsThisWeek: 0, chats: 0, isActive: false });
   const [recentLeads, setRecentLeads] = useState<RecentLead[]>([]);
   const [embedToken, setEmbedToken] = useState("");
   const [loading, setLoading] = useState(true);
-  const [clientPlan, setClientPlan] = useState("free");
   const [monthlyChats, setMonthlyChats] = useState(0);
   const [monthlyLeads, setMonthlyLeads] = useState(0);
 
+  // Handle payment success with polling
   useEffect(() => {
-    if (searchParams.get("payment") === "success") {
-      const plan = searchParams.get("plan") || "";
+    if (searchParams.get("payment") !== "success") return;
+    const planFromUrl = searchParams.get("plan") || "Premium";
+
+    let cancelled = false;
+    const pollPlan = async () => {
+      for (let i = 0; i < 5; i++) {
+        if (cancelled) return;
+        await refetchPlan();
+        // Re-read from DB directly to avoid stale closure
+        const { data } = await supabase
+          .from("clients")
+          .select("plan")
+          .eq("id", clientId!)
+          .single();
+        if (data && data.plan !== "free") {
+          toast({
+            title: t("upgradeCompleteTitle"),
+            description: t("upgradeCompleteDesc").replace("[plan]", planFromUrl.charAt(0).toUpperCase() + planFromUrl.slice(1)),
+          });
+          setSearchParams({}, { replace: true });
+          return;
+        }
+        await new Promise((r) => setTimeout(r, 2000));
+      }
+      // After 5 attempts
       toast({
-        title: t("upgradeCompleteTitle"),
-        description: t("upgradeCompleteDesc").replace("[plan]", plan || "Premium"),
+        title: t("paymentProcessing", "Pagamento in elaborazione"),
+        description: t("paymentProcessingDesc", "Il pagamento è in elaborazione. Aggiorna la pagina tra qualche secondo."),
       });
-      window.history.replaceState({}, "", "/dashboard");
-    }
-  }, [searchParams]);
+      setSearchParams({}, { replace: true });
+    };
+
+    if (clientId) pollPlan();
+    return () => { cancelled = true; };
+  }, [searchParams, clientId]);
 
   useEffect(() => {
     if (!clientId) return;
@@ -51,14 +79,13 @@ const ClientOverview = () => {
       monthStart.setDate(1);
       monthStart.setHours(0, 0, 0, 0);
 
-      const [leadsCount, weekLeads, chatsCount, botStatus, recent, botConfig, clientData, monthChats, monthLeadsCount] = await Promise.all([
+      const [leadsCount, weekLeads, chatsCount, botStatus, recent, botConfig, monthChats, monthLeadsCount] = await Promise.all([
         supabase.from("leads").select("id", { count: "exact", head: true }).eq("client_id", clientId),
         supabase.from("leads").select("id", { count: "exact", head: true }).eq("client_id", clientId).gte("created_at", weekAgo),
         supabase.from("chat_sessions").select("id", { count: "exact", head: true }).eq("client_id", clientId),
         supabase.from("chatbot_configs").select("is_active").eq("client_id", clientId).single(),
         supabase.from("leads").select("id, name, email, status, created_at").eq("client_id", clientId).order("created_at", { ascending: false }).limit(5),
         supabase.from("chatbot_configs").select("embed_token").eq("client_id", clientId).single(),
-        supabase.from("clients").select("plan").eq("id", clientId).single(),
         supabase.from("chat_sessions").select("id", { count: "exact", head: true }).eq("client_id", clientId).gte("started_at", monthStart.toISOString()),
         supabase.from("leads").select("id", { count: "exact", head: true }).eq("client_id", clientId).gte("created_at", monthStart.toISOString()),
       ]);
@@ -71,7 +98,6 @@ const ClientOverview = () => {
       });
       setRecentLeads((recent.data as any) || []);
       setEmbedToken(botConfig.data?.embed_token || "");
-      setClientPlan(clientData.data?.plan || "free");
       setMonthlyChats(monthChats.count || 0);
       setMonthlyLeads(monthLeadsCount.count || 0);
       setLoading(false);
@@ -105,7 +131,7 @@ const ClientOverview = () => {
       </div>
 
       {/* Upgrade Banner for Free users */}
-      {clientPlan === "free" && (
+      {isFree && (
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-4 rounded-xl bg-amber-500/10 border border-amber-500/20">
           <div className="flex items-center gap-3">
             <Star className="w-5 h-5 text-amber-400 shrink-0" />

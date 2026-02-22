@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { usePlan } from "@/hooks/usePlan";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -62,11 +63,11 @@ const ChatbotConfigForm: React.FC<ChatbotConfigFormProps> = ({ clientId, onSaved
   const { toast } = useToast();
   const { role } = useAuth();
   const { t } = useLanguage();
+  const { plan: clientPlan, isStarterOrAbove } = usePlan();
   const [config, setConfig] = useState<Config>(defaultConfig);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [activeSection, setActiveSection] = useState("identity");
-  const [clientPlan, setClientPlan] = useState<string>("free");
 
   useEffect(() => {
     const fetchConfig = async () => {
@@ -95,17 +96,6 @@ const ChatbotConfigForm: React.FC<ChatbotConfigFormProps> = ({ clientId, onSaved
           launcher_position: data.launcher_position || "bottom-right",
           embed_token: data.embed_token,
         });
-      }
-
-      // Fetch client plan
-      const { data: clientData } = await supabase
-        .from("clients")
-        .select("plan")
-        .eq("id", clientId)
-        .single();
-
-      if (clientData) {
-        setClientPlan(clientData.plan || "free");
       }
 
       setLoading(false);
@@ -160,7 +150,7 @@ const ChatbotConfigForm: React.FC<ChatbotConfigFormProps> = ({ clientId, onSaved
 
   const set = (key: keyof Config, value: any) => setConfig((prev) => ({ ...prev, [key]: value }));
 
-  const isProOrAdmin = clientPlan === "pro" || role === "super_admin";
+  const isProOrAdmin = isStarterOrAbove || role === "super_admin";
 
   const sections = [
     { id: "identity", label: t("identity"), icon: Bot },

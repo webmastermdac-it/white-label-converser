@@ -7,6 +7,11 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+const log = (step: string, details?: any) => {
+  const d = details ? ` - ${JSON.stringify(details)}` : "";
+  console.log(`[STRIPE-WEBHOOK] ${step}${d}`);
+};
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -16,6 +21,7 @@ serve(async (req) => {
 
   const signature = req.headers.get("stripe-signature");
   if (!signature) {
+    log("ERROR: No signature header");
     return new Response(JSON.stringify({ error: "No signature" }), {
       status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
@@ -31,11 +37,13 @@ serve(async (req) => {
       Deno.env.get("STRIPE_WEBHOOK_SECRET") || ""
     );
   } catch (err: any) {
-    console.error("Webhook signature verification failed:", err.message);
+    log("Webhook signature verification failed", { message: err.message });
     return new Response(JSON.stringify({ error: "Invalid signature" }), {
       status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
+
+  log("Webhook received", { type: event.type });
 
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL")!,
@@ -45,39 +53,93 @@ serve(async (req) => {
   try {
     if (event.type === "checkout.session.completed") {
       const session = event.data.object as Stripe.Checkout.Session;
-      const email = session.customer_email || session.customer_details?.email;
+      log("Session data", {
+        customer: session.customer,
+        subscription: session.subscription,
+        metadata: session.metadata,
+        customer_email: session.customer_email,
+        customer_details_email: session.customer_details?.email,
+      });
+
       const plan = session.metadata?.plan || "starter";
       const interval = session.metadata?.interval || "month";
+      const metaClientId = session.metadata?.client_id;
+      const email = session.customer_email || session.customer_details?.email;
 
-      if (email) {
-        // Get subscription details for expiry
-        let planExpiresAt: string | null = null;
-        if (session.subscription) {
+      log("Plan detection", { plan, interval, metaClientId, email });
+
+      // Get subscription details for expiry
+      let planExpiresAt: string | null = null;
+      if (session.subscription) {
+        try {
           const sub = await stripe.subscriptions.retrieve(session.subscription as string);
           planExpiresAt = new Date(sub.current_period_end * 1000).toISOString();
+          log("Subscription expiry", { planExpiresAt });
+        } catch (subErr: any) {
+          log("Error retrieving subscription", { message: subErr.message });
+          // Calculate manually as fallback
+          const now = new Date();
+          if (interval === "year") {
+            now.setFullYear(now.getFullYear() + 1);
+          } else {
+            now.setMonth(now.getMonth() + 1);
+          }
+          planExpiresAt = now.toISOString();
         }
+      }
 
-        const { error } = await supabase
+      const updatePayload = {
+        plan,
+        stripe_customer_id: session.customer as string,
+        stripe_subscription_id: session.subscription as string,
+        plan_interval: interval,
+        plan_expires_at: planExpiresAt,
+      };
+
+      log("Update payload", updatePayload);
+
+      // Strategy 1: Use client_id from metadata (most reliable)
+      if (metaClientId) {
+        log("Looking for client by client_id", { metaClientId });
+        const { data: client, error } = await supabase
           .from("clients")
-          .update({
-            plan,
-            stripe_customer_id: session.customer as string,
-            stripe_subscription_id: session.subscription as string,
-            plan_interval: interval,
-            plan_expires_at: planExpiresAt,
-          })
-          .eq("email", email);
+          .update(updatePayload)
+          .eq("id", metaClientId)
+          .select("id, email, plan")
+          .single();
 
-        if (error) console.error("Error updating client:", error);
-        else console.log(`Client ${email} upgraded to ${plan}/${interval}`);
+        if (error) {
+          log("Error updating client by client_id", { error });
+        } else {
+          log("Client updated successfully by client_id", { client });
+        }
+      }
+      // Strategy 2: Fallback to email
+      else if (email) {
+        log("Looking for client with email", { email });
+        const { data: client, error } = await supabase
+          .from("clients")
+          .update(updatePayload)
+          .eq("email", email)
+          .select("id, email, plan")
+          .single();
+
+        if (error) {
+          log("Error updating client by email", { error });
+        } else {
+          log("Client updated successfully by email", { client });
+        }
+      } else {
+        log("ERROR: No client_id or email found in session");
       }
     }
 
     if (event.type === "customer.subscription.deleted") {
       const subscription = event.data.object as Stripe.Subscription;
       const customerId = subscription.customer as string;
+      log("Subscription deleted", { customerId });
 
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from("clients")
         .update({
           plan: "free",
@@ -85,19 +147,22 @@ serve(async (req) => {
           plan_interval: null,
           plan_expires_at: null,
         })
-        .eq("stripe_customer_id", customerId);
+        .eq("stripe_customer_id", customerId)
+        .select("id, email, plan");
 
-      if (error) console.error("Error downgrading client:", error);
-      else console.log(`Customer ${customerId} downgraded to free`);
+      if (error) log("Error downgrading client", { error });
+      else log("Client downgraded to free", { data });
     }
 
+    // Always return 200 to prevent Stripe retries
     return new Response(JSON.stringify({ received: true }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error: any) {
-    console.error("Webhook processing error:", error);
-    return new Response(JSON.stringify({ error: error.message }), {
-      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    log("Webhook processing error", { message: error.message, stack: error.stack });
+    // Still return 200 to prevent Stripe retries
+    return new Response(JSON.stringify({ received: true }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
 });

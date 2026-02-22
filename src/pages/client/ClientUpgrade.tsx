@@ -1,25 +1,19 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/hooks/useLanguage";
+import { usePlan } from "@/hooks/usePlan";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Check, Loader2, Star } from "lucide-react";
+import { Check, Loader2 } from "lucide-react";
 
 const ClientUpgrade = () => {
   const { clientId } = useAuth();
   const { t } = useLanguage();
-  const [clientPlan, setClientPlan] = useState("free");
+  const { plan: clientPlan } = usePlan();
   const [yearly, setYearly] = useState(false);
   const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
   const [couponCode, setCouponCode] = useState("");
-
-  useEffect(() => {
-    if (!clientId) return;
-    supabase.from("clients").select("plan").eq("id", clientId).single().then(({ data }) => {
-      if (data) setClientPlan(data.plan || "free");
-    });
-  }, [clientId]);
 
   const handleUpgrade = async (plan: "starter" | "pro") => {
     const interval = yearly ? "year" : "month";
@@ -29,7 +23,7 @@ const ClientUpgrade = () => {
       const email = session?.user?.email;
       if (!email) return;
       const { data, error } = await supabase.functions.invoke("create-checkout-session", {
-        body: { plan, interval, email },
+        body: { plan, interval, email, client_id: clientId },
       });
       if (error) throw error;
       if (data?.url) window.location.href = data.url;
