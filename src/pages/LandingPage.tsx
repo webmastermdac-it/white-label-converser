@@ -313,7 +313,7 @@ export default function LandingPage() {
                       </div>
                     </div>
                   </div>
-                  <img src={tab.img} alt={tab.label} className="w-full" />
+                  <img src={tab.img} alt={tab.label} className="w-full lg:w-1/2 lg:mx-auto" />
                 </div>
                 <p className="text-white/50 text-center text-sm">{tab.desc}</p>
               </div>
