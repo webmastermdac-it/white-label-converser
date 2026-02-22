@@ -12,6 +12,14 @@ import logoDtm from "@/assets/logos/dtm.png";
 import logoSaniplast from "@/assets/logos/saniplast.png";
 import logoZerotrenta from "@/assets/logos/zerotrenta.png";
 import logoCurtense from "@/assets/logos/curtense.png";
+import logoMetelli from "@/assets/logos/metelli-frutta.png";
+import logoFiorita from "@/assets/logos/la-fiorita.png";
+import logoMiri from "@/assets/logos/miri.png";
+import logoGatti from "@/assets/logos/gatti.png";
+import logoProvaglio from "@/assets/logos/provaglio.png";
+import logoRodengo from "@/assets/logos/rodengo-saiano.png";
+import logoMonticelli from "@/assets/logos/monticelli-brusati.png";
+import logoOspitaletto from "@/assets/logos/ospitaletto.png";
 import screenshotDashboard from "@/assets/screenshots/analytics-kpi.png";
 import screenshotWidget from "@/assets/screenshots/chatbot-widget-new.png";
 import screenshotSettings from "@/assets/screenshots/bot-settings-new.png";
@@ -531,16 +539,26 @@ export default function LandingPage() {
               "Ogni giorno lavoriamo per far crescere online PMI e aziende. Negli anni abbiamo aiutato centinaia di imprenditori e aziende a raggiungere i propri obiettivi di business."
             )}
           </p>
-          <div className="flex justify-center items-center gap-10 flex-wrap opacity-70">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
             {[
               { src: logoSpedali, alt: "Spedali Civili di Brescia" },
               { src: logoUnimi, alt: "Università degli Studi di Milano" },
               { src: logoDtm, alt: "DTM" },
-              { src: logoSaniplast, alt: "Saniplast" },
-              { src: logoZerotrenta, alt: "Zerotrenta" },
+              { src: logoMetelli, alt: "Metelli Frutta" },
+              { src: logoFiorita, alt: "La Fiorita Franciacorta" },
               { src: logoCurtense, alt: "Curtense" },
+              { src: logoZerotrenta, alt: "Zerotrenta" },
+              { src: logoMiri, alt: "Maurizio Miri" },
+              { src: logoGatti, alt: "Fratelli Gatti Tappezzeria" },
+              { src: logoSaniplast, alt: "Saniplast" },
+              { src: logoProvaglio, alt: "Comune di Provaglio d'Iseo" },
+              { src: logoRodengo, alt: "Comune di Rodengo Saiano" },
+              { src: logoMonticelli, alt: "Comune di Monticelli Brusati" },
+              { src: logoOspitaletto, alt: "Comune di Ospitaletto" },
             ].map((logo) => (
-              <img key={logo.alt} src={logo.src} alt={logo.alt} className="h-8 sm:h-10 w-auto grayscale hover:grayscale-0 transition-all duration-300 hover:opacity-100" />
+              <div key={logo.alt} className="bg-white/[0.03] border border-white/10 rounded-xl flex items-center justify-center p-6 h-28 hover:border-white/20 hover:bg-white/[0.06] transition-all duration-300">
+                <img src={logo.src} alt={logo.alt} className="max-h-12 max-w-[140px] w-auto object-contain opacity-70 hover:opacity-100 transition-opacity duration-300" />
+              </div>
             ))}
           </div>
         </div>
