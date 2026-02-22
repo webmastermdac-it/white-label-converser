@@ -20,6 +20,8 @@ interface Config {
   background_color: string;
   text_color: string;
   welcome_message: string;
+  welcome_msg_it: string;
+  welcome_msg_en: string;
   knowledge_base: string;
   fallback_message: string;
   fallback_msg_it: string;
@@ -46,6 +48,8 @@ const defaultConfig: Config = {
   background_color: "#1A1A2E",
   text_color: "#FFFFFF",
   welcome_message: "Ciao! Come posso aiutarti oggi?",
+  welcome_msg_it: "Ciao! Come posso aiutarti?",
+  welcome_msg_en: "Hello! How can I help you?",
   knowledge_base: "",
   fallback_message: "Non ho questa informazione, ma posso metterti in contatto con un nostro consulente!",
   fallback_msg_it: "Non ho questa informazione, ma posso metterti in contatto con un nostro consulente!",
@@ -86,6 +90,8 @@ const ChatbotConfigForm: React.FC<ChatbotConfigFormProps> = ({ clientId, onSaved
           background_color: data.background_color || "#1A1A2E",
           text_color: data.text_color || "#FFFFFF",
           welcome_message: data.welcome_message || "",
+          welcome_msg_it: (data as any).welcome_msg_it || defaultConfig.welcome_msg_it,
+          welcome_msg_en: (data as any).welcome_msg_en || defaultConfig.welcome_msg_en,
           knowledge_base: data.knowledge_base || "",
           fallback_message: data.fallback_message || "",
           fallback_msg_it: (data as any).fallback_msg_it || defaultConfig.fallback_msg_it,
@@ -117,6 +123,8 @@ const ChatbotConfigForm: React.FC<ChatbotConfigFormProps> = ({ clientId, onSaved
             background_color: config.background_color,
             text_color: config.text_color,
             welcome_message: config.welcome_message,
+            welcome_msg_it: config.welcome_msg_it,
+            welcome_msg_en: config.welcome_msg_en,
             knowledge_base: config.knowledge_base,
             fallback_message: config.fallback_message,
             fallback_msg_it: config.fallback_msg_it,
@@ -301,15 +309,30 @@ const ChatbotConfigForm: React.FC<ChatbotConfigFormProps> = ({ clientId, onSaved
         <div className="glass rounded-xl p-6 space-y-5 animate-fade-in-up">
           <h3 className="font-semibold text-foreground">{t("chatMessages")}</h3>
 
-          <div className="space-y-2">
+          <div className="space-y-3">
             <Label>{t("welcomeMessage")}</Label>
-            <Textarea
-              value={config.welcome_message}
-              onChange={(e) => set("welcome_message", e.target.value)}
-              placeholder="Ciao! Come posso aiutarti oggi?"
-              rows={3}
-              className="bg-secondary border-border resize-none"
-            />
+            <div className="space-y-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs text-muted-foreground">🇮🇹 {t("Welcome message (IT)", "Messaggio di benvenuto (IT)")}</Label>
+                <Textarea
+                  value={config.welcome_msg_it}
+                  onChange={(e) => set("welcome_msg_it", e.target.value)}
+                  placeholder="Ciao! Come posso aiutarti?"
+                  rows={2}
+                  className="bg-secondary border-border resize-none"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs text-muted-foreground">🇬🇧 {t("Welcome message (EN)", "Messaggio di benvenuto (EN)")}</Label>
+                <Textarea
+                  value={config.welcome_msg_en}
+                  onChange={(e) => set("welcome_msg_en", e.target.value)}
+                  placeholder="Hello! How can I help you?"
+                  rows={2}
+                  className="bg-secondary border-border resize-none"
+                />
+              </div>
+            </div>
           </div>
 
           <div className="space-y-2">

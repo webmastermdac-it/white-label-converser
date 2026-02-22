@@ -376,7 +376,7 @@
   }
 
   // ── Init: fetch config ──────────────────────────────────
-  fetch(SUPABASE_URL + "/rest/v1/chatbot_configs?embed_token=eq." + encodeURIComponent(EMBED_TOKEN) + "&select=*&limit=1", {
+  fetch(SUPABASE_URL + "/rest/v1/chatbot_configs?embed_token=eq." + encodeURIComponent(EMBED_TOKEN) + "&select=*,welcome_msg_it,welcome_msg_en&limit=1", {
     headers: {
       "apikey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhiemdweGF4cnFiYnZjeXZrbGxuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE0NTA3MzEsImV4cCI6MjA4NzAyNjczMX0.ngGgUexd_CYOHtDEyZCd7Cs_XA-EimDAyuguuLgSCUk",
       "Content-Type": "application/json",
@@ -391,7 +391,13 @@
       if (saved && saved.length) {
         messages = saved;
       } else {
-        messages = [{ role: "assistant", content: config.welcome_message || (widgetLang === "en" ? "Hi! How can I help you?" : "Ciao! Come posso aiutarti?") }];
+        var welcomeMsg;
+        if (widgetLang === "en") {
+          welcomeMsg = config.welcome_msg_en || config.welcome_msg_it || config.welcome_message || "Hello! How can I help you?";
+        } else {
+          welcomeMsg = config.welcome_msg_it || config.welcome_message || "Ciao! Come posso aiutarti?";
+        }
+        messages = [{ role: "assistant", content: welcomeMsg }];
         saveMessages(messages);
       }
 

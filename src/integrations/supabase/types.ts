@@ -90,6 +90,8 @@ export type Database = {
           text_color: string | null
           updated_at: string
           welcome_message: string | null
+          welcome_msg_en: string | null
+          welcome_msg_it: string | null
         }
         Insert: {
           avatar?: string | null
@@ -115,6 +117,8 @@ export type Database = {
           text_color?: string | null
           updated_at?: string
           welcome_message?: string | null
+          welcome_msg_en?: string | null
+          welcome_msg_it?: string | null
         }
         Update: {
           avatar?: string | null
@@ -140,6 +144,8 @@ export type Database = {
           text_color?: string | null
           updated_at?: string
           welcome_message?: string | null
+          welcome_msg_en?: string | null
+          welcome_msg_it?: string | null
         }
         Relationships: [
           {
