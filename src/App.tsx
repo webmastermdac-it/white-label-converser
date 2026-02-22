@@ -23,6 +23,7 @@ import ClientChats from "@/pages/client/ClientChats";
 import ClientBotSettings from "@/pages/client/ClientBotSettings";
 import AdminChats from "@/pages/admin/AdminChats";
 import AdminPlans from "@/pages/admin/AdminPlans";
+import AdminAnalytics from "@/pages/admin/AdminAnalytics";
 import ClientEmbed from "@/pages/client/ClientEmbed";
 import ClientChatPreview from "@/pages/client/ClientChatPreview";
 import NotFound from "@/pages/NotFound";
@@ -32,6 +33,7 @@ import PrivacyPolicy from "@/pages/PrivacyPolicy";
 import Terms from "@/pages/Terms";
 import Register from "@/pages/Register";
 import ClientUpgrade from "@/pages/client/ClientUpgrade";
+import ClientAnalytics from "@/pages/client/ClientAnalytics";
 
 const queryClient = new QueryClient();
 
@@ -68,6 +70,7 @@ const App = () => (
               <Route path="chats" element={<AdminChats />} />
               <Route path="settings" element={<AdminSettings />} />
               <Route path="plans" element={<AdminPlans />} />
+              <Route path="analytics" element={<AdminAnalytics />} />
             </Route>
 
             {/* Client Routes */}
@@ -86,6 +89,7 @@ const App = () => (
               <Route path="preview" element={<ClientChatPreview />} />
               <Route path="embed" element={<ClientEmbed />} />
               <Route path="upgrade" element={<ClientUpgrade />} />
+              <Route path="analytics" element={<ClientAnalytics />} />
             </Route>
 
             <Route path="*" element={<NotFound />} />
