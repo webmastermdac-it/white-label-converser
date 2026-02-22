@@ -43,7 +43,7 @@ serve(async (req) => {
       });
     }
 
-    // Check lead limits for free plan
+    // Check lead limits via plan_configs
     const { data: clientData } = await supabase
       .from("clients")
       .select("plan")
@@ -53,7 +53,15 @@ serve(async (req) => {
     const clientPlan = clientData?.plan || "free";
     let leadLimitReached = false;
 
-    if (clientPlan === "free") {
+    const { data: planConfig } = await supabase
+      .from("plan_configs")
+      .select("max_leads_month")
+      .eq("plan_name", clientPlan)
+      .single();
+
+    const maxLeads = planConfig?.max_leads_month ?? 10;
+
+    if (maxLeads !== -1) {
       const monthStart = new Date();
       monthStart.setDate(1);
       monthStart.setHours(0, 0, 0, 0);
@@ -63,7 +71,7 @@ serve(async (req) => {
         .eq("client_id", botConfig.client_id)
         .gte("created_at", monthStart.toISOString());
 
-      if ((count || 0) >= 10) {
+      if ((count || 0) >= maxLeads) {
         leadLimitReached = true;
       }
     }

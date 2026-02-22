@@ -1,0 +1,84 @@
+import { useState, useEffect, useCallback } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { usePlan } from "@/hooks/usePlan";
+
+export interface PlanConfig {
+  plan_name: string;
+  price_monthly: number;
+  price_yearly: number;
+  max_chatbots: number;
+  max_conversations_month: number;
+  max_leads_month: number;
+  remove_branding: boolean;
+  doc_upload: boolean;
+  sector_templates: boolean;
+  calendly_integration: boolean;
+  advanced_analytics: boolean;
+  priority_support: boolean;
+  knowledge_base_wizard: boolean;
+  updated_at: string;
+}
+
+const DEFAULTS: PlanConfig = {
+  plan_name: "free",
+  price_monthly: 0,
+  price_yearly: 0,
+  max_chatbots: 1,
+  max_conversations_month: 50,
+  max_leads_month: 10,
+  remove_branding: false,
+  doc_upload: false,
+  sector_templates: false,
+  calendly_integration: false,
+  advanced_analytics: false,
+  priority_support: false,
+  knowledge_base_wizard: false,
+  updated_at: new Date().toISOString(),
+};
+
+export function usePlanConfig() {
+  const { role } = useAuth();
+  const { plan } = usePlan();
+  const [config, setConfig] = useState<PlanConfig>(DEFAULTS);
+  const [loading, setLoading] = useState(true);
+
+  const fetchConfig = useCallback(async () => {
+    const targetPlan = role === "super_admin" ? "pro" : plan;
+    const { data } = await supabase
+      .from("plan_configs" as any)
+      .select("*")
+      .eq("plan_name", targetPlan)
+      .single();
+
+    if (data) {
+      setConfig(data as any as PlanConfig);
+    }
+    setLoading(false);
+  }, [plan, role]);
+
+  useEffect(() => {
+    fetchConfig();
+  }, [fetchConfig]);
+
+  // Convenience flags — super_admin always gets full access
+  const isAdmin = role === "super_admin";
+
+  return {
+    config,
+    loading,
+    refetch: fetchConfig,
+    // Limits
+    maxChatbots: isAdmin ? -1 : config.max_chatbots,
+    maxConversationsMonth: isAdmin ? -1 : config.max_conversations_month,
+    maxLeadsMonth: isAdmin ? -1 : config.max_leads_month,
+    // Feature flags
+    canRemoveBranding: isAdmin || config.remove_branding,
+    canUploadDocs: isAdmin || config.doc_upload,
+    canUseSectorTemplates: isAdmin || config.sector_templates,
+    canUseCalendly: isAdmin || config.calendly_integration,
+    canUseAdvancedAnalytics: isAdmin || config.advanced_analytics,
+    hasPrioritySupport: isAdmin || config.priority_support,
+    canUseKBWizard: isAdmin || config.knowledge_base_wizard,
+  };
+}

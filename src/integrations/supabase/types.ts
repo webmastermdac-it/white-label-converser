@@ -259,6 +259,60 @@ export type Database = {
           },
         ]
       }
+      plan_configs: {
+        Row: {
+          advanced_analytics: boolean
+          calendly_integration: boolean
+          doc_upload: boolean
+          id: string
+          knowledge_base_wizard: boolean
+          max_chatbots: number
+          max_conversations_month: number
+          max_leads_month: number
+          plan_name: string
+          price_monthly: number
+          price_yearly: number
+          priority_support: boolean
+          remove_branding: boolean
+          sector_templates: boolean
+          updated_at: string
+        }
+        Insert: {
+          advanced_analytics?: boolean
+          calendly_integration?: boolean
+          doc_upload?: boolean
+          id?: string
+          knowledge_base_wizard?: boolean
+          max_chatbots?: number
+          max_conversations_month?: number
+          max_leads_month?: number
+          plan_name: string
+          price_monthly?: number
+          price_yearly?: number
+          priority_support?: boolean
+          remove_branding?: boolean
+          sector_templates?: boolean
+          updated_at?: string
+        }
+        Update: {
+          advanced_analytics?: boolean
+          calendly_integration?: boolean
+          doc_upload?: boolean
+          id?: string
+          knowledge_base_wizard?: boolean
+          max_chatbots?: number
+          max_conversations_month?: number
+          max_leads_month?: number
+          plan_name?: string
+          price_monthly?: number
+          price_yearly?: number
+          priority_support?: boolean
+          remove_branding?: boolean
+          sector_templates?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           client_id: string | null

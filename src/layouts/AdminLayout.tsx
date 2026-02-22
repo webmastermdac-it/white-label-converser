@@ -3,7 +3,7 @@ import AdminSidebar from "@/components/AdminSidebar";
 import MobileNav from "@/components/MobileNav";
 import { useLanguage } from "@/hooks/useLanguage";
 import {
-  BarChart3, Users, Inbox, MessageSquare, Settings
+  BarChart3, Users, Inbox, MessageSquare, Settings, CreditCard
 } from "lucide-react";
 
 const AdminLayout = () => {
@@ -15,6 +15,7 @@ const AdminLayout = () => {
     { label: t("allLeads"), href: "/admin/leads", icon: Inbox },
     { label: t("chatSessions"), href: "/admin/chats", icon: MessageSquare },
     { label: t("settings"), href: "/admin/settings", icon: Settings },
+    { label: "Piani", href: "/admin/plans", icon: CreditCard },
   ];
 
   return (

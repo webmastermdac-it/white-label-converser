@@ -22,6 +22,7 @@ import ClientLeads from "@/pages/client/ClientLeads";
 import ClientChats from "@/pages/client/ClientChats";
 import ClientBotSettings from "@/pages/client/ClientBotSettings";
 import AdminChats from "@/pages/admin/AdminChats";
+import AdminPlans from "@/pages/admin/AdminPlans";
 import ClientEmbed from "@/pages/client/ClientEmbed";
 import ClientChatPreview from "@/pages/client/ClientChatPreview";
 import NotFound from "@/pages/NotFound";
@@ -66,6 +67,7 @@ const App = () => (
               <Route path="leads" element={<AdminLeads />} />
               <Route path="chats" element={<AdminChats />} />
               <Route path="settings" element={<AdminSettings />} />
+              <Route path="plans" element={<AdminPlans />} />
             </Route>
 
             {/* Client Routes */}

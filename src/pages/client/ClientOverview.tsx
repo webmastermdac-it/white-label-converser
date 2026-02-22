@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/hooks/useLanguage";
 import { usePlan } from "@/hooks/usePlan";
+import { usePlanConfig } from "@/hooks/usePlanConfig";
 import { Inbox, MessageSquare, Bot, TrendingUp, ArrowUpRight, Activity, Settings, Code2, Copy, Sparkles, Star } from "lucide-react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -25,6 +26,7 @@ const ClientOverview = () => {
   const { toast } = useToast();
   const [searchParams, setSearchParams] = useSearchParams();
   const { plan: clientPlan, isFree, isStarterOrAbove, refetch: refetchPlan } = usePlan();
+  const { maxConversationsMonth, maxLeadsMonth } = usePlanConfig();
   const [stats, setStats] = useState({ leads: 0, leadsThisWeek: 0, chats: 0, isActive: false });
   const [recentLeads, setRecentLeads] = useState<RecentLead[]>([]);
   const [embedToken, setEmbedToken] = useState("");
@@ -112,8 +114,8 @@ const ClientOverview = () => {
     toast({ title: t("copied"), description: t("embedCopied") });
   };
 
-  const chatLimit = clientPlan === "free" ? 50 : clientPlan === "starter" ? 500 : null;
-  const leadLimit = clientPlan === "free" ? 10 : null;
+  const chatLimit = maxConversationsMonth === -1 ? null : maxConversationsMonth;
+  const leadLimit = maxLeadsMonth === -1 ? null : maxLeadsMonth;
 
   return (
     <div className="p-4 md:p-6 space-y-4 md:space-y-6 animate-fade-in-up">

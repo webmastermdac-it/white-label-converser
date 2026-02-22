@@ -33,7 +33,7 @@ serve(async (req) => {
       });
     }
 
-    // --- Plan limit enforcement ---
+    // --- Plan limit enforcement via plan_configs ---
     const { data: client } = await supabase
       .from("clients")
       .select("plan")
@@ -42,7 +42,15 @@ serve(async (req) => {
 
     const plan = client?.plan || "free";
 
-    if (plan === "free") {
+    const { data: planConfig } = await supabase
+      .from("plan_configs")
+      .select("max_conversations_month")
+      .eq("plan_name", plan)
+      .single();
+
+    const maxConv = planConfig?.max_conversations_month ?? 50;
+
+    if (maxConv !== -1) {
       const monthStart = new Date();
       monthStart.setDate(1);
       monthStart.setHours(0, 0, 0, 0);
@@ -52,29 +60,11 @@ serve(async (req) => {
         .eq("client_id", botConfig.client_id)
         .gte("started_at", monthStart.toISOString());
 
-      if ((count || 0) >= 50) {
+      if ((count || 0) >= maxConv) {
         return new Response(JSON.stringify({
           error: "plan_limit",
           message: "Monthly conversation limit reached. Upgrade to continue.",
           trigger_lead_form: true,
-        }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-      }
-    }
-
-    if (plan === "starter") {
-      const monthStart = new Date();
-      monthStart.setDate(1);
-      monthStart.setHours(0, 0, 0, 0);
-      const { count } = await supabase
-        .from("chat_sessions")
-        .select("id", { count: "exact", head: true })
-        .eq("client_id", botConfig.client_id)
-        .gte("started_at", monthStart.toISOString());
-
-      if ((count || 0) >= 500) {
-        return new Response(JSON.stringify({
-          error: "plan_limit",
-          message: "Monthly conversation limit reached. Please upgrade to Pro for unlimited conversations.",
         }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
     }

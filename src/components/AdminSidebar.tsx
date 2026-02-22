@@ -5,7 +5,7 @@ import { useLanguage } from "@/hooks/useLanguage";
 import { Button } from "@/components/ui/button";
 import {
   Users, Settings, BarChart3, MessageSquare, ChevronLeft,
-  ChevronRight, Bot, LogOut, Shield, Inbox, Globe
+  ChevronRight, Bot, LogOut, Shield, Inbox, Globe, CreditCard
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -21,6 +21,7 @@ const AdminSidebar = () => {
     { label: t("allLeads"), href: "/admin/leads", icon: Inbox },
     { label: t("chatSessions"), href: "/admin/chats", icon: MessageSquare },
     { label: t("settings"), href: "/admin/settings", icon: Settings },
+    { label: "Piani", href: "/admin/plans", icon: CreditCard },
   ];
 
   const handleSignOut = async () => {
