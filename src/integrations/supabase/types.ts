@@ -81,6 +81,7 @@ export type Database = {
           is_active: boolean | null
           knowledge_base: string | null
           knowledge_base_documents: Json | null
+          knowledge_base_products: string | null
           knowledge_base_scraped: string | null
           knowledge_base_sections: Json | null
           launcher_position: string | null
@@ -108,6 +109,7 @@ export type Database = {
           is_active?: boolean | null
           knowledge_base?: string | null
           knowledge_base_documents?: Json | null
+          knowledge_base_products?: string | null
           knowledge_base_scraped?: string | null
           knowledge_base_sections?: Json | null
           launcher_position?: string | null
@@ -135,6 +137,7 @@ export type Database = {
           is_active?: boolean | null
           knowledge_base?: string | null
           knowledge_base_documents?: Json | null
+          knowledge_base_products?: string | null
           knowledge_base_scraped?: string | null
           knowledge_base_sections?: Json | null
           launcher_position?: string | null
@@ -195,6 +198,65 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      ecommerce_configs: {
+        Row: {
+          api_key: string | null
+          api_secret: string | null
+          client_id: string
+          created_at: string
+          feed_format: string | null
+          feed_url: string | null
+          id: string
+          last_sync_at: string | null
+          platform: string
+          store_url: string
+          sync_enabled: boolean
+          sync_error: string | null
+          sync_status: string
+          webhook_secret: string | null
+        }
+        Insert: {
+          api_key?: string | null
+          api_secret?: string | null
+          client_id: string
+          created_at?: string
+          feed_format?: string | null
+          feed_url?: string | null
+          id?: string
+          last_sync_at?: string | null
+          platform?: string
+          store_url?: string
+          sync_enabled?: boolean
+          sync_error?: string | null
+          sync_status?: string
+          webhook_secret?: string | null
+        }
+        Update: {
+          api_key?: string | null
+          api_secret?: string | null
+          client_id?: string
+          created_at?: string
+          feed_format?: string | null
+          feed_url?: string | null
+          id?: string
+          last_sync_at?: string | null
+          platform?: string
+          store_url?: string
+          sync_enabled?: boolean
+          sync_error?: string | null
+          sync_status?: string
+          webhook_secret?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ecommerce_configs_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: true
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       leads: {
         Row: {
@@ -313,6 +375,77 @@ export type Database = {
         }
         Relationships: []
       }
+      products: {
+        Row: {
+          categories: string[] | null
+          client_id: string
+          currency: string
+          description: string
+          external_id: string
+          id: string
+          image_url: string | null
+          in_stock: boolean
+          is_active: boolean
+          last_updated: string
+          name: string
+          price: number
+          product_url: string | null
+          raw_data: Json | null
+          sale_price: number | null
+          stock_quantity: number | null
+          tags: string[] | null
+          variants: Json | null
+        }
+        Insert: {
+          categories?: string[] | null
+          client_id: string
+          currency?: string
+          description?: string
+          external_id?: string
+          id?: string
+          image_url?: string | null
+          in_stock?: boolean
+          is_active?: boolean
+          last_updated?: string
+          name?: string
+          price?: number
+          product_url?: string | null
+          raw_data?: Json | null
+          sale_price?: number | null
+          stock_quantity?: number | null
+          tags?: string[] | null
+          variants?: Json | null
+        }
+        Update: {
+          categories?: string[] | null
+          client_id?: string
+          currency?: string
+          description?: string
+          external_id?: string
+          id?: string
+          image_url?: string | null
+          in_stock?: boolean
+          is_active?: boolean
+          last_updated?: string
+          name?: string
+          price?: number
+          product_url?: string | null
+          raw_data?: Json | null
+          sale_price?: number | null
+          stock_quantity?: number | null
+          tags?: string[] | null
+          variants?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "products_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           client_id: string | null
@@ -341,6 +474,44 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "profiles_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sync_logs: {
+        Row: {
+          client_id: string
+          ended_at: string | null
+          errors: Json | null
+          id: string
+          products_synced: number | null
+          started_at: string
+          status: string
+        }
+        Insert: {
+          client_id: string
+          ended_at?: string | null
+          errors?: Json | null
+          id?: string
+          products_synced?: number | null
+          started_at?: string
+          status?: string
+        }
+        Update: {
+          client_id?: string
+          ended_at?: string | null
+          errors?: Json | null
+          id?: string
+          products_synced?: number | null
+          started_at?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sync_logs_client_id_fkey"
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clients"

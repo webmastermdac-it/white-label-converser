@@ -5,7 +5,7 @@ import { useLanguage } from "@/hooks/useLanguage";
 import { Button } from "@/components/ui/button";
 import {
   LayoutDashboard, MessageSquare, Settings, Code2,
-  ChevronLeft, ChevronRight, Bot, LogOut, Inbox, PlayCircle, Globe, ArrowUpCircle, BarChart3
+  ChevronLeft, ChevronRight, Bot, LogOut, Inbox, PlayCircle, Globe, ArrowUpCircle, BarChart3, Store
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -23,6 +23,7 @@ const ClientSidebar = () => {
     { label: t("testChatbot"), href: "/dashboard/preview", icon: PlayCircle },
     { label: t("embedCode"), href: "/dashboard/embed", icon: Code2 },
     { label: "Analytics", href: "/dashboard/analytics", icon: BarChart3 },
+    { label: "Ecommerce", href: "/dashboard/ecommerce", icon: Store },
     { label: "Upgrade", href: "/dashboard/upgrade", icon: ArrowUpCircle },
   ];
 
