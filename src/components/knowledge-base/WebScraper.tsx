@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
+import { useLanguage } from "@/hooks/useLanguage";
 import { Globe, Loader2, Check } from "lucide-react";
 
 interface DetectedPage {
@@ -20,6 +21,7 @@ interface Props {
 
 const WebScraper: React.FC<Props> = ({ scrapedContent, onUseContent }) => {
   const { toast } = useToast();
+  const { t } = useLanguage();
   const [url, setUrl] = useState("");
   const [analyzing, setAnalyzing] = useState(false);
   const [importing, setImporting] = useState(false);
@@ -49,7 +51,14 @@ const WebScraper: React.FC<Props> = ({ scrapedContent, onUseContent }) => {
         }))
       );
     } catch (err: any) {
-      toast({ title: "Errore", description: err.message, variant: "destructive" });
+      toast({
+        title: t("Error", "Errore"),
+        description: t(
+          "I cannot read this website. It may have anti-bot protection. Try copying the text manually in the next step.",
+          "Non riesco a leggere questo sito. Potrebbe avere protezioni anti-bot. Prova a copiare il testo manualmente nello step successivo."
+        ),
+        variant: "destructive",
+      });
     } finally {
       setAnalyzing(false);
     }
@@ -64,7 +73,7 @@ const WebScraper: React.FC<Props> = ({ scrapedContent, onUseContent }) => {
   const importSelected = async () => {
     const selectedUrls = pages.filter((p) => p.selected).map((p) => p.url);
     if (selectedUrls.length === 0) {
-      toast({ title: "Nessuna pagina selezionata", variant: "destructive" });
+      toast({ title: t("No pages selected", "Nessuna pagina selezionata"), variant: "destructive" });
       return;
     }
 
@@ -79,7 +88,7 @@ const WebScraper: React.FC<Props> = ({ scrapedContent, onUseContent }) => {
       const combined = [mainContent, ...(data?.contents || [])].filter(Boolean).join("\n\n---\n\n");
       setContent(combined);
     } catch (err: any) {
-      toast({ title: "Errore", description: err.message, variant: "destructive" });
+      toast({ title: t("Error", "Errore"), description: err.message, variant: "destructive" });
     } finally {
       setImporting(false);
     }
@@ -91,7 +100,7 @@ const WebScraper: React.FC<Props> = ({ scrapedContent, onUseContent }) => {
         <Input
           value={url}
           onChange={(e) => setUrl(e.target.value)}
-          placeholder="https://www.tuosito.com"
+          placeholder="https://www.example.com"
           className="bg-secondary border-border"
         />
         <Button onClick={analyze} disabled={analyzing || !url.trim()}>
@@ -100,20 +109,24 @@ const WebScraper: React.FC<Props> = ({ scrapedContent, onUseContent }) => {
           ) : (
             <Globe className="w-4 h-4 mr-1" />
           )}
-          Analizza Sito
+          {t("Analyze", "Analizza")}
         </Button>
       </div>
 
       {mainContent && (
         <div className="p-3 rounded-xl bg-secondary border border-border">
-          <p className="text-xs font-medium text-foreground mb-2">Contenuto pagina principale:</p>
+          <p className="text-xs font-medium text-foreground mb-2">
+            {t("Main page content:", "Contenuto pagina principale:")}
+          </p>
           <p className="text-xs text-muted-foreground line-clamp-4">{mainContent.slice(0, 400)}...</p>
         </div>
       )}
 
       {pages.length > 0 && (
         <div className="space-y-2">
-          <p className="text-sm font-medium text-foreground">Pagine trovate:</p>
+          <p className="text-sm font-medium text-foreground">
+            {t("Pages found:", "Pagine trovate:")}
+          </p>
           {pages.map((page, i) => (
             <label
               key={i}
@@ -138,14 +151,16 @@ const WebScraper: React.FC<Props> = ({ scrapedContent, onUseContent }) => {
             {importing ? (
               <Loader2 className="w-4 h-4 animate-spin mr-1" />
             ) : null}
-            Importa Pagine Selezionate
+            {t("Import selected pages", "Importa Pagine Selezionate")}
           </Button>
         </div>
       )}
 
       {content && (
         <div className="space-y-2">
-          <p className="text-sm font-medium text-foreground">Contenuto estratto:</p>
+          <p className="text-sm font-medium text-foreground">
+            {t("Extracted content:", "Contenuto estratto:")}
+          </p>
           <Textarea
             value={content}
             readOnly
@@ -155,12 +170,12 @@ const WebScraper: React.FC<Props> = ({ scrapedContent, onUseContent }) => {
           <Button
             onClick={() => {
               onUseContent(content);
-              toast({ title: "Contenuto salvato nella knowledge base" });
+              toast({ title: t("Content saved to knowledge base", "Contenuto salvato nella knowledge base") });
             }}
             className="gradient-primary text-white border-0"
           >
             <Check className="w-4 h-4 mr-1" />
-            Usa Questo Contenuto
+            {t("Use this content", "Usa Questo Contenuto")}
           </Button>
         </div>
       )}

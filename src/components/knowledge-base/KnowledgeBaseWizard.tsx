@@ -1,6 +1,7 @@
 import { useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useLanguage } from "@/hooks/useLanguage";
 import { industryTemplates, IndustryTemplate } from "./templates";
 import { KBDocument } from "./types";
 import { Button } from "@/components/ui/button";
@@ -20,51 +21,25 @@ interface Props {
   plan?: string;
 }
 
-const STEPS = [
-  { id: 1, label: "Template", icon: "📋" },
-  { id: 2, label: "Documenti", icon: "📄" },
-  { id: 3, label: "Sito Web", icon: "🌐" },
-  { id: 4, label: "Revisione", icon: "✏️" },
-];
-
-const TONES = [
-  { value: "professionale", label: "Professionale" },
-  { value: "amichevole", label: "Amichevole" },
-  { value: "formale", label: "Formale" },
-  { value: "giovane", label: "Giovane e dinamico" },
-];
-
-function templateToText(t: IndustryTemplate): string {
+function templateToText(tmpl: IndustryTemplate, lang: "it" | "en"): string {
+  const s = tmpl.sections[lang];
   const lines: string[] = [];
-  lines.push("## CHI SIAMO", t.sections.about_us, "");
-  lines.push("## SERVIZI/PRODOTTI", t.sections.products_services, "");
-  lines.push("## DOMANDE FREQUENTI");
-  t.sections.faqs.forEach((f) => {
-    lines.push(`D: ${f.question}`, `R: ${f.answer}`, "");
+  const isEn = lang === "en";
+  lines.push(isEn ? "## ABOUT US" : "## CHI SIAMO", s.about_us, "");
+  lines.push(isEn ? "## PRODUCTS & SERVICES" : "## SERVIZI/PRODOTTI", s.products_services, "");
+  lines.push(isEn ? "## FREQUENTLY ASKED QUESTIONS" : "## DOMANDE FREQUENTI");
+  s.faqs.forEach((f) => {
+    lines.push(`${isEn ? "Q" : "D"}: ${f.question}`, `${isEn ? "A" : "R"}: ${f.answer}`, "");
   });
-  lines.push("## TONO DI VOCE", t.sections.tone_of_voice, "");
-  lines.push("## CONTATTI", t.sections.contacts_hours, "");
-  lines.push("## ARGOMENTI VIETATI", t.sections.forbidden_topics);
+  lines.push(isEn ? "## TONE OF VOICE" : "## TONO DI VOCE", s.tone_of_voice, "");
+  lines.push(isEn ? "## CONTACT" : "## CONTATTI", s.contacts_hours, "");
+  lines.push(isEn ? "## FORBIDDEN TOPICS" : "## ARGOMENTI VIETATI", s.forbidden_topics);
   return lines.join("\n");
 }
 
-const blankTemplate: IndustryTemplate = {
-  id: "blank",
-  icon: "✏️",
-  name: "Inizia da zero",
-  description: "Parti con una base vuota e personalizza tutto",
-  sections: {
-    about_us: "",
-    products_services: "",
-    faqs: [],
-    tone_of_voice: "",
-    forbidden_topics: "",
-    contacts_hours: "Telefono: da compilare\nEmail: da compilare\nOrari: da compilare",
-  },
-};
-
 const KnowledgeBaseWizard: React.FC<Props> = ({ clientId, configId, currentKnowledgeBase, onSave, plan = "pro" }) => {
   const { toast } = useToast();
+  const { lang, t } = useLanguage();
   const [step, setStep] = useState(1);
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
   const [knowledgeBase, setKnowledgeBase] = useState(currentKnowledgeBase);
@@ -76,14 +51,43 @@ const KnowledgeBaseWizard: React.FC<Props> = ({ clientId, configId, currentKnowl
   const [saving, setSaving] = useState(false);
   const [completed, setCompleted] = useState(false);
 
-  const allTemplates = [...industryTemplates, blankTemplate];
+  const STEPS = [
+    { id: 1, label: t("Choose Template", "Scegli Template"), icon: "📋" },
+    { id: 2, label: t("Upload Documents", "Carica Documenti"), icon: "📄" },
+    { id: 3, label: t("Add Website", "Aggiungi Sito"), icon: "🌐" },
+    { id: 4, label: t("Final Review", "Revisione Finale"), icon: "✏️" },
+  ];
+
+  const TONES = [
+    { value: "professionale", label: t("Professional", "Professionale") },
+    { value: "amichevole", label: t("Friendly", "Amichevole") },
+    { value: "formale", label: t("Formal", "Formale") },
+    { value: "giovane", label: t("Young and dynamic", "Giovane e dinamico") },
+  ];
+
+  const blankTemplate = {
+    id: "blank",
+    icon: "✏️",
+    name: t("Start from scratch", "Inizia da zero"),
+    description: t("Start with a blank base and customize everything", "Parti con una base vuota e personalizza tutto"),
+  };
+
+  const allTemplates = [
+    ...industryTemplates.map((tmpl) => ({
+      id: tmpl.id,
+      icon: tmpl.icon,
+      name: tmpl.name[lang],
+      description: tmpl.description[lang],
+    })),
+    blankTemplate,
+  ];
 
   // Step 1: Select template
   const handleTemplateSelect = (id: string) => {
     setSelectedTemplate(id);
-    const t = allTemplates.find((x) => x.id === id);
-    if (t && t.id !== "blank") {
-      setKnowledgeBase(templateToText(t));
+    const tmpl = industryTemplates.find((x) => x.id === id);
+    if (tmpl) {
+      setKnowledgeBase(templateToText(tmpl, lang));
     } else {
       setKnowledgeBase("");
     }
@@ -112,34 +116,31 @@ const KnowledgeBaseWizard: React.FC<Props> = ({ clientId, configId, currentKnowl
 
   // Build final KB
   const buildFinalKB = useCallback(() => {
+    const isEn = lang === "en";
     let final = knowledgeBase;
 
-    // Append document text
     const readyDocs = documents.filter((d) => d.status === "ready" && d.extractedText);
     if (readyDocs.length > 0) {
-      final += "\n\n## CONTENUTO DOCUMENTI\n";
+      final += isEn ? "\n\n## DOCUMENT CONTENT\n" : "\n\n## CONTENUTO DOCUMENTI\n";
       readyDocs.forEach((d) => {
         final += `\n### ${d.filename}\n${d.extractedText}\n`;
       });
     }
 
-    // Append scraped content
     if (scrapedContent.trim()) {
-      final += "\n\n## CONTENUTO SITO WEB\n" + scrapedContent;
+      final += (isEn ? "\n\n## WEBSITE CONTENT\n" : "\n\n## CONTENUTO SITO WEB\n") + scrapedContent;
     }
 
-    // Append forbidden topics if added in step 4
     if (forbiddenTopics.trim()) {
-      final += "\n\n## ARGOMENTI VIETATI\n" + forbiddenTopics;
+      final += (isEn ? "\n\n## FORBIDDEN TOPICS\n" : "\n\n## ARGOMENTI VIETATI\n") + forbiddenTopics;
     }
 
-    // Append tone if selected in step 4
     if (tone) {
-      final += "\n\n## TONO DI VOCE\n" + tone;
+      final += (isEn ? "\n\n## TONE OF VOICE\n" : "\n\n## TONO DI VOCE\n") + tone;
     }
 
     return final;
-  }, [knowledgeBase, documents, scrapedContent, forbiddenTopics, tone]);
+  }, [knowledgeBase, documents, scrapedContent, forbiddenTopics, tone, lang]);
 
   const handleSave = async () => {
     setSaving(true);
@@ -161,15 +162,17 @@ const KnowledgeBaseWizard: React.FC<Props> = ({ clientId, configId, currentKnowl
         <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center mb-4">
           <Sparkles className="w-8 h-8 text-primary" />
         </div>
-        <h3 className="text-lg font-semibold text-foreground">Knowledge Base salvata! 🎉</h3>
+        <h3 className="text-lg font-semibold text-foreground">
+          {t("Knowledge Base saved!", "Knowledge Base salvata!")} 🎉
+        </h3>
         <p className="text-sm text-muted-foreground mt-1 text-center">
-          Il tuo chatbot è pronto! Vuoi testarlo ora?
+          {t("Your chatbot is ready! Do you want to test it now?", "Il tuo chatbot è pronto! Vuoi testarlo ora?")}
         </p>
         <Button
           className="mt-4 gradient-primary text-white border-0"
           onClick={() => window.location.href = "/dashboard/preview"}
         >
-          Testa il chatbot →
+          {t("Go to preview", "Vai all'anteprima")} →
         </Button>
       </div>
     );
@@ -207,14 +210,18 @@ const KnowledgeBaseWizard: React.FC<Props> = ({ clientId, configId, currentKnowl
       {step === 1 && (
         <div className="space-y-4 animate-fade-in-up">
           <div>
-            <h3 className="text-base font-semibold text-foreground">📋 Da dove vuoi partire?</h3>
-            <p className="text-sm text-muted-foreground mt-1">Scegli un template per il tuo settore o inizia da zero</p>
+            <h3 className="text-base font-semibold text-foreground">📋 {t("Where do you want to start?", "Da dove vuoi partire?")}</h3>
+            <p className="text-sm text-muted-foreground mt-1">
+              {t("Choose a template for your sector or start from scratch", "Scegli un template per il tuo settore o inizia da zero")}
+            </p>
           </div>
 
           {plan === "free" ? (
             <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 text-sm text-muted-foreground">
-              <p className="font-medium text-foreground mb-1">⭐ Template per settore disponibili da Starter</p>
-              <p>Con il piano Free puoi usare solo il template vuoto.</p>
+              <p className="font-medium text-foreground mb-1">
+                ⭐ {t("Sector templates available from Starter", "Template per settore disponibili da Starter")}
+              </p>
+              <p>{t("With the Free plan you can only use the blank template.", "Con il piano Free puoi usare solo il template vuoto.")}</p>
             </div>
           ) : null}
 
@@ -248,17 +255,26 @@ const KnowledgeBaseWizard: React.FC<Props> = ({ clientId, configId, currentKnowl
       {step === 2 && (
         <div className="space-y-4 animate-fade-in-up">
           <div>
-            <h3 className="text-base font-semibold text-foreground">📄 Hai documenti da aggiungere?</h3>
+            <h3 className="text-base font-semibold text-foreground">
+              📄 {t("Do you have documents to add?", "Hai documenti da aggiungere?")}
+            </h3>
             <p className="text-sm text-muted-foreground mt-1">
-              PDF o Word con listino prezzi, brochure, FAQ — il bot li leggerà automaticamente
+              {t(
+                "PDF or Word files with price lists, brochures, FAQs — the bot will read them automatically",
+                "PDF o Word con listino prezzi, brochure, FAQ — il bot li leggerà automaticamente"
+              )}
             </p>
           </div>
 
           {plan === "free" ? (
             <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 text-sm text-muted-foreground">
-              <p className="font-medium text-foreground mb-1">⭐ Upload documenti disponibile da Starter</p>
-              <p>Upgradia il tuo piano per caricare PDF e Word.</p>
-              <a href="/dashboard/upgrade" className="text-primary hover:underline text-xs mt-1 inline-block">Upgrade →</a>
+              <p className="font-medium text-foreground mb-1">
+                ⭐ {t("Document upload available from Starter", "Upload documenti disponibile da Starter")}
+              </p>
+              <p>{t("Upgrade your plan to upload PDF and Word files.", "Upgradia il tuo piano per caricare PDF e Word.")}</p>
+              <a href="/dashboard/upgrade" className="text-primary hover:underline text-xs mt-1 inline-block">
+                {t("Upgrade", "Upgrade")} →
+              </a>
             </div>
           ) : (
             <DocumentUpload
@@ -274,9 +290,14 @@ const KnowledgeBaseWizard: React.FC<Props> = ({ clientId, configId, currentKnowl
       {step === 3 && (
         <div className="space-y-4 animate-fade-in-up">
           <div>
-            <h3 className="text-base font-semibold text-foreground">🌐 Vuoi che il bot conosca il tuo sito?</h3>
+            <h3 className="text-base font-semibold text-foreground">
+              🌐 {t("Do you want the bot to know your website?", "Vuoi che il bot conosca il tuo sito?")}
+            </h3>
             <p className="text-sm text-muted-foreground mt-1">
-              Inserisci l'URL del tuo sito e analizzeremo il contenuto automaticamente
+              {t(
+                "Enter your website URL and we will analyze the content automatically",
+                "Inserisci l'URL del tuo sito e analizzeremo il contenuto automaticamente"
+              )}
             </p>
           </div>
 
@@ -291,9 +312,14 @@ const KnowledgeBaseWizard: React.FC<Props> = ({ clientId, configId, currentKnowl
       {step === 4 && (
         <div className="space-y-4 animate-fade-in-up">
           <div>
-            <h3 className="text-base font-semibold text-foreground">✏️ Rivedi e personalizza</h3>
+            <h3 className="text-base font-semibold text-foreground">
+              ✏️ {t("Review and customize", "Rivedi e personalizza")}
+            </h3>
             <p className="text-sm text-muted-foreground mt-1">
-              Modifica liberamente il contenuto che il bot userà come base di conoscenza
+              {t(
+                "Freely edit the content the bot will use as its knowledge base",
+                "Modifica liberamente il contenuto che il bot userà come base di conoscenza"
+              )}
             </p>
           </div>
 
@@ -311,42 +337,42 @@ const KnowledgeBaseWizard: React.FC<Props> = ({ clientId, configId, currentKnowl
           />
 
           <div className="text-xs text-muted-foreground text-right">
-            {buildFinalKB().length.toLocaleString()} caratteri
+            {buildFinalKB().length.toLocaleString()} {t("characters used", "caratteri utilizzati")}
           </div>
 
           {/* Quick-add fields */}
           <div className="space-y-3 p-4 rounded-xl bg-secondary/50 border border-border">
             <div className="space-y-2">
-              <Label className="text-xs">Aggiungi un'informazione importante</Label>
+              <Label className="text-xs">{t("Add an important detail", "Aggiungi un'informazione importante")}</Label>
               <div className="flex flex-col sm:flex-row gap-2">
                 <Input
                   value={quickAdd}
                   onChange={(e) => setQuickAdd(e.target.value)}
-                  placeholder="Es: Accettiamo pagamenti con carta e contanti"
+                  placeholder={t("E.g.: We accept card and cash payments", "Es: Accettiamo pagamenti con carta e contanti")}
                   className="bg-background border-border text-base md:text-sm flex-1 h-12 md:h-10"
                   onKeyDown={(e) => e.key === "Enter" && handleQuickAdd()}
                 />
                 <Button size="sm" variant="outline" onClick={handleQuickAdd} disabled={!quickAdd.trim()} className="min-h-[44px] md:min-h-0">
-                  Aggiungi
+                  {t("Add", "Aggiungi")}
                 </Button>
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label className="text-xs">Argomenti vietati</Label>
+              <Label className="text-xs">{t("Forbidden topics", "Argomenti vietati")}</Label>
               <Input
                 value={forbiddenTopics}
                 onChange={(e) => setForbiddenTopics(e.target.value)}
-                placeholder="Es: prezzi competitor, politica, offerte non autorizzate"
+                placeholder={t("E.g.: competitor prices, politics, unauthorized offers", "Es: prezzi competitor, politica, offerte non autorizzate")}
                 className="bg-background border-border text-sm"
               />
             </div>
 
             <div className="space-y-2">
-              <Label className="text-xs">Tono di voce</Label>
+              <Label className="text-xs">{t("Tone of voice", "Tono di voce")}</Label>
               <Select value={tone} onValueChange={setTone}>
                 <SelectTrigger className="bg-background border-border text-sm">
-                  <SelectValue placeholder="Seleziona un tono..." />
+                  <SelectValue placeholder={t("Select a tone...", "Seleziona un tono...")} />
                 </SelectTrigger>
                 <SelectContent className="bg-card border-border">
                   {TONES.map((t) => (
@@ -364,7 +390,7 @@ const KnowledgeBaseWizard: React.FC<Props> = ({ clientId, configId, currentKnowl
         <div>
           {step > 1 && (
             <Button variant="ghost" onClick={() => goTo(step - 1)} className="min-h-[44px]">
-              <ArrowLeft className="w-4 h-4 mr-1" /> Indietro
+              <ArrowLeft className="w-4 h-4 mr-1" /> {t("Back", "Indietro")}
             </Button>
           )}
         </div>
@@ -372,7 +398,7 @@ const KnowledgeBaseWizard: React.FC<Props> = ({ clientId, configId, currentKnowl
         <div className="flex gap-2">
           {(step === 2 || step === 3) && (
             <Button variant="ghost" onClick={() => goTo(step + 1)} className="text-muted-foreground min-h-[44px]">
-              <SkipForward className="w-4 h-4 mr-1" /> Salta
+              <SkipForward className="w-4 h-4 mr-1" /> {t("Skip", "Salta")}
             </Button>
           )}
 
@@ -382,7 +408,7 @@ const KnowledgeBaseWizard: React.FC<Props> = ({ clientId, configId, currentKnowl
               disabled={step === 1 && !canProceedStep1}
               className="min-h-[44px]"
             >
-              Avanti <ArrowRight className="w-4 h-4 ml-1" />
+              {t("Next", "Avanti")} <ArrowRight className="w-4 h-4 ml-1" />
             </Button>
           )}
 
@@ -397,7 +423,7 @@ const KnowledgeBaseWizard: React.FC<Props> = ({ clientId, configId, currentKnowl
               ) : (
                 <span className="mr-1">💾</span>
               )}
-              Salva Knowledge Base
+              {t("Save Knowledge Base", "Salva Knowledge Base")}
             </Button>
           )}
         </div>

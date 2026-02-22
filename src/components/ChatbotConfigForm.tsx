@@ -331,9 +331,9 @@ const ChatbotConfigForm: React.FC<ChatbotConfigFormProps> = ({ clientId, onSaved
                     .update({ knowledge_base: kb })
                     .eq("id", config.id);
                   if (error) {
-                    toast({ title: "Errore", description: error.message, variant: "destructive" });
+                    toast({ title: t("Error saving. Please try again.", "Errore durante il salvataggio. Riprova."), description: error.message, variant: "destructive" });
                   } else {
-                    toast({ title: "Knowledge Base salvata!" });
+                    toast({ title: t("Knowledge Base saved successfully!", "Knowledge Base salvata con successo!") });
                   }
                 }}
               />

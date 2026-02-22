@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { KBDocument } from "./types";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import { useLanguage } from "@/hooks/useLanguage";
 import { Upload, FileText, Trash2, Loader2, AlertCircle } from "lucide-react";
 
 interface Props {
@@ -16,21 +17,22 @@ const MAX_SIZE = 5 * 1024 * 1024; // 5MB
 
 const DocumentUpload: React.FC<Props> = ({ clientId, documents, onChange }) => {
   const { toast } = useToast();
+  const { t } = useLanguage();
   const [uploading, setUploading] = useState(false);
   const [dragOver, setDragOver] = useState(false);
 
   const processFile = async (file: File) => {
     if (documents.length >= MAX_FILES) {
-      toast({ title: "Limite raggiunto", description: `Massimo ${MAX_FILES} file.`, variant: "destructive" });
+      toast({ title: t("Limit reached", "Limite raggiunto"), description: t(`Maximum ${MAX_FILES} files.`, `Massimo ${MAX_FILES} file.`), variant: "destructive" });
       return;
     }
     if (file.size > MAX_SIZE) {
-      toast({ title: "File troppo grande", description: "Max 5MB per file.", variant: "destructive" });
+      toast({ title: t("File too large", "File troppo grande"), description: t("Max 5MB per file.", "Max 5MB per file."), variant: "destructive" });
       return;
     }
     const ext = file.name.split(".").pop()?.toLowerCase();
     if (!["pdf", "docx"].includes(ext || "")) {
-      toast({ title: "Formato non supportato", description: "Solo PDF e DOCX.", variant: "destructive" });
+      toast({ title: t("Unsupported format", "Formato non supportato"), description: t("Only PDF and DOCX.", "Solo PDF e DOCX."), variant: "destructive" });
       return;
     }
 
@@ -51,14 +53,12 @@ const DocumentUpload: React.FC<Props> = ({ clientId, documents, onChange }) => {
     setUploading(true);
 
     try {
-      // Upload to storage
       const { error: uploadError } = await supabase.storage
         .from("kb-documents")
         .upload(storagePath, file);
 
       if (uploadError) throw uploadError;
 
-      // Extract text via edge function
       const { data, error } = await supabase.functions.invoke("parse-document", {
         body: { storagePath, filename: file.name },
       });
@@ -68,18 +68,18 @@ const DocumentUpload: React.FC<Props> = ({ clientId, documents, onChange }) => {
       const finalDoc: KBDocument = {
         ...newDoc,
         status: "ready",
-        extractedText: data?.text || "(Nessun testo estratto)",
+        extractedText: data?.text || t("(No text extracted)", "(Nessun testo estratto)"),
       };
 
       onChange(updated.map((d) => (d.id === docId ? finalDoc : d)));
-      toast({ title: "Documento elaborato", description: file.name });
+      toast({ title: t("Document processed", "Documento elaborato"), description: file.name });
     } catch (err: any) {
       onChange(
         updated.map((d) =>
           d.id === docId ? { ...d, status: "error" as const } : d
         )
       );
-      toast({ title: "Errore", description: err.message, variant: "destructive" });
+      toast({ title: t("Error", "Errore"), description: err.message, variant: "destructive" });
     } finally {
       setUploading(false);
     }
@@ -121,10 +121,10 @@ const DocumentUpload: React.FC<Props> = ({ clientId, documents, onChange }) => {
       >
         <Upload className="w-8 h-8 mx-auto mb-3 text-muted-foreground" />
         <p className="text-sm text-muted-foreground mb-2">
-          Trascina qui i tuoi file PDF o DOCX
+          {t("Drag files here or click to upload", "Trascina qui i tuoi file PDF o DOCX")}
         </p>
         <p className="text-xs text-muted-foreground mb-4">
-          Max {MAX_FILES} file, 5MB ciascuno
+          {t(`Max ${MAX_FILES} files, 5MB each`, `Max ${MAX_FILES} file, 5MB ciascuno`)}
         </p>
         <label>
           <input
@@ -135,7 +135,7 @@ const DocumentUpload: React.FC<Props> = ({ clientId, documents, onChange }) => {
             className="hidden"
           />
           <Button variant="outline" size="sm" asChild>
-            <span>Seleziona File</span>
+            <span>{t("Select Files", "Seleziona File")}</span>
           </Button>
         </label>
       </div>
@@ -158,13 +158,13 @@ const DocumentUpload: React.FC<Props> = ({ clientId, documents, onChange }) => {
             {doc.status === "processing" && (
               <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
                 <Loader2 className="w-3 h-3 animate-spin" />
-                Elaborazione in corso...
+                {t("Processing...", "Elaborazione in corso...")}
               </div>
             )}
             {doc.status === "error" && (
               <div className="flex items-center gap-2 mt-2 text-xs text-destructive">
                 <AlertCircle className="w-3 h-3" />
-                Errore nell'elaborazione
+                {t("Error processing file", "Errore nell'elaborazione")}
               </div>
             )}
             {doc.status === "ready" && doc.extractedText && (
