@@ -48,6 +48,7 @@ const ClientUpgrade = () => {
         isIt ? "Branding 'Powered by Genius'" : "'Powered by Genius' branding",
         isIt ? "Knowledge base base" : "Basic knowledge base",
         isIt ? "Supporto email" : "Email support",
+        isIt ? "❌ Nessuna integrazione ecommerce" : "❌ No ecommerce integration",
       ],
     },
     {
@@ -62,6 +63,7 @@ const ClientUpgrade = () => {
         isIt ? "Upload documenti PDF/Word" : "PDF/Word document upload",
         isIt ? "Template per settore" : "Sector templates",
         isIt ? "Supporto prioritario" : "Priority support",
+        isIt ? "🛒 Feed XML/CSV (sync giornaliero)" : "🛒 XML/CSV Feed (daily sync)",
       ],
     },
     {
@@ -76,6 +78,7 @@ const ClientUpgrade = () => {
         isIt ? "Tutte le funzionalità Pro" : "All Pro features",
         isIt ? "Analytics avanzate" : "Advanced analytics",
         isIt ? "Supporto dedicato" : "Dedicated support",
+        isIt ? "🛒 Ecommerce completo (WooCommerce, Shopify, PrestaShop, API + webhook real-time)" : "🛒 Full ecommerce (WooCommerce, Shopify, PrestaShop, API + real-time webhooks)",
       ],
     },
   ];

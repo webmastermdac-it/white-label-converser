@@ -326,6 +326,7 @@ export type Database = {
           advanced_analytics: boolean
           calendly_integration: boolean
           doc_upload: boolean
+          ecommerce_integration: boolean
           id: string
           knowledge_base_wizard: boolean
           max_chatbots: number
@@ -343,6 +344,7 @@ export type Database = {
           advanced_analytics?: boolean
           calendly_integration?: boolean
           doc_upload?: boolean
+          ecommerce_integration?: boolean
           id?: string
           knowledge_base_wizard?: boolean
           max_chatbots?: number
@@ -360,6 +362,7 @@ export type Database = {
           advanced_analytics?: boolean
           calendly_integration?: boolean
           doc_upload?: boolean
+          ecommerce_integration?: boolean
           id?: string
           knowledge_base_wizard?: boolean
           max_chatbots?: number

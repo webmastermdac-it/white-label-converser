@@ -17,6 +17,7 @@ export interface PlanConfig {
   advanced_analytics: boolean;
   priority_support: boolean;
   knowledge_base_wizard: boolean;
+  ecommerce_integration: boolean;
   updated_at: string;
 }
 
@@ -34,6 +35,7 @@ const DEFAULTS: PlanConfig = {
   advanced_analytics: false,
   priority_support: false,
   knowledge_base_wizard: false,
+  ecommerce_integration: false,
   updated_at: new Date().toISOString(),
 };
 
@@ -80,5 +82,6 @@ export function usePlanConfig() {
     canUseAdvancedAnalytics: isAdmin || config.advanced_analytics,
     hasPrioritySupport: isAdmin || config.priority_support,
     canUseKBWizard: isAdmin || config.knowledge_base_wizard,
+    canUseEcommerce: isAdmin || config.ecommerce_integration,
   };
 }
