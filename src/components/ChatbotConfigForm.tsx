@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { usePlan } from "@/hooks/usePlan";
+import { usePlanConfig } from "@/hooks/usePlanConfig";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -67,7 +67,7 @@ const ChatbotConfigForm: React.FC<ChatbotConfigFormProps> = ({ clientId, onSaved
   const { toast } = useToast();
   const { role } = useAuth();
   const { t } = useLanguage();
-  const { plan: clientPlan, isStarterOrAbove } = usePlan();
+  const { canUseKBWizard, canUseCalendly, config: planConfig } = usePlanConfig();
   const [config, setConfig] = useState<Config>(defaultConfig);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -158,7 +158,7 @@ const ChatbotConfigForm: React.FC<ChatbotConfigFormProps> = ({ clientId, onSaved
 
   const set = (key: keyof Config, value: any) => setConfig((prev) => ({ ...prev, [key]: value }));
 
-  const isProOrAdmin = isStarterOrAbove || role === "super_admin";
+  const isProOrAdmin = canUseKBWizard;
 
   const sections = [
     { id: "identity", label: t("identity"), icon: Bot },
@@ -346,7 +346,7 @@ const ChatbotConfigForm: React.FC<ChatbotConfigFormProps> = ({ clientId, onSaved
                 clientId={clientId}
                 configId={config.id}
                 currentKnowledgeBase={config.knowledge_base}
-                plan={clientPlan}
+                plan={planConfig.plan_name}
                 onSave={async (kb) => {
                   set("knowledge_base", kb);
                   const { error } = await supabase
