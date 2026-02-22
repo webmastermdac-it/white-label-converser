@@ -24,6 +24,7 @@ interface PlanRow {
   advanced_analytics: boolean;
   priority_support: boolean;
   knowledge_base_wizard: boolean;
+  ecommerce_integration: boolean;
   updated_at: string;
 }
 
@@ -47,6 +48,7 @@ const FEATURE_KEYS: { key: keyof PlanRow; label: string }[] = [
   { key: "advanced_analytics", label: "Analytics avanzate" },
   { key: "priority_support", label: "Supporto prioritario" },
   { key: "knowledge_base_wizard", label: "Wizard knowledge base" },
+  { key: "ecommerce_integration", label: "Integrazione Ecommerce" },
 ];
 
 // Features that have enforcement in the app
@@ -56,6 +58,7 @@ const ENFORCED_FEATURES = new Set([
   "sector_templates",
   "calendly_integration",
   "knowledge_base_wizard",
+  "ecommerce_integration",
   "max_chatbots",
   "max_conversations_month",
   "max_leads_month",
@@ -116,6 +119,7 @@ const AdminPlans = () => {
         advanced_analytics: current.advanced_analytics,
         priority_support: current.priority_support,
         knowledge_base_wizard: current.knowledge_base_wizard,
+        ecommerce_integration: current.ecommerce_integration,
       } as any)
       .eq("id", plan.id);
 

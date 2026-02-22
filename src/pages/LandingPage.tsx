@@ -241,6 +241,7 @@ export default function LandingPage() {
               { icon: "🎨", en: "Full Customization", it: "Personalizzazione Totale", descEn: "Colors, avatar, tone of voice. Your chatbot, your brand. Complete white-label.", descIt: "Colori, avatar, tono di voce. Il tuo chatbot, il tuo brand. Completa white-label." },
               { icon: "🌍", en: "Multilingual", it: "Multilingua", descEn: "Speaks English and Italian. Auto-detects visitor language.", descIt: "Parla italiano e inglese. Rileva automaticamente la lingua del visitatore." },
               { icon: "📊", en: "Full Dashboard", it: "Dashboard Completa", descEn: "Track leads, conversations, and conversions in real time with advanced analytics.", descIt: "Monitora lead, conversazioni e conversioni in tempo reale con analytics avanzati." },
+              { icon: "🛒", en: "Ecommerce Integration", it: "Integrazione Ecommerce", descEn: "Connect WooCommerce, Shopify or PrestaShop. The bot knows products, prices, availability and variants in real time. Automatic sync every 24 hours.", descIt: "Connetti WooCommerce, Shopify o PrestaShop. Il bot conosce prodotti, prezzi, disponibilità e varianti in tempo reale. Sincronizzazione automatica ogni 24 ore." },
             ].map((f, i) => (
               <div key={i} className="group bg-white/[0.03] hover:bg-white/[0.06] border border-white/10 hover:border-[#F5A623]/30 rounded-2xl p-6 transition-all duration-300">
                 <div className="text-3xl mb-4">{f.icon}</div>
@@ -439,6 +440,7 @@ export default function LandingPage() {
                   t("\"Powered by Genius\" branding", "Branding \"Powered by Genius\""),
                   t("Basic knowledge base", "Knowledge base base"),
                   t("Email support", "Supporto email"),
+                  t("❌ No ecommerce integration", "❌ Nessuna integrazione ecommerce"),
                 ].map((item, i) => (
                   <li key={i} className="flex items-start gap-2"><Check className="w-4 h-4 text-[#F5A623] shrink-0 mt-0.5" />{item}</li>
                 ))}
@@ -469,6 +471,7 @@ export default function LandingPage() {
                   t("PDF/Word upload", "Upload PDF/Word"),
                   t("Industry templates", "Template di settore"),
                   t("Priority support", "Supporto prioritario"),
+                  t("🛒 XML/CSV Feed (daily sync)", "🛒 Feed XML/CSV (sync giornaliero)"),
                 ].map((item, i) => (
                   <li key={i} className="flex items-start gap-2"><Check className="w-4 h-4 text-[#F5A623] shrink-0 mt-0.5" />{item}</li>
                 ))}
@@ -499,6 +502,7 @@ export default function LandingPage() {
                   t("All Pro features", "Tutte le funzionalità Pro"),
                   t("Advanced analytics", "Analytics avanzati"),
                   t("Dedicated support", "Supporto dedicato"),
+                  t("🛒 Full ecommerce (WooCommerce, Shopify, PrestaShop, API + real-time webhooks)", "🛒 Ecommerce completo (WooCommerce, Shopify, PrestaShop, API + webhook real-time)"),
                 ].map((item, i) => (
                   <li key={i} className="flex items-start gap-2"><Check className="w-4 h-4 text-[#F5A623] shrink-0 mt-0.5" />{item}</li>
                 ))}
