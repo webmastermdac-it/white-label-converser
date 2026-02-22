@@ -12,9 +12,12 @@ import logoDtm from "@/assets/logos/dtm.png";
 import logoSaniplast from "@/assets/logos/saniplast.png";
 import logoZerotrenta from "@/assets/logos/zerotrenta.png";
 import logoCurtense from "@/assets/logos/curtense.png";
-import screenshotDashboard from "@/assets/screenshots/dashboard.png";
-import screenshotWidget from "@/assets/screenshots/chatbot-widget.png";
-import screenshotSettings from "@/assets/screenshots/bot-settings.png";
+import screenshotDashboard from "@/assets/screenshots/analytics-kpi.png";
+import screenshotWidget from "@/assets/screenshots/chatbot-widget-new.png";
+import screenshotSettings from "@/assets/screenshots/bot-settings-new.png";
+import screenshotChatHistory from "@/assets/screenshots/chat-history.png";
+import screenshotCharts from "@/assets/screenshots/analytics-charts.png";
+import screenshotEcommerce from "@/assets/screenshots/ecommerce.png";
 import CookieBanner from "@/components/CookieBanner";
 
 /* ─── Scroll fade-in observer ─── */
@@ -50,7 +53,7 @@ export default function LandingPage() {
   const [yearly, setYearly] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<"dashboard" | "widget" | "config">("dashboard");
+  const [activeTab, setActiveTab] = useState<string>("dashboard");
 
   const handleCheckout = async (plan: "starter" | "pro") => {
     const interval = yearly ? "year" : "month";
@@ -94,9 +97,12 @@ export default function LandingPage() {
   ];
 
   const screenshotTabs = [
-    { key: "dashboard" as const, label: "Dashboard", img: screenshotDashboard, desc: t("Monitor all conversations, leads, and performance in real time.", "Monitora tutte le conversazioni, i lead e le performance in tempo reale.") },
-    { key: "widget" as const, label: "Chatbot Widget", img: screenshotWidget, desc: t("The widget integrates seamlessly on any website with full customization.", "Il widget si integra perfettamente su qualsiasi sito con personalizzazione completa.") },
-    { key: "config" as const, label: t("Configuration", "Configurazione"), img: screenshotSettings, desc: t("Configure identity, colors, behavior and knowledge base in minutes.", "Configura identità, colori, comportamento e knowledge base in pochi minuti.") },
+    { key: "dashboard", label: "Dashboard", img: screenshotDashboard, desc: t("Monitor all conversations, leads, and performance in real time.", "Monitora tutte le conversazioni, i lead e le performance in tempo reale.") },
+    { key: "widget", label: "Chatbot Widget", img: screenshotWidget, desc: t("The widget integrates seamlessly on any website with full customization.", "Il widget si integra perfettamente su qualsiasi sito con personalizzazione completa.") },
+    { key: "config", label: t("Configuration", "Configurazione"), img: screenshotSettings, desc: t("Configure identity, colors, behavior and knowledge base in minutes.", "Configura identità, colori, comportamento e knowledge base in pochi minuti.") },
+    { key: "chat-history", label: t("Chat History", "Storico Chat"), img: screenshotChatHistory, desc: t("View all conversations with details on messages, duration and dates.", "Visualizza tutte le conversazioni con dettagli su messaggi, durata e date.") },
+    { key: "analytics", label: "Analytics", img: screenshotCharts, desc: t("Advanced charts: lead distribution, status, source pages and trends.", "Grafici avanzati: distribuzione lead, stato, pagine sorgente e trend.") },
+    { key: "ecommerce", label: "Ecommerce", img: screenshotEcommerce, desc: t("Connect your store: WooCommerce, Shopify, PrestaShop or custom feeds.", "Connetti il tuo store: WooCommerce, Shopify, PrestaShop o feed personalizzati.") },
   ];
 
   return (
@@ -265,12 +271,12 @@ export default function LandingPage() {
           </p>
 
           {/* Tabs */}
-          <div className="flex justify-center gap-2 mb-8">
+          <div className="flex justify-start sm:justify-center gap-2 mb-8 overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 scrollbar-hide">
             {screenshotTabs.map((tab) => (
               <button
                 key={tab.key}
                 onClick={() => setActiveTab(tab.key)}
-                className={`px-5 py-2.5 rounded-full text-sm font-medium transition-all ${
+                className={`px-5 py-2.5 rounded-full text-sm font-medium transition-all whitespace-nowrap shrink-0 ${
                   activeTab === tab.key
                     ? "bg-[#F5A623] text-black"
                     : "bg-white/5 text-white/60 hover:bg-white/10 hover:text-white"
