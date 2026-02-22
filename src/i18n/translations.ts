@@ -888,6 +888,14 @@ export const translations = {
     en: "Unlimited",
     it: "Illimitato",
   },
+  paymentProcessing: {
+    en: "Payment processing",
+    it: "Pagamento in elaborazione",
+  },
+  paymentProcessingDesc: {
+    en: "Your payment is being processed. Refresh the page in a few seconds.",
+    it: "Il pagamento è in elaborazione. Aggiorna la pagina tra qualche secondo.",
+  },
 } as const;
 
 export type TranslationKey = keyof typeof translations;

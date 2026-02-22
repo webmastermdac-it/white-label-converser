@@ -18,11 +18,17 @@ const PRICES: Record<string, Record<string, string>> = {
   },
 };
 
+const log = (step: string, details?: any) => {
+  const d = details ? ` - ${JSON.stringify(details)}` : "";
+  console.log(`[CREATE-CHECKOUT] ${step}${d}`);
+};
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { plan, interval, email } = await req.json();
+    const { plan, interval, email, client_id } = await req.json();
+    log("Request received", { plan, interval, email, client_id });
 
     if (!plan || !interval || !PRICES[plan]?.[interval]) {
       return new Response(JSON.stringify({ error: "Invalid plan or interval" }), {
@@ -39,6 +45,7 @@ serve(async (req) => {
     let customerId: string | undefined;
     if (customers.data.length > 0) {
       customerId = customers.data[0].id;
+      log("Existing Stripe customer found", { customerId });
     }
 
     const origin = req.headers.get("origin") || "https://genius-chatbot.lovable.app";
@@ -48,16 +55,23 @@ serve(async (req) => {
       customer_email: customerId ? undefined : email,
       line_items: [{ price: PRICES[plan][interval], quantity: 1 }],
       mode: "subscription",
-      success_url: `${origin}/dashboard?payment=success`,
-      cancel_url: `${origin}/#pricing`,
-      metadata: { plan, interval },
+      success_url: `${origin}/dashboard?payment=success&plan=${plan}`,
+      cancel_url: `${origin}/dashboard/upgrade`,
+      metadata: {
+        plan,
+        interval,
+        client_id: client_id || "",
+        email: email || "",
+      },
     });
+
+    log("Checkout session created", { sessionId: session.id, url: session.url });
 
     return new Response(JSON.stringify({ url: session.url }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error: any) {
-    console.error("create-checkout-session error:", error);
+    log("Error", { message: error.message });
     return new Response(JSON.stringify({ error: error.message }), {
       status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
