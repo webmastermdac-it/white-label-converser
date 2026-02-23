@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { useLanguage } from "@/hooks/useLanguage";
 import { Button } from "@/components/ui/button";
-import { Play, Star, Menu, X, Check, Loader2, ArrowRight, Users, GraduationCap, BookOpen } from "lucide-react";
+import { Play, Star, Menu, X, Check, Loader2, ArrowRight, Users, GraduationCap, BookOpen, Bot, ClipboardList, CalendarCheck, Palette, Globe, BarChart3, ShoppingCart } from "lucide-react";
 import geniusLogo from "@/assets/genius.png";
 import genieHero from "@/assets/genie-hero.jpg";
 import { supabase } from "@/integrations/supabase/client";
@@ -249,18 +249,25 @@ export default function LandingPage() {
           </p>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {[
-              { icon: "🤖", en: "AI Conversations", it: "Conversazioni AI", descEn: "Trained on your business. Answers questions, handles objections, qualifies leads 24/7.", descIt: "Addestrato sul tuo business. Risponde alle domande, gestisce le obiezioni e qualifica i lead 24/7." },
-              { icon: "📋", en: "Lead Capture", it: "Cattura Lead", descEn: "Never lose a visitor. When the bot can't answer, it captures their contact instantly.", descIt: "Non perdere mai un visitatore. Quando il bot non può rispondere, cattura il contatto istantaneamente." },
-              { icon: "📅", en: "Booking", it: "Prenotazioni", descEn: "Integrated Calendly. Visitors book appointments directly in the chat.", descIt: "Calendly integrato. I visitatori prenotano appuntamenti direttamente nella chat." },
-              { icon: "🎨", en: "Full Customization", it: "Personalizzazione Totale", descEn: "Colors, avatar, tone of voice. Your chatbot, your brand. Complete white-label.", descIt: "Colori, avatar, tono di voce. Il tuo chatbot, il tuo brand. Completa white-label." },
-              { icon: "🌍", en: "Multilingual", it: "Multilingua", descEn: "Speaks English and Italian. Auto-detects visitor language.", descIt: "Parla italiano e inglese. Rileva automaticamente la lingua del visitatore." },
-              { icon: "📊", en: "Full Dashboard", it: "Dashboard Completa", descEn: "Track leads, conversations, and conversions in real time with advanced analytics.", descIt: "Monitora lead, conversazioni e conversioni in tempo reale con analytics avanzati." },
-              { icon: "🛒", en: "Ecommerce Integration", it: "Integrazione Ecommerce", descEn: "Connect WooCommerce, Shopify or PrestaShop. The bot knows products, prices, availability and variants in real time. Automatic sync every 24 hours.", descIt: "Connetti WooCommerce, Shopify o PrestaShop. Il bot conosce prodotti, prezzi, disponibilità e varianti in tempo reale. Sincronizzazione automatica ogni 24 ore." },
+              { Icon: Bot, color: "38 90% 55%", en: "AI Conversations", it: "Conversazioni AI", descEn: "Trained on your business. Answers questions, handles objections, qualifies leads 24/7.", descIt: "Addestrato sul tuo business. Risponde alle domande, gestisce le obiezioni e qualifica i lead 24/7." },
+              { Icon: ClipboardList, color: "199 89% 48%", en: "Lead Capture", it: "Cattura Lead", descEn: "Never lose a visitor. When the bot can't answer, it captures their contact instantly.", descIt: "Non perdere mai un visitatore. Quando il bot non può rispondere, cattura il contatto istantaneamente." },
+              { Icon: CalendarCheck, color: "142 71% 45%", en: "Booking", it: "Prenotazioni", descEn: "Integrated Calendly. Visitors book appointments directly in the chat.", descIt: "Calendly integrato. I visitatori prenotano appuntamenti direttamente nella chat." },
+              { Icon: Palette, color: "340 82% 52%", en: "Full Customization", it: "Personalizzazione Totale", descEn: "Colors, avatar, tone of voice. Your chatbot, your brand. Complete white-label.", descIt: "Colori, avatar, tono di voce. Il tuo chatbot, il tuo brand. Completa white-label." },
+              { Icon: Globe, color: "199 89% 48%", en: "Multilingual", it: "Multilingua", descEn: "Speaks English and Italian. Auto-detects visitor language.", descIt: "Parla italiano e inglese. Rileva automaticamente la lingua del visitatore." },
+              { Icon: BarChart3, color: "262 83% 58%", en: "Full Dashboard", it: "Dashboard Completa", descEn: "Track leads, conversations, and conversions in real time with advanced analytics.", descIt: "Monitora lead, conversazioni e conversioni in tempo reale con analytics avanzati." },
+              { Icon: ShoppingCart, color: "38 90% 55%", en: "Ecommerce Integration", it: "Integrazione Ecommerce", descEn: "Connect WooCommerce, Shopify or PrestaShop. The bot knows products, prices, availability and variants in real time. Automatic sync every 24 hours.", descIt: "Connetti WooCommerce, Shopify o PrestaShop. Il bot conosce prodotti, prezzi, disponibilità e varianti in tempo reale. Sincronizzazione automatica ogni 24 ore." },
             ].map((f, i) => (
-              <div key={i} className="group bg-white/[0.03] hover:bg-white/[0.06] border border-white/10 hover:border-[#F5A623]/30 rounded-2xl p-6 transition-all duration-300">
-                <div className="text-3xl mb-4">{f.icon}</div>
-                <h3 className="text-lg font-semibold mb-2" style={{ fontFamily: "'Syne', sans-serif" }}>{t(f.en, f.it)}</h3>
-                <p className="text-white/50 text-sm leading-relaxed">{t(f.descEn, f.descIt)}</p>
+              <div key={i} className="group relative bg-white/[0.03] border border-white/10 rounded-2xl p-6 transition-all duration-500 hover:border-opacity-40 overflow-hidden" style={{ ["--card-accent" as string]: f.color }}>
+                {/* Glow overlay on hover */}
+                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" style={{ background: `radial-gradient(ellipse at 30% 20%, hsl(${f.color} / 0.12) 0%, transparent 70%)` }} />
+                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none border border-transparent rounded-2xl" style={{ borderColor: `hsl(${f.color} / 0.3)` }} />
+                <div className="relative z-10">
+                  <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-4" style={{ background: `hsl(${f.color} / 0.15)` }}>
+                    <f.Icon className="w-6 h-6" style={{ color: `hsl(${f.color})` }} />
+                  </div>
+                  <h3 className="text-lg font-semibold mb-2" style={{ fontFamily: "'Syne', sans-serif" }}>{t(f.en, f.it)}</h3>
+                  <p className="text-white/50 text-sm leading-relaxed">{t(f.descEn, f.descIt)}</p>
+                </div>
               </div>
             ))}
           </div>
