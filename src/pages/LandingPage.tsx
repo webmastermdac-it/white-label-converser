@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { useLanguage } from "@/hooks/useLanguage";
 import { Button } from "@/components/ui/button";
@@ -50,6 +50,64 @@ function Section({ children, className = "", id }: { children: React.ReactNode; 
     <section id={id} ref={ref} className={`opacity-0 translate-y-8 transition-all duration-700 ease-out ${className}`}>
       {children}
     </section>
+  );
+}
+
+/* ─── Staggered feature cards ─── */
+const featureItems = [
+  { Icon: Bot, color: "38 90% 55%", en: "AI Conversations", it: "Conversazioni AI", descEn: "Trained on your business. Answers questions, handles objections, qualifies leads 24/7.", descIt: "Addestrato sul tuo business. Risponde alle domande, gestisce le obiezioni e qualifica i lead 24/7." },
+  { Icon: ClipboardList, color: "199 89% 48%", en: "Lead Capture", it: "Cattura Lead", descEn: "Never lose a visitor. When the bot can't answer, it captures their contact instantly.", descIt: "Non perdere mai un visitatore. Quando il bot non può rispondere, cattura il contatto istantaneamente." },
+  { Icon: CalendarCheck, color: "142 71% 45%", en: "Booking", it: "Prenotazioni", descEn: "Integrated Calendly. Visitors book appointments directly in the chat.", descIt: "Calendly integrato. I visitatori prenotano appuntamenti direttamente nella chat." },
+  { Icon: Palette, color: "340 82% 52%", en: "Full Customization", it: "Personalizzazione Totale", descEn: "Colors, avatar, tone of voice. Your chatbot, your brand. Complete white-label.", descIt: "Colori, avatar, tono di voce. Il tuo chatbot, il tuo brand. Completa white-label." },
+  { Icon: Globe, color: "199 89% 48%", en: "Multilingual", it: "Multilingua", descEn: "Speaks English and Italian. Auto-detects visitor language.", descIt: "Parla italiano e inglese. Rileva automaticamente la lingua del visitatore." },
+  { Icon: BarChart3, color: "262 83% 58%", en: "Full Dashboard", it: "Dashboard Completa", descEn: "Track leads, conversations, and conversions in real time with advanced analytics.", descIt: "Monitora lead, conversazioni e conversioni in tempo reale con analytics avanzati." },
+  { Icon: ShoppingCart, color: "38 90% 55%", en: "Ecommerce Integration", it: "Integrazione Ecommerce", descEn: "Connect WooCommerce, Shopify or PrestaShop. The bot knows products, prices, availability and variants in real time. Automatic sync every 24 hours.", descIt: "Connetti WooCommerce, Shopify o PrestaShop. Il bot conosce prodotti, prezzi, disponibilità e varianti in tempo reale. Sincronizzazione automatica ogni 24 ore." },
+];
+
+function FeatureGrid({ t }: { t: (en: string, it: string) => string }) {
+  const gridRef = useRef<HTMLDivElement>(null);
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const el = gridRef.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      ([e]) => { if (e.isIntersecting) { setVisible(true); obs.disconnect(); } },
+      { threshold: 0.1 }
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
+
+  return (
+    <div ref={gridRef} className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      {featureItems.map((f, i) => (
+        <div
+          key={i}
+          className={`group relative bg-white/[0.03] border border-white/10 rounded-2xl p-6 transition-all duration-500 hover:border-opacity-40 overflow-hidden ${
+            visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
+          }`}
+          style={{
+            ["--card-accent" as string]: f.color,
+            transitionDelay: visible ? `${i * 100}ms` : "0ms",
+            transitionProperty: "opacity, transform, border-color",
+            transitionDuration: "600ms",
+            transitionTimingFunction: "cubic-bezier(0.25, 0.46, 0.45, 0.94)",
+          }}
+        >
+          {/* Glow overlay on hover */}
+          <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" style={{ background: `radial-gradient(ellipse at 30% 20%, hsl(${f.color} / 0.12) 0%, transparent 70%)` }} />
+          <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none border border-transparent rounded-2xl" style={{ borderColor: `hsl(${f.color} / 0.3)` }} />
+          <div className="relative z-10">
+            <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-4" style={{ background: `hsl(${f.color} / 0.15)` }}>
+              <f.Icon className="w-6 h-6" style={{ color: `hsl(${f.color})` }} />
+            </div>
+            <h3 className="text-lg font-semibold mb-2" style={{ fontFamily: "'Syne', sans-serif" }}>{t(f.en, f.it)}</h3>
+            <p className="text-white/50 text-sm leading-relaxed">{t(f.descEn, f.descIt)}</p>
+          </div>
+        </div>
+      ))}
+    </div>
   );
 }
 
@@ -247,30 +305,7 @@ export default function LandingPage() {
           <p className="text-white/50 text-center mb-14 max-w-2xl mx-auto">
             {t("Powerful features to turn every website visitor into a qualified lead.", "Funzionalità potenti per trasformare ogni visitatore del sito in un lead qualificato.")}
           </p>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[
-              { Icon: Bot, color: "38 90% 55%", en: "AI Conversations", it: "Conversazioni AI", descEn: "Trained on your business. Answers questions, handles objections, qualifies leads 24/7.", descIt: "Addestrato sul tuo business. Risponde alle domande, gestisce le obiezioni e qualifica i lead 24/7." },
-              { Icon: ClipboardList, color: "199 89% 48%", en: "Lead Capture", it: "Cattura Lead", descEn: "Never lose a visitor. When the bot can't answer, it captures their contact instantly.", descIt: "Non perdere mai un visitatore. Quando il bot non può rispondere, cattura il contatto istantaneamente." },
-              { Icon: CalendarCheck, color: "142 71% 45%", en: "Booking", it: "Prenotazioni", descEn: "Integrated Calendly. Visitors book appointments directly in the chat.", descIt: "Calendly integrato. I visitatori prenotano appuntamenti direttamente nella chat." },
-              { Icon: Palette, color: "340 82% 52%", en: "Full Customization", it: "Personalizzazione Totale", descEn: "Colors, avatar, tone of voice. Your chatbot, your brand. Complete white-label.", descIt: "Colori, avatar, tono di voce. Il tuo chatbot, il tuo brand. Completa white-label." },
-              { Icon: Globe, color: "199 89% 48%", en: "Multilingual", it: "Multilingua", descEn: "Speaks English and Italian. Auto-detects visitor language.", descIt: "Parla italiano e inglese. Rileva automaticamente la lingua del visitatore." },
-              { Icon: BarChart3, color: "262 83% 58%", en: "Full Dashboard", it: "Dashboard Completa", descEn: "Track leads, conversations, and conversions in real time with advanced analytics.", descIt: "Monitora lead, conversazioni e conversioni in tempo reale con analytics avanzati." },
-              { Icon: ShoppingCart, color: "38 90% 55%", en: "Ecommerce Integration", it: "Integrazione Ecommerce", descEn: "Connect WooCommerce, Shopify or PrestaShop. The bot knows products, prices, availability and variants in real time. Automatic sync every 24 hours.", descIt: "Connetti WooCommerce, Shopify o PrestaShop. Il bot conosce prodotti, prezzi, disponibilità e varianti in tempo reale. Sincronizzazione automatica ogni 24 ore." },
-            ].map((f, i) => (
-              <div key={i} className="group relative bg-white/[0.03] border border-white/10 rounded-2xl p-6 transition-all duration-500 hover:border-opacity-40 overflow-hidden" style={{ ["--card-accent" as string]: f.color }}>
-                {/* Glow overlay on hover */}
-                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" style={{ background: `radial-gradient(ellipse at 30% 20%, hsl(${f.color} / 0.12) 0%, transparent 70%)` }} />
-                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none border border-transparent rounded-2xl" style={{ borderColor: `hsl(${f.color} / 0.3)` }} />
-                <div className="relative z-10">
-                  <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-4" style={{ background: `hsl(${f.color} / 0.15)` }}>
-                    <f.Icon className="w-6 h-6" style={{ color: `hsl(${f.color})` }} />
-                  </div>
-                  <h3 className="text-lg font-semibold mb-2" style={{ fontFamily: "'Syne', sans-serif" }}>{t(f.en, f.it)}</h3>
-                  <p className="text-white/50 text-sm leading-relaxed">{t(f.descEn, f.descIt)}</p>
-                </div>
-              </div>
-            ))}
-          </div>
+          <FeatureGrid t={t} />
         </div>
       </Section>
 
