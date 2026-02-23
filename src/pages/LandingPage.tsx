@@ -684,7 +684,7 @@ export default function LandingPage() {
           </div>
 
           <div className="border-t border-white/5 pt-6 text-center text-xs text-white/30">
-            © 2025 Genius Chatbot Builder. {t("All rights reserved.", "Tutti i diritti riservati.")} {t("A product of", "Un prodotto")} MDAC S.r.l.
+            © 2026 Genius Chatbot Builder. {t("All rights reserved.", "Tutti i diritti riservati.")} {t("A product of", "Un prodotto")} MDAC S.r.l.
           </div>
         </div>
       </footer>
