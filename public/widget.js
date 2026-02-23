@@ -15,24 +15,12 @@
     return d.innerHTML;
   }
 
-  // ── Language detection ─────────────────────────────────
-  var widgetLang = (navigator.language || "it").startsWith("en") ? "en" : "it";
+  // ── Language detection (full code) ─────────────────────
+  var widgetLang = navigator.language || "en";
+  var baseLang = widgetLang.substring(0, 2);
 
-  var i18n = {
-    it: {
-      placeholder: "Scrivi un messaggio...",
-      leadLabel: "📋 Lascia i tuoi contatti",
-      namePlaceholder: "Nome *",
-      emailPlaceholder: "Email *",
-      phonePlaceholder: "Telefono",
-      messagePlaceholder: "Messaggio",
-      submitBtn: "Invia richiesta",
-      calendlyBtn: "📅 Prenota una consulenza",
-      successMsg: "✅ Richiesta inviata! Ti contatteremo presto.",
-      thankYou: "Grazie! Ti contatteremo presto. 🎉",
-      errorMsg: "Errore di connessione. Riprova.",
-      errorReply: "Errore nella risposta.",
-    },
+  // ── Multi-language form labels ─────────────────────────
+  var formLabels = {
     en: {
       placeholder: "Type a message...",
       leadLabel: "📋 Leave your contact details",
@@ -47,9 +35,79 @@
       errorMsg: "Connection error. Please retry.",
       errorReply: "Error in the response.",
     },
+    it: {
+      placeholder: "Scrivi un messaggio...",
+      leadLabel: "📋 Lascia i tuoi contatti",
+      namePlaceholder: "Nome *",
+      emailPlaceholder: "Email *",
+      phonePlaceholder: "Telefono",
+      messagePlaceholder: "Messaggio",
+      submitBtn: "Invia richiesta",
+      calendlyBtn: "📅 Prenota una consulenza",
+      successMsg: "✅ Richiesta inviata! Ti contatteremo presto.",
+      thankYou: "Grazie! Ti contatteremo presto. 🎉",
+      errorMsg: "Errore di connessione. Riprova.",
+      errorReply: "Errore nella risposta.",
+    },
+    fr: {
+      placeholder: "Écrivez un message...",
+      leadLabel: "📋 Laissez vos coordonnées",
+      namePlaceholder: "Nom *",
+      emailPlaceholder: "Email *",
+      phonePlaceholder: "Téléphone",
+      messagePlaceholder: "Message",
+      submitBtn: "Envoyer",
+      calendlyBtn: "📅 Réserver une consultation",
+      successMsg: "✅ Demande envoyée! Nous vous contacterons.",
+      thankYou: "Merci! Nous vous contacterons bientôt. 🎉",
+      errorMsg: "Erreur de connexion. Réessayez.",
+      errorReply: "Erreur dans la réponse.",
+    },
+    de: {
+      placeholder: "Nachricht schreiben...",
+      leadLabel: "📋 Hinterlassen Sie Ihre Daten",
+      namePlaceholder: "Name *",
+      emailPlaceholder: "E-Mail *",
+      phonePlaceholder: "Telefon",
+      messagePlaceholder: "Nachricht",
+      submitBtn: "Absenden",
+      calendlyBtn: "📅 Beratung buchen",
+      successMsg: "✅ Anfrage gesendet! Wir melden uns.",
+      thankYou: "Danke! Wir melden uns bald. 🎉",
+      errorMsg: "Verbindungsfehler. Bitte erneut versuchen.",
+      errorReply: "Fehler in der Antwort.",
+    },
+    es: {
+      placeholder: "Escribe un mensaje...",
+      leadLabel: "📋 Deje sus datos",
+      namePlaceholder: "Nombre *",
+      emailPlaceholder: "Email *",
+      phonePlaceholder: "Teléfono",
+      messagePlaceholder: "Mensaje",
+      submitBtn: "Enviar solicitud",
+      calendlyBtn: "📅 Reservar consulta",
+      successMsg: "✅ ¡Solicitud enviada! Le contactaremos.",
+      thankYou: "¡Gracias! Le contactaremos pronto. 🎉",
+      errorMsg: "Error de conexión. Inténtelo de nuevo.",
+      errorReply: "Error en la respuesta.",
+    },
+    pt: {
+      placeholder: "Escreva uma mensagem...",
+      leadLabel: "📋 Deixe seus dados",
+      namePlaceholder: "Nome *",
+      emailPlaceholder: "Email *",
+      phonePlaceholder: "Telefone",
+      messagePlaceholder: "Mensagem",
+      submitBtn: "Enviar pedido",
+      calendlyBtn: "📅 Agendar consulta",
+      successMsg: "✅ Pedido enviado! Entraremos em contato.",
+      thankYou: "Obrigado! Entraremos em contato em breve. 🎉",
+      errorMsg: "Erro de conexão. Tente novamente.",
+      errorReply: "Erro na resposta.",
+    },
   };
 
-  var t = i18n[widgetLang];
+  var t = formLabels[baseLang] || formLabels["en"];
 
   // ── Detect script tag & token ───────────────────────────
   var scriptTag = document.currentScript || (function () {
@@ -311,13 +369,7 @@
         var botMsg = data.message || t.errorReply;
         messages.push({ role: "assistant", content: botMsg });
 
-        if (data.trigger_lead_form ||
-          /non ho (questa )?informazion/i.test(botMsg) ||
-          /non so rispondere/i.test(botMsg) ||
-          /contatt/i.test(botMsg) ||
-          /non sono in grado/i.test(botMsg) ||
-          /i don't have/i.test(botMsg) ||
-          /i can connect you/i.test(botMsg)) {
+        if (data.trigger_lead_form) {
           showLeadForm = true;
         }
 
@@ -392,10 +444,13 @@
         messages = saved;
       } else {
         var welcomeMsg;
-        if (widgetLang === "en") {
+        if (baseLang === "en") {
           welcomeMsg = config.welcome_msg_en || config.welcome_msg_it || config.welcome_message || "Hello! How can I help you?";
-        } else {
+        } else if (baseLang === "it") {
           welcomeMsg = config.welcome_msg_it || config.welcome_message || "Ciao! Come posso aiutarti?";
+        } else {
+          // For other languages, prefer English welcome then Italian
+          welcomeMsg = config.welcome_msg_en || config.welcome_msg_it || config.welcome_message || "Hello! How can I help you?";
         }
         messages = [{ role: "assistant", content: welcomeMsg }];
         saveMessages(messages);

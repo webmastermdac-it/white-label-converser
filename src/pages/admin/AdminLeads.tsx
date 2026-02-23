@@ -12,6 +12,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue
 } from "@/components/ui/select";
 import { Loader2, Download, Search, Filter } from "lucide-react";
+import { getLanguageFlag } from "@/lib/languageFlags";
 
 interface Lead {
   id: string;
@@ -126,7 +127,7 @@ const AdminLeads = () => {
                 <tr key={lead.id} className="hover:bg-secondary/20 transition-colors cursor-pointer" onClick={() => setSelectedLead(lead)}>
                   <td className="px-5 py-4">
                     <p className="font-medium text-foreground text-sm">
-                      {lead.language === "en" ? "🇬🇧" : "🇮🇹"} {lead.name}
+                      <span title={getLanguageFlag(lead.language).tooltip}>{getLanguageFlag(lead.language).flag}</span> {lead.name}
                     </p>
                     <p className="text-xs text-muted-foreground">{lead.email} · {lead.phone}</p>
                   </td>
@@ -168,7 +169,7 @@ const AdminLeads = () => {
             <div key={lead.id} className="glass rounded-xl p-4 space-y-2" onClick={() => setSelectedLead(lead)}>
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-2">
-                  <span className="text-sm">{lead.language === "en" ? "🇬🇧" : "🇮🇹"}</span>
+                  <span className="text-sm" title={getLanguageFlag(lead.language).tooltip}>{getLanguageFlag(lead.language).flag}</span>
                   <p className="font-medium text-foreground text-sm">👤 {lead.name}</p>
                 </div>
                 <span className={`text-xs px-2 py-1 rounded-full font-medium ${
