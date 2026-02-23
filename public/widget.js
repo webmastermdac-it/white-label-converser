@@ -15,6 +15,17 @@
     return d.innerHTML;
   }
 
+  function renderMarkdown(text) {
+    return esc(text)
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\*(.*?)\*/g, '<em>$1</em>')
+      .replace(/^\* (.+)$/gm, '<li>$1</li>')
+      .replace(/^\d+\. (.+)$/gm, '<li>$1</li>')
+      .replace(/(<li>[\s\S]*?<\/li>)/g, '<ul>$1</ul>')
+      .replace(/<\/ul>\s*<ul>/g, '')
+      .replace(/\n/g, '<br>');
+  }
+
   // ── Language detection (full code) ─────────────────────
   var widgetLang = navigator.language || "en";
   var baseLang = widgetLang.substring(0, 2);
@@ -192,6 +203,11 @@
 .mdac-msg.user .mdac-bubble{background:" + pc + ";color:#fff;border-bottom-right-radius:4px;}\
 .mdac-msg.bot .mdac-bubble{background:#fff;color:#1a1a2e;border:1px solid #e5e7eb;border-bottom-left-radius:4px;}\
 .mdac-msg-avatar{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;}\
+.mdac-bubble strong{font-weight:700;}\
+.mdac-bubble em{font-style:italic;}\
+.mdac-bubble ul,.mdac-bubble ol{margin:4px 0 4px 16px;padding:0;}\
+.mdac-bubble li{margin:2px 0;list-style:disc;}\
+.mdac-bubble ol li{list-style:decimal;}\
 .mdac-msg.bot .mdac-msg-avatar{background:#e5e7eb;}\
 .mdac-msg.user .mdac-msg-avatar{background:" + pc + ";color:#fff;font-size:12px;}\
 .mdac-typing{display:flex;gap:4px;padding:10px 14px;}\
@@ -260,7 +276,11 @@
       if (m.role !== "user") {
         html += '<div class="mdac-msg-avatar">' + avatarSmall + '</div>';
       }
-      html += '<div class="mdac-bubble">' + esc(m.content) + '</div>';
+      if (m.role === "user") {
+        html += '<div class="mdac-bubble">' + esc(m.content) + '</div>';
+      } else {
+        html += '<div class="mdac-bubble">' + renderMarkdown(m.content) + '</div>';
+      }
       if (m.role === "user") {
         html += '<div class="mdac-msg-avatar">👤</div>';
       }

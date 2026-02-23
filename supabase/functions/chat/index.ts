@@ -104,10 +104,20 @@ When you don't know the answer or are uncertain, you must:
 3. After saying the fallback message, include the special marker: [TRIGGER_LEAD_FORM]
 4. Never make up information not provided in your knowledge base.`;
 
+    const formattingInstruction = `
+
+FORMATTING RULES:
+- Use **bold** only for plan names and prices
+- Use bullet lists only when listing 3+ items
+- Keep responses concise: max 4-5 lines per answer
+- No headers (##) in responses
+- End with ONE short question to keep the conversation going
+- Never use excessive formatting — write naturally`;
+
     const systemPrompt = `${botConfig.knowledge_base || "You are a helpful assistant."}${productKnowledge ? "\n\n" + productKnowledge : ""}
 
 IMPORTANT INSTRUCTIONS:
-- Be concise, helpful, and professional${languageInstruction}${fallbackInstruction}${productInstruction}`;
+- Be concise, helpful, and professional${languageInstruction}${fallbackInstruction}${productInstruction}${formattingInstruction}`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
