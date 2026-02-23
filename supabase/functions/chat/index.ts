@@ -10,7 +10,8 @@ serve(async (req) => {
 
   try {
     const { messages, embed_token, session_token, source_url, language } = await req.json();
-    const lang = language === "en" ? "en" : "it";
+    // Keep full language code (e.g. 'fr-FR', 'de-DE')
+    const lang = language || "en";
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
@@ -69,14 +70,8 @@ serve(async (req) => {
       }
     }
 
-    // Pick correct fallback message based on language
-    const fallbackMessage = lang === "en"
-      ? (botConfig.fallback_msg_en || botConfig.fallback_message || "I don't have this information, but I can connect you with one of our consultants!")
-      : (botConfig.fallback_msg_it || botConfig.fallback_message || "Non ho questa informazione, ma posso metterti in contatto con un nostro consulente!");
-
-    const langInstruction = lang === "en"
-      ? "\n\nIMPORTANT: Always reply in English, regardless of the language the user writes in."
-      : "\n\nIMPORTANTE: Rispondi SEMPRE in italiano, indipendentemente dalla lingua con cui ti scrive l'utente.";
+    // Use fallback messages as inspiration for the AI, not as fixed strings
+    const fallbackConcept = botConfig.fallback_msg_en || botConfig.fallback_message || "I don't have this information, but I can connect you with one of our consultants!";
 
     // Check if client has product catalog
     let productKnowledge = "";
@@ -84,18 +79,35 @@ serve(async (req) => {
       productKnowledge = botConfig.knowledge_base_products;
     }
 
-    const productInstruction = productKnowledge ? (lang === "en"
+    const productInstruction = productKnowledge
       ? `\n\nYou have access to the store's updated product catalog. When users ask about products: search the catalog and answer accurately, always mention the exact price and availability, if there are variants list them with prices and stock, if a product is out of stock say so and suggest similar available products, never invent products not in the catalog, you can provide a direct link to the product if available.`
-      : `\n\nHai accesso al catalogo prodotti aggiornato del negozio. Quando l'utente chiede di prodotti: cerca nel catalogo e rispondi con precisione, indica sempre il prezzo esatto e la disponibilità, se ci sono varianti elencale con prezzi e stock, se il prodotto è esaurito dillo e suggerisci prodotti simili disponibili, non inventare prodotti che non sono nel catalogo, puoi fornire il link diretto al prodotto se disponibile.`)
       : "";
+
+    // Universal language instruction
+    const languageInstruction = `
+
+IMPORTANT LANGUAGE RULE:
+The visitor is using language code: ${lang}
+You MUST always respond in the same language the visitor is writing in, regardless of the language of the knowledge base.
+If the visitor writes in French, respond in French.
+If the visitor writes in Spanish, respond in Spanish.
+If the visitor writes in German, respond in German.
+Adapt naturally to any language the visitor uses.
+The only exception: if the visitor explicitly asks you to switch to a different language, do so.`;
+
+    const fallbackInstruction = `
+
+FALLBACK RULE:
+When you don't know the answer or are uncertain, you must:
+1. Write a fallback message in the SAME language the visitor is using.
+2. The concept to convey is: "${fallbackConcept}" — translate and adapt this naturally to whatever language the visitor is using.
+3. After saying the fallback message, include the special marker: [TRIGGER_LEAD_FORM]
+4. Never make up information not provided in your knowledge base.`;
 
     const systemPrompt = `${botConfig.knowledge_base || "You are a helpful assistant."}${productKnowledge ? "\n\n" + productKnowledge : ""}
 
 IMPORTANT INSTRUCTIONS:
-- If you don't know the answer or are uncertain, say the following EXACT phrase (or very similar): "${fallbackMessage}"
-- After saying the fallback message, include the special marker: [TRIGGER_LEAD_FORM]
-- Never make up information not provided in your knowledge base
-- Be concise, helpful, and professional${langInstruction}${productInstruction}`;
+- Be concise, helpful, and professional${languageInstruction}${fallbackInstruction}${productInstruction}`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -122,14 +134,11 @@ IMPORTANT INSTRUCTIONS:
     const aiData = await response.json();
     const aiMessage = aiData.choices?.[0]?.message?.content || "";
 
-    const triggerLeadForm = aiMessage.includes("[TRIGGER_LEAD_FORM]") ||
-      aiMessage.toLowerCase().includes("non ho questa informazione") ||
-      aiMessage.toLowerCase().includes("non so") ||
-      aiMessage.toLowerCase().includes("i don't have");
+    const triggerLeadForm = aiMessage.includes("[TRIGGER_LEAD_FORM]");
 
     const cleanMessage = aiMessage.replace("[TRIGGER_LEAD_FORM]", "").trim();
 
-    // Save/update chat session with language
+    // Save/update chat session with full language code
     if (session_token) {
       const allMessages = [...messages, { role: "assistant", content: cleanMessage }];
       const { data: existingSession } = await supabase
@@ -160,8 +169,6 @@ IMPORTANT INSTRUCTIONS:
       JSON.stringify({
         message: cleanMessage,
         trigger_lead_form: triggerLeadForm,
-        fallback_message: triggerLeadForm ? fallbackMessage : null,
-        calendly_url: triggerLeadForm ? botConfig.calendly_url : null,
         bot_id: botConfig.id,
         client_id: botConfig.client_id,
       }),
