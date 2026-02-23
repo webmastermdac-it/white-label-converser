@@ -111,6 +111,128 @@ function FeatureGrid({ t }: { t: (en: string, it: string) => string }) {
   );
 }
 
+function PricingGrid({ yearly, t }: { yearly: boolean; t: (en: string, it: string) => string }) {
+  const gridRef = useRef<HTMLDivElement>(null);
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const el = gridRef.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      ([e]) => { if (e.isIntersecting) { setVisible(true); obs.disconnect(); } },
+      { threshold: 0.1 }
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
+
+  const cardClass = (i: number, extra = "") =>
+    `${extra} transition-all ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`;
+
+  const cardStyle = (i: number) => ({
+    transitionDelay: visible ? `${i * 150}ms` : "0ms",
+    transitionProperty: "opacity, transform",
+    transitionDuration: "600ms",
+    transitionTimingFunction: "cubic-bezier(0.25, 0.46, 0.45, 0.94)",
+  });
+
+  return (
+    <div ref={gridRef} className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+      {/* Free */}
+      <div className={cardClass(0, "bg-white/[0.03] border border-white/10 rounded-2xl p-8 space-y-6")} style={cardStyle(0)}>
+        <div>
+          <h3 className="text-xl font-bold" style={{ fontFamily: "'Syne', sans-serif" }}>Free</h3>
+          <p className="text-white/40 text-sm mt-1">{t("Try Genius with no commitment", "Per provare Genius senza impegno")}</p>
+          <div className="mt-3">
+            <span className="text-4xl font-extrabold">€0</span>
+            <span className="text-white/40 text-sm">/{t("month", "mese")}</span>
+          </div>
+        </div>
+        <Link to="/register" className="block">
+          <Button variant="outline" className="w-full border-white/20 text-white hover:bg-white/10 rounded-full h-11">
+            {t("Start Free", "Inizia Gratis")}
+          </Button>
+        </Link>
+        <ul className="space-y-3 text-sm text-white/70">
+          {[
+            t("1 chatbot", "1 chatbot"),
+            t("50 conversations/month", "50 conversazioni/mese"),
+            t("10 leads/month", "10 lead/mese"),
+            t("\"Powered by Genius\" branding", "Branding \"Powered by Genius\""),
+            t("Basic knowledge base", "Knowledge base base"),
+            t("Email support", "Supporto email"),
+            t("❌ No ecommerce integration", "❌ Nessuna integrazione ecommerce"),
+          ].map((item, i) => (
+            <li key={i} className="flex items-start gap-2"><Check className="w-4 h-4 text-[#F5A623] shrink-0 mt-0.5" />{item}</li>
+          ))}
+        </ul>
+      </div>
+
+      {/* Starter */}
+      <div className={cardClass(1, "bg-white/[0.03] border border-white/10 rounded-2xl p-8 space-y-6")} style={cardStyle(1)}>
+        <div>
+          <h3 className="text-xl font-bold" style={{ fontFamily: "'Syne', sans-serif" }}>Starter</h3>
+          <p className="text-white/40 text-sm mt-1">{t("For small businesses and professionals", "Per piccole imprese e professionisti")}</p>
+          <div className="mt-3">
+            <span className="text-4xl font-extrabold">€{yearly ? "490" : "49"}</span>
+            <span className="text-white/40 text-sm">/{yearly ? t("year", "anno") : t("month", "mese")}</span>
+          </div>
+        </div>
+        <Link to="/register" className="block">
+          <Button variant="outline" className="w-full border-white/20 text-white hover:bg-white/10 rounded-full h-11">
+            {t("Try Free, Then Upgrade", "Prova Gratis, poi Upgrade")}
+          </Button>
+        </Link>
+        <ul className="space-y-3 text-sm text-white/70">
+          {[
+            t("1 chatbot", "1 chatbot"),
+            t("500 conversations/month", "500 conversazioni/mese"),
+            t("Unlimited leads", "Lead illimitati"),
+            t("Remove branding", "Rimuovi branding"),
+            t("PDF/Word upload", "Upload PDF/Word"),
+            t("Industry templates", "Template di settore"),
+            t("Priority support", "Supporto prioritario"),
+            t("🛒 XML/CSV Feed (daily sync)", "🛒 Feed XML/CSV (sync giornaliero)"),
+          ].map((item, i) => (
+            <li key={i} className="flex items-start gap-2"><Check className="w-4 h-4 text-[#F5A623] shrink-0 mt-0.5" />{item}</li>
+          ))}
+        </ul>
+      </div>
+
+      {/* Pro */}
+      <div className={cardClass(2, "relative bg-gradient-to-br from-[#F5A623]/10 to-transparent border-2 border-[#F5A623]/40 rounded-2xl p-8 space-y-6 shadow-lg shadow-[#F5A623]/10")} style={cardStyle(2)}>
+        <div className="absolute -top-3 right-6 bg-[#F5A623] text-black text-xs font-bold px-3 py-1 rounded-full">{t("Most Popular", "Più Popolare")}</div>
+        <div>
+          <h3 className="text-xl font-bold" style={{ fontFamily: "'Syne', sans-serif" }}>Pro</h3>
+          <p className="text-white/40 text-sm mt-1">{t("For agencies and growing businesses", "Per agenzie e aziende in crescita")}</p>
+          <div className="mt-3">
+            <span className="text-4xl font-extrabold">€{yearly ? "1490" : "149"}</span>
+            <span className="text-white/40 text-sm">/{yearly ? t("year", "anno") : t("month", "mese")}</span>
+          </div>
+        </div>
+        <Link to="/register" className="block">
+          <Button className="w-full bg-[#F5A623] hover:bg-[#E09800] text-black rounded-full h-11 font-semibold">
+            {t("Try Free, Then Upgrade", "Prova Gratis, poi Upgrade")}
+          </Button>
+        </Link>
+        <ul className="space-y-3 text-sm text-white/70">
+          {[
+            t("Unlimited chatbots", "Chatbot illimitati"),
+            t("Unlimited conversations", "Conversazioni illimitate"),
+            t("Unlimited leads", "Lead illimitati"),
+            t("All Pro features", "Tutte le funzionalità Pro"),
+            t("Advanced analytics", "Analytics avanzati"),
+            t("Dedicated support", "Supporto dedicato"),
+            t("🛒 Full ecommerce (WooCommerce, Shopify, PrestaShop, API + real-time webhooks)", "🛒 Ecommerce completo (WooCommerce, Shopify, PrestaShop, API + webhook real-time)"),
+          ].map((item, i) => (
+            <li key={i} className="flex items-start gap-2"><Check className="w-4 h-4 text-[#F5A623] shrink-0 mt-0.5" />{item}</li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  );
+}
+
 /* ═══════════════════════════════════════════════════════════ */
 export default function LandingPage() {
   const { lang, setLang, t } = useLanguage();
@@ -472,99 +594,7 @@ export default function LandingPage() {
             {yearly && <span className="text-xs bg-[#F5A623]/20 text-[#F5A623] px-2 py-0.5 rounded-full font-medium">-20%</span>}
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            {/* Free */}
-            <div className="bg-white/[0.03] border border-white/10 rounded-2xl p-8 space-y-6">
-              <div>
-                <h3 className="text-xl font-bold" style={{ fontFamily: "'Syne', sans-serif" }}>Free</h3>
-                <p className="text-white/40 text-sm mt-1">{t("Try Genius with no commitment", "Per provare Genius senza impegno")}</p>
-                <div className="mt-3">
-                  <span className="text-4xl font-extrabold">€0</span>
-                  <span className="text-white/40 text-sm">/{t("month", "mese")}</span>
-                </div>
-              </div>
-              <Link to="/register" className="block">
-                <Button variant="outline" className="w-full border-white/20 text-white hover:bg-white/10 rounded-full h-11">
-                  {t("Start Free", "Inizia Gratis")}
-                </Button>
-              </Link>
-              <ul className="space-y-3 text-sm text-white/70">
-                {[
-                  t("1 chatbot", "1 chatbot"),
-                  t("50 conversations/month", "50 conversazioni/mese"),
-                  t("10 leads/month", "10 lead/mese"),
-                  t("\"Powered by Genius\" branding", "Branding \"Powered by Genius\""),
-                  t("Basic knowledge base", "Knowledge base base"),
-                  t("Email support", "Supporto email"),
-                  t("❌ No ecommerce integration", "❌ Nessuna integrazione ecommerce"),
-                ].map((item, i) => (
-                  <li key={i} className="flex items-start gap-2"><Check className="w-4 h-4 text-[#F5A623] shrink-0 mt-0.5" />{item}</li>
-                ))}
-              </ul>
-            </div>
-
-            {/* Starter */}
-            <div className="bg-white/[0.03] border border-white/10 rounded-2xl p-8 space-y-6">
-              <div>
-                <h3 className="text-xl font-bold" style={{ fontFamily: "'Syne', sans-serif" }}>Starter</h3>
-                <p className="text-white/40 text-sm mt-1">{t("For small businesses and professionals", "Per piccole imprese e professionisti")}</p>
-                <div className="mt-3">
-                  <span className="text-4xl font-extrabold">€{yearly ? "490" : "49"}</span>
-                  <span className="text-white/40 text-sm">/{yearly ? t("year", "anno") : t("month", "mese")}</span>
-                </div>
-              </div>
-              <Link to="/register" className="block">
-                <Button variant="outline" className="w-full border-white/20 text-white hover:bg-white/10 rounded-full h-11">
-                  {t("Try Free, Then Upgrade", "Prova Gratis, poi Upgrade")}
-                </Button>
-              </Link>
-              <ul className="space-y-3 text-sm text-white/70">
-                {[
-                  t("1 chatbot", "1 chatbot"),
-                  t("500 conversations/month", "500 conversazioni/mese"),
-                  t("Unlimited leads", "Lead illimitati"),
-                  t("Remove branding", "Rimuovi branding"),
-                  t("PDF/Word upload", "Upload PDF/Word"),
-                  t("Industry templates", "Template di settore"),
-                  t("Priority support", "Supporto prioritario"),
-                  t("🛒 XML/CSV Feed (daily sync)", "🛒 Feed XML/CSV (sync giornaliero)"),
-                ].map((item, i) => (
-                  <li key={i} className="flex items-start gap-2"><Check className="w-4 h-4 text-[#F5A623] shrink-0 mt-0.5" />{item}</li>
-                ))}
-              </ul>
-            </div>
-
-            {/* Pro */}
-            <div className="relative bg-gradient-to-br from-[#F5A623]/10 to-transparent border-2 border-[#F5A623]/40 rounded-2xl p-8 space-y-6 shadow-lg shadow-[#F5A623]/10">
-              <div className="absolute -top-3 right-6 bg-[#F5A623] text-black text-xs font-bold px-3 py-1 rounded-full">{t("Most Popular", "Più Popolare")}</div>
-              <div>
-                <h3 className="text-xl font-bold" style={{ fontFamily: "'Syne', sans-serif" }}>Pro</h3>
-                <p className="text-white/40 text-sm mt-1">{t("For agencies and growing businesses", "Per agenzie e aziende in crescita")}</p>
-                <div className="mt-3">
-                  <span className="text-4xl font-extrabold">€{yearly ? "1490" : "149"}</span>
-                  <span className="text-white/40 text-sm">/{yearly ? t("year", "anno") : t("month", "mese")}</span>
-                </div>
-              </div>
-              <Link to="/register" className="block">
-                <Button className="w-full bg-[#F5A623] hover:bg-[#E09800] text-black rounded-full h-11 font-semibold">
-                  {t("Try Free, Then Upgrade", "Prova Gratis, poi Upgrade")}
-                </Button>
-              </Link>
-              <ul className="space-y-3 text-sm text-white/70">
-                {[
-                  t("Unlimited chatbots", "Chatbot illimitati"),
-                  t("Unlimited conversations", "Conversazioni illimitate"),
-                  t("Unlimited leads", "Lead illimitati"),
-                  t("All Pro features", "Tutte le funzionalità Pro"),
-                  t("Advanced analytics", "Analytics avanzati"),
-                  t("Dedicated support", "Supporto dedicato"),
-                  t("🛒 Full ecommerce (WooCommerce, Shopify, PrestaShop, API + real-time webhooks)", "🛒 Ecommerce completo (WooCommerce, Shopify, PrestaShop, API + webhook real-time)"),
-                ].map((item, i) => (
-                  <li key={i} className="flex items-start gap-2"><Check className="w-4 h-4 text-[#F5A623] shrink-0 mt-0.5" />{item}</li>
-                ))}
-              </ul>
-            </div>
-          </div>
+          <PricingGrid yearly={yearly} t={t} />
         </div>
       </Section>
 
