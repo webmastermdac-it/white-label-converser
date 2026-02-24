@@ -182,18 +182,20 @@ const ClientLeads = () => {
       </div>
 
       <Dialog open={!!selectedLead} onOpenChange={() => setSelectedLead(null)}>
-        <DialogContent className="bg-card border-border text-foreground max-w-2xl max-h-[80vh] overflow-y-auto w-full fixed inset-0 md:inset-auto md:relative rounded-none md:rounded-lg">
+        <DialogContent className="bg-card border-border text-foreground max-w-lg w-[95vw] md:w-full max-h-[90vh] overflow-y-auto rounded-xl">
           <DialogHeader>
-            <DialogTitle>Lead: {selectedLead?.name}</DialogTitle>
+            <DialogTitle className="text-lg">Lead: {selectedLead?.name}</DialogTitle>
           </DialogHeader>
           {selectedLead && (
             <div className="space-y-4 pt-2">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div><p className="text-xs text-muted-foreground">{t("lead", "Nome")}</p><p className="text-sm text-foreground mt-1">{selectedLead.name}</p></div>
                 <div><p className="text-xs text-muted-foreground">{t("email")}</p><p className="text-sm text-foreground mt-1">{selectedLead.email}</p></div>
                 <div><p className="text-xs text-muted-foreground">{t("phone")}</p><p className="text-sm text-foreground mt-1">{selectedLead.phone || "—"}</p></div>
-                <div className="col-span-2"><p className="text-xs text-muted-foreground">{t("message")}</p><p className="text-sm text-foreground mt-1">{selectedLead.message || "—"}</p></div>
-                <div><p className="text-xs text-muted-foreground">{t("source")}</p><p className="text-sm text-foreground mt-1 truncate">{selectedLead.source_url || "—"}</p></div>
+                <div><p className="text-xs text-muted-foreground">{t("status")}</p><p className="text-sm text-foreground mt-1 capitalize">{selectedLead.status}</p></div>
                 <div><p className="text-xs text-muted-foreground">{t("date")}</p><p className="text-sm text-foreground mt-1">{new Date(selectedLead.created_at).toLocaleString()}</p></div>
+                <div><p className="text-xs text-muted-foreground">{t("source")}</p><p className="text-sm text-foreground mt-1 truncate">{selectedLead.source_url || "—"}</p></div>
+                <div className="col-span-1 sm:col-span-2"><p className="text-xs text-muted-foreground">{t("message")}</p><p className="text-sm text-foreground mt-1">{selectedLead.message || "—"}</p></div>
               </div>
               {selectedLead.transcript.length > 0 && (
                 <div>
