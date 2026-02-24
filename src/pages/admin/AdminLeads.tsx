@@ -6,12 +6,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle
-} from "@/components/ui/dialog";
-import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue
 } from "@/components/ui/select";
-import { Loader2, Download, Search, Filter } from "lucide-react";
+import { Loader2, Download, Search, Filter, X } from "lucide-react";
 import { getLanguageFlag } from "@/lib/languageFlags";
 
 interface Lead {
@@ -190,11 +187,14 @@ const AdminLeads = () => {
         )}
       </div>
 
-      <Dialog open={!!selectedLead} onOpenChange={() => setSelectedLead(null)}>
-        <DialogContent className="bg-card border-border text-foreground max-w-2xl max-h-[80vh] overflow-y-auto w-full fixed inset-0 md:inset-auto md:relative rounded-none md:rounded-lg">
-          <DialogHeader>
-            <DialogTitle>Lead: {selectedLead?.name}</DialogTitle>
-          </DialogHeader>
+      {selectedLead && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center animate-in fade-in-0 duration-200" onClick={() => setSelectedLead(null)}>
+          <div className="absolute inset-0 bg-black/60" />
+          <div className="relative w-[95vw] max-w-lg bg-card border border-border rounded-xl p-6 max-h-[90vh] overflow-y-auto animate-in zoom-in-95 duration-200" onClick={(e) => e.stopPropagation()}>
+            <button onClick={() => setSelectedLead(null)} className="absolute right-4 top-4 text-muted-foreground hover:text-foreground transition-colors">
+              <X className="w-5 h-5" />
+            </button>
+            <h2 className="text-lg font-semibold text-foreground mb-4">Lead: {selectedLead.name}</h2>
           {selectedLead && (
             <div className="space-y-4 pt-2">
               <div className="grid grid-cols-2 gap-4">
@@ -234,8 +234,9 @@ const AdminLeads = () => {
               )}
             </div>
           )}
-        </DialogContent>
-      </Dialog>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

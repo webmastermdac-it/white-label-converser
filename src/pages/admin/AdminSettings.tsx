@@ -5,12 +5,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Key, Save } from "lucide-react";
+import { Loader2, Key, Save, Mail } from "lucide-react";
 
 const AdminSettings = () => {
   const { toast } = useToast();
   const { t } = useLanguage();
   const [saving, setSaving] = useState(false);
+  const [sendingTest, setSendingTest] = useState(false);
   const [openaiKey, setOpenaiKey] = useState("");
   const [resendKey, setResendKey] = useState("");
 
@@ -62,6 +63,33 @@ const AdminSettings = () => {
           {saving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
           {t("saveSettings")}
         </Button>
+
+        <div className="border-t border-border pt-4 mt-4">
+          <h3 className="text-sm font-medium text-foreground mb-2">Test Notifiche Email</h3>
+          <p className="text-xs text-muted-foreground mb-3">Invia un'email di test per verificare che Resend funzioni correttamente.</p>
+          <Button
+            variant="outline"
+            onClick={async () => {
+              setSendingTest(true);
+              try {
+                const { data, error } = await supabase.functions.invoke("send-test-email", {
+                  body: { to_email: "webmastermdac@gmail.com", bot_name: "Admin Test" }
+                });
+                if (error) throw error;
+                if (data?.error) throw new Error(data.error);
+                toast({ title: "✅ Email inviata!", description: "Controlla la casella webmastermdac@gmail.com" });
+              } catch (err: any) {
+                toast({ title: "Errore invio email", description: err.message, variant: "destructive" });
+              }
+              setSendingTest(false);
+            }}
+            disabled={sendingTest}
+            className="w-full border-border text-foreground"
+          >
+            {sendingTest ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Mail className="w-4 h-4 mr-2" />}
+            Invia Email di Test
+          </Button>
+        </div>
       </div>
 
       <div className="glass rounded-xl p-6 max-w-lg">

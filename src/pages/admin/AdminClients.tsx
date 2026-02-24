@@ -104,7 +104,7 @@ const AdminClients = () => {
               <Plus className="w-4 h-4 mr-2" /> {t("addClient")}
             </Button>
           </DialogTrigger>
-          <DialogContent className="bg-card border-border text-foreground">
+          <DialogContent className="bg-card border-border text-foreground w-[95vw] max-w-lg">
             <DialogHeader>
               <DialogTitle>{t("createNewClient")}</DialogTitle>
             </DialogHeader>
