@@ -403,11 +403,30 @@ export default function LandingPage() {
           </div>
 
           {/* Mascot */}
-          <div className="flex-1 flex justify-center md:justify-end max-w-md w-full">
+          <div className="flex-1 flex justify-center md:justify-end max-w-md w-full relative">
+            {/* Particles */}
+            {[...Array(12)].map((_, i) => (
+              <span
+                key={i}
+                className="absolute rounded-full pointer-events-none"
+                style={{
+                  width: `${4 + (i % 3) * 3}px`,
+                  height: `${4 + (i % 3) * 3}px`,
+                  background: `radial-gradient(circle, rgba(245,166,35,${0.6 + (i % 3) * 0.15}) 0%, transparent 70%)`,
+                  boxShadow: `0 0 ${6 + i * 2}px rgba(245,166,35,0.4)`,
+                  top: `${10 + (i * 7) % 80}%`,
+                  left: `${15 + (i * 11) % 70}%`,
+                  animation: `sparkle${i % 3} ${3 + (i % 4)}s ease-in-out ${i * 0.4}s infinite`,
+                  opacity: 0,
+                }}
+              />
+            ))}
             <div
               style={{
                 animation: "genieReveal 1.2s ease-out forwards, floatMascot 4s ease-in-out 1.2s infinite",
                 opacity: 0,
+                position: "relative",
+                zIndex: 1,
               }}
             >
               <img
@@ -726,6 +745,21 @@ export default function LandingPage() {
         @keyframes floatParticle {
           0%, 100% { transform: translateY(0) scale(1); opacity: 0.2; }
           50% { transform: translateY(-30px) scale(1.5); opacity: 0.5; }
+        }
+        @keyframes sparkle0 {
+          0%, 100% { opacity: 0; transform: translate(0, 0) scale(0.5); }
+          30% { opacity: 0.9; transform: translate(-12px, -20px) scale(1.2); }
+          70% { opacity: 0.5; transform: translate(8px, -35px) scale(0.8); }
+        }
+        @keyframes sparkle1 {
+          0%, 100% { opacity: 0; transform: translate(0, 0) scale(0.6); }
+          40% { opacity: 1; transform: translate(15px, -25px) scale(1.3); }
+          80% { opacity: 0.3; transform: translate(-10px, -40px) scale(0.7); }
+        }
+        @keyframes sparkle2 {
+          0%, 100% { opacity: 0; transform: translate(0, 0) scale(0.4); }
+          25% { opacity: 0.8; transform: translate(-8px, -30px) scale(1.1); }
+          65% { opacity: 0.6; transform: translate(12px, -15px) scale(0.9); }
         }
       `}</style>
 
