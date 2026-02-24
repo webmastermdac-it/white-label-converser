@@ -423,7 +423,7 @@ export default function LandingPage() {
             ))}
             <div
               style={{
-                animation: "genieReveal 1.2s ease-out forwards, floatMascot 4s ease-in-out 1.2s infinite",
+                animation: "genieReveal 2.4s cubic-bezier(0.16, 1, 0.3, 1) forwards, floatMascot 4s ease-in-out 2.4s infinite",
                 opacity: 0,
                 position: "relative",
                 zIndex: 1,
@@ -735,7 +735,8 @@ export default function LandingPage() {
       {/* ─── CSS Animations ─── */}
       <style>{`
         @keyframes genieReveal {
-          0% { opacity: 0; transform: translateY(60px); }
+          0% { opacity: 0; transform: translateY(80px); }
+          60% { opacity: 0.7; transform: translateY(10px); }
           100% { opacity: 1; transform: translateY(0); }
         }
         @keyframes floatMascot {
