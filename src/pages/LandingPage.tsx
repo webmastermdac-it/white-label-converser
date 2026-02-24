@@ -4,7 +4,7 @@ import { useLanguage } from "@/hooks/useLanguage";
 import { Button } from "@/components/ui/button";
 import { Play, Star, Menu, X, Check, Loader2, ArrowRight, Users, GraduationCap, BookOpen, Bot, ClipboardList, CalendarCheck, Palette, Globe, BarChart3, ShoppingCart } from "lucide-react";
 import geniusLogo from "@/assets/genius.png";
-import genieHero from "@/assets/genie-hero.jpg";
+import genieHero from "@/assets/genie-mascot-new.png";
 import { supabase } from "@/integrations/supabase/client";
 import logoSpedali from "@/assets/logos/spedali-civili.png";
 import logoUnimi from "@/assets/logos/unimi.png";
@@ -407,7 +407,7 @@ export default function LandingPage() {
             <img
               src={genieHero}
               alt="Genius Chatbot Genie"
-              className="w-72 sm:w-96 rounded-3xl"
+              className="w-72 sm:w-96"
               style={{
                 animation: "floatMascot 4s ease-in-out infinite",
                 filter: "drop-shadow(0 0 40px rgba(245,166,35,0.2))",
