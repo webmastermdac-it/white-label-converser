@@ -405,18 +405,18 @@ export default function LandingPage() {
           {/* Mascot */}
           <div className="flex-1 flex justify-center md:justify-end max-w-md w-full relative">
             {/* Particles */}
-            {[...Array(12)].map((_, i) => (
+            {[...Array(20)].map((_, i) => (
               <span
                 key={i}
                 className="absolute rounded-full pointer-events-none"
                 style={{
-                  width: `${4 + (i % 3) * 3}px`,
-                  height: `${4 + (i % 3) * 3}px`,
-                  background: `radial-gradient(circle, rgba(245,166,35,${0.6 + (i % 3) * 0.15}) 0%, transparent 70%)`,
-                  boxShadow: `0 0 ${6 + i * 2}px rgba(245,166,35,0.4)`,
-                  top: `${10 + (i * 7) % 80}%`,
-                  left: `${15 + (i * 11) % 70}%`,
-                  animation: `sparkle${i % 3} ${3 + (i % 4)}s ease-in-out ${i * 0.4}s infinite`,
+                  width: `${3 + (i % 4) * 2.5}px`,
+                  height: `${3 + (i % 4) * 2.5}px`,
+                  background: `radial-gradient(circle, rgba(245,166,35,${0.7 + (i % 3) * 0.1}) 0%, transparent 70%)`,
+                  boxShadow: `0 0 ${8 + (i % 5) * 3}px rgba(245,166,35,0.5)`,
+                  top: `${5 + (i * 4.7) % 85}%`,
+                  left: `${10 + (i * 4.3) % 80}%`,
+                  animation: `sparkle${i % 3} ${2.5 + (i % 5) * 0.8}s ease-in-out ${i * 0.3}s infinite`,
                   opacity: 0,
                 }}
               />
