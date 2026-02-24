@@ -421,6 +421,20 @@ export default function LandingPage() {
                 }}
               />
             ))}
+            {/* Mystic aura */}
+            <div
+              className="absolute rounded-full pointer-events-none"
+              style={{
+                width: "320px",
+                height: "320px",
+                top: "50%",
+                left: "50%",
+                transform: "translate(-50%, -50%)",
+                background: "radial-gradient(circle, rgba(245,166,35,0.18) 0%, rgba(245,166,35,0.06) 50%, transparent 70%)",
+                animation: "auraPulse 3.5s ease-in-out infinite",
+                zIndex: 0,
+              }}
+            />
             <div
               style={{
                 animation: "genieReveal 2.4s cubic-bezier(0.16, 1, 0.3, 1) forwards, floatMascot 4s ease-in-out 2.4s infinite",
@@ -761,6 +775,10 @@ export default function LandingPage() {
           0%, 100% { opacity: 0; transform: translate(0, 0) scale(0.4); }
           25% { opacity: 0.8; transform: translate(-8px, -30px) scale(1.1); }
           65% { opacity: 0.6; transform: translate(12px, -15px) scale(0.9); }
+        }
+        @keyframes auraPulse {
+          0%, 100% { opacity: 0.5; transform: translate(-50%, -50%) scale(1); }
+          50% { opacity: 1; transform: translate(-50%, -50%) scale(1.15); }
         }
       `}</style>
 
