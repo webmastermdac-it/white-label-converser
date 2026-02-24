@@ -404,15 +404,21 @@ export default function LandingPage() {
 
           {/* Mascot */}
           <div className="flex-1 flex justify-center md:justify-end max-w-md w-full">
-            <img
-              src={genieHero}
-              alt="Genius Chatbot Genie"
-              className="w-72 sm:w-96"
+            <div
               style={{
-                animation: "floatMascot 4s ease-in-out infinite",
-                filter: "drop-shadow(0 0 40px rgba(245,166,35,0.2))",
+                animation: "genieReveal 1.2s ease-out forwards, floatMascot 4s ease-in-out 1.2s infinite",
+                opacity: 0,
               }}
-            />
+            >
+              <img
+                src={genieHero}
+                alt="Genius Chatbot Genie"
+                className="w-72 sm:w-96"
+                style={{
+                  filter: "drop-shadow(0 0 50px rgba(245,166,35,0.35)) drop-shadow(0 0 100px rgba(245,166,35,0.15))",
+                }}
+              />
+            </div>
           </div>
         </div>
       </header>
@@ -709,6 +715,10 @@ export default function LandingPage() {
 
       {/* ─── CSS Animations ─── */}
       <style>{`
+        @keyframes genieReveal {
+          0% { opacity: 0; transform: translateY(60px); }
+          100% { opacity: 1; transform: translateY(0); }
+        }
         @keyframes floatMascot {
           0%, 100% { transform: translateY(0); }
           50% { transform: translateY(-16px); }
