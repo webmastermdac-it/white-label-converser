@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Save, Bot, Palette, MessageSquare, Zap, Mail, Star } from "lucide-react";
+import { Loader2, Save, Bot, Palette, MessageSquare, Zap, Mail, Star, SendHorizonal } from "lucide-react";
 import KnowledgeBaseWizard from "@/components/knowledge-base/KnowledgeBaseWizard";
 import { useLanguage } from "@/hooks/useLanguage";
 
@@ -71,6 +71,7 @@ const ChatbotConfigForm: React.FC<ChatbotConfigFormProps> = ({ clientId, onSaved
   const [config, setConfig] = useState<Config>(defaultConfig);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [sendingTest, setSendingTest] = useState(false);
   const [activeSection, setActiveSection] = useState("identity");
 
   useEffect(() => {
@@ -470,6 +471,32 @@ const ChatbotConfigForm: React.FC<ChatbotConfigFormProps> = ({ clientId, onSaved
               className="bg-secondary border-border"
             />
           </div>
+
+          {config.notification_email && (
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full h-11"
+              disabled={sendingTest}
+              onClick={async () => {
+                setSendingTest(true);
+                try {
+                  const { data, error } = await supabase.functions.invoke("send-test-email", {
+                    body: { to_email: config.notification_email, bot_name: config.name },
+                  });
+                  if (error) throw error;
+                  if (data?.error) throw new Error(data.error);
+                  toast({ title: "✅ Email di test inviata!", description: `Controlla ${config.notification_email}` });
+                } catch (err: any) {
+                  toast({ title: "Errore invio email", description: err.message, variant: "destructive" });
+                }
+                setSendingTest(false);
+              }}
+            >
+              {sendingTest ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <SendHorizonal className="w-4 h-4 mr-2" />}
+              Invia email di test
+            </Button>
+          )}
         </div>
       )}
 
