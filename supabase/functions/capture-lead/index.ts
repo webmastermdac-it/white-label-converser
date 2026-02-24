@@ -145,7 +145,7 @@ serve(async (req) => {
           })
           .join("");
 
-        const dashboardUrl = "https://id-preview--edbbbdba-afd9-4dc6-9f8a-3c34c421c770.lovable.app/dashboard/leads";
+        const dashboardUrl = "https://white-label-converser.lovable.app/dashboard/leads";
 
         const subject = `🔔 Nuovo Lead: ${name} - ${botConfig.name} (lingua visitatore: ${lang})`;
 
