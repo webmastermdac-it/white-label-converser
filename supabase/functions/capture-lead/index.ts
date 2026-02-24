@@ -191,7 +191,7 @@ serve(async (req) => {
             method: "POST",
             headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
             body: JSON.stringify({
-              from: "Genius Chatbot <noreply@chatbot.your-genius.com>",
+              from: "Genius Chatbot <onboarding@resend.dev>",
               to: [botConfig.notification_email],
               subject,
               html: emailHtml,
