@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Loader2, MessageSquare, Search } from "lucide-react";
+import { Loader2, MessageSquare, Search, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 
 interface ChatSession {
@@ -119,30 +118,30 @@ const AdminChats = () => {
         )}
       </div>
 
-      <Dialog open={!!selected} onOpenChange={() => setSelected(null)}>
-        <DialogContent className="bg-card border-border text-foreground max-w-lg max-h-[70vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Chat Transcript — {selected?.clients?.name}</DialogTitle>
-          </DialogHeader>
-          {selected && (
-            <div className="space-y-3 pt-2">
-              <p className="text-xs text-muted-foreground">Source: {selected.source_url || "Direct"}</p>
-              <div className="space-y-2">
-                {selected.messages.map((msg: any, i: number) => (
-                  <div
-                    key={i}
-                    className={`text-sm p-3 rounded-xl max-w-[85%] ${
-                      msg.role === "user" ? "chat-bubble-user ml-auto" : "chat-bubble-bot"
-                    }`}
-                  >
-                    {msg.content}
-                  </div>
-                ))}
-              </div>
+      {selected && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center animate-in fade-in-0 duration-200" onClick={() => setSelected(null)}>
+          <div className="absolute inset-0 bg-black/60" />
+          <div className="relative w-[95vw] max-w-lg bg-card border border-border rounded-xl p-6 max-h-[90vh] overflow-y-auto animate-in zoom-in-95 duration-200" onClick={(e) => e.stopPropagation()}>
+            <button onClick={() => setSelected(null)} className="absolute right-4 top-4 text-muted-foreground hover:text-foreground transition-colors">
+              <X className="w-5 h-5" />
+            </button>
+            <h2 className="text-lg font-semibold text-foreground mb-4">Chat Transcript — {selected.clients?.name}</h2>
+            <p className="text-xs text-muted-foreground mb-3">Source: {selected.source_url || "Direct"}</p>
+            <div className="space-y-2">
+              {selected.messages.map((msg: any, i: number) => (
+                <div
+                  key={i}
+                  className={`text-sm p-3 rounded-xl max-w-[85%] ${
+                    msg.role === "user" ? "chat-bubble-user ml-auto" : "chat-bubble-bot"
+                  }`}
+                >
+                  {msg.content}
+                </div>
+              ))}
             </div>
-          )}
-        </DialogContent>
-      </Dialog>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
