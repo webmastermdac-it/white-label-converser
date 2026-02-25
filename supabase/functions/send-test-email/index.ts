@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { fetchBrandSettings, testEmail } from "../_shared/email-template.ts";
+import { fetchBrandSettings, testEmail, fetchCustomTemplate, renderCustomTemplate, replaceSubjectVars, type Locale } from "../_shared/email-template.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -30,7 +30,7 @@ serve(async (req) => {
       });
     }
 
-    const { to_email, bot_name } = await req.json();
+    const { to_email, bot_name, locale: reqLocale } = await req.json();
     if (!to_email) {
       return new Response(JSON.stringify({ error: "Missing to_email" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" }
@@ -44,8 +44,15 @@ serve(async (req) => {
       });
     }
 
+    // Use requested locale or fall back to user profile language
+    const locale: Locale = reqLocale === "en" ? "en" : reqLocale === "it" ? "it" : "it";
+
     const brand = await fetchBrandSettings(supabase);
-    const emailHtml = testEmail(brand, to_email, bot_name || brand.app_name);
+    const emailHtml = testEmail(brand, to_email, bot_name || brand.app_name, locale);
+
+    const subjectText = locale === "en"
+      ? `✅ Test Notification - ${bot_name || brand.app_name}`
+      : `✅ Test Notifica - ${bot_name || brand.app_name}`;
 
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
@@ -53,7 +60,7 @@ serve(async (req) => {
       body: JSON.stringify({
         from: `${brand.app_name} <noreply@chatbot.your-genius.com>`,
         to: [to_email],
-        subject: `✅ Test Notifica - ${bot_name || brand.app_name}`,
+        subject: subjectText,
         html: emailHtml,
       }),
     });
