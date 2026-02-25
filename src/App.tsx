@@ -25,6 +25,7 @@ import AdminChats from "@/pages/admin/AdminChats";
 import AdminPlans from "@/pages/admin/AdminPlans";
 import AdminAnalytics from "@/pages/admin/AdminAnalytics";
 import AdminEcommerce from "@/pages/admin/AdminEcommerce";
+import AdminEmailTemplates from "@/pages/admin/AdminEmailTemplates";
 import ClientEmbed from "@/pages/client/ClientEmbed";
 import ClientChatPreview from "@/pages/client/ClientChatPreview";
 import NotFound from "@/pages/NotFound";
@@ -74,6 +75,7 @@ const App = () => (
               <Route path="plans" element={<AdminPlans />} />
               <Route path="analytics" element={<AdminAnalytics />} />
               <Route path="ecommerce" element={<AdminEcommerce />} />
+              <Route path="email-templates" element={<AdminEmailTemplates />} />
             </Route>
 
             {/* Client Routes */}

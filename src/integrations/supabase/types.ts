@@ -285,6 +285,77 @@ export type Database = {
           },
         ]
       }
+      email_template_logs: {
+        Row: {
+          changed_at: string
+          changed_by: string
+          id: string
+          new_html_body: string | null
+          new_subject: string | null
+          old_html_body: string | null
+          old_subject: string | null
+          template_id: string
+          template_type: string
+        }
+        Insert: {
+          changed_at?: string
+          changed_by: string
+          id?: string
+          new_html_body?: string | null
+          new_subject?: string | null
+          old_html_body?: string | null
+          old_subject?: string | null
+          template_id: string
+          template_type: string
+        }
+        Update: {
+          changed_at?: string
+          changed_by?: string
+          id?: string
+          new_html_body?: string | null
+          new_subject?: string | null
+          old_html_body?: string | null
+          old_subject?: string | null
+          template_id?: string
+          template_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_template_logs_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "email_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      email_templates: {
+        Row: {
+          html_body: string
+          id: string
+          subject: string
+          type: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          html_body?: string
+          id?: string
+          subject?: string
+          type: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          html_body?: string
+          id?: string
+          subject?: string
+          type?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       leads: {
         Row: {
           bot_id: string | null

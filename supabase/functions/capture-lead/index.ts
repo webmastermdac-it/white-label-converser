@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { fetchBrandSettings, newLeadEmail } from "../_shared/email-template.ts";
+import { fetchBrandSettings, newLeadEmail, fetchCustomTemplate, renderCustomTemplate } from "../_shared/email-template.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -98,20 +98,27 @@ serve(async (req) => {
       if (RESEND_API_KEY) {
         const brand = await fetchBrandSettings(supabase);
         const dashboardUrl = "https://white-label-converser.lovable.app/dashboard/leads";
+        const customTpl = await fetchCustomTemplate(supabase, "chatbot_notification");
 
-        const emailHtml = newLeadEmail(brand, {
-          botName: botConfig.name,
-          visitorName: name,
-          visitorEmail: email,
-          phone,
-          message,
-          sourceUrl: source_url,
-          language: lang,
-          transcript,
-          dashboardUrl,
-        });
+        let emailHtml: string;
+        let emailSubject: string;
 
-        const subject = `🔔 Nuovo Lead: ${name} - ${botConfig.name}`;
+        if (customTpl) {
+          const vars = {
+            "{{nome}}": name, "{{email}}": email, "{{messaggio}}": (message || "").substring(0, 150),
+            "{{data}}": new Date().toLocaleString("it-IT", { timeZone: "Europe/Rome" }),
+            "{{link}}": dashboardUrl, "{{app_name}}": brand.app_name,
+            "{{logo_url}}": brand.logo_url || "", "{{bot_name}}": botConfig.name,
+          };
+          emailHtml = renderCustomTemplate(brand, customTpl, vars);
+          emailSubject = customTpl.subject.replace(/\{\{nome\}\}/g, name).replace(/\{\{bot_name\}\}/g, botConfig.name).replace(/\{\{app_name\}\}/g, brand.app_name);
+        } else {
+          emailHtml = newLeadEmail(brand, {
+            botName: botConfig.name, visitorName: name, visitorEmail: email,
+            phone, message, sourceUrl: source_url, language: lang, transcript, dashboardUrl,
+          });
+          emailSubject = `🔔 Nuovo Lead: ${name} - ${botConfig.name}`;
+        }
 
         try {
           await fetch("https://api.resend.com/emails", {
@@ -120,7 +127,7 @@ serve(async (req) => {
             body: JSON.stringify({
               from: `${brand.app_name} <noreply@chatbot.your-genius.com>`,
               to: [botConfig.notification_email],
-              subject,
+              subject: emailSubject,
               html: emailHtml,
             }),
           });
