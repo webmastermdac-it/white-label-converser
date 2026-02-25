@@ -333,6 +333,7 @@ export type Database = {
         Row: {
           html_body: string
           id: string
+          locale: string
           subject: string
           type: string
           updated_at: string
@@ -341,6 +342,7 @@ export type Database = {
         Insert: {
           html_body?: string
           id?: string
+          locale?: string
           subject?: string
           type: string
           updated_at?: string
@@ -349,6 +351,7 @@ export type Database = {
         Update: {
           html_body?: string
           id?: string
+          locale?: string
           subject?: string
           type?: string
           updated_at?: string
@@ -554,6 +557,7 @@ export type Database = {
           email: string | null
           full_name: string | null
           id: string
+          language: string
           updated_at: string
         }
         Insert: {
@@ -562,6 +566,7 @@ export type Database = {
           email?: string | null
           full_name?: string | null
           id: string
+          language?: string
           updated_at?: string
         }
         Update: {
@@ -570,6 +575,7 @@ export type Database = {
           email?: string | null
           full_name?: string | null
           id?: string
+          language?: string
           updated_at?: string
         }
         Relationships: [

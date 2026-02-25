@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { fetchBrandSettings, newLeadEmail, fetchCustomTemplate, renderCustomTemplate } from "../_shared/email-template.ts";
+import { fetchBrandSettings, newLeadEmail, newLeadSubject, fetchCustomTemplate, renderCustomTemplate, replaceSubjectVars, resolveClientOwnerLocale, type Locale } from "../_shared/email-template.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -27,7 +27,6 @@ serve(async (req) => {
     const message = body.message || lead.message || "";
     const transcript = body.transcript || [];
 
-    // Get bot config
     const { data: botConfig, error: configError } = await supabase
       .from("chatbot_configs")
       .select("*")
@@ -40,7 +39,6 @@ serve(async (req) => {
       });
     }
 
-    // Check lead limits
     const { data: clientData } = await supabase
       .from("clients")
       .select("plan")
@@ -86,19 +84,19 @@ serve(async (req) => {
 
     if (leadError) throw leadError;
 
-    // Update chat session
     if (session_token) {
       await supabase.from("chat_sessions").update({ ended_at: new Date().toISOString() })
         .eq("session_token", session_token);
     }
 
-    // Send email notification
+    // Send email notification in the client owner's language
     if (botConfig.email_notifications_enabled && botConfig.notification_email && !leadLimitReached) {
       const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
       if (RESEND_API_KEY) {
         const brand = await fetchBrandSettings(supabase);
+        const ownerLocale = await resolveClientOwnerLocale(supabase, botConfig.client_id);
         const dashboardUrl = "https://white-label-converser.lovable.app/dashboard/leads";
-        const customTpl = await fetchCustomTemplate(supabase, "chatbot_notification");
+        const customTpl = await fetchCustomTemplate(supabase, "chatbot_notification", ownerLocale);
 
         let emailHtml: string;
         let emailSubject: string;
@@ -106,18 +104,18 @@ serve(async (req) => {
         if (customTpl) {
           const vars = {
             "{{nome}}": name, "{{email}}": email, "{{messaggio}}": (message || "").substring(0, 150),
-            "{{data}}": new Date().toLocaleString("it-IT", { timeZone: "Europe/Rome" }),
+            "{{data}}": new Date().toLocaleString(ownerLocale === "en" ? "en-GB" : "it-IT", { timeZone: "Europe/Rome" }),
             "{{link}}": dashboardUrl, "{{app_name}}": brand.app_name,
             "{{logo_url}}": brand.logo_url || "", "{{bot_name}}": botConfig.name,
           };
           emailHtml = renderCustomTemplate(brand, customTpl, vars);
-          emailSubject = customTpl.subject.replace(/\{\{nome\}\}/g, name).replace(/\{\{bot_name\}\}/g, botConfig.name).replace(/\{\{app_name\}\}/g, brand.app_name);
+          emailSubject = replaceSubjectVars(customTpl.subject, vars);
         } else {
           emailHtml = newLeadEmail(brand, {
             botName: botConfig.name, visitorName: name, visitorEmail: email,
             phone, message, sourceUrl: source_url, language: lang, transcript, dashboardUrl,
-          });
-          emailSubject = `🔔 Nuovo Lead: ${name} - ${botConfig.name}`;
+          }, ownerLocale);
+          emailSubject = newLeadSubject(name, botConfig.name, ownerLocale);
         }
 
         try {

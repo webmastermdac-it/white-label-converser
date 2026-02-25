@@ -1,5 +1,5 @@
 // Shared email template for all transactional emails
-// Professional, minimal design with dynamic branding
+// Professional, minimal design with dynamic branding + i18n (it/en)
 
 export function escHtml(s: string): string {
   return (s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
@@ -44,12 +44,6 @@ function ctaButton(text: string, url: string, color: string): string {
   </div>`;
 }
 
-/**
- * Wraps content in the standard email shell.
- * @param brand - Brand settings
- * @param bodyHtml - Inner body HTML (no wrapper needed)
- * @param footerExtra - Optional extra footer HTML (e.g. unsubscribe link)
- */
 export function emailShell(brand: BrandSettings, bodyHtml: string, footerExtra?: string): string {
   return `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>
 <body style="margin:0;padding:0;background:#F5F5F5;font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;-webkit-font-smoothing:antialiased;">
@@ -72,10 +66,42 @@ export function emailShell(brand: BrandSettings, bodyHtml: string, footerExtra?:
 </body></html>`;
 }
 
-// ——— Specific email builders ———
+// ——— i18n footer helpers ———
+const FOOTER_IT = `<p style="margin:8px 0 0;font-size:11px;color:#AAAAAA;text-align:center;">
+  <a href="https://chatbot.your-genius.com" style="color:#AAAAAA;text-decoration:underline;">Assistenza</a> &nbsp;|&nbsp;
+  <a href="https://chatbot.your-genius.com/terms" style="color:#AAAAAA;text-decoration:underline;">Termini</a> &nbsp;|&nbsp;
+  <a href="https://chatbot.your-genius.com/privacy" style="color:#AAAAAA;text-decoration:underline;">Privacy</a>
+</p>`;
 
-export function welcomeEmail(brand: BrandSettings, name: string, email: string, loginUrl: string, password?: string): string {
-  const body = `
+const FOOTER_EN = `<p style="margin:8px 0 0;font-size:11px;color:#AAAAAA;text-align:center;">
+  <a href="https://chatbot.your-genius.com" style="color:#AAAAAA;text-decoration:underline;">Support</a> &nbsp;|&nbsp;
+  <a href="https://chatbot.your-genius.com/terms" style="color:#AAAAAA;text-decoration:underline;">Terms</a> &nbsp;|&nbsp;
+  <a href="https://chatbot.your-genius.com/privacy" style="color:#AAAAAA;text-decoration:underline;">Privacy</a>
+</p>`;
+
+// ——— Locale-aware email builders ———
+
+export type Locale = "it" | "en";
+
+export function resolveLocale(lang?: string | null): Locale {
+  const base = (lang || "it").substring(0, 2).toLowerCase();
+  return base === "en" ? "en" : "it";
+}
+
+// Welcome email
+export function welcomeEmail(brand: BrandSettings, name: string, email: string, loginUrl: string, password?: string, locale: Locale = "it"): string {
+  const isEn = locale === "en";
+  const body = isEn ? `
+    <h1 style="margin:0 0 4px;font-size:24px;font-weight:700;color:#1A1A1A;">Welcome, ${escHtml(name)}! 👋</h1>
+    <p style="margin:0 0 20px;font-size:14px;color:#888888;">Your account has been created successfully</p>
+    <p style="margin:0 0 16px;">We're glad to have you on board. Your chatbot is ready to be configured: customize it, add your knowledge base, and start capturing leads automatically.</p>
+    <div style="background:#F5F5F5;border-radius:8px;padding:16px;margin:0 0 8px;">
+      <p style="margin:0 0 6px;font-size:14px;">📧 <strong>Email:</strong> ${escHtml(email)}</p>
+      ${password ? `<p style="margin:0;font-size:14px;">🔑 <strong>Temporary password:</strong> ${escHtml(password)}</p>` : ""}
+    </div>
+    ${password ? `<p style="font-size:13px;color:#E94560;margin:8px 0 0;">⚠️ We recommend changing your password on first login.</p>` : ""}
+    ${ctaButton("Access the platform", loginUrl, brand.primary_color)}
+  ` : `
     <h1 style="margin:0 0 4px;font-size:24px;font-weight:700;color:#1A1A1A;">Benvenuto/a, ${escHtml(name)}! 👋</h1>
     <p style="margin:0 0 20px;font-size:14px;color:#888888;">Il tuo account è stato creato con successo</p>
     <p style="margin:0 0 16px;">Siamo felici di averti a bordo. Il tuo chatbot è pronto per essere configurato: personalizzalo, aggiungi la tua knowledge base e inizia a catturare lead in automatico.</p>
@@ -86,16 +112,27 @@ export function welcomeEmail(brand: BrandSettings, name: string, email: string, 
     ${password ? `<p style="font-size:13px;color:#E94560;margin:8px 0 0;">⚠️ Ti consigliamo di cambiare la password al primo accesso.</p>` : ""}
     ${ctaButton("Accedi alla piattaforma", loginUrl, brand.primary_color)}
   `;
-  const footer = `<p style="margin:8px 0 0;font-size:11px;color:#AAAAAA;text-align:center;">
-    <a href="https://chatbot.your-genius.com" style="color:#AAAAAA;text-decoration:underline;">Assistenza</a> &nbsp;|&nbsp;
-    <a href="https://chatbot.your-genius.com/terms" style="color:#AAAAAA;text-decoration:underline;">Termini</a> &nbsp;|&nbsp;
-    <a href="https://chatbot.your-genius.com/privacy" style="color:#AAAAAA;text-decoration:underline;">Privacy</a>
-  </p>`;
+  const footer = isEn
+    ? `<p style="margin:8px 0 0;font-size:11px;color:#AAAAAA;text-align:center;">© 2025 <a href="https://mdac.agency" target="_blank" style="color:#888888;text-decoration:underline;">MDAC s.r.l.</a> — All rights reserved</p>`
+    : FOOTER_IT;
   return emailShell(brand, body, footer);
 }
 
-export function resetPasswordEmail(brand: BrandSettings, resetUrl: string): string {
-  const body = `
+export function welcomeSubject(brand: BrandSettings, name: string, locale: Locale = "it"): string {
+  return locale === "en"
+    ? `Welcome to ${brand.app_name}! 🎉`
+    : `Benvenuto/a in ${brand.app_name}! 👋`;
+}
+
+// Reset password email
+export function resetPasswordEmail(brand: BrandSettings, resetUrl: string, locale: Locale = "it"): string {
+  const isEn = locale === "en";
+  const body = isEn ? `
+    <h1 style="margin:0 0 16px;font-size:24px;font-weight:700;color:#1A1A1A;">Reset your password</h1>
+    <p style="margin:0 0 16px;">You requested to reset your account password. Click the button below to choose a new password.</p>
+    ${ctaButton("Reset password", resetUrl, brand.primary_color)}
+    <p style="margin:20px 0 0;font-size:12px;color:#888888;">This link expires in 24 hours. If you didn't request this, please ignore this email.</p>
+  ` : `
     <h1 style="margin:0 0 16px;font-size:24px;font-weight:700;color:#1A1A1A;">Reimposta la tua password</h1>
     <p style="margin:0 0 16px;">Hai richiesto di reimpostare la password del tuo account. Clicca sul pulsante qui sotto per scegliere una nuova password.</p>
     ${ctaButton("Reimposta password", resetUrl, brand.primary_color)}
@@ -104,6 +141,7 @@ export function resetPasswordEmail(brand: BrandSettings, resetUrl: string): stri
   return emailShell(brand, body);
 }
 
+// New lead email (notification to business owner — uses owner's locale)
 export function newLeadEmail(
   brand: BrandSettings,
   opts: {
@@ -116,8 +154,10 @@ export function newLeadEmail(
     language?: string;
     transcript?: any[];
     dashboardUrl: string;
-  }
+  },
+  locale: Locale = "it"
 ): string {
+  const isEn = locale === "en";
   const langMap: Record<string, { flag: string; name: string }> = {
     it: { flag: "🇮🇹", name: "Italiano" }, en: { flag: "🇬🇧", name: "English" },
     fr: { flag: "🇫🇷", name: "Français" }, de: { flag: "🇩🇪", name: "Deutsch" },
@@ -137,38 +177,61 @@ export function newLeadEmail(
           ? `background:${brand.primary_color};color:#fff;border-bottom-right-radius:4px;`
           : `background:#F5F5F5;color:#1A1A1A;border-bottom-left-radius:4px;`
         }">
-        <div style="font-size:11px;font-weight:600;margin-bottom:2px;opacity:0.7;">${isUser ? "👤 Utente" : "🤖 " + escHtml(opts.botName)}</div>
+        <div style="font-size:11px;font-weight:600;margin-bottom:2px;opacity:0.7;">${isUser ? (isEn ? "👤 User" : "👤 Utente") : "🤖 " + escHtml(opts.botName)}</div>
         ${escHtml(m.content)}
       </div>
     </div>`;
   }).join("");
 
+  const lblName = isEn ? "Name" : "Nome";
+  const lblPhone = isEn ? "Phone" : "Telefono";
+  const lblMessage = isEn ? "Message" : "Messaggio";
+  const lblPage = isEn ? "Page" : "Pagina";
+  const lblLang = isEn ? "Visitor language" : "Lingua visitatore";
+  const lblTranscript = isEn ? "Chat Transcript" : "Trascrizione Chat";
+
   const body = `
-    <h1 style="margin:0 0 4px;font-size:24px;font-weight:700;color:#1A1A1A;">Hai ricevuto un nuovo messaggio 💬</h1>
+    <h1 style="margin:0 0 4px;font-size:24px;font-weight:700;color:#1A1A1A;">${isEn ? "You have a new message 💬" : "Hai ricevuto un nuovo messaggio 💬"}</h1>
     <p style="margin:0 0 20px;font-size:14px;color:#888888;">${escHtml(opts.botName)}</p>
     <div style="background:#F5F5F5;border-radius:8px;padding:4px 12px;margin:0 0 20px;font-size:13px;color:#555;">
-      ${langInfo.flag} Lingua visitatore: <strong>${escHtml(langInfo.name)}</strong>
+      ${langInfo.flag} ${lblLang}: <strong>${escHtml(langInfo.name)}</strong>
     </div>
     <table style="width:100%;border-collapse:collapse;margin-bottom:20px;">
-      <tr><td style="padding:10px 0;color:#888888;font-size:13px;width:90px;vertical-align:top;">Nome</td><td style="padding:10px 0;font-weight:600;font-size:14px;color:#1A1A1A;">${escHtml(opts.visitorName)}</td></tr>
+      <tr><td style="padding:10px 0;color:#888888;font-size:13px;width:90px;vertical-align:top;">${lblName}</td><td style="padding:10px 0;font-weight:600;font-size:14px;color:#1A1A1A;">${escHtml(opts.visitorName)}</td></tr>
       <tr><td style="padding:10px 0;color:#888888;font-size:13px;vertical-align:top;">Email</td><td style="padding:10px 0;font-size:14px;"><a href="mailto:${escHtml(opts.visitorEmail)}" style="color:${brand.primary_color};text-decoration:none;">${escHtml(opts.visitorEmail)}</a></td></tr>
-      <tr><td style="padding:10px 0;color:#888888;font-size:13px;vertical-align:top;">Telefono</td><td style="padding:10px 0;font-size:14px;color:#1A1A1A;">${escHtml(opts.phone || "") || "—"}</td></tr>
-      <tr><td style="padding:10px 0;color:#888888;font-size:13px;vertical-align:top;">Messaggio</td><td style="padding:10px 0;font-size:14px;color:#1A1A1A;">${escHtml(opts.message || "") || "—"}</td></tr>
-      <tr><td style="padding:10px 0;color:#888888;font-size:13px;vertical-align:top;">Pagina</td><td style="padding:10px 0;font-size:13px;color:#888888;">${escHtml(opts.sourceUrl || "") || "—"}</td></tr>
+      <tr><td style="padding:10px 0;color:#888888;font-size:13px;vertical-align:top;">${lblPhone}</td><td style="padding:10px 0;font-size:14px;color:#1A1A1A;">${escHtml(opts.phone || "") || "—"}</td></tr>
+      <tr><td style="padding:10px 0;color:#888888;font-size:13px;vertical-align:top;">${lblMessage}</td><td style="padding:10px 0;font-size:14px;color:#1A1A1A;">${escHtml(opts.message || "") || "—"}</td></tr>
+      <tr><td style="padding:10px 0;color:#888888;font-size:13px;vertical-align:top;">${lblPage}</td><td style="padding:10px 0;font-size:13px;color:#888888;">${escHtml(opts.sourceUrl || "") || "—"}</td></tr>
     </table>
     ${opts.transcript && opts.transcript.length > 0 ? `
-    <h2 style="margin:0 0 12px;font-size:16px;font-weight:600;color:#1A1A1A;">Trascrizione Chat</h2>
+    <h2 style="margin:0 0 12px;font-size:16px;font-weight:600;color:#1A1A1A;">${lblTranscript}</h2>
     <div style="background:#F5F5F5;border-radius:8px;padding:16px;max-height:400px;overflow-y:auto;margin-bottom:8px;">
       ${transcriptHtml}
     </div>` : ""}
-    ${ctaButton("Visualizza conversazione", opts.dashboardUrl, brand.primary_color)}
+    ${ctaButton(isEn ? "View conversation" : "Visualizza conversazione", opts.dashboardUrl, brand.primary_color)}
   `;
   return emailShell(brand, body);
 }
 
-export function testEmail(brand: BrandSettings, toEmail: string, botName: string): string {
-  const now = new Date().toLocaleString("it-IT", { timeZone: "Europe/Rome" });
-  const body = `
+export function newLeadSubject(name: string, botName: string, locale: Locale = "it"): string {
+  return locale === "en"
+    ? `🔔 New Lead: ${name} - ${botName}`
+    : `🔔 Nuovo Lead: ${name} - ${botName}`;
+}
+
+// Test email
+export function testEmail(brand: BrandSettings, toEmail: string, botName: string, locale: Locale = "it"): string {
+  const isEn = locale === "en";
+  const now = new Date().toLocaleString(isEn ? "en-GB" : "it-IT", { timeZone: "Europe/Rome" });
+  const body = isEn ? `
+    <h1 style="margin:0 0 16px;font-size:24px;font-weight:700;color:#1A1A1A;">✅ Test Email Successful!</h1>
+    <p style="margin:0 0 20px;">Email notifications are configured correctly. You will receive a notification every time a new lead is captured by chatbot <strong>${escHtml(botName)}</strong>.</p>
+    <div style="background:#F5F5F5;border-radius:8px;padding:16px;margin-bottom:8px;">
+      <p style="margin:0 0 6px;font-size:13px;color:#1A1A1A;">📧 Recipient: <strong>${escHtml(toEmail)}</strong></p>
+      <p style="margin:0;font-size:13px;color:#1A1A1A;">🕐 Sent at: ${now}</p>
+    </div>
+    ${ctaButton("Go to Dashboard", "https://white-label-converser.lovable.app/dashboard/leads", brand.primary_color)}
+  ` : `
     <h1 style="margin:0 0 16px;font-size:24px;font-weight:700;color:#1A1A1A;">✅ Email di Test Riuscita!</h1>
     <p style="margin:0 0 20px;">Le notifiche email sono configurate correttamente. Riceverai una notifica ogni volta che un nuovo lead viene catturato dal chatbot <strong>${escHtml(botName)}</strong>.</p>
     <div style="background:#F5F5F5;border-radius:8px;padding:16px;margin-bottom:8px;">
@@ -180,6 +243,7 @@ export function testEmail(brand: BrandSettings, toEmail: string, botName: string
   return emailShell(brand, body);
 }
 
+// Weekly summary email
 export function weeklySummaryEmail(
   brand: BrandSettings,
   opts: {
@@ -188,37 +252,43 @@ export function weeklySummaryEmail(
     avgResponseTime: string;
     dashboardUrl: string;
     unsubscribeUrl?: string;
-  }
+  },
+  locale: Locale = "it"
 ): string {
-  const body = `
+  const isEn = locale === "en";
+  const body = isEn ? `
+    <h1 style="margin:0 0 4px;font-size:24px;font-weight:700;color:#1A1A1A;">Conversations summary 📊</h1>
+    <p style="margin:0 0 24px;font-size:14px;color:#888888;">Your weekly summary</p>
+    <table style="width:100%;border-collapse:collapse;margin-bottom:24px;">
+      <thead><tr style="border-bottom:2px solid #E5E5E5;">
+        <th style="text-align:left;padding:12px 8px;font-size:13px;color:#888888;font-weight:500;">Metric</th>
+        <th style="text-align:right;padding:12px 8px;font-size:13px;color:#888888;font-weight:500;">Value</th>
+      </tr></thead>
+      <tbody>
+        <tr style="border-bottom:1px solid #E5E5E5;"><td style="padding:14px 8px;font-size:14px;">Total conversations</td><td style="padding:14px 8px;font-size:14px;text-align:right;font-weight:600;">${opts.totalConversations}</td></tr>
+        <tr style="border-bottom:1px solid #E5E5E5;"><td style="padding:14px 8px;font-size:14px;">Messages received</td><td style="padding:14px 8px;font-size:14px;text-align:right;font-weight:600;">${opts.totalMessages}</td></tr>
+        <tr><td style="padding:14px 8px;font-size:14px;">Avg. response time</td><td style="padding:14px 8px;font-size:14px;text-align:right;font-weight:600;">${escHtml(opts.avgResponseTime)}</td></tr>
+      </tbody>
+    </table>
+    ${ctaButton("View all conversations", opts.dashboardUrl, brand.primary_color)}
+  ` : `
     <h1 style="margin:0 0 4px;font-size:24px;font-weight:700;color:#1A1A1A;">Riepilogo conversazioni 📊</h1>
     <p style="margin:0 0 24px;font-size:14px;color:#888888;">Il tuo riepilogo settimanale</p>
     <table style="width:100%;border-collapse:collapse;margin-bottom:24px;">
-      <thead>
-        <tr style="border-bottom:2px solid #E5E5E5;">
-          <th style="text-align:left;padding:12px 8px;font-size:13px;color:#888888;font-weight:500;">Metrica</th>
-          <th style="text-align:right;padding:12px 8px;font-size:13px;color:#888888;font-weight:500;">Valore</th>
-        </tr>
-      </thead>
+      <thead><tr style="border-bottom:2px solid #E5E5E5;">
+        <th style="text-align:left;padding:12px 8px;font-size:13px;color:#888888;font-weight:500;">Metrica</th>
+        <th style="text-align:right;padding:12px 8px;font-size:13px;color:#888888;font-weight:500;">Valore</th>
+      </tr></thead>
       <tbody>
-        <tr style="border-bottom:1px solid #E5E5E5;">
-          <td style="padding:14px 8px;font-size:14px;color:#1A1A1A;">Totale conversazioni</td>
-          <td style="padding:14px 8px;font-size:14px;color:#1A1A1A;text-align:right;font-weight:600;">${opts.totalConversations}</td>
-        </tr>
-        <tr style="border-bottom:1px solid #E5E5E5;">
-          <td style="padding:14px 8px;font-size:14px;color:#1A1A1A;">Messaggi ricevuti</td>
-          <td style="padding:14px 8px;font-size:14px;color:#1A1A1A;text-align:right;font-weight:600;">${opts.totalMessages}</td>
-        </tr>
-        <tr>
-          <td style="padding:14px 8px;font-size:14px;color:#1A1A1A;">Tempo medio di risposta</td>
-          <td style="padding:14px 8px;font-size:14px;color:#1A1A1A;text-align:right;font-weight:600;">${escHtml(opts.avgResponseTime)}</td>
-        </tr>
+        <tr style="border-bottom:1px solid #E5E5E5;"><td style="padding:14px 8px;font-size:14px;">Totale conversazioni</td><td style="padding:14px 8px;font-size:14px;text-align:right;font-weight:600;">${opts.totalConversations}</td></tr>
+        <tr style="border-bottom:1px solid #E5E5E5;"><td style="padding:14px 8px;font-size:14px;">Messaggi ricevuti</td><td style="padding:14px 8px;font-size:14px;text-align:right;font-weight:600;">${opts.totalMessages}</td></tr>
+        <tr><td style="padding:14px 8px;font-size:14px;">Tempo medio di risposta</td><td style="padding:14px 8px;font-size:14px;text-align:right;font-weight:600;">${escHtml(opts.avgResponseTime)}</td></tr>
       </tbody>
     </table>
     ${ctaButton("Vedi tutte le conversazioni", opts.dashboardUrl, brand.primary_color)}
   `;
   const footer = opts.unsubscribeUrl
-    ? `<p style="margin:8px 0 0;font-size:11px;color:#AAAAAA;text-align:center;"><a href="${escHtml(opts.unsubscribeUrl)}" style="color:#AAAAAA;text-decoration:underline;">Disattiva riepilogo settimanale</a></p>`
+    ? `<p style="margin:8px 0 0;font-size:11px;color:#AAAAAA;text-align:center;"><a href="${escHtml(opts.unsubscribeUrl)}" style="color:#AAAAAA;text-decoration:underline;">${isEn ? "Unsubscribe from weekly summary" : "Disattiva riepilogo settimanale"}</a></p>`
     : "";
   return emailShell(brand, body, footer);
 }
@@ -231,43 +301,90 @@ export interface CustomTemplate {
 }
 
 /**
- * Fetch a custom email template from DB if one exists.
- * Returns null if no custom template, meaning use the default.
+ * Fetch a custom email template from DB for a given type and locale.
+ * Falls back to IT locale if no template exists for the requested locale.
+ * Returns null if no custom template at all, meaning use the default.
  */
-export async function fetchCustomTemplate(supabase: any, type: string): Promise<CustomTemplate | null> {
+export async function fetchCustomTemplate(supabase: any, type: string, locale: Locale = "it"): Promise<CustomTemplate | null> {
   try {
+    // Try requested locale first
     const { data } = await supabase
       .from("email_templates")
       .select("subject, html_body")
       .eq("type", type)
+      .eq("locale", locale)
       .maybeSingle();
     if (data && data.html_body) return data as CustomTemplate;
+
+    // Fallback to IT if we asked for EN
+    if (locale !== "it") {
+      const { data: fallback } = await supabase
+        .from("email_templates")
+        .select("subject, html_body")
+        .eq("type", type)
+        .eq("locale", "it")
+        .maybeSingle();
+      if (fallback && fallback.html_body) return fallback as CustomTemplate;
+    }
   } catch (_) {}
   return null;
 }
 
 /**
- * Build a complete email from a custom template with variable replacement.
- * Falls back to the default builder functions if no custom template exists.
+ * Resolve a user's preferred locale from the profiles table.
  */
+export async function resolveUserLocale(supabase: any, userId: string): Promise<Locale> {
+  try {
+    const { data } = await supabase
+      .from("profiles")
+      .select("language")
+      .eq("id", userId)
+      .single();
+    if (data?.language) return resolveLocale(data.language);
+  } catch (_) {}
+  return "it";
+}
+
+/**
+ * Resolve a client's owner locale from profiles via client_id.
+ */
+export async function resolveClientOwnerLocale(supabase: any, clientId: string): Promise<Locale> {
+  try {
+    const { data } = await supabase
+      .from("profiles")
+      .select("language")
+      .eq("client_id", clientId)
+      .limit(1)
+      .single();
+    if (data?.language) return resolveLocale(data.language);
+  } catch (_) {}
+  return "it";
+}
+
 export function renderCustomTemplate(
   brand: BrandSettings,
   template: CustomTemplate,
   variables: Record<string, string>
 ): string {
-  let subject = template.subject;
   let body = template.html_body;
 
   for (const [key, value] of Object.entries(variables)) {
     const regex = new RegExp(escapeRegex(key), "g");
-    subject = subject.replace(regex, escHtml(value));
     body = body.replace(regex, escHtml(value));
   }
 
-  // Replace primary color in CTA buttons
   body = body.replace(/background:#1A1A1A/g, `background:${brand.primary_color}`);
 
   return emailShell(brand, body);
+}
+
+export function replaceSubjectVars(subject: string, variables: Record<string, string>): string {
+  let result = subject;
+  for (const [key, value] of Object.entries(variables)) {
+    const regex = new RegExp(escapeRegex(key), "g");
+    result = result.replace(regex, value);
+  }
+  return result;
 }
 
 function escapeRegex(s: string): string {

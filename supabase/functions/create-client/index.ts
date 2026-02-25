@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { fetchBrandSettings, welcomeEmail, fetchCustomTemplate, renderCustomTemplate } from "../_shared/email-template.ts";
+import { fetchBrandSettings, welcomeEmail, welcomeSubject, fetchCustomTemplate, renderCustomTemplate, replaceSubjectVars, resolveLocale, type Locale } from "../_shared/email-template.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -16,7 +16,7 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
-    const { name, email, password, plan } = await req.json();
+    const { name, email, password, plan, locale: reqLocale } = await req.json();
 
     if (!name || !email || !password) {
       return new Response(JSON.stringify({ error: "Missing required fields" }), {
@@ -43,8 +43,10 @@ serve(async (req) => {
     });
     if (authError) { await supabaseAdmin.from("clients").delete().eq("id", clientData.id); throw authError; }
 
+    const locale: Locale = resolveLocale(reqLocale);
+
     await supabaseAdmin.from("user_roles").insert({ user_id: authData.user.id, role: "client" });
-    await supabaseAdmin.from("profiles").upsert({ id: authData.user.id, email, full_name: name, client_id: clientData.id });
+    await supabaseAdmin.from("profiles").upsert({ id: authData.user.id, email, full_name: name, client_id: clientData.id, language: locale });
     await supabaseAdmin.from("chatbot_configs").insert({
       client_id: clientData.id,
       name: `${name} Assistant`,
@@ -57,17 +59,17 @@ serve(async (req) => {
     if (RESEND_API_KEY) {
       const brand = await fetchBrandSettings(supabaseAdmin);
       const loginUrl = "https://chatbot.your-genius.com/login";
-      const customTpl = await fetchCustomTemplate(supabaseAdmin, "welcome");
+      const customTpl = await fetchCustomTemplate(supabaseAdmin, "welcome", locale);
 
       let emailHtml: string;
       let subject: string;
       if (customTpl) {
         const vars = { "{{nome}}": name, "{{email}}": email, "{{link}}": loginUrl, "{{app_name}}": brand.app_name, "{{logo_url}}": brand.logo_url || "", "{{password}}": password };
         emailHtml = renderCustomTemplate(brand, customTpl, vars);
-        subject = customTpl.subject.replace(/\{\{app_name\}\}/g, brand.app_name).replace(/\{\{nome\}\}/g, name);
+        subject = replaceSubjectVars(customTpl.subject, vars);
       } else {
-        emailHtml = welcomeEmail(brand, name, email, loginUrl, password);
-        subject = `Benvenuto/a in ${brand.app_name}! 👋`;
+        emailHtml = welcomeEmail(brand, name, email, loginUrl, password, locale);
+        subject = welcomeSubject(brand, name, locale);
       }
 
       try {
