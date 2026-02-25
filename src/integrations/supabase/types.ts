@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      brand_settings: {
+        Row: {
+          app_name: string
+          footer_text: string | null
+          id: string
+          logo_url: string | null
+          primary_color: string
+          updated_at: string
+        }
+        Insert: {
+          app_name?: string
+          footer_text?: string | null
+          id?: string
+          logo_url?: string | null
+          primary_color?: string
+          updated_at?: string
+        }
+        Update: {
+          app_name?: string
+          footer_text?: string | null
+          id?: string
+          logo_url?: string | null
+          primary_color?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       chat_sessions: {
         Row: {
           bot_id: string | null
