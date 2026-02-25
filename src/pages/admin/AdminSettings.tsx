@@ -73,7 +73,7 @@ const AdminSettings = () => {
               setSendingTest(true);
               try {
                 const { data, error } = await supabase.functions.invoke("send-test-email", {
-                  body: { to_email: "webmastermdac@gmail.com", bot_name: "Admin Test" }
+                  body: { to_email: "developermdac@gmail.com", bot_name: "Admin Test" }
                 });
                 if (error) throw error;
                 if (data?.error) throw new Error(data.error);
