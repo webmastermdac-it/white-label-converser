@@ -222,3 +222,54 @@ export function weeklySummaryEmail(
     : "";
   return emailShell(brand, body, footer);
 }
+
+// ——— Custom template support ———
+
+export interface CustomTemplate {
+  subject: string;
+  html_body: string;
+}
+
+/**
+ * Fetch a custom email template from DB if one exists.
+ * Returns null if no custom template, meaning use the default.
+ */
+export async function fetchCustomTemplate(supabase: any, type: string): Promise<CustomTemplate | null> {
+  try {
+    const { data } = await supabase
+      .from("email_templates")
+      .select("subject, html_body")
+      .eq("type", type)
+      .maybeSingle();
+    if (data && data.html_body) return data as CustomTemplate;
+  } catch (_) {}
+  return null;
+}
+
+/**
+ * Build a complete email from a custom template with variable replacement.
+ * Falls back to the default builder functions if no custom template exists.
+ */
+export function renderCustomTemplate(
+  brand: BrandSettings,
+  template: CustomTemplate,
+  variables: Record<string, string>
+): string {
+  let subject = template.subject;
+  let body = template.html_body;
+
+  for (const [key, value] of Object.entries(variables)) {
+    const regex = new RegExp(escapeRegex(key), "g");
+    subject = subject.replace(regex, escHtml(value));
+    body = body.replace(regex, escHtml(value));
+  }
+
+  // Replace primary color in CTA buttons
+  body = body.replace(/background:#1A1A1A/g, `background:${brand.primary_color}`);
+
+  return emailShell(brand, body);
+}
+
+function escapeRegex(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}

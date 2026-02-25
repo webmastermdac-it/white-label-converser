@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { fetchBrandSettings, welcomeEmail } from "../_shared/email-template.ts";
+import { fetchBrandSettings, welcomeEmail, fetchCustomTemplate, renderCustomTemplate } from "../_shared/email-template.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -57,7 +57,18 @@ serve(async (req) => {
     if (RESEND_API_KEY) {
       const brand = await fetchBrandSettings(supabaseAdmin);
       const loginUrl = "https://chatbot.your-genius.com/login";
-      const emailHtml = welcomeEmail(brand, name, email, loginUrl, password);
+      const customTpl = await fetchCustomTemplate(supabaseAdmin, "welcome");
+
+      let emailHtml: string;
+      let subject: string;
+      if (customTpl) {
+        const vars = { "{{nome}}": name, "{{email}}": email, "{{link}}": loginUrl, "{{app_name}}": brand.app_name, "{{logo_url}}": brand.logo_url || "", "{{password}}": password };
+        emailHtml = renderCustomTemplate(brand, customTpl, vars);
+        subject = customTpl.subject.replace(/\{\{app_name\}\}/g, brand.app_name).replace(/\{\{nome\}\}/g, name);
+      } else {
+        emailHtml = welcomeEmail(brand, name, email, loginUrl, password);
+        subject = `Benvenuto/a in ${brand.app_name}! 👋`;
+      }
 
       try {
         await fetch("https://api.resend.com/emails", {
@@ -66,7 +77,7 @@ serve(async (req) => {
           body: JSON.stringify({
             from: `${brand.app_name} <noreply@chatbot.your-genius.com>`,
             to: [email],
-            subject: `Benvenuto/a in ${brand.app_name}! 👋`,
+            subject,
             html: emailHtml,
           }),
         });
