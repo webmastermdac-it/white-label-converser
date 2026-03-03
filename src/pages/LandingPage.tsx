@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { useLanguage } from "@/hooks/useLanguage";
 import { Button } from "@/components/ui/button";
-import { Play, Star, Menu, X, Check, Loader2, ArrowRight, Users, GraduationCap, BookOpen, Bot, ClipboardList, CalendarCheck, Palette, Globe, BarChart3, ShoppingCart } from "lucide-react";
+import { Play, Star, Menu, X, Check, Loader2, ArrowRight, Users, GraduationCap, BookOpen, Bot, ClipboardList, CalendarCheck, Palette, Globe, BarChart3, ShoppingCart, Lock, Info } from "lucide-react";
 import geniusLogo from "@/assets/genius.png";
 import genieHero from "@/assets/genie-mascot-new.png";
 import { supabase } from "@/integrations/supabase/client";
@@ -111,6 +111,44 @@ function FeatureGrid({ t }: { t: (en: string, it: string) => string }) {
   );
 }
 
+function RAGTooltip({ t }: { t: (en: string, it: string) => string }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <span className="relative inline-block">
+      <button
+        type="button"
+        onClick={() => setOpen(!open)}
+        onMouseEnter={() => setOpen(true)}
+        onMouseLeave={() => setOpen(false)}
+        className="w-4 h-4 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors cursor-pointer"
+        aria-label="Info RAG"
+      >
+        <Info className="w-2.5 h-2.5 text-white/50" />
+      </button>
+      {open && (
+        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-[260px] bg-[#1a1a1a] text-white text-xs rounded-lg p-3 shadow-xl z-50 animate-fade-in-up"
+          style={{ animationDuration: '200ms' }}
+          onMouseEnter={() => setOpen(true)}
+          onMouseLeave={() => setOpen(false)}
+        >
+          <div className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-l-[6px] border-r-[6px] border-t-[6px] border-l-transparent border-r-transparent border-t-[#1a1a1a]" />
+          <p className="leading-relaxed mb-2">
+            La Ricerca Avanzata (RAG) permette al tuo chatbot di consultare documenti, PDF e knowledge base in tempo reale per rispondere con precisione alle domande dei tuoi clienti.
+          </p>
+          <a
+            href="https://chatbot.your-genius.com/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[#F5A623] hover:text-[#FFB84D] font-medium transition-colors"
+          >
+            Scopri di più →
+          </a>
+        </div>
+      )}
+    </span>
+  );
+}
+
 function PricingGrid({ yearly, t }: { yearly: boolean; t: (en: string, it: string) => string }) {
   const gridRef = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(false);
@@ -139,7 +177,7 @@ function PricingGrid({ yearly, t }: { yearly: boolean; t: (en: string, it: strin
   return (
     <div ref={gridRef} className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
       {/* Free */}
-      <div className={cardClass(0, "bg-white/[0.03] border border-white/10 rounded-2xl p-8 space-y-6")} style={cardStyle(0)}>
+      <div className={cardClass(0, "bg-white/[0.03] border border-white/10 rounded-2xl p-8 space-y-6 flex flex-col")} style={cardStyle(0)}>
         <div>
           <h3 className="text-xl font-bold" style={{ fontFamily: "'Syne', sans-serif" }}>Free</h3>
           <p className="text-white/40 text-sm mt-1">{t("Try Genius with no commitment", "Per provare Genius senza impegno")}</p>
@@ -158,7 +196,6 @@ function PricingGrid({ yearly, t }: { yearly: boolean; t: (en: string, it: strin
             t("1 chatbot", "1 chatbot"),
             t("50 conversations/month", "50 conversazioni/mese"),
             t("10 leads/month", "10 lead/mese"),
-            t("\"Powered by Genius\" branding", "Branding \"Powered by Genius\""),
             t("Basic knowledge base", "Knowledge base base"),
             t("Email support", "Supporto email"),
             t("❌ No ecommerce integration", "❌ Nessuna integrazione ecommerce"),
@@ -166,10 +203,27 @@ function PricingGrid({ yearly, t }: { yearly: boolean; t: (en: string, it: strin
             <li key={i} className="flex items-start gap-2"><Check className="w-4 h-4 text-[#F5A623] shrink-0 mt-0.5" />{item}</li>
           ))}
         </ul>
+        {/* RAG Section */}
+        <div className="mt-auto pt-4 border-t border-white/10">
+          <div className="flex items-center gap-1.5 mb-2">
+            <span className="text-xs font-semibold text-white/30 uppercase tracking-wider">🔍 {t("Advanced Search (RAG)", "Ricerca Avanzata (RAG)")}</span>
+            <RAGTooltip t={t} />
+          </div>
+          <div className="flex items-center gap-2 text-white/30 text-sm">
+            <Lock className="w-4 h-4 shrink-0" />
+            <span>{t("Locked – upgrade to unlock", "Bloccato – fai upgrade per sbloccare")}</span>
+          </div>
+        </div>
+        {/* Branding Footer */}
+        <div className="pt-3 border-t border-white/10 text-center">
+          <a href="https://chatbot.your-genius.com/" target="_blank" rel="noopener noreferrer" className="text-xs text-white/30 hover:text-white/50 transition-colors">
+            Free Chatbot Genius
+          </a>
+        </div>
       </div>
 
       {/* Starter */}
-      <div className={cardClass(1, "bg-white/[0.03] border border-white/10 rounded-2xl p-8 space-y-6")} style={cardStyle(1)}>
+      <div className={cardClass(1, "bg-white/[0.03] border border-white/10 rounded-2xl p-8 space-y-6 flex flex-col")} style={cardStyle(1)}>
         <div>
           <h3 className="text-xl font-bold" style={{ fontFamily: "'Syne', sans-serif" }}>Starter</h3>
           <p className="text-white/40 text-sm mt-1">{t("For small businesses and professionals", "Per piccole imprese e professionisti")}</p>
@@ -188,7 +242,6 @@ function PricingGrid({ yearly, t }: { yearly: boolean; t: (en: string, it: strin
             t("1 chatbot", "1 chatbot"),
             t("500 conversations/month", "500 conversazioni/mese"),
             t("Unlimited leads", "Lead illimitati"),
-            t("Remove branding", "Rimuovi branding"),
             t("PDF/Word upload", "Upload PDF/Word"),
             t("Industry templates", "Template di settore"),
             t("Priority support", "Supporto prioritario"),
@@ -197,10 +250,27 @@ function PricingGrid({ yearly, t }: { yearly: boolean; t: (en: string, it: strin
             <li key={i} className="flex items-start gap-2"><Check className="w-4 h-4 text-[#F5A623] shrink-0 mt-0.5" />{item}</li>
           ))}
         </ul>
+        {/* RAG Section */}
+        <div className="mt-auto pt-4 border-t border-white/10">
+          <div className="flex items-center gap-1.5 mb-2">
+            <span className="text-xs font-semibold text-[#F5A623]/70 uppercase tracking-wider">🔍 {t("Advanced Search (RAG)", "Ricerca Avanzata (RAG)")}</span>
+            <RAGTooltip t={t} />
+          </div>
+          <div className="flex items-center gap-2 text-[#F5A623] text-sm">
+            <Check className="w-4 h-4 shrink-0" />
+            <span>{t("Included", "Incluso")}</span>
+          </div>
+        </div>
+        {/* Branding Footer */}
+        <div className="pt-3 border-t border-white/10 text-center">
+          <a href="https://chatbot.your-genius.com/" target="_blank" rel="noopener noreferrer" className="text-xs text-white/30 hover:text-white/50 transition-colors">
+            Chatbot Genius
+          </a>
+        </div>
       </div>
 
       {/* Pro */}
-      <div className={cardClass(2, "relative bg-gradient-to-br from-[#F5A623]/10 to-transparent border-2 border-[#F5A623]/40 rounded-2xl p-8 space-y-6 shadow-lg shadow-[#F5A623]/10")} style={cardStyle(2)}>
+      <div className={cardClass(2, "relative bg-gradient-to-br from-[#F5A623]/10 to-transparent border-2 border-[#F5A623]/40 rounded-2xl p-8 space-y-6 shadow-lg shadow-[#F5A623]/10 flex flex-col")} style={cardStyle(2)}>
         <div className="absolute -top-3 right-6 bg-[#F5A623] text-black text-xs font-bold px-3 py-1 rounded-full">{t("Most Popular", "Più Popolare")}</div>
         <div>
           <h3 className="text-xl font-bold" style={{ fontFamily: "'Syne', sans-serif" }}>Pro</h3>
@@ -228,6 +298,23 @@ function PricingGrid({ yearly, t }: { yearly: boolean; t: (en: string, it: strin
             <li key={i} className="flex items-start gap-2"><Check className="w-4 h-4 text-[#F5A623] shrink-0 mt-0.5" />{item}</li>
           ))}
         </ul>
+        {/* RAG Section */}
+        <div className="mt-auto pt-4 border-t border-[#F5A623]/30">
+          <div className="flex items-center gap-1.5 mb-2">
+            <span className="text-xs font-semibold text-[#F5A623] uppercase tracking-wider">🔍 {t("Advanced Search (RAG)", "Ricerca Avanzata (RAG)")}</span>
+            <RAGTooltip t={t} />
+          </div>
+          <div className="flex items-center gap-2 text-[#F5A623] text-sm font-medium">
+            <Check className="w-4 h-4 shrink-0" />
+            <span>{t("Included + Priority", "Incluso + Priorità")}</span>
+          </div>
+        </div>
+        {/* Branding Footer */}
+        <div className="pt-3 border-t border-[#F5A623]/20 text-center">
+          <a href="https://chatbot.your-genius.com/" target="_blank" rel="noopener noreferrer" className="text-xs text-[#F5A623]/50 hover:text-[#F5A623]/70 transition-colors">
+            Chatbot Genius
+          </a>
+        </div>
       </div>
     </div>
   );
