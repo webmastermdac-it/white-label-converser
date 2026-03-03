@@ -114,22 +114,23 @@ function FeatureGrid({ t }: { t: (en: string, it: string) => string }) {
 function RAGTooltip({ t }: { t: (en: string, it: string) => string }) {
   const [open, setOpen] = useState(false);
   return (
-    <span className="relative inline-block">
+    <span
+      className="relative inline-block"
+      onMouseEnter={() => setOpen(true)}
+      onMouseLeave={() => setOpen(false)}
+    >
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        onMouseEnter={() => setOpen(true)}
-        onMouseLeave={() => setOpen(false)}
         className="w-4 h-4 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors cursor-pointer"
         aria-label="Info RAG"
       >
         <Info className="w-2.5 h-2.5 text-white/50" />
       </button>
       {open && (
-        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-[260px] bg-[#1a1a1a] text-white text-xs rounded-lg p-3 shadow-xl z-50 animate-fade-in-up"
-          style={{ animationDuration: '200ms' }}
-          onMouseEnter={() => setOpen(true)}
-          onMouseLeave={() => setOpen(false)}
+        <div
+          className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 w-[260px] bg-[#1a1a1a] text-white text-xs rounded-lg p-3 shadow-2xl z-50 border border-white/10"
+          style={{ animation: 'fadeInUp 200ms ease-out forwards' }}
         >
           <div className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-l-[6px] border-r-[6px] border-t-[6px] border-l-transparent border-r-transparent border-t-[#1a1a1a]" />
           <p className="leading-relaxed mb-2">
@@ -139,7 +140,7 @@ function RAGTooltip({ t }: { t: (en: string, it: string) => string }) {
             href="https://chatbot.your-genius.com/"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-[#F5A623] hover:text-[#FFB84D] font-medium transition-colors"
+            className="text-amber-400 hover:text-amber-300 font-medium transition-colors"
           >
             Scopri di più →
           </a>

@@ -10,12 +10,14 @@ import { Check, Loader2, Lock, Info } from "lucide-react";
 function RAGInfoTooltip({ isIt }: { isIt: boolean }) {
   const [open, setOpen] = useState(false);
   return (
-    <span className="relative inline-block">
+    <span
+      className="relative inline-block"
+      onMouseEnter={() => setOpen(true)}
+      onMouseLeave={() => setOpen(false)}
+    >
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        onMouseEnter={() => setOpen(true)}
-        onMouseLeave={() => setOpen(false)}
         className="w-4 h-4 rounded-full bg-muted hover:bg-muted/80 flex items-center justify-center transition-colors cursor-pointer"
         aria-label="Info RAG"
       >
@@ -23,10 +25,8 @@ function RAGInfoTooltip({ isIt }: { isIt: boolean }) {
       </button>
       {open && (
         <div
-          className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-[260px] bg-[#1a1a1a] text-white text-xs rounded-lg p-3 shadow-xl z-50 animate-fade-in-up"
-          style={{ animationDuration: '200ms' }}
-          onMouseEnter={() => setOpen(true)}
-          onMouseLeave={() => setOpen(false)}
+          className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 w-[260px] bg-[#1a1a1a] text-white text-xs rounded-lg p-3 shadow-2xl z-50 border border-white/10"
+          style={{ animation: 'fadeInUp 200ms ease-out forwards' }}
         >
           <div className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-l-[6px] border-r-[6px] border-t-[6px] border-l-transparent border-r-transparent border-t-[#1a1a1a]" />
           <p className="leading-relaxed mb-2">
