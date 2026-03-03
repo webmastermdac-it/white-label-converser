@@ -4,6 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/hooks/useLanguage";
 import { Bot, LogOut, Menu, X, Globe } from "lucide-react";
 import { cn } from "@/lib/utils";
+import ThemeSelector from "@/components/ThemeSelector";
 
 interface NavItem {
   label: string;
@@ -94,6 +95,7 @@ const MobileNav: React.FC<MobileNavProps> = ({ items, subtitle }) => {
 
             {/* Footer */}
             <div className="p-4 border-t border-sidebar-border space-y-3">
+              <ThemeSelector />
               <button
                 onClick={() => { setLang(lang === "it" ? "en" : "it"); }}
                 className="flex items-center gap-2 px-3 py-2 w-full rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-sidebar-accent transition-colors min-h-[44px]"

@@ -8,6 +8,7 @@ import {
   ChevronRight, Bot, LogOut, Shield, Inbox, Globe, CreditCard, TrendingUp, Store, Mail
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import ThemeSelector from "@/components/ThemeSelector";
 
 const AdminSidebar = () => {
   const [collapsed, setCollapsed] = useState(false);
@@ -86,21 +87,23 @@ const AdminSidebar = () => {
       </nav>
 
       {/* Language + User */}
-      <div className="p-3 border-t border-sidebar-border">
+      <div className="p-3 border-t border-sidebar-border space-y-2">
         {!collapsed && (
           <>
+            <ThemeSelector />
             <button
               onClick={() => setLang(lang === "it" ? "en" : "it")}
-              className="flex items-center gap-2 px-3 py-2 mb-2 w-full rounded-lg text-xs text-muted-foreground hover:text-foreground hover:bg-sidebar-accent transition-colors"
+              className="flex items-center gap-2 px-3 py-2 w-full rounded-lg text-xs text-muted-foreground hover:text-foreground hover:bg-sidebar-accent transition-colors"
             >
               <Globe className="w-3.5 h-3.5" />
               {lang === "it" ? "🇮🇹 Italiano" : "🇬🇧 English"}
             </button>
-            <div className="px-3 py-2 mb-2">
+            <div className="px-3 py-2">
               <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
             </div>
           </>
         )}
+        {collapsed && <ThemeSelector collapsed />}
         <Button
           variant="ghost"
           size="sm"
