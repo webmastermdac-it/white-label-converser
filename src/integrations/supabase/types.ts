@@ -359,6 +359,110 @@ export type Database = {
         }
         Relationships: []
       }
+      knowledge_base: {
+        Row: {
+          chatbot_id: string
+          chunk_count: number
+          created_at: string
+          created_by: string | null
+          error_message: string | null
+          file_path: string | null
+          id: string
+          name: string
+          source_url: string | null
+          status: string
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          chatbot_id: string
+          chunk_count?: number
+          created_at?: string
+          created_by?: string | null
+          error_message?: string | null
+          file_path?: string | null
+          id?: string
+          name: string
+          source_url?: string | null
+          status?: string
+          type?: string
+          updated_at?: string
+        }
+        Update: {
+          chatbot_id?: string
+          chunk_count?: number
+          created_at?: string
+          created_by?: string | null
+          error_message?: string | null
+          file_path?: string | null
+          id?: string
+          name?: string
+          source_url?: string | null
+          status?: string
+          type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "knowledge_base_chatbot_id_fkey"
+            columns: ["chatbot_id"]
+            isOneToOne: false
+            referencedRelation: "chatbot_configs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      knowledge_chunks: {
+        Row: {
+          chatbot_id: string
+          chunk_index: number
+          content: string
+          created_at: string
+          embedding: string | null
+          id: string
+          knowledge_base_id: string
+          metadata: Json | null
+          token_count: number
+        }
+        Insert: {
+          chatbot_id: string
+          chunk_index?: number
+          content: string
+          created_at?: string
+          embedding?: string | null
+          id?: string
+          knowledge_base_id: string
+          metadata?: Json | null
+          token_count?: number
+        }
+        Update: {
+          chatbot_id?: string
+          chunk_index?: number
+          content?: string
+          created_at?: string
+          embedding?: string | null
+          id?: string
+          knowledge_base_id?: string
+          metadata?: Json | null
+          token_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "knowledge_chunks_chatbot_id_fkey"
+            columns: ["chatbot_id"]
+            isOneToOne: false
+            referencedRelation: "chatbot_configs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "knowledge_chunks_knowledge_base_id_fkey"
+            columns: ["knowledge_base_id"]
+            isOneToOne: false
+            referencedRelation: "knowledge_base"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       leads: {
         Row: {
           bot_id: string | null
@@ -584,6 +688,50 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rag_query_logs: {
+        Row: {
+          chatbot_id: string
+          chunks_retrieved: Json | null
+          conversation_id: string | null
+          created_at: string
+          id: string
+          query: string
+          relevance_score: number | null
+          response_generated: string | null
+          response_time_ms: number | null
+        }
+        Insert: {
+          chatbot_id: string
+          chunks_retrieved?: Json | null
+          conversation_id?: string | null
+          created_at?: string
+          id?: string
+          query: string
+          relevance_score?: number | null
+          response_generated?: string | null
+          response_time_ms?: number | null
+        }
+        Update: {
+          chatbot_id?: string
+          chunks_retrieved?: Json | null
+          conversation_id?: string | null
+          created_at?: string
+          id?: string
+          query?: string
+          relevance_score?: number | null
+          response_generated?: string | null
+          response_time_ms?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rag_query_logs_chatbot_id_fkey"
+            columns: ["chatbot_id"]
+            isOneToOne: false
+            referencedRelation: "chatbot_configs"
             referencedColumns: ["id"]
           },
         ]
