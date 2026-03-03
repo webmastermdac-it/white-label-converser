@@ -5,7 +5,48 @@ import { usePlan } from "@/hooks/usePlan";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Check, Loader2 } from "lucide-react";
+import { Check, Loader2, Lock, Info } from "lucide-react";
+
+function RAGInfoTooltip({ isIt }: { isIt: boolean }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <span className="relative inline-block">
+      <button
+        type="button"
+        onClick={() => setOpen(!open)}
+        onMouseEnter={() => setOpen(true)}
+        onMouseLeave={() => setOpen(false)}
+        className="w-4 h-4 rounded-full bg-muted hover:bg-muted/80 flex items-center justify-center transition-colors cursor-pointer"
+        aria-label="Info RAG"
+      >
+        <Info className="w-2.5 h-2.5 text-muted-foreground" />
+      </button>
+      {open && (
+        <div
+          className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-[260px] bg-[#1a1a1a] text-white text-xs rounded-lg p-3 shadow-xl z-50 animate-fade-in-up"
+          style={{ animationDuration: '200ms' }}
+          onMouseEnter={() => setOpen(true)}
+          onMouseLeave={() => setOpen(false)}
+        >
+          <div className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-l-[6px] border-r-[6px] border-t-[6px] border-l-transparent border-r-transparent border-t-[#1a1a1a]" />
+          <p className="leading-relaxed mb-2">
+            {isIt
+              ? "La Ricerca Avanzata (RAG) permette al tuo chatbot di consultare documenti, PDF e knowledge base in tempo reale per rispondere con precisione alle domande dei tuoi clienti."
+              : "Advanced Search (RAG) allows your chatbot to consult documents, PDFs, and knowledge bases in real time to answer your customers' questions with precision."}
+          </p>
+          <a
+            href="https://chatbot.your-genius.com/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-amber-400 hover:text-amber-300 font-medium transition-colors"
+          >
+            {isIt ? "Scopri di più →" : "Learn more →"}
+          </a>
+        </div>
+      )}
+    </span>
+  );
+}
 
 const ClientUpgrade = () => {
   const { clientId } = useAuth();
@@ -45,11 +86,12 @@ const ClientUpgrade = () => {
         "1 chatbot",
         isIt ? "50 conversazioni/mese" : "50 conversations/month",
         isIt ? "10 lead/mese" : "10 leads/month",
-        isIt ? "Branding 'Powered by Genius'" : "'Powered by Genius' branding",
         isIt ? "Knowledge base base" : "Basic knowledge base",
         isIt ? "Supporto email" : "Email support",
         isIt ? "❌ Nessuna integrazione ecommerce" : "❌ No ecommerce integration",
       ],
+      rag: "locked" as const,
+      brandingFooter: "Free Chatbot Genius",
     },
     {
       id: "starter",
@@ -59,12 +101,13 @@ const ClientUpgrade = () => {
         "1 chatbot",
         isIt ? "500 conversazioni/mese" : "500 conversations/month",
         isIt ? "Lead illimitati" : "Unlimited leads",
-        isIt ? "Rimozione branding" : "Remove branding",
         isIt ? "Upload documenti PDF/Word" : "PDF/Word document upload",
         isIt ? "Template per settore" : "Sector templates",
         isIt ? "Supporto prioritario" : "Priority support",
         isIt ? "🛒 Feed XML/CSV (sync giornaliero)" : "🛒 XML/CSV Feed (daily sync)",
       ],
+      rag: "included" as const,
+      brandingFooter: "Chatbot Genius",
     },
     {
       id: "pro",
@@ -80,6 +123,8 @@ const ClientUpgrade = () => {
         isIt ? "Supporto dedicato" : "Dedicated support",
         isIt ? "🛒 Ecommerce completo (WooCommerce, Shopify, PrestaShop, API + webhook real-time)" : "🛒 Full ecommerce (WooCommerce, Shopify, PrestaShop, API + real-time webhooks)",
       ],
+      rag: "highlighted" as const,
+      brandingFooter: "Chatbot Genius",
     },
   ];
 
@@ -122,7 +167,7 @@ const ClientUpgrade = () => {
           return (
             <div
               key={plan.id}
-              className={`glass rounded-xl p-6 space-y-5 relative ${
+              className={`glass rounded-xl p-6 space-y-5 relative flex flex-col ${
                 plan.popular ? "border-primary/40 ring-1 ring-primary/20" : ""
               } ${isCurrent ? "border-primary/60 ring-2 ring-primary/30" : ""}`}
             >
@@ -160,6 +205,29 @@ const ClientUpgrade = () => {
                 ))}
               </ul>
 
+              {/* RAG Section */}
+              <div className={`mt-auto pt-4 border-t ${plan.rag === "highlighted" ? "border-primary/30" : "border-border"}`}>
+                <div className="flex items-center gap-1.5 mb-2">
+                  <span className={`text-xs font-semibold uppercase tracking-wider ${
+                    plan.rag === "locked" ? "text-muted-foreground/50" : plan.rag === "highlighted" ? "text-primary" : "text-primary/70"
+                  }`}>
+                    🔍 {isIt ? "Ricerca Avanzata (RAG)" : "Advanced Search (RAG)"}
+                  </span>
+                  <RAGInfoTooltip isIt={isIt} />
+                </div>
+                {plan.rag === "locked" ? (
+                  <div className="flex items-center gap-2 text-muted-foreground/50 text-sm">
+                    <Lock className="w-4 h-4 shrink-0" />
+                    <span>{isIt ? "Bloccato – fai upgrade" : "Locked – upgrade to unlock"}</span>
+                  </div>
+                ) : (
+                  <div className={`flex items-center gap-2 text-sm ${plan.rag === "highlighted" ? "text-primary font-medium" : "text-primary"}`}>
+                    <Check className="w-4 h-4 shrink-0" />
+                    <span>{plan.rag === "highlighted" ? (isIt ? "Incluso + Priorità" : "Included + Priority") : (isIt ? "Incluso" : "Included")}</span>
+                  </div>
+                )}
+              </div>
+
               {canUpgrade ? (
                 <Button
                   className="w-full gradient-primary text-white border-0"
@@ -181,6 +249,13 @@ const ClientUpgrade = () => {
                   {plan.id === "free" ? (isIt ? "Incluso" : "Included") : `${isIt ? "Passa a" : "Upgrade to"} ${plan.name}`}
                 </Button>
               )}
+
+              {/* Branding Footer */}
+              <div className="pt-3 border-t border-border text-center">
+                <a href="https://chatbot.your-genius.com/" target="_blank" rel="noopener noreferrer" className="text-xs text-muted-foreground/50 hover:text-muted-foreground/70 transition-colors">
+                  {plan.brandingFooter}
+                </a>
+              </div>
             </div>
           );
         })}
