@@ -18,7 +18,6 @@ serve(async (req) => {
     const { knowledge_base_id } = await req.json();
     if (!knowledge_base_id) throw new Error("knowledge_base_id required");
 
-    // Fetch source record
     const { data: source, error: srcErr } = await supabase
       .from("knowledge_base")
       .select("*")
@@ -26,14 +25,15 @@ serve(async (req) => {
       .single();
     if (srcErr || !source) throw new Error("Source not found");
 
-    // Mark as processing
     await supabase.from("knowledge_base").update({ status: "processing", error_message: null }).eq("id", knowledge_base_id);
+
+    // Read AI settings for provider
+    const { data: aiSettings } = await supabase.from("ai_settings").select("*").limit(1).single();
+    const embeddingProvider = aiSettings?.embedding_provider || "openai";
 
     let rawText = "";
 
-    // --- STEP 1: Extract text based on type ---
     if (source.type === "faq" || source.type === "txt") {
-      // For FAQ/text, content is stored directly in the source_url field as text
       rawText = source.source_url || "";
     } else if (source.type === "url") {
       rawText = await scrapeUrl(source.source_url);
@@ -46,24 +46,23 @@ serve(async (req) => {
       return jsonResponse({ error: "No text extracted" }, 400);
     }
 
-    // --- STEP 2: Chunk the text ---
     const chunks = chunkText(rawText, 800, 150, {
       source_name: source.name,
       source_type: source.type,
       url: source.source_url || undefined,
     });
 
-    // --- STEP 3: Generate embeddings ---
+    // Generate embeddings based on provider
     const OPENAI_KEY = Deno.env.get("OPENAI_API_KEY");
     const LOVABLE_KEY = Deno.env.get("LOVABLE_API_KEY");
 
     const embeddings = await generateEmbeddings(
       chunks.map(c => c.content),
+      embeddingProvider,
       OPENAI_KEY,
       LOVABLE_KEY,
     );
 
-    // --- STEP 4: Delete old chunks and insert new ---
     await supabase.from("knowledge_chunks").delete().eq("knowledge_base_id", knowledge_base_id);
 
     const batchSize = 50;
@@ -79,13 +78,9 @@ serve(async (req) => {
       }));
 
       const { error: insertErr } = await supabase.from("knowledge_chunks").insert(batch);
-      if (insertErr) {
-        console.error("Chunk insert error:", insertErr);
-        throw new Error(`Failed to insert chunks: ${insertErr.message}`);
-      }
+      if (insertErr) throw new Error(`Failed to insert chunks: ${insertErr.message}`);
     }
 
-    // Update status
     await supabase.from("knowledge_base").update({
       status: "ready",
       chunk_count: chunks.length,
@@ -96,8 +91,6 @@ serve(async (req) => {
     return jsonResponse({ success: true, chunk_count: chunks.length });
   } catch (error: any) {
     console.error("process-knowledge error:", error);
-
-    // Try to mark source as error
     try {
       const { knowledge_base_id } = await req.clone().json();
       if (knowledge_base_id) {
@@ -107,12 +100,9 @@ serve(async (req) => {
         }).eq("id", knowledge_base_id);
       }
     } catch { }
-
     return jsonResponse({ error: error.message }, 500);
   }
 });
-
-// --- Helper functions ---
 
 function jsonResponse(data: any, status = 200) {
   return new Response(JSON.stringify(data), {
@@ -132,7 +122,6 @@ async function scrapeUrl(url: string | null): Promise<string> {
   if (!response.ok) throw new Error(`Failed to fetch URL: ${response.status}`);
 
   const html = await response.text();
-  // Strip scripts, styles, nav, footer, header
   let text = html
     .replace(/<script[\s\S]*?<\/script>/gi, "")
     .replace(/<style[\s\S]*?<\/style>/gi, "")
@@ -151,33 +140,26 @@ async function scrapeUrl(url: string | null): Promise<string> {
 
 async function extractFileText(supabase: any, filePath: string | null, fileType: string): Promise<string> {
   if (!filePath) return "";
-
-  const { data: fileData, error } = await supabase.storage
-    .from("kb-documents")
-    .download(filePath);
+  const { data: fileData, error } = await supabase.storage.from("kb-documents").download(filePath);
   if (error || !fileData) throw new Error(`Download failed: ${error?.message}`);
 
   if (fileType === "pdf") {
     const pdfParse = (await import("npm:pdf-parse@1.1.1")).default;
     const buffer = Buffer.from(await fileData.arrayBuffer());
-    const pdfData = await pdfParse(buffer);
-    return pdfData.text || "";
+    return (await pdfParse(buffer)).text || "";
   } else if (fileType === "docx" || fileType === "doc") {
     const mammoth = await import("npm:mammoth@1.8.0");
     const buffer = Buffer.from(await fileData.arrayBuffer());
-    const result = await mammoth.extractRawText({ buffer });
-    return result.value || "";
+    return (await mammoth.extractRawText({ buffer })).value || "";
   } else if (fileType === "csv") {
     return await fileData.text();
   } else if (fileType === "xlsx") {
     const XLSX = await import("npm:xlsx@0.18.5");
     const buffer = Buffer.from(await fileData.arrayBuffer());
     const workbook = XLSX.read(buffer, { type: "buffer" });
-    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-    return XLSX.utils.sheet_to_csv(firstSheet);
-  } else {
-    return await fileData.text();
+    return XLSX.utils.sheet_to_csv(workbook.Sheets[workbook.SheetNames[0]]);
   }
+  return await fileData.text();
 }
 
 interface Chunk {
@@ -187,11 +169,8 @@ interface Chunk {
 }
 
 function chunkText(text: string, maxTokens: number, overlap: number, baseMeta: Record<string, any>): Chunk[] {
-  // Approximate tokens: ~4 chars per token
   const charLimit = maxTokens * 4;
   const overlapChars = overlap * 4;
-
-  // Split by paragraphs first
   const paragraphs = text.split(/\n{2,}/);
   const chunks: Chunk[] = [];
   let currentChunk = "";
@@ -200,12 +179,9 @@ function chunkText(text: string, maxTokens: number, overlap: number, baseMeta: R
   for (const para of paragraphs) {
     const trimmed = para.trim();
     if (!trimmed) continue;
-
-    // Detect section headers
     if (trimmed.length < 100 && (trimmed.endsWith(":") || /^[A-Z\d]/.test(trimmed))) {
       currentSection = trimmed;
     }
-
     if (currentChunk.length + trimmed.length + 2 > charLimit) {
       if (currentChunk.trim()) {
         chunks.push({
@@ -214,14 +190,12 @@ function chunkText(text: string, maxTokens: number, overlap: number, baseMeta: R
           tokenCount: Math.ceil(currentChunk.trim().length / 4),
         });
       }
-      // Keep overlap from end of previous chunk
       const overlapText = currentChunk.slice(-overlapChars);
       currentChunk = overlapText + "\n\n" + trimmed;
     } else {
       currentChunk += (currentChunk ? "\n\n" : "") + trimmed;
     }
   }
-
   if (currentChunk.trim()) {
     chunks.push({
       content: currentChunk.trim(),
@@ -229,49 +203,36 @@ function chunkText(text: string, maxTokens: number, overlap: number, baseMeta: R
       tokenCount: Math.ceil(currentChunk.trim().length / 4),
     });
   }
-
   return chunks;
 }
 
-async function generateEmbeddings(texts: string[], openaiKey?: string, lovableKey?: string): Promise<(number[] | null)[]> {
+async function generateEmbeddings(
+  texts: string[],
+  provider: string,
+  openaiKey?: string,
+  lovableKey?: string,
+): Promise<(number[] | null)[]> {
   const batchSize = 100;
   const allEmbeddings: (number[] | null)[] = [];
-
   for (let i = 0; i < texts.length; i += batchSize) {
     const batch = texts.slice(i, i + batchSize);
-    const embeddings = await embedBatch(batch, openaiKey, lovableKey);
+    const embeddings = await embedBatch(batch, provider, openaiKey, lovableKey);
     allEmbeddings.push(...embeddings);
   }
-
   return allEmbeddings;
 }
 
-async function embedBatch(texts: string[], openaiKey?: string, lovableKey?: string, retries = 3): Promise<(number[] | null)[]> {
+async function embedBatch(
+  texts: string[],
+  provider: string,
+  openaiKey?: string,
+  lovableKey?: string,
+  retries = 3,
+): Promise<(number[] | null)[]> {
   for (let attempt = 0; attempt < retries; attempt++) {
     try {
-      // Try OpenAI first
-      if (openaiKey) {
-        const response = await fetch("https://api.openai.com/v1/embeddings", {
-          method: "POST",
-          headers: {
-            "Authorization": `Bearer ${openaiKey}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            model: "text-embedding-3-small",
-            input: texts,
-          }),
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          return data.data.map((d: any) => d.embedding);
-        }
-        if (response.status !== 429) throw new Error(`OpenAI API error: ${response.status}`);
-      }
-
-      // Fallback: try Lovable AI gateway embeddings
-      if (lovableKey) {
+      if (provider === "gemini" && lovableKey) {
+        // Use Lovable AI Gateway with Gemini embedding model
         const response = await fetch("https://ai.gateway.lovable.dev/v1/embeddings", {
           method: "POST",
           headers: {
@@ -279,28 +240,69 @@ async function embedBatch(texts: string[], openaiKey?: string, lovableKey?: stri
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            model: "text-embedding-3-small",
+            model: "text-embedding-004",
             input: texts,
           }),
         });
-
         if (response.ok) {
           const data = await response.json();
           return data.data.map((d: any) => d.embedding);
         }
-        console.error("Lovable AI embedding error:", response.status, await response.text());
+        if (response.status !== 429) {
+          const errText = await response.text();
+          console.error("Gemini embedding error:", response.status, errText);
+          throw new Error(`Gemini embedding error: ${response.status}`);
+        }
+      } else if (provider === "openai") {
+        // Try OpenAI
+        if (openaiKey) {
+          const response = await fetch("https://api.openai.com/v1/embeddings", {
+            method: "POST",
+            headers: {
+              "Authorization": `Bearer ${openaiKey}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              model: "text-embedding-3-small",
+              input: texts,
+            }),
+          });
+          if (response.ok) {
+            const data = await response.json();
+            return data.data.map((d: any) => d.embedding);
+          }
+          if (response.status !== 429) throw new Error(`OpenAI API error: ${response.status}`);
+        }
+
+        // Fallback: Lovable AI gateway with OpenAI model
+        if (lovableKey) {
+          const response = await fetch("https://ai.gateway.lovable.dev/v1/embeddings", {
+            method: "POST",
+            headers: {
+              "Authorization": `Bearer ${lovableKey}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              model: "text-embedding-3-small",
+              input: texts,
+            }),
+          });
+          if (response.ok) {
+            const data = await response.json();
+            return data.data.map((d: any) => d.embedding);
+          }
+          console.error("Lovable AI embedding error:", response.status);
+        }
       }
 
       throw new Error("No embedding API available or all failed");
     } catch (error) {
       if (attempt < retries - 1) {
-        const delay = Math.pow(2, attempt) * 1000;
-        await new Promise(r => setTimeout(r, delay));
+        await new Promise(r => setTimeout(r, Math.pow(2, attempt) * 1000));
         continue;
       }
       throw error;
     }
   }
-
   return texts.map(() => null);
 }
