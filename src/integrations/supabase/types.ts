@@ -805,6 +805,20 @@ export type Database = {
         }
         Returns: boolean
       }
+      match_chunks: {
+        Args: {
+          _chatbot_id: string
+          _match_count?: number
+          _match_threshold?: number
+          _query_embedding: string
+        }
+        Returns: {
+          content: string
+          id: string
+          metadata: Json
+          similarity: number
+        }[]
+      }
     }
     Enums: {
       app_role: "super_admin" | "client"

@@ -114,7 +114,41 @@ FORMATTING RULES:
 - End with ONE short question to keep the conversation going
 - Never use excessive formatting — write naturally`;
 
-    const systemPrompt = `${botConfig.knowledge_base || "You are a helpful assistant."}${productKnowledge ? "\n\n" + productKnowledge : ""}
+    // --- RAG: Retrieve relevant chunks ---
+    let ragContext = "";
+    const lastUserMessage = messages[messages.length - 1]?.content || "";
+    try {
+      const ragResponse = await fetch(
+        `${Deno.env.get("SUPABASE_URL")}/functions/v1/rag-search`,
+        {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            query: lastUserMessage,
+            chatbot_id: botConfig.id,
+            match_count: 5,
+            match_threshold: 0.5,
+          }),
+        }
+      );
+      if (ragResponse.ok) {
+        const ragData = await ragResponse.json();
+        if (ragData.chunks?.length > 0) {
+          ragContext = "\n\n--- RELEVANT KNOWLEDGE BASE CONTEXT ---\n" +
+            ragData.chunks.map((c: any, i: number) =>
+              `[Source ${i + 1} (relevance: ${(c.similarity * 100).toFixed(0)}%)]\n${c.content}`
+            ).join("\n\n") +
+            "\n--- END CONTEXT ---\n\nIMPORTANT: Use the above context to answer the user's question accurately. If the context contains the answer, use it. If not, use your general knowledge base instructions.";
+        }
+      }
+    } catch (ragErr) {
+      console.error("RAG search error (non-blocking):", ragErr);
+    }
+
+    const systemPrompt = `${botConfig.knowledge_base || "You are a helpful assistant."}${productKnowledge ? "\n\n" + productKnowledge : ""}${ragContext}
 
 IMPORTANT INSTRUCTIONS:
 - Be concise, helpful, and professional${languageInstruction}${fallbackInstruction}${productInstruction}${formattingInstruction}`;
