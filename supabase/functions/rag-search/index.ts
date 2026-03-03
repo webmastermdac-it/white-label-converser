@@ -18,29 +18,24 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
-    // Check if there are any ready chunks for this chatbot
     const { count } = await supabase
       .from("knowledge_chunks")
       .select("id", { count: "exact", head: true })
       .eq("chatbot_id", chatbot_id);
 
     if (!count || count === 0) {
-      return new Response(
-        JSON.stringify({ chunks: [], has_rag: false }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" } },
-      );
+      return jsonResp({ chunks: [], has_rag: false });
     }
 
-    // Generate query embedding
-    const embedding = await generateQueryEmbedding(query);
+    // Read AI settings for provider
+    const { data: aiSettings } = await supabase.from("ai_settings").select("*").limit(1).single();
+    const provider = aiSettings?.embedding_provider || "openai";
+
+    const embedding = await generateQueryEmbedding(query, provider);
     if (!embedding) {
-      return new Response(
-        JSON.stringify({ chunks: [], has_rag: true, error: "Embedding generation failed" }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" } },
-      );
+      return jsonResp({ chunks: [], has_rag: true, error: "Embedding generation failed" });
     }
 
-    // Similarity search via RPC
     const embeddingStr = `[${embedding.join(",")}]`;
     const { data: chunks, error } = await supabase.rpc("match_chunks", {
       _chatbot_id: chatbot_id,
@@ -49,50 +44,27 @@ serve(async (req) => {
       _match_threshold: match_threshold,
     });
 
-    if (error) {
-      console.error("match_chunks error:", error);
-      throw new Error(`Search failed: ${error.message}`);
-    }
+    if (error) throw new Error(`Search failed: ${error.message}`);
 
-    return new Response(
-      JSON.stringify({ chunks: chunks || [], has_rag: true }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" } },
-    );
+    return jsonResp({ chunks: chunks || [], has_rag: true });
   } catch (error: any) {
     console.error("rag-search error:", error);
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-    );
+    return jsonResp({ error: error.message }, 500);
   }
 });
 
-async function generateQueryEmbedding(text: string): Promise<number[] | null> {
+function jsonResp(data: any, status = 200) {
+  return new Response(JSON.stringify(data), {
+    status,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+}
+
+async function generateQueryEmbedding(text: string, provider: string): Promise<number[] | null> {
   const OPENAI_KEY = Deno.env.get("OPENAI_API_KEY");
   const LOVABLE_KEY = Deno.env.get("LOVABLE_API_KEY");
 
-  // Try OpenAI
-  if (OPENAI_KEY) {
-    try {
-      const res = await fetch("https://api.openai.com/v1/embeddings", {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${OPENAI_KEY}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ model: "text-embedding-3-small", input: text }),
-      });
-      if (res.ok) {
-        const data = await res.json();
-        return data.data[0].embedding;
-      }
-    } catch (e) {
-      console.error("OpenAI embedding error:", e);
-    }
-  }
-
-  // Try Lovable AI
-  if (LOVABLE_KEY) {
+  if (provider === "gemini" && LOVABLE_KEY) {
     try {
       const res = await fetch("https://ai.gateway.lovable.dev/v1/embeddings", {
         method: "POST",
@@ -100,15 +72,56 @@ async function generateQueryEmbedding(text: string): Promise<number[] | null> {
           "Authorization": `Bearer ${LOVABLE_KEY}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ model: "text-embedding-3-small", input: text }),
+        body: JSON.stringify({ model: "text-embedding-004", input: text }),
       });
       if (res.ok) {
         const data = await res.json();
         return data.data[0].embedding;
       }
-      console.error("Lovable embedding error:", res.status);
+      console.error("Gemini embedding error:", res.status);
     } catch (e) {
-      console.error("Lovable embedding error:", e);
+      console.error("Gemini embedding error:", e);
+    }
+  }
+
+  if (provider === "openai") {
+    if (OPENAI_KEY) {
+      try {
+        const res = await fetch("https://api.openai.com/v1/embeddings", {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${OPENAI_KEY}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ model: "text-embedding-3-small", input: text }),
+        });
+        if (res.ok) {
+          const data = await res.json();
+          return data.data[0].embedding;
+        }
+      } catch (e) {
+        console.error("OpenAI embedding error:", e);
+      }
+    }
+
+    // Fallback to Lovable AI gateway
+    if (LOVABLE_KEY) {
+      try {
+        const res = await fetch("https://ai.gateway.lovable.dev/v1/embeddings", {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${LOVABLE_KEY}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ model: "text-embedding-3-small", input: text }),
+        });
+        if (res.ok) {
+          const data = await res.json();
+          return data.data[0].embedding;
+        }
+      } catch (e) {
+        console.error("Lovable embedding error:", e);
+      }
     }
   }
 

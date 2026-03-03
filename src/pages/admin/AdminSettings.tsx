@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Key, Save, Mail, Upload, Palette, X } from "lucide-react";
+import AIConfigSection from "@/components/admin/AIConfigSection";
 
 const AdminSettings = () => {
   const { toast } = useToast();
@@ -221,12 +222,7 @@ const AdminSettings = () => {
         </div>
       </div>
 
-      <div className="glass rounded-xl p-6 max-w-lg">
-        <h2 className="font-semibold text-foreground text-sm mb-3">{t("aiModel")}</h2>
-        <p className="text-sm text-muted-foreground">
-          The platform uses <span className="text-primary font-medium">Lovable AI (Gemini 3 Flash Preview)</span> by default.
-        </p>
-      </div>
+      <AIConfigSection />
     </div>
   );
 };
