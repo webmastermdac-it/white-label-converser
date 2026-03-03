@@ -20,12 +20,14 @@ function RAGInfoTooltip({ isIt }: { isIt: boolean }) {
   };
 
   return (
-    <span className="relative inline-block">
+    <span
+      className="relative inline-block"
+      onMouseEnter={handleOpen}
+      onMouseLeave={handleClose}
+    >
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        onMouseEnter={handleOpen}
-        onMouseLeave={handleClose}
         className="w-4 h-4 rounded-full bg-muted hover:bg-muted/80 flex items-center justify-center transition-colors cursor-pointer"
         aria-label="Info RAG"
       >
@@ -35,10 +37,10 @@ function RAGInfoTooltip({ isIt }: { isIt: boolean }) {
         <div
           onMouseEnter={handleOpen}
           onMouseLeave={handleClose}
-          className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 w-[260px] rounded-lg border border-white/10 pointer-events-auto"
-          style={{ zIndex: 9999, background: '#1a1a1a', opacity: 1, padding: '12px 14px', animation: 'fadeInUp 200ms ease-out forwards' }}
+          className="absolute left-1/2 -translate-x-1/2 w-[260px] rounded-lg border border-white/10 pointer-events-auto shadow-2xl"
+          style={{ zIndex: 9999, background: '#1a1a1a', opacity: 1, padding: '12px 14px', bottom: 'calc(100% + 12px)' }}
         >
-          <div className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-l-[6px] border-r-[6px] border-t-[6px] border-l-transparent border-r-transparent border-t-[#1a1a1a]" />
+          <div className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-l-[6px] border-r-[6px] border-t-[6px] border-l-transparent border-r-transparent" style={{ borderTopColor: '#1a1a1a' }} />
           <p className="text-white text-xs leading-relaxed mb-2">
             {isIt
               ? "La Ricerca Avanzata (RAG) permette al tuo chatbot di consultare documenti, PDF e knowledge base in tempo reale per rispondere con precisione alle domande dei tuoi clienti."
