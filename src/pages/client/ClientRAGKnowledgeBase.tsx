@@ -15,7 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 import {
   Loader2, Upload, Globe, HelpCircle, FileText, Trash2,
   RefreshCw, CheckCircle2, XCircle, Clock, Plus, Database,
-  Search, Map, Send, AlertTriangle, GripVertical, X, Lock
+  Search, Map, Send, AlertTriangle, GripVertical, X, Lock, BrainCircuit
 } from "lucide-react";
 
 interface KBSource {
@@ -43,7 +43,7 @@ const ClientRAGKnowledgeBase = () => {
   const { clientId } = useAuth();
   const { lang } = useLanguage();
   const { toast } = useToast();
-  const { canUploadDocs, canUseKBWizard, maxFaqs } = usePlanConfig();
+  const { canUploadDocs, canUseKBWizard, maxFaqs, config: planConfig } = usePlanConfig();
   const [upgradeOpen, setUpgradeOpen] = useState(false);
   const [upgradeRequiredPlan, setUpgradeRequiredPlan] = useState<"starter" | "pro">("starter");
   const [sources, setSources] = useState<KBSource[]>([]);
@@ -70,6 +70,7 @@ const ClientRAGKnowledgeBase = () => {
   const [searching, setSearching] = useState(false);
 
   const t = (it: string, en: string) => lang === "it" ? it : en;
+  const isFree = planConfig?.plan_name === "free";
 
   const showUpgrade = (plan: "starter" | "pro" = "starter") => {
     setUpgradeRequiredPlan(plan);
@@ -119,9 +120,9 @@ const ClientRAGKnowledgeBase = () => {
     }
   };
 
-  // --- File upload (supports multiple) ---
+  // --- File upload ---
   const uploadFiles = async (files: FileList | File[]) => {
-    if (!chatbotId) return;
+    if (!chatbotId || isFree) { showUpgrade("starter"); return; }
     const allowed = ["pdf", "docx", "doc", "txt", "md", "csv", "xlsx"];
     const fileArr = Array.from(files);
     const valid = fileArr.filter(f => {
@@ -172,11 +173,13 @@ const ClientRAGKnowledgeBase = () => {
   const handleDragOver = (e: React.DragEvent) => { e.preventDefault(); e.stopPropagation(); };
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault(); e.stopPropagation(); setDragging(false);
+    if (isFree) { showUpgrade("starter"); return; }
     if (e.dataTransfer.files.length) uploadFiles(e.dataTransfer.files);
   };
 
   // --- URL ---
   const handleAddUrl = async () => {
+    if (isFree) { showUpgrade("starter"); return; }
     if (!urlInput.trim() || !chatbotId) return;
     setUploading(true);
     try {
@@ -197,10 +200,10 @@ const ClientRAGKnowledgeBase = () => {
 
   // --- Sitemap ---
   const handleAddSitemap = async () => {
+    if (isFree) { showUpgrade("starter"); return; }
     if (!sitemapInput.trim() || !chatbotId) return;
     setUploading(true);
     try {
-      // Fetch sitemap and extract URLs
       const sitemapUrl = sitemapInput.startsWith("http") ? sitemapInput : `https://${sitemapInput}`;
       const res = await fetch(sitemapUrl);
       const text = await res.text();
@@ -236,6 +239,7 @@ const ClientRAGKnowledgeBase = () => {
     setFaqItems(prev => prev.map((item, i) => i === idx ? { ...item, [field]: val } : item));
   };
   const handleSaveFaqs = async () => {
+    if (isFree) { showUpgrade("starter"); return; }
     const validFaqs = faqItems.filter(f => f.q.trim() && f.a.trim());
     if (!validFaqs.length || !chatbotId) return;
     setUploading(true);
@@ -259,6 +263,7 @@ const ClientRAGKnowledgeBase = () => {
 
   // --- Free text ---
   const handleAddFreeText = async () => {
+    if (isFree) { showUpgrade("starter"); return; }
     if (!freeText.trim() || !chatbotId) return;
     setUploading(true);
     try {
@@ -289,6 +294,7 @@ const ClientRAGKnowledgeBase = () => {
   };
 
   const handleReprocess = async (source: KBSource) => {
+    if (isFree) { showUpgrade("starter"); return; }
     await supabase.from("knowledge_base" as any).update({ status: "processing" } as any).eq("id", source.id);
     fetchData();
     processSource(source.id);
@@ -297,6 +303,7 @@ const ClientRAGKnowledgeBase = () => {
 
   // --- Search test ---
   const handleSearchTest = async () => {
+    if (isFree) { showUpgrade("starter"); return; }
     if (!searchQuery.trim() || !chatbotId) return;
     setSearching(true);
     setSearchResults([]);
@@ -327,6 +334,71 @@ const ClientRAGKnowledgeBase = () => {
     md: FileText, csv: FileText, xlsx: FileText, url: Globe, faq: HelpCircle,
   };
 
+  // ─── FREE PLAN: Full locked state ───
+  if (isFree) {
+    return (
+      <div className="p-4 md:p-6 space-y-6 animate-fade-in-up">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground" style={{ fontFamily: "Syne, sans-serif" }}>
+            {t("Knowledge Base RAG", "RAG Knowledge Base")}
+          </h1>
+          <p className="text-muted-foreground text-sm mt-1">
+            {t("Gestisci le fonti di conoscenza del tuo chatbot con ricerca semantica avanzata",
+              "Manage your chatbot's knowledge sources with advanced semantic search")}
+          </p>
+        </div>
+
+        {/* Locked overlay card */}
+        <div className="relative rounded-xl border border-border overflow-hidden">
+          {/* Blurred background content to show what they're missing */}
+          <div className="opacity-[0.15] pointer-events-none select-none p-6 space-y-4">
+            <div className="grid grid-cols-3 gap-4">
+              {[1, 2, 3].map(i => (
+                <div key={i} className="glass rounded-xl p-4 h-20 bg-secondary" />
+              ))}
+            </div>
+            <div className="glass rounded-xl p-5 h-48 bg-secondary" />
+            <div className="glass rounded-xl p-5 h-32 bg-secondary" />
+          </div>
+
+          {/* Lock overlay */}
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-background/60 backdrop-blur-[2px]">
+            <div className="w-16 h-16 rounded-full bg-amber-500/10 flex items-center justify-center mb-4">
+              <Lock className="w-8 h-8 text-amber-500" />
+            </div>
+            <h2 className="text-lg font-bold text-foreground mb-2">
+              {t("🔒 Funzionalità Premium", "🔒 Premium Feature")}
+            </h2>
+            <p className="text-sm text-muted-foreground text-center max-w-md mb-6 px-4">
+              {t(
+                "La Ricerca Avanzata (RAG) e il caricamento documenti sono disponibili dal piano Starter a €49/mese. Fai upgrade per addestrare il tuo chatbot sui tuoi documenti aziendali.",
+                "Advanced Search (RAG) and document upload are available on the Starter plan at €49/month. Upgrade to train your chatbot on your business documents."
+              )}
+            </p>
+            <div className="flex flex-col gap-2 w-full max-w-xs px-4">
+              <Button
+                className="w-full bg-amber-500 hover:bg-amber-600 text-white border-0"
+                onClick={() => showUpgrade("starter")}
+              >
+                {t("Fai Upgrade a Starter →", "Upgrade to Starter →")}
+              </Button>
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => showUpgrade("starter")}
+              >
+                {t("Scopri tutti i piani →", "See all plans →")}
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        <UpgradeModal open={upgradeOpen} onClose={() => setUpgradeOpen(false)} requiredPlan={upgradeRequiredPlan} variant="rag" />
+      </div>
+    );
+  }
+
+  // ─── STARTER / PRO: Full access ───
   return (
     <div className="p-4 md:p-6 space-y-6 animate-fade-in-up">
       {/* Header */}
@@ -388,7 +460,7 @@ const ClientRAGKnowledgeBase = () => {
             <TabsTrigger value="text" className="gap-1.5 text-xs"><FileText className="w-3.5 h-3.5" /> {t("Testo", "Text")}</TabsTrigger>
           </TabsList>
 
-          {/* FILE TAB - Drag & Drop */}
+          {/* FILE TAB */}
           <TabsContent value="file" className="mt-0">
             {!canUploadDocs ? (
               <div className="border-2 border-dashed rounded-xl p-8 text-center border-border">
@@ -487,7 +559,7 @@ const ClientRAGKnowledgeBase = () => {
             </div>
           </TabsContent>
 
-          {/* FAQ TAB - Inline editor */}
+          {/* FAQ TAB */}
           <TabsContent value="faq" className="mt-0 space-y-3">
             <p className="text-xs text-muted-foreground">
               {t("Aggiungi domande e risposte frequenti. Puoi aggiungere più FAQ contemporaneamente.",
@@ -683,7 +755,7 @@ const ClientRAGKnowledgeBase = () => {
           </div>
         )}
       </div>
-      <UpgradeModal open={upgradeOpen} onClose={() => setUpgradeOpen(false)} requiredPlan={upgradeRequiredPlan} />
+      <UpgradeModal open={upgradeOpen} onClose={() => setUpgradeOpen(false)} requiredPlan={upgradeRequiredPlan} variant="rag" />
     </div>
   );
 };

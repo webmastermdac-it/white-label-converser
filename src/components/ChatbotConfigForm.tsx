@@ -8,9 +8,10 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Save, Bot, Palette, MessageSquare, Zap, Mail, Star, SendHorizonal } from "lucide-react";
+import { Loader2, Save, Bot, Palette, MessageSquare, Zap, Mail, Star, SendHorizonal, Lock, FileText, BrainCircuit, Plug } from "lucide-react";
 import KnowledgeBaseWizard from "@/components/knowledge-base/KnowledgeBaseWizard";
 import { useLanguage } from "@/hooks/useLanguage";
+import { UpgradeModal } from "@/components/UpgradeModal";
 
 interface Config {
   id?: string;
@@ -66,7 +67,7 @@ const POSITIONS = ["bottom-right", "bottom-left"];
 const ChatbotConfigForm: React.FC<ChatbotConfigFormProps> = ({ clientId, onSaved }) => {
   const { toast } = useToast();
   const { role } = useAuth();
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const { canUseKBWizard, canUseCalendly, config: planConfig } = usePlanConfig();
   const [config, setConfig] = useState<Config>(defaultConfig);
   const [loading, setLoading] = useState(true);
@@ -160,6 +161,8 @@ const ChatbotConfigForm: React.FC<ChatbotConfigFormProps> = ({ clientId, onSaved
   const set = (key: keyof Config, value: any) => setConfig((prev) => ({ ...prev, [key]: value }));
 
   const isProOrAdmin = canUseKBWizard;
+  const isFree = planConfig?.plan_name === "free";
+  const [upgradeOpen, setUpgradeOpen] = useState(false);
 
   const sections = [
     { id: "identity", label: t("identity"), icon: Bot },
@@ -167,6 +170,11 @@ const ChatbotConfigForm: React.FC<ChatbotConfigFormProps> = ({ clientId, onSaved
     { id: "messages", label: t("chatMessages"), icon: MessageSquare },
     { id: "fallback", label: t("fallbackAndLeads"), icon: Zap },
     { id: "notifications", label: t("notifications"), icon: Mail },
+    ...(isFree ? [
+      { id: "locked-docs", label: lang === "it" ? "Documenti & KB" : "Documents & KB", icon: FileText, locked: true },
+      { id: "locked-rag", label: "RAG", icon: BrainCircuit, locked: true },
+      { id: "locked-integrations", label: lang === "it" ? "Integrazioni" : "Integrations", icon: Plug, locked: true },
+    ] : []),
   ];
 
   if (loading) {
@@ -181,20 +189,25 @@ const ChatbotConfigForm: React.FC<ChatbotConfigFormProps> = ({ clientId, onSaved
     <div className="space-y-6">
       {/* Section Tabs */}
       <div className="flex gap-2 flex-wrap overflow-x-auto -mx-1 px-1 pb-1">
-        {sections.map((s) => (
-          <button
-            key={s.id}
-            onClick={() => setActiveSection(s.id)}
-            className={`flex items-center gap-2 px-3 md:px-4 py-2.5 md:py-2 rounded-lg text-sm font-medium transition-all duration-150 min-h-[44px] whitespace-nowrap ${
-              activeSection === s.id
-                ? "bg-primary/15 text-primary border border-primary/30"
-                : "bg-secondary text-muted-foreground hover:text-foreground hover:bg-secondary/80"
-            }`}
-          >
-            <s.icon className="w-4 h-4 md:w-3.5 md:h-3.5" />
-            <span className="hidden sm:inline">{s.label}</span>
-          </button>
-        ))}
+        {sections.map((s) => {
+          const isLocked = (s as any).locked;
+          return (
+            <button
+              key={s.id}
+              onClick={() => isLocked ? setUpgradeOpen(true) : setActiveSection(s.id)}
+              className={`flex items-center gap-2 px-3 md:px-4 py-2.5 md:py-2 rounded-lg text-sm font-medium transition-all duration-150 min-h-[44px] whitespace-nowrap ${
+                isLocked
+                  ? "bg-secondary/50 text-muted-foreground/40 cursor-pointer"
+                  : activeSection === s.id
+                    ? "bg-primary/15 text-primary border border-primary/30"
+                    : "bg-secondary text-muted-foreground hover:text-foreground hover:bg-secondary/80"
+              }`}
+            >
+              {isLocked ? <Lock className="w-3.5 h-3.5" /> : <s.icon className="w-4 h-4 md:w-3.5 md:h-3.5" />}
+              <span className="hidden sm:inline">{s.label}</span>
+            </button>
+          );
+        })}
       </div>
 
       {/* Identity */}
@@ -507,6 +520,8 @@ const ChatbotConfigForm: React.FC<ChatbotConfigFormProps> = ({ clientId, onSaved
           {t("saveConfig")}
         </Button>
       </div>
+
+      <UpgradeModal open={upgradeOpen} onClose={() => setUpgradeOpen(false)} requiredPlan="starter" variant="rag" />
     </div>
   );
 };

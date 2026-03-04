@@ -25,6 +25,29 @@ serve(async (req) => {
       .single();
     if (srcErr || !source) throw new Error("Source not found");
 
+    // --- Plan check: block Free plan ---
+    const { data: botConfig } = await supabase
+      .from("chatbot_configs")
+      .select("client_id")
+      .eq("id", source.chatbot_id)
+      .single();
+
+    if (botConfig) {
+      const { data: client } = await supabase
+        .from("clients")
+        .select("plan")
+        .eq("id", botConfig.client_id)
+        .single();
+
+      if (client?.plan === "free") {
+        await supabase.from("knowledge_base").update({
+          status: "error",
+          error_message: "Upgrade required. RAG is not available on the Free plan.",
+        }).eq("id", knowledge_base_id);
+        return jsonResponse({ error: "Upgrade required. RAG is not available on the Free plan." }, 403);
+      }
+    }
+
     await supabase.from("knowledge_base").update({ status: "processing", error_message: null }).eq("id", knowledge_base_id);
 
     const OPENAI_KEY = Deno.env.get("OPENAI_API_KEY");
