@@ -1,64 +1,13 @@
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/hooks/useLanguage";
 import { usePlan } from "@/hooks/usePlan";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Check, Loader2, Lock, Info } from "lucide-react";
+import { Check, Loader2, Lock } from "lucide-react";
 
-function RAGInfoTooltip({ isIt }: { isIt: boolean }) {
-  const [open, setOpen] = useState(false);
-  const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const handleOpen = () => {
-    if (closeTimer.current) { clearTimeout(closeTimer.current); closeTimer.current = null; }
-    setOpen(true);
-  };
-  const handleClose = () => {
-    closeTimer.current = setTimeout(() => setOpen(false), 300);
-  };
-
-  return (
-    <span
-      className="relative inline-block"
-      onMouseEnter={handleOpen}
-      onMouseLeave={handleClose}
-    >
-      <button
-        type="button"
-        onClick={() => setOpen((v) => !v)}
-        className="w-4 h-4 rounded-full bg-muted hover:bg-muted/80 flex items-center justify-center transition-colors cursor-pointer"
-        aria-label="Info RAG"
-      >
-        <Info className="w-2.5 h-2.5 text-muted-foreground" />
-      </button>
-      {open && (
-        <div
-          onMouseEnter={handleOpen}
-          onMouseLeave={handleClose}
-          className="absolute left-1/2 -translate-x-1/2 w-[260px] rounded-lg border border-white/10 pointer-events-auto shadow-2xl"
-          style={{ zIndex: 9999, background: '#1a1a1a', opacity: 1, padding: '12px 14px', bottom: 'calc(100% + 12px)' }}
-        >
-          <div className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-l-[6px] border-r-[6px] border-t-[6px] border-l-transparent border-r-transparent" style={{ borderTopColor: '#1a1a1a' }} />
-          <p className="text-white text-xs leading-relaxed mb-2">
-            {isIt
-              ? "La Ricerca Avanzata (RAG) permette al tuo chatbot di consultare documenti, PDF e knowledge base in tempo reale per rispondere con precisione alle domande dei tuoi clienti."
-              : "Advanced Search (RAG) allows your chatbot to consult documents, PDFs, and knowledge bases in real time to answer your customers' questions with precision."}
-          </p>
-          <a
-            href="https://chatbot.your-genius.com/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-amber-400 hover:text-amber-300 font-medium transition-colors text-xs"
-          >
-            {isIt ? "Scopri di più →" : "Learn more →"}
-          </a>
-        </div>
-      )}
-    </span>
-  );
-}
+// RAGInfoTooltip removed — replaced with inline description
 
 const ClientUpgrade = () => {
   const { clientId } = useAuth();
@@ -241,13 +190,13 @@ const ClientUpgrade = () => {
 
               {/* RAG Section */}
               <div className={`mt-auto pt-4 border-t ${plan.rag === "highlighted" ? "border-primary/30" : "border-border"}`}>
-                <div className="flex items-center gap-1.5 mb-2">
+                <div className="mb-2">
                   <span className={`text-xs font-semibold uppercase tracking-wider ${
                     plan.rag === "locked" ? "text-muted-foreground/50" : plan.rag === "highlighted" ? "text-primary" : "text-primary/70"
                   }`}>
                     🔍 {isIt ? "Ricerca Avanzata (RAG)" : "Advanced Search (RAG)"}
                   </span>
-                  <RAGInfoTooltip isIt={isIt} />
+                  <p style={{ fontSize: '11px', color: '#888888', marginTop: '2px' }}>{isIt ? "Addestra il chatbot sui tuoi documenti e PDF" : "Train your chatbot on your documents and PDFs"}</p>
                 </div>
                 {plan.rag === "locked" ? (
                   <div className="flex items-center gap-2 text-muted-foreground/50 text-sm">
