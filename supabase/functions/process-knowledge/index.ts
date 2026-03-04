@@ -143,20 +143,20 @@ async function extractFileText(supabase: any, filePath: string | null, fileType:
   const { data: fileData, error } = await supabase.storage.from("kb-documents").download(filePath);
   if (error || !fileData) throw new Error(`Download failed: ${error?.message}`);
 
+  const arrayBuf = await fileData.arrayBuffer();
+  const uint8 = new Uint8Array(arrayBuf);
+
   if (fileType === "pdf") {
     const pdfParse = (await import("npm:pdf-parse@1.1.1")).default;
-    const buffer = Buffer.from(await fileData.arrayBuffer());
-    return (await pdfParse(buffer)).text || "";
+    return (await pdfParse(uint8)).text || "";
   } else if (fileType === "docx" || fileType === "doc") {
     const mammoth = await import("npm:mammoth@1.8.0");
-    const buffer = Buffer.from(await fileData.arrayBuffer());
-    return (await mammoth.extractRawText({ buffer })).value || "";
+    return (await mammoth.extractRawText({ buffer: uint8 })).value || "";
   } else if (fileType === "csv") {
-    return await fileData.text();
+    return new TextDecoder().decode(uint8);
   } else if (fileType === "xlsx") {
     const XLSX = await import("npm:xlsx@0.18.5");
-    const buffer = Buffer.from(await fileData.arrayBuffer());
-    const workbook = XLSX.read(buffer, { type: "buffer" });
+    const workbook = XLSX.read(uint8, { type: "array" });
     return XLSX.utils.sheet_to_csv(workbook.Sheets[workbook.SheetNames[0]]);
   }
   return await fileData.text();
