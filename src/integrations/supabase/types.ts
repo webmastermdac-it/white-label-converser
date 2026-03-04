@@ -530,6 +530,7 @@ export type Database = {
         Row: {
           advanced_analytics: boolean
           calendly_integration: boolean
+          chat_model: string
           doc_upload: boolean
           ecommerce_integration: boolean
           id: string
@@ -549,6 +550,7 @@ export type Database = {
         Insert: {
           advanced_analytics?: boolean
           calendly_integration?: boolean
+          chat_model?: string
           doc_upload?: boolean
           ecommerce_integration?: boolean
           id?: string
@@ -568,6 +570,7 @@ export type Database = {
         Update: {
           advanced_analytics?: boolean
           calendly_integration?: boolean
+          chat_model?: string
           doc_upload?: boolean
           ecommerce_integration?: boolean
           id?: string
