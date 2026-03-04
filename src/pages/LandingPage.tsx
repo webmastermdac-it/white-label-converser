@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { useLanguage } from "@/hooks/useLanguage";
 import { Button } from "@/components/ui/button";
-import { Play, Star, Menu, X, Check, Loader2, ArrowRight, Users, GraduationCap, BookOpen, Bot, ClipboardList, CalendarCheck, Palette, Globe, BarChart3, ShoppingCart, Lock, Info } from "lucide-react";
+import { Play, Star, Menu, X, Check, Loader2, ArrowRight, Users, GraduationCap, BookOpen, Bot, ClipboardList, CalendarCheck, Palette, Globe, BarChart3, ShoppingCart, Lock } from "lucide-react";
 import geniusLogo from "@/assets/genius.png";
 import genieHero from "@/assets/genie-mascot-new.png";
 import { supabase } from "@/integrations/supabase/client";
@@ -111,59 +111,7 @@ function FeatureGrid({ t }: { t: (en: string, it: string) => string }) {
   );
 }
 
-function RAGTooltip({ t }: { t: (en: string, it: string) => string }) {
-  const [open, setOpen] = useState(false);
-  const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const handleOpen = () => {
-    if (closeTimer.current) { clearTimeout(closeTimer.current); closeTimer.current = null; }
-    setOpen(true);
-  };
-  const handleClose = () => {
-    closeTimer.current = setTimeout(() => setOpen(false), 300);
-  };
-
-  return (
-    <span
-      className="relative inline-block"
-      onMouseEnter={handleOpen}
-      onMouseLeave={handleClose}
-    >
-      <button
-        type="button"
-        onClick={() => setOpen((v) => !v)}
-        className="w-4 h-4 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors cursor-pointer"
-        aria-label="Info RAG"
-      >
-        <Info className="w-2.5 h-2.5 text-white/50" />
-      </button>
-      {open && (
-        <div
-          onMouseEnter={handleOpen}
-          onMouseLeave={handleClose}
-          className="absolute left-1/2 -translate-x-1/2 w-[260px] rounded-lg border border-white/10 pointer-events-auto shadow-2xl"
-          style={{ zIndex: 9999, background: '#1a1a1a', opacity: 1, padding: '12px 14px', bottom: 'calc(100% + 12px)' }}
-        >
-          <div className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-l-[6px] border-r-[6px] border-t-[6px] border-l-transparent border-r-transparent" style={{ borderTopColor: '#1a1a1a' }} />
-          <p className="text-white text-xs leading-relaxed mb-2">
-            {t(
-              "Advanced Search (RAG) allows your chatbot to consult documents, PDFs, and knowledge bases in real time to answer your customers' questions with precision.",
-              "La Ricerca Avanzata (RAG) permette al tuo chatbot di consultare documenti, PDF e knowledge base in tempo reale per rispondere con precisione alle domande dei tuoi clienti."
-            )}
-          </p>
-          <a
-            href="https://chatbot.your-genius.com/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-amber-400 hover:text-amber-300 font-medium transition-colors text-xs"
-          >
-            {t("Learn more →", "Scopri di più →")}
-          </a>
-        </div>
-      )}
-    </span>
-  );
-}
+// RAGTooltip removed — replaced with inline description
 
 function PricingGrid({ yearly, t }: { yearly: boolean; t: (en: string, it: string) => string }) {
   const gridRef = useRef<HTMLDivElement>(null);
@@ -229,9 +177,9 @@ function PricingGrid({ yearly, t }: { yearly: boolean; t: (en: string, it: strin
         </ul>
         {/* RAG Section */}
         <div className="mt-auto pt-4 border-t border-white/10">
-          <div className="flex items-center gap-1.5 mb-2">
+          <div className="mb-2">
             <span className="text-xs font-semibold text-white/30 uppercase tracking-wider">🔍 {t("Advanced Search (RAG)", "Ricerca Avanzata (RAG)")}</span>
-            <RAGTooltip t={t} />
+            <p style={{ fontSize: '11px', color: '#888888', marginTop: '2px' }}>{t("Train your chatbot on your documents and PDFs", "Addestra il chatbot sui tuoi documenti e PDF")}</p>
           </div>
           <div className="flex items-center gap-2 text-white/30 text-sm">
             <Lock className="w-4 h-4 shrink-0" />
@@ -285,9 +233,9 @@ function PricingGrid({ yearly, t }: { yearly: boolean; t: (en: string, it: strin
         </ul>
         {/* RAG Section */}
         <div className="mt-auto pt-4 border-t border-white/10">
-          <div className="flex items-center gap-1.5 mb-2">
+          <div className="mb-2">
             <span className="text-xs font-semibold text-[#F5A623]/70 uppercase tracking-wider">🔍 {t("Advanced Search (RAG)", "Ricerca Avanzata (RAG)")}</span>
-            <RAGTooltip t={t} />
+            <p style={{ fontSize: '11px', color: '#888888', marginTop: '2px' }}>{t("Train your chatbot on your documents and PDFs", "Addestra il chatbot sui tuoi documenti e PDF")}</p>
           </div>
           <div className="flex items-center gap-2 text-[#F5A623] text-sm">
             <Check className="w-4 h-4 shrink-0" />
@@ -335,9 +283,9 @@ function PricingGrid({ yearly, t }: { yearly: boolean; t: (en: string, it: strin
         </ul>
         {/* RAG Section */}
         <div className="mt-auto pt-4 border-t border-[#F5A623]/30">
-          <div className="flex items-center gap-1.5 mb-2">
+          <div className="mb-2">
             <span className="text-xs font-semibold text-[#F5A623] uppercase tracking-wider">🔍 {t("Advanced Search (RAG)", "Ricerca Avanzata (RAG)")}</span>
-            <RAGTooltip t={t} />
+            <p style={{ fontSize: '11px', color: '#888888', marginTop: '2px' }}>{t("Train your chatbot on your documents and PDFs", "Addestra il chatbot sui tuoi documenti e PDF")}</p>
           </div>
           <div className="flex items-center gap-2 text-[#F5A623] text-sm font-medium">
             <Check className="w-4 h-4 shrink-0" />
