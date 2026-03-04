@@ -98,9 +98,15 @@ const ClientUpgrade = () => {
         "1 chatbot",
         isIt ? "50 conversazioni/mese" : "50 conversations/month",
         isIt ? "10 lead/mese" : "10 leads/month",
-        isIt ? "Knowledge base base" : "Basic knowledge base",
+        isIt ? "Prompt di sistema (tono e ruolo del bot)" : "System prompt (tone & bot role)",
+        isIt ? "Testo libero per istruzioni base" : "Free text for basic instructions",
+        isIt ? "5 FAQ manuali" : "5 manual FAQs",
         isIt ? "Supporto email" : "Email support",
-        isIt ? "❌ Nessuna integrazione ecommerce" : "❌ No ecommerce integration",
+      ],
+      lockedFeatures: [
+        isIt ? "Upload PDF/Word" : "PDF/Word upload",
+        isIt ? "Ricerca Avanzata RAG" : "Advanced Search RAG",
+        isIt ? "Integrazioni ecommerce" : "Ecommerce integrations",
       ],
       rag: "locked" as const,
       brandingFooter: "Free Chatbot Genius",
@@ -113,10 +119,17 @@ const ClientUpgrade = () => {
         "1 chatbot",
         isIt ? "500 conversazioni/mese" : "500 conversations/month",
         isIt ? "Lead illimitati" : "Unlimited leads",
-        isIt ? "Upload documenti PDF/Word" : "PDF/Word document upload",
-        isIt ? "Template per settore" : "Sector templates",
+        isIt ? "Prompt di sistema avanzato" : "Advanced system prompt",
+        isIt ? "FAQ illimitate" : "Unlimited FAQs",
+        isIt ? "Upload PDF/Word" : "PDF/Word upload",
+        isIt ? "Template di settore" : "Industry templates",
         isIt ? "Supporto prioritario" : "Priority support",
+        isIt ? "🔍 Ricerca Avanzata (RAG)" : "🔍 Advanced Search (RAG)",
         isIt ? "🛒 Feed XML/CSV (sync giornaliero)" : "🛒 XML/CSV Feed (daily sync)",
+      ],
+      lockedFeatures: [
+        isIt ? "Chatbot multipli" : "Multiple chatbots",
+        isIt ? "Analytics avanzati" : "Advanced analytics",
       ],
       rag: "included" as const,
       brandingFooter: "Chatbot Genius",
@@ -130,11 +143,14 @@ const ClientUpgrade = () => {
         isIt ? "Chatbot illimitati" : "Unlimited chatbots",
         isIt ? "Conversazioni illimitate" : "Unlimited conversations",
         isIt ? "Lead illimitati" : "Unlimited leads",
-        isIt ? "Tutte le funzionalità Pro" : "All Pro features",
-        isIt ? "Analytics avanzate" : "Advanced analytics",
+        isIt ? "Tutte le funzionalità Starter" : "All Starter features",
+        isIt ? "🔍 Ricerca Avanzata (RAG) — in evidenza" : "🔍 Advanced Search (RAG) — highlighted",
+        isIt ? "Analytics avanzati" : "Advanced analytics",
         isIt ? "Supporto dedicato" : "Dedicated support",
         isIt ? "🛒 Ecommerce completo (WooCommerce, Shopify, PrestaShop, API + webhook real-time)" : "🛒 Full ecommerce (WooCommerce, Shopify, PrestaShop, API + real-time webhooks)",
+        isIt ? "White label completo" : "Complete white label",
       ],
+      lockedFeatures: [],
       rag: "highlighted" as const,
       brandingFooter: "Chatbot Genius",
     },
@@ -213,6 +229,12 @@ const ClientUpgrade = () => {
                   <li key={i} className="flex items-start gap-2 text-muted-foreground">
                     <Check className="w-4 h-4 text-primary shrink-0 mt-0.5" />
                     {f}
+                  </li>
+                ))}
+                {plan.lockedFeatures.map((f, i) => (
+                  <li key={`lock-${i}`} className="flex items-start gap-2 text-muted-foreground/40">
+                    <Lock className="w-4 h-4 shrink-0 mt-0.5" />
+                    🔒 {f}
                   </li>
                 ))}
               </ul>

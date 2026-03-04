@@ -536,6 +536,7 @@ export type Database = {
           knowledge_base_wizard: boolean
           max_chatbots: number
           max_conversations_month: number
+          max_faqs: number
           max_leads_month: number
           plan_name: string
           price_monthly: number
@@ -554,6 +555,7 @@ export type Database = {
           knowledge_base_wizard?: boolean
           max_chatbots?: number
           max_conversations_month?: number
+          max_faqs?: number
           max_leads_month?: number
           plan_name: string
           price_monthly?: number
@@ -572,6 +574,7 @@ export type Database = {
           knowledge_base_wizard?: boolean
           max_chatbots?: number
           max_conversations_month?: number
+          max_faqs?: number
           max_leads_month?: number
           plan_name?: string
           price_monthly?: number

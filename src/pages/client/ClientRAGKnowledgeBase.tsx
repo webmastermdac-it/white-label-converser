@@ -2,6 +2,8 @@ import { useEffect, useState, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/hooks/useLanguage";
+import { usePlanConfig } from "@/hooks/usePlanConfig";
+import { UpgradeModal } from "@/components/UpgradeModal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -13,7 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 import {
   Loader2, Upload, Globe, HelpCircle, FileText, Trash2,
   RefreshCw, CheckCircle2, XCircle, Clock, Plus, Database,
-  Search, Map, Send, AlertTriangle, GripVertical, X
+  Search, Map, Send, AlertTriangle, GripVertical, X, Lock
 } from "lucide-react";
 
 interface KBSource {
@@ -41,6 +43,9 @@ const ClientRAGKnowledgeBase = () => {
   const { clientId } = useAuth();
   const { lang } = useLanguage();
   const { toast } = useToast();
+  const { canUploadDocs, canUseKBWizard, maxFaqs } = usePlanConfig();
+  const [upgradeOpen, setUpgradeOpen] = useState(false);
+  const [upgradeRequiredPlan, setUpgradeRequiredPlan] = useState<"starter" | "pro">("starter");
   const [sources, setSources] = useState<KBSource[]>([]);
   const [chatbotId, setChatbotId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -65,6 +70,15 @@ const ClientRAGKnowledgeBase = () => {
   const [searching, setSearching] = useState(false);
 
   const t = (it: string, en: string) => lang === "it" ? it : en;
+
+  const showUpgrade = (plan: "starter" | "pro" = "starter") => {
+    setUpgradeRequiredPlan(plan);
+    setUpgradeOpen(true);
+  };
+
+  // Count existing FAQ sources
+  const existingFaqCount = sources.filter(s => s.type === "faq").length;
+  const faqLimitReached = maxFaqs !== -1 && existingFaqCount >= maxFaqs;
 
   const fetchData = useCallback(async () => {
     if (!clientId) return;
@@ -376,6 +390,17 @@ const ClientRAGKnowledgeBase = () => {
 
           {/* FILE TAB - Drag & Drop */}
           <TabsContent value="file" className="mt-0">
+            {!canUploadDocs ? (
+              <div className="border-2 border-dashed rounded-xl p-8 text-center border-border">
+                <Lock className="w-8 h-8 text-muted-foreground/40 mx-auto mb-3" />
+                <p className="text-sm text-muted-foreground mb-3">
+                  {t("L'upload di documenti è disponibile dal piano Starter.", "Document upload is available on the Starter plan.")}
+                </p>
+                <Button variant="outline" size="sm" onClick={() => showUpgrade("starter")}>
+                  {t("Fai Upgrade →", "Upgrade →")}
+                </Button>
+              </div>
+            ) : (
             <div
               ref={dropRef}
               onDragEnter={handleDragEnter}
@@ -418,6 +443,7 @@ const ClientRAGKnowledgeBase = () => {
                 </div>
               )}
             </div>
+            )}
           </TabsContent>
 
           {/* URL TAB */}
@@ -495,9 +521,17 @@ const ClientRAGKnowledgeBase = () => {
                 </div>
               ))}
             </div>
+            {faqLimitReached && (
+              <p className="text-xs text-amber-500 flex items-center gap-1">
+                <AlertTriangle className="w-3.5 h-3.5" />
+                {t(`Limite di ${maxFaqs} FAQ raggiunto. Fai upgrade per sbloccare FAQ illimitate.`,
+                  `Limit of ${maxFaqs} FAQs reached. Upgrade to unlock unlimited FAQs.`)}
+              </p>
+            )}
             <div className="flex gap-2">
-              <Button variant="outline" size="sm" onClick={addFaqRow} className="gap-1.5 border-border text-foreground">
-                <Plus className="w-3.5 h-3.5" /> {t("Altra FAQ", "Add FAQ")}
+              <Button variant="outline" size="sm" onClick={faqLimitReached ? () => showUpgrade("starter") : addFaqRow} className="gap-1.5 border-border text-foreground">
+                {faqLimitReached ? <Lock className="w-3.5 h-3.5" /> : <Plus className="w-3.5 h-3.5" />}
+                {t("Altra FAQ", "Add FAQ")}
               </Button>
               <Button size="sm" onClick={handleSaveFaqs}
                 disabled={uploading || !faqItems.some(f => f.q.trim() && f.a.trim())} className="gap-1.5 ml-auto">
@@ -649,6 +683,7 @@ const ClientRAGKnowledgeBase = () => {
           </div>
         )}
       </div>
+      <UpgradeModal open={upgradeOpen} onClose={() => setUpgradeOpen(false)} requiredPlan={upgradeRequiredPlan} />
     </div>
   );
 };
