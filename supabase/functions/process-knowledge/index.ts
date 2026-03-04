@@ -27,9 +27,10 @@ serve(async (req) => {
 
     await supabase.from("knowledge_base").update({ status: "processing", error_message: null }).eq("id", knowledge_base_id);
 
-    // Read AI settings for provider
-    const { data: aiSettings } = await supabase.from("ai_settings").select("*").limit(1).single();
-    const embeddingProvider = aiSettings?.embedding_provider || "openai";
+    const OPENAI_KEY = Deno.env.get("OPENAI_API_KEY");
+    if (!OPENAI_KEY) {
+      throw new Error("OPENAI_API_KEY not configured. Please add it in settings.");
+    }
 
     let rawText = "";
 
@@ -42,7 +43,7 @@ serve(async (req) => {
     }
 
     if (!rawText.trim()) {
-      await supabase.from("knowledge_base").update({ status: "error", error_message: "No text extracted" }).eq("id", knowledge_base_id);
+      await supabase.from("knowledge_base").update({ status: "error", error_message: "Nessun testo estratto dal documento" }).eq("id", knowledge_base_id);
       return jsonResponse({ error: "No text extracted" }, 400);
     }
 
@@ -52,16 +53,7 @@ serve(async (req) => {
       url: source.source_url || undefined,
     });
 
-    // Generate embeddings based on provider
-    const OPENAI_KEY = Deno.env.get("OPENAI_API_KEY");
-    const LOVABLE_KEY = Deno.env.get("LOVABLE_API_KEY");
-
-    const embeddings = await generateEmbeddings(
-      chunks.map(c => c.content),
-      embeddingProvider,
-      OPENAI_KEY,
-      LOVABLE_KEY,
-    );
+    const embeddings = await generateEmbeddings(chunks.map(c => c.content), OPENAI_KEY);
 
     await supabase.from("knowledge_chunks").delete().eq("knowledge_base_id", knowledge_base_id);
 
@@ -91,16 +83,17 @@ serve(async (req) => {
     return jsonResponse({ success: true, chunk_count: chunks.length });
   } catch (error: any) {
     console.error("process-knowledge error:", error);
+    const userMessage = "Errore nel processare il documento. Riprova o contatta il supporto.";
     try {
       const { knowledge_base_id } = await req.clone().json();
       if (knowledge_base_id) {
         await supabase.from("knowledge_base").update({
           status: "error",
-          error_message: error.message?.slice(0, 500),
+          error_message: userMessage,
         }).eq("id", knowledge_base_id);
       }
     } catch { }
-    return jsonResponse({ error: error.message }, 500);
+    return jsonResponse({ error: userMessage, detail: error.message }, 500);
   }
 });
 
@@ -133,7 +126,7 @@ async function scrapeUrl(url: string | null): Promise<string> {
   text = text.replace(/<(p|div|h[1-6]|li|br|tr)[^>]*>/gi, "\n");
   text = text.replace(/<[^>]+>/g, " ");
   text = text.replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">")
-    .replace(/&quot;/g, '\"').replace(/&#39;/g, "'").replace(/&nbsp;/g, " ");
+    .replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&nbsp;/g, " ");
   text = text.split("\n").map(l => l.trim()).filter(Boolean).join("\n");
   return text.slice(0, 100000);
 }
@@ -206,78 +199,42 @@ function chunkText(text: string, maxTokens: number, overlap: number, baseMeta: R
   return chunks;
 }
 
-async function generateEmbeddings(
-  texts: string[],
-  provider: string,
-  openaiKey?: string,
-  lovableKey?: string,
-): Promise<(number[] | null)[]> {
+async function generateEmbeddings(texts: string[], openaiKey: string): Promise<(number[] | null)[]> {
   const batchSize = 100;
   const allEmbeddings: (number[] | null)[] = [];
   for (let i = 0; i < texts.length; i += batchSize) {
     const batch = texts.slice(i, i + batchSize);
-    const embeddings = await embedBatch(batch, provider, openaiKey, lovableKey);
+    const embeddings = await embedBatch(batch, openaiKey);
     allEmbeddings.push(...embeddings);
   }
   return allEmbeddings;
 }
 
-async function embedBatch(
-  texts: string[],
-  provider: string,
-  openaiKey?: string,
-  lovableKey?: string,
-  retries = 3,
-): Promise<(number[] | null)[]> {
+async function embedBatch(texts: string[], openaiKey: string, retries = 3): Promise<(number[] | null)[]> {
   for (let attempt = 0; attempt < retries; attempt++) {
     try {
-      if (provider === "gemini" && lovableKey) {
-        // Use Lovable AI Gateway with Gemini embedding model
-        const response = await fetch("https://ai.gateway.lovable.dev/v1/embeddings", {
-          method: "POST",
-          headers: {
-            "Authorization": `Bearer ${lovableKey}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            model: "text-embedding-004",
-            input: texts,
-          }),
-        });
-        if (response.ok) {
-          const data = await response.json();
-          return data.data.map((d: any) => d.embedding);
-        }
-        if (response.status !== 429) {
-          const errText = await response.text();
-          console.error("Gemini embedding error:", response.status, errText);
-          throw new Error(`Gemini embedding error: ${response.status}`);
-        }
-      } else if (provider === "openai") {
-        // Try OpenAI
-        if (openaiKey) {
-          const response = await fetch("https://api.openai.com/v1/embeddings", {
-            method: "POST",
-            headers: {
-              "Authorization": `Bearer ${openaiKey}`,
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              model: "text-embedding-3-small",
-              input: texts,
-            }),
-          });
-          if (response.ok) {
-            const data = await response.json();
-            return data.data.map((d: any) => d.embedding);
-          }
-          if (response.status !== 429) throw new Error(`OpenAI API error: ${response.status}`);
-        }
-
-        // No fallback to Lovable AI gateway for embeddings (not supported)
+      const response = await fetch("https://api.openai.com/v1/embeddings", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${openaiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "text-embedding-3-small",
+          input: texts,
+        }),
+      });
+      if (response.ok) {
+        const data = await response.json();
+        return data.data.map((d: any) => d.embedding);
       }
-
-      throw new Error("No embedding API available or all failed");
+      const errText = await response.text();
+      console.error("OpenAI embedding error:", response.status, errText);
+      if (response.status === 429) {
+        await new Promise(r => setTimeout(r, Math.pow(2, attempt) * 1000));
+        continue;
+      }
+      throw new Error(`OpenAI embedding error: ${response.status} - ${errText.slice(0, 200)}`);
     } catch (error) {
       if (attempt < retries - 1) {
         await new Promise(r => setTimeout(r, Math.pow(2, attempt) * 1000));
