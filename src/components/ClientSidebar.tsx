@@ -6,7 +6,7 @@ import { usePlanConfig } from "@/hooks/usePlanConfig";
 import { Button } from "@/components/ui/button";
 import {
   LayoutDashboard, MessageSquare, Settings, Code2,
-  ChevronLeft, ChevronRight, Bot, LogOut, Inbox, PlayCircle, Globe, ArrowUpCircle, BarChart3, Store, BrainCircuit
+  ChevronLeft, ChevronRight, Bot, LogOut, Inbox, PlayCircle, Globe, ArrowUpCircle, BarChart3, Store, BrainCircuit, Lock
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import ThemeSelector from "@/components/ThemeSelector";
@@ -15,7 +15,8 @@ const ClientSidebar = () => {
   const [collapsed, setCollapsed] = useState(false);
   const { user, signOut } = useAuth();
   const { lang, setLang, t } = useLanguage();
-  const { canUseEcommerce } = usePlanConfig();
+  const { canUseEcommerce, config: planConfig } = usePlanConfig();
+  const isFree = planConfig?.plan_name === "free";
   const navigate = useNavigate();
 
   const clientNav = [
@@ -23,7 +24,7 @@ const ClientSidebar = () => {
     { label: t("leads"), href: "/dashboard/leads", icon: Inbox },
     { label: t("chatHistory"), href: "/dashboard/chats", icon: MessageSquare },
     { label: t("botSettings"), href: "/dashboard/settings", icon: Settings },
-    { label: "Knowledge Base", href: "/dashboard/knowledge-base", icon: BrainCircuit },
+    { label: "Knowledge Base", href: "/dashboard/knowledge-base", icon: isFree ? Lock : BrainCircuit, locked: isFree },
     { label: t("testChatbot"), href: "/dashboard/preview", icon: PlayCircle },
     { label: t("embedCode"), href: "/dashboard/embed", icon: Code2 },
     { label: "Analytics", href: "/dashboard/analytics", icon: BarChart3 },
@@ -69,10 +70,11 @@ const ClientSidebar = () => {
           <NavLink
             key={item.href}
             to={item.href}
-            end={item.end}
+            end={(item as any).end}
             className={({ isActive }) =>
               cn(
                 "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150",
+                (item as any).locked && "opacity-40",
                 isActive
                   ? "nav-item-active"
                   : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-foreground"

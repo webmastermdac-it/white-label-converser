@@ -18,6 +18,25 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
+    // --- Plan check: block Free plan ---
+    const { data: botConfig } = await supabase
+      .from("chatbot_configs")
+      .select("client_id")
+      .eq("id", chatbot_id)
+      .single();
+
+    if (botConfig) {
+      const { data: client } = await supabase
+        .from("clients")
+        .select("plan")
+        .eq("id", botConfig.client_id)
+        .single();
+
+      if (client?.plan === "free") {
+        return jsonResp({ error: "Upgrade required. RAG is not available on the Free plan." }, 403);
+      }
+    }
+
     const { count } = await supabase
       .from("knowledge_chunks")
       .select("id", { count: "exact", head: true })
