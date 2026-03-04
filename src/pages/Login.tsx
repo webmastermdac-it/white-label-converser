@@ -40,7 +40,7 @@ const Login = () => {
 
       <div className="relative w-full max-w-md">
         <div className="text-center mb-8 animate-fade-in-up">
-          <div className="inline-flex items-center justify-center w-16 h-16 max-w-[120px] rounded-2xl gradient-primary mb-4 glow-primary">
+          <div className="inline-flex items-center justify-center w-16 h-16 max-w-[120px] rounded-2xl bg-white shadow-lg mb-4">
             <img src="/images/genius-icon.png" alt="Genius" className="w-10 h-10" />
           </div>
           <h1 className="text-3xl font-bold text-foreground" style={{ fontFamily: 'Syne, sans-serif' }}>
