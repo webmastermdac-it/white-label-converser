@@ -17,6 +17,7 @@ interface PlanRow {
   max_chatbots: number;
   max_conversations_month: number;
   max_leads_month: number;
+  max_faqs: number;
   remove_branding: boolean;
   doc_upload: boolean;
   sector_templates: boolean;
@@ -62,6 +63,7 @@ const ENFORCED_FEATURES = new Set([
   "max_chatbots",
   "max_conversations_month",
   "max_leads_month",
+  "max_faqs",
 ]);
 
 const AdminPlans = () => {
@@ -112,6 +114,7 @@ const AdminPlans = () => {
         max_chatbots: current.max_chatbots,
         max_conversations_month: current.max_conversations_month,
         max_leads_month: current.max_leads_month,
+        max_faqs: current.max_faqs,
         remove_branding: current.remove_branding,
         doc_upload: current.doc_upload,
         sector_templates: current.sector_templates,
@@ -203,6 +206,7 @@ const AdminPlans = () => {
                     { key: "max_chatbots" as keyof PlanRow, label: "Chatbot max" },
                     { key: "max_conversations_month" as keyof PlanRow, label: "Conv/mese" },
                     { key: "max_leads_month" as keyof PlanRow, label: "Lead/mese" },
+                    { key: "max_faqs" as keyof PlanRow, label: "FAQ max" },
                   ].map(({ key, label }) => (
                     <div key={key} className="flex items-center justify-between gap-3">
                       <Label className="text-sm text-foreground">{label}</Label>

@@ -10,6 +10,7 @@ export interface PlanConfig {
   max_chatbots: number;
   max_conversations_month: number;
   max_leads_month: number;
+  max_faqs: number;
   remove_branding: boolean;
   doc_upload: boolean;
   sector_templates: boolean;
@@ -28,6 +29,7 @@ const DEFAULTS: PlanConfig = {
   max_chatbots: 1,
   max_conversations_month: 50,
   max_leads_month: 10,
+  max_faqs: 5,
   remove_branding: false,
   doc_upload: false,
   sector_templates: false,
@@ -74,6 +76,7 @@ export function usePlanConfig() {
     maxChatbots: isAdmin ? -1 : config.max_chatbots,
     maxConversationsMonth: isAdmin ? -1 : config.max_conversations_month,
     maxLeadsMonth: isAdmin ? -1 : config.max_leads_month,
+    maxFaqs: isAdmin ? -1 : config.max_faqs,
     // Feature flags
     canRemoveBranding: isAdmin || config.remove_branding,
     canUploadDocs: isAdmin || config.doc_upload,

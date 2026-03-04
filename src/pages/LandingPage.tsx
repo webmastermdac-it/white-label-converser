@@ -212,11 +212,19 @@ function PricingGrid({ yearly, t }: { yearly: boolean; t: (en: string, it: strin
             t("1 chatbot", "1 chatbot"),
             t("50 conversations/month", "50 conversazioni/mese"),
             t("10 leads/month", "10 lead/mese"),
-            t("Basic knowledge base", "Knowledge base base"),
+            t("System prompt (tone & bot role)", "Prompt di sistema (tono e ruolo del bot)"),
+            t("Free text for basic instructions", "Testo libero per istruzioni base"),
+            t("5 manual FAQs", "5 FAQ manuali"),
             t("Email support", "Supporto email"),
-            t("❌ No ecommerce integration", "❌ Nessuna integrazione ecommerce"),
           ].map((item, i) => (
             <li key={i} className="flex items-start gap-2"><Check className="w-4 h-4 text-[#F5A623] shrink-0 mt-0.5" />{item}</li>
+          ))}
+          {[
+            t("🔒 PDF/Word upload", "🔒 Upload PDF/Word"),
+            t("🔒 Advanced Search RAG", "🔒 Ricerca Avanzata RAG"),
+            t("🔒 Ecommerce integrations", "🔒 Integrazioni ecommerce"),
+          ].map((item, i) => (
+            <li key={`lock-${i}`} className="flex items-start gap-2 text-white/30"><Lock className="w-4 h-4 shrink-0 mt-0.5" />{item}</li>
           ))}
         </ul>
         {/* RAG Section */}
@@ -258,12 +266,21 @@ function PricingGrid({ yearly, t }: { yearly: boolean; t: (en: string, it: strin
             t("1 chatbot", "1 chatbot"),
             t("500 conversations/month", "500 conversazioni/mese"),
             t("Unlimited leads", "Lead illimitati"),
+            t("Advanced system prompt", "Prompt di sistema avanzato"),
+            t("Unlimited FAQs", "FAQ illimitate"),
             t("PDF/Word upload", "Upload PDF/Word"),
             t("Industry templates", "Template di settore"),
             t("Priority support", "Supporto prioritario"),
+            t("🔍 Advanced Search (RAG)", "🔍 Ricerca Avanzata (RAG)"),
             t("🛒 XML/CSV Feed (daily sync)", "🛒 Feed XML/CSV (sync giornaliero)"),
           ].map((item, i) => (
             <li key={i} className="flex items-start gap-2"><Check className="w-4 h-4 text-[#F5A623] shrink-0 mt-0.5" />{item}</li>
+          ))}
+          {[
+            t("🔒 Multiple chatbots", "🔒 Chatbot multipli"),
+            t("🔒 Advanced analytics", "🔒 Analytics avanzati"),
+          ].map((item, i) => (
+            <li key={`lock-${i}`} className="flex items-start gap-2 text-white/30"><Lock className="w-4 h-4 shrink-0 mt-0.5" />{item}</li>
           ))}
         </ul>
         {/* RAG Section */}
@@ -306,10 +323,12 @@ function PricingGrid({ yearly, t }: { yearly: boolean; t: (en: string, it: strin
             t("Unlimited chatbots", "Chatbot illimitati"),
             t("Unlimited conversations", "Conversazioni illimitate"),
             t("Unlimited leads", "Lead illimitati"),
-            t("All Pro features", "Tutte le funzionalità Pro"),
+            t("All Starter features", "Tutte le funzionalità Starter"),
+            t("🔍 Advanced Search (RAG) — highlighted", "🔍 Ricerca Avanzata (RAG) — in evidenza"),
             t("Advanced analytics", "Analytics avanzati"),
             t("Dedicated support", "Supporto dedicato"),
             t("🛒 Full ecommerce (WooCommerce, Shopify, PrestaShop, API + real-time webhooks)", "🛒 Ecommerce completo (WooCommerce, Shopify, PrestaShop, API + webhook real-time)"),
+            t("Complete white label", "White label completo"),
           ].map((item, i) => (
             <li key={i} className="flex items-start gap-2"><Check className="w-4 h-4 text-[#F5A623] shrink-0 mt-0.5" />{item}</li>
           ))}

@@ -1,0 +1,1 @@
+ALTER TABLE public.plan_configs ADD COLUMN IF NOT EXISTS max_faqs integer NOT NULL DEFAULT -1;
