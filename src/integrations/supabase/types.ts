@@ -14,6 +14,27 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_settings: {
+        Row: {
+          embedding_dimensions: number
+          embedding_provider: string
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          embedding_dimensions?: number
+          embedding_provider?: string
+          id?: string
+          updated_at?: string
+        }
+        Update: {
+          embedding_dimensions?: number
+          embedding_provider?: string
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       brand_settings: {
         Row: {
           app_name: string
