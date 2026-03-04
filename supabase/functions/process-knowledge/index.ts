@@ -274,25 +274,7 @@ async function embedBatch(
           if (response.status !== 429) throw new Error(`OpenAI API error: ${response.status}`);
         }
 
-        // Fallback: Lovable AI gateway with OpenAI model
-        if (lovableKey) {
-          const response = await fetch("https://ai.gateway.lovable.dev/v1/embeddings", {
-            method: "POST",
-            headers: {
-              "Authorization": `Bearer ${lovableKey}`,
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              model: "text-embedding-3-small",
-              input: texts,
-            }),
-          });
-          if (response.ok) {
-            const data = await response.json();
-            return data.data.map((d: any) => d.embedding);
-          }
-          console.error("Lovable AI embedding error:", response.status);
-        }
+        // No fallback to Lovable AI gateway for embeddings (not supported)
       }
 
       throw new Error("No embedding API available or all failed");
