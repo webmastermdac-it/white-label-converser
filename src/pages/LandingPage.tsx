@@ -450,7 +450,7 @@ export default function LandingPage() {
                   {t("Start Free", "Inizia Gratis")} <ArrowRight className="w-4 h-4" />
                 </Button>
               </Link>
-              <Button variant="outline" onClick={() => { scrollTo("how-it-works"); }} className="border-white/20 text-foreground bg-white hover:bg-white/90 h-12 px-8 rounded-full gap-2">
+              <Button variant="outline" onClick={() => { scrollTo("how-it-works"); }} className="border-white/20 bg-white text-gray-900 hover:bg-white/90 h-12 px-8 rounded-full gap-2">
                 <Play className="w-4 h-4" />
                 {t("Watch Demo", "Guarda la Demo")}
               </Button>
