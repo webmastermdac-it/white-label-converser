@@ -170,11 +170,6 @@ const ChatbotConfigForm: React.FC<ChatbotConfigFormProps> = ({ clientId, onSaved
     { id: "messages", label: t("chatMessages"), icon: MessageSquare },
     { id: "fallback", label: t("fallbackAndLeads"), icon: Zap },
     { id: "notifications", label: t("notifications"), icon: Mail },
-    ...(isFree ? [
-      { id: "locked-docs", label: lang === "it" ? "Documenti & KB" : "Documents & KB", icon: FileText, locked: true },
-      { id: "locked-rag", label: "RAG", icon: BrainCircuit, locked: true },
-      { id: "locked-integrations", label: lang === "it" ? "Integrazioni" : "Integrations", icon: Plug, locked: true },
-    ] : []),
   ];
 
   if (loading) {
