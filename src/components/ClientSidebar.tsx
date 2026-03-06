@@ -24,7 +24,7 @@ const ClientSidebar = () => {
     { label: t("leads"), href: "/dashboard/leads", icon: Inbox },
     { label: t("chatHistory"), href: "/dashboard/chats", icon: MessageSquare },
     { label: t("botSettings"), href: "/dashboard/settings", icon: Settings },
-    { label: "Knowledge Base", href: "/dashboard/knowledge-base", icon: isFree ? Lock : BrainCircuit, locked: isFree },
+    { label: "Knowledge Base", href: "/dashboard/knowledge-base", icon: BrainCircuit },
     { label: t("testChatbot"), href: "/dashboard/preview", icon: PlayCircle },
     { label: t("embedCode"), href: "/dashboard/embed", icon: Code2 },
     { label: "Analytics", href: "/dashboard/analytics", icon: BarChart3 },
