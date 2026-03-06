@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Save, Bot, Palette, MessageSquare, Zap, Mail, Star, SendHorizonal, Lock, FileText, BrainCircuit, Plug } from "lucide-react";
-import KnowledgeBaseWizard from "@/components/knowledge-base/KnowledgeBaseWizard";
+import { Link } from "react-router-dom";
 import { useLanguage } from "@/hooks/useLanguage";
 import { UpgradeModal } from "@/components/UpgradeModal";
 
@@ -355,60 +355,61 @@ const ChatbotConfigForm: React.FC<ChatbotConfigFormProps> = ({ clientId, onSaved
               <span className="ml-2 text-xs text-muted-foreground">({t("usedAsSystemPrompt")})</span>
             </Label>
 
-            {isProOrAdmin && config.id ? (
-              <KnowledgeBaseWizard
-                clientId={clientId}
-                configId={config.id}
-                currentKnowledgeBase={config.knowledge_base}
-                plan={planConfig.plan_name}
-                onSave={async (kb) => {
-                  set("knowledge_base", kb);
-                  const { error } = await supabase
-                    .from("chatbot_configs")
-                    .update({ knowledge_base: kb })
-                    .eq("id", config.id);
-                  if (error) {
-                    toast({ title: t("Error saving. Please try again.", "Errore durante il salvataggio. Riprova."), description: error.message, variant: "destructive" });
-                  } else {
-                    toast({ title: t("Knowledge Base saved successfully!", "Knowledge Base salvata con successo!") });
-                  }
-                }}
-              />
-            ) : (
-              <>
-                {/* Upgrade banner for non-Pro users */}
-                {!isProOrAdmin && (
-                  <div className="flex items-start gap-3 p-4 rounded-xl bg-primary/10 border border-primary/20 mb-3">
-                    <Star className="w-5 h-5 text-primary shrink-0 mt-0.5" />
-                    <div className="flex-1">
-                       <p className="text-sm font-medium text-foreground">
-                        {t("upgradeWizardTitle")}
-                      </p>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {t("upgradeWizardDesc")}
-                      </p>
-                      <a
-                        href="/dashboard/upgrade"
-                        className="inline-block mt-2 text-xs font-medium text-primary hover:underline"
-                      >
-                        {t("upgradeToProLink")}
-                      </a>
-                    </div>
-                  </div>
-                )}
-
-                <Textarea
-                  value={config.knowledge_base}
-                  onChange={(e) => set("knowledge_base", e.target.value)}
-                  placeholder={t("kbPlaceholder")}
-                  rows={14}
-                  className="bg-secondary border-border resize-none font-mono text-sm"
-                />
-                <p className="text-xs text-muted-foreground">
-                  {t("kbHelp")}
-                </p>
-              </>
+            {/* Banner KB avanzata per piani paganti */}
+            {isProOrAdmin && (
+              <div className="flex items-start gap-3 p-4 rounded-xl bg-primary/10 border border-primary/20 mb-3">
+                <BrainCircuit className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-foreground">
+                    {t("Advanced Knowledge Base available", "Knowledge Base avanzata disponibile")}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {t(
+                      "Upload documents, scrape websites and use RAG semantic search from the dedicated page.",
+                      "Carica documenti, analizza siti web e usa la ricerca semantica RAG dalla pagina dedicata."
+                    )}
+                  </p>
+                  <Link
+                    to="/dashboard/knowledge-base"
+                    className="inline-block mt-2 text-xs font-medium text-primary hover:underline"
+                  >
+                    {t("Go to Knowledge Base", "Vai alla Knowledge Base")} →
+                  </Link>
+                </div>
+              </div>
             )}
+
+            {/* Upgrade banner for free users */}
+            {!isProOrAdmin && (
+              <div className="flex items-start gap-3 p-4 rounded-xl bg-primary/10 border border-primary/20 mb-3">
+                <Star className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-foreground">
+                    {t("upgradeWizardTitle")}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {t("upgradeWizardDesc")}
+                  </p>
+                  <a
+                    href="/dashboard/upgrade"
+                    className="inline-block mt-2 text-xs font-medium text-primary hover:underline"
+                  >
+                    {t("upgradeToProLink")}
+                  </a>
+                </div>
+              </div>
+            )}
+
+            <Textarea
+              value={config.knowledge_base}
+              onChange={(e) => set("knowledge_base", e.target.value)}
+              placeholder={t("kbPlaceholder")}
+              rows={14}
+              className="bg-secondary border-border resize-none font-mono text-sm"
+            />
+            <p className="text-xs text-muted-foreground">
+              {t("kbHelp")}
+            </p>
           </div>
         </div>
       )}
