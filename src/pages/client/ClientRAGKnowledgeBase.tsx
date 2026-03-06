@@ -86,7 +86,7 @@ const ClientRAGKnowledgeBase = () => {
     if (!clientId) return;
     const { data: config } = await supabase
       .from("chatbot_configs")
-      .select("id")
+      .select("id, knowledge_base")
       .eq("client_id", clientId)
       .limit(1)
       .single();
