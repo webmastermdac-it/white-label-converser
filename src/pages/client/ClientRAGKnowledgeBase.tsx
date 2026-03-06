@@ -15,8 +15,9 @@ import { useToast } from "@/hooks/use-toast";
 import {
   Loader2, Upload, Globe, HelpCircle, FileText, Trash2,
   RefreshCw, CheckCircle2, XCircle, Clock, Plus, Database,
-  Search, Map, Send, AlertTriangle, GripVertical, X, Lock, BrainCircuit
+  Search, Map, Send, AlertTriangle, GripVertical, X, Lock, BrainCircuit, Sparkles
 } from "lucide-react";
+import IndustryTemplateSelector from "@/components/knowledge-base/IndustryTemplateSelector";
 
 interface KBSource {
   id: string;
@@ -85,7 +86,7 @@ const ClientRAGKnowledgeBase = () => {
     if (!clientId) return;
     const { data: config } = await supabase
       .from("chatbot_configs")
-      .select("id")
+      .select("id, knowledge_base")
       .eq("client_id", clientId)
       .limit(1)
       .single();
@@ -334,63 +335,119 @@ const ClientRAGKnowledgeBase = () => {
     md: FileText, csv: FileText, xlsx: FileText, url: Globe, faq: HelpCircle,
   };
 
-  // ─── FREE PLAN: Full locked state ───
+  const handleTemplateApply = async (systemPrompt: string) => {
+    if (!chatbotId) return;
+    try {
+      const { error } = await supabase
+        .from("chatbot_configs")
+        .update({ knowledge_base: systemPrompt } as any)
+        .eq("id", chatbotId);
+      if (error) throw error;
+      toast({ title: "✅", description: t("System prompt salvato con successo!", "System prompt saved successfully!") });
+    } catch (err: any) {
+      toast({ title: "Errore", description: err.message, variant: "destructive" });
+    }
+  };
+
+  // ─── FREE PLAN: Template wizard + locked advanced features ───
   if (isFree) {
     return (
       <div className="p-4 md:p-6 space-y-6 animate-fade-in-up">
         <div>
           <h1 className="text-2xl font-bold text-foreground" style={{ fontFamily: "Syne, sans-serif" }}>
-            {t("Knowledge Base RAG", "RAG Knowledge Base")}
+            {t("Knowledge Base", "Knowledge Base")}
           </h1>
           <p className="text-muted-foreground text-sm mt-1">
-            {t("Gestisci le fonti di conoscenza del tuo chatbot con ricerca semantica avanzata",
-              "Manage your chatbot's knowledge sources with advanced semantic search")}
+            {t("Configura le conoscenze del tuo chatbot partendo da un template di settore",
+              "Configure your chatbot's knowledge starting from an industry template")}
           </p>
         </div>
 
-        {/* Locked overlay card */}
-        <div className="relative rounded-xl border border-border overflow-hidden">
-          {/* Blurred background content to show what they're missing */}
-          <div className="opacity-[0.15] pointer-events-none select-none p-6 space-y-4">
-            <div className="grid grid-cols-3 gap-4">
-              {[1, 2, 3].map(i => (
-                <div key={i} className="glass rounded-xl p-4 h-20 bg-secondary" />
-              ))}
-            </div>
-            <div className="glass rounded-xl p-5 h-48 bg-secondary" />
-            <div className="glass rounded-xl p-5 h-32 bg-secondary" />
-          </div>
-
-          {/* Lock overlay */}
-          <div className="absolute inset-0 flex flex-col items-center justify-center bg-background/60 backdrop-blur-[2px]">
-            <div className="w-16 h-16 rounded-full bg-amber-500/10 flex items-center justify-center mb-4">
-              <Lock className="w-8 h-8 text-amber-500" />
-            </div>
-            <h2 className="text-lg font-bold text-foreground mb-2">
-              {t("🔒 Funzionalità Premium", "🔒 Premium Feature")}
+        {/* Step 1: Industry Template (accessible) */}
+        <div className="glass rounded-xl p-5">
+          <div className="flex items-center gap-2 mb-1">
+            <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center text-xs font-bold text-primary-foreground">1</div>
+            <h2 className="text-sm font-semibold text-foreground">
+              {t("Template di settore", "Industry Template")}
             </h2>
-            <p className="text-sm text-muted-foreground text-center max-w-md mb-6 px-4">
-              {t(
-                "La Ricerca Avanzata (RAG) e il caricamento documenti sono disponibili dal piano Starter a €49/mese. Fai upgrade per addestrare il tuo chatbot sui tuoi documenti aziendali.",
-                "Advanced Search (RAG) and document upload are available on the Starter plan at €49/month. Upgrade to train your chatbot on your business documents."
-              )}
-            </p>
-            <div className="flex flex-col gap-2 w-full max-w-xs px-4">
-              <Button
-                className="w-full bg-amber-500 hover:bg-amber-600 text-white border-0"
-                onClick={() => showUpgrade("starter")}
-              >
-                {t("Fai Upgrade a Starter →", "Upgrade to Starter →")}
-              </Button>
-              <Button
-                variant="outline"
-                className="w-full"
-                onClick={() => showUpgrade("starter")}
-              >
-                {t("Scopri tutti i piani →", "See all plans →")}
-              </Button>
-            </div>
+            <Badge variant="secondary" className="text-xs ml-auto">{t("Gratuito", "Free")}</Badge>
           </div>
+          <p className="text-xs text-muted-foreground mb-4 ml-8">
+            {t("Scegli un modello pre-compilato e personalizzalo per la tua attività",
+              "Choose a pre-filled template and customize it for your business")}
+          </p>
+          <IndustryTemplateSelector onApply={handleTemplateApply} />
+        </div>
+
+        {/* Step 2: Documents (locked) */}
+        <div
+          className="glass rounded-xl p-5 opacity-60 cursor-pointer relative overflow-hidden"
+          onClick={() => showUpgrade("starter")}
+        >
+          <div className="flex items-center gap-2">
+            <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center text-xs font-bold text-muted-foreground">2</div>
+            <h2 className="text-sm font-semibold text-muted-foreground">
+              {t("Carica documenti", "Upload Documents")}
+            </h2>
+            <Lock className="w-3.5 h-3.5 text-muted-foreground ml-auto" />
+          </div>
+          <p className="text-xs text-muted-foreground mt-1 ml-8">
+            {t("PDF, DOCX, TXT — disponibile dal piano Starter", "PDF, DOCX, TXT — available on Starter plan")}
+          </p>
+        </div>
+
+        {/* Step 3: Web scraping (locked) */}
+        <div
+          className="glass rounded-xl p-5 opacity-60 cursor-pointer relative overflow-hidden"
+          onClick={() => showUpgrade("starter")}
+        >
+          <div className="flex items-center gap-2">
+            <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center text-xs font-bold text-muted-foreground">3</div>
+            <h2 className="text-sm font-semibold text-muted-foreground">
+              {t("Scraping sito web e sitemap", "Website & Sitemap Scraping")}
+            </h2>
+            <Lock className="w-3.5 h-3.5 text-muted-foreground ml-auto" />
+          </div>
+          <p className="text-xs text-muted-foreground mt-1 ml-8">
+            {t("Importa automaticamente contenuti dal tuo sito — disponibile dal piano Starter",
+              "Automatically import content from your site — available on Starter plan")}
+          </p>
+        </div>
+
+        {/* Step 4: RAG search (locked) */}
+        <div
+          className="glass rounded-xl p-5 opacity-60 cursor-pointer relative overflow-hidden"
+          onClick={() => showUpgrade("starter")}
+        >
+          <div className="flex items-center gap-2">
+            <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center text-xs font-bold text-muted-foreground">4</div>
+            <h2 className="text-sm font-semibold text-muted-foreground">
+              {t("Ricerca semantica RAG", "RAG Semantic Search")}
+            </h2>
+            <Lock className="w-3.5 h-3.5 text-muted-foreground ml-auto" />
+          </div>
+          <p className="text-xs text-muted-foreground mt-1 ml-8">
+            {t("Ricerca avanzata con embedding vettoriali — disponibile dal piano Starter",
+              "Advanced search with vector embeddings — available on Starter plan")}
+          </p>
+        </div>
+
+        {/* Upgrade CTA */}
+        <div className="glass rounded-xl p-5 border-primary/20 text-center">
+          <Sparkles className="w-6 h-6 text-primary mx-auto mb-2" />
+          <p className="text-sm font-medium text-foreground mb-1">
+            {t("Sblocca tutte le funzionalità", "Unlock all features")}
+          </p>
+          <p className="text-xs text-muted-foreground mb-4">
+            {t("Fai upgrade a Starter per caricare documenti, scraping web e ricerca RAG.",
+              "Upgrade to Starter to upload documents, web scraping and RAG search.")}
+          </p>
+          <Button
+            className="gradient-primary text-white border-0 glow-sm"
+            onClick={() => showUpgrade("starter")}
+          >
+            {t("Fai Upgrade →", "Upgrade →")}
+          </Button>
         </div>
 
         <UpgradeModal open={upgradeOpen} onClose={() => setUpgradeOpen(false)} requiredPlan={upgradeRequiredPlan} variant="rag" />
