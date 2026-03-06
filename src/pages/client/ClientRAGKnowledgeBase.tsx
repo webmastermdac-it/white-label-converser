@@ -15,8 +15,9 @@ import { useToast } from "@/hooks/use-toast";
 import {
   Loader2, Upload, Globe, HelpCircle, FileText, Trash2,
   RefreshCw, CheckCircle2, XCircle, Clock, Plus, Database,
-  Search, Map, Send, AlertTriangle, GripVertical, X, Lock, BrainCircuit
+  Search, Map, Send, AlertTriangle, GripVertical, X, Lock, BrainCircuit, Sparkles
 } from "lucide-react";
+import IndustryTemplateSelector from "@/components/knowledge-base/IndustryTemplateSelector";
 
 interface KBSource {
   id: string;
