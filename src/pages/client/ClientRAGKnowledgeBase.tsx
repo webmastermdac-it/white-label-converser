@@ -7,7 +7,7 @@ import { UpgradeModal } from "@/components/UpgradeModal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -15,7 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 import {
   Loader2, Upload, Globe, HelpCircle, FileText, Trash2,
   RefreshCw, CheckCircle2, XCircle, Clock, Plus, Database,
-  Search, Map, Send, AlertTriangle, GripVertical, X, Lock, BrainCircuit, Sparkles
+  Search, Map, Send, AlertTriangle, GripVertical, X, Lock, BrainCircuit, Sparkles, Save, Wand2
 } from "lucide-react";
 import IndustryTemplateSelector from "@/components/knowledge-base/IndustryTemplateSelector";
 
@@ -40,6 +40,9 @@ const statusConfig: Record<string, { icon: any; cls: string; label: string }> = 
   outdated: { icon: RefreshCw, cls: "bg-primary/10 text-primary border-primary/30", label: "Da aggiornare" },
 };
 
+const MAX_FREE_PROMPT_CHARS = 2000;
+const MAX_FREE_FAQS = 5;
+
 const ClientRAGKnowledgeBase = () => {
   const { clientId } = useAuth();
   const { lang } = useLanguage();
@@ -51,6 +54,13 @@ const ClientRAGKnowledgeBase = () => {
   const [chatbotId, setChatbotId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("file");
+
+  // System prompt for free/paid
+  const [systemPrompt, setSystemPrompt] = useState("");
+  const [savingPrompt, setSavingPrompt] = useState(false);
+
+  // Free FAQ
+  const [freeFaqs, setFreeFaqs] = useState<{ q: string; a: string }[]>([]);
 
   // Form states
   const [uploading, setUploading] = useState(false);
@@ -78,7 +88,6 @@ const ClientRAGKnowledgeBase = () => {
     setUpgradeOpen(true);
   };
 
-  // Count existing FAQ sources
   const existingFaqCount = sources.filter(s => s.type === "faq").length;
   const faqLimitReached = maxFaqs !== -1 && existingFaqCount >= maxFaqs;
 
@@ -86,12 +95,19 @@ const ClientRAGKnowledgeBase = () => {
     if (!clientId) return;
     const { data: config } = await supabase
       .from("chatbot_configs")
-      .select("id, knowledge_base")
+      .select("*")
       .eq("client_id", clientId)
       .limit(1)
       .single();
     if (!config) { setLoading(false); return; }
     setChatbotId(config.id);
+    setSystemPrompt(config.knowledge_base || "");
+
+    // Load free FAQs from knowledge_base_sections
+    const sections = config.knowledge_base_sections as any;
+    if (sections?.faqs && Array.isArray(sections.faqs)) {
+      setFreeFaqs(sections.faqs.map((f: any) => ({ q: f.question || "", a: f.answer || "" })));
+    }
 
     const { data } = await supabase
       .from("knowledge_base" as any)
@@ -111,6 +127,27 @@ const ClientRAGKnowledgeBase = () => {
     return () => clearInterval(interval);
   }, [sources, fetchData]);
 
+  // --- Save system prompt + free FAQs ---
+  const saveKnowledgeBase = async () => {
+    if (!chatbotId) return;
+    setSavingPrompt(true);
+    try {
+      const faqsForSections = freeFaqs.filter(f => f.q.trim() || f.a.trim()).map(f => ({ question: f.q, answer: f.a }));
+      const { error } = await supabase
+        .from("chatbot_configs")
+        .update({
+          knowledge_base: systemPrompt,
+          knowledge_base_sections: { faqs: faqsForSections },
+        } as any)
+        .eq("id", chatbotId);
+      if (error) throw error;
+      toast({ title: "✅", description: t("Knowledge base salvata!", "Knowledge base saved!") });
+    } catch (err: any) {
+      toast({ title: "Errore", description: err.message, variant: "destructive" });
+    }
+    setSavingPrompt(false);
+  };
+
   const processSource = async (sourceId: string) => {
     try {
       await supabase.functions.invoke("process-knowledge", {
@@ -123,7 +160,7 @@ const ClientRAGKnowledgeBase = () => {
 
   // --- File upload ---
   const uploadFiles = async (files: FileList | File[]) => {
-    if (!chatbotId || isFree) { showUpgrade("starter"); return; }
+    if (!chatbotId) return;
     const allowed = ["pdf", "docx", "doc", "txt", "md", "csv", "xlsx"];
     const fileArr = Array.from(files);
     const valid = fileArr.filter(f => {
@@ -168,19 +205,16 @@ const ClientRAGKnowledgeBase = () => {
     if (e.target.files) uploadFiles(e.target.files);
   };
 
-  // Drag & drop handlers
   const handleDragEnter = (e: React.DragEvent) => { e.preventDefault(); e.stopPropagation(); setDragging(true); };
   const handleDragLeave = (e: React.DragEvent) => { e.preventDefault(); e.stopPropagation(); setDragging(false); };
   const handleDragOver = (e: React.DragEvent) => { e.preventDefault(); e.stopPropagation(); };
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault(); e.stopPropagation(); setDragging(false);
-    if (isFree) { showUpgrade("starter"); return; }
     if (e.dataTransfer.files.length) uploadFiles(e.dataTransfer.files);
   };
 
   // --- URL ---
   const handleAddUrl = async () => {
-    if (isFree) { showUpgrade("starter"); return; }
     if (!urlInput.trim() || !chatbotId) return;
     setUploading(true);
     try {
@@ -201,7 +235,6 @@ const ClientRAGKnowledgeBase = () => {
 
   // --- Sitemap ---
   const handleAddSitemap = async () => {
-    if (isFree) { showUpgrade("starter"); return; }
     if (!sitemapInput.trim() || !chatbotId) return;
     setUploading(true);
     try {
@@ -233,14 +266,13 @@ const ClientRAGKnowledgeBase = () => {
     } finally { setUploading(false); }
   };
 
-  // --- Inline FAQ ---
+  // --- Inline FAQ (RAG) ---
   const addFaqRow = () => setFaqItems(prev => [...prev, { q: "", a: "" }]);
   const removeFaqRow = (idx: number) => setFaqItems(prev => prev.filter((_, i) => i !== idx));
   const updateFaq = (idx: number, field: "q" | "a", val: string) => {
     setFaqItems(prev => prev.map((item, i) => i === idx ? { ...item, [field]: val } : item));
   };
   const handleSaveFaqs = async () => {
-    if (isFree) { showUpgrade("starter"); return; }
     const validFaqs = faqItems.filter(f => f.q.trim() && f.a.trim());
     if (!validFaqs.length || !chatbotId) return;
     setUploading(true);
@@ -264,7 +296,6 @@ const ClientRAGKnowledgeBase = () => {
 
   // --- Free text ---
   const handleAddFreeText = async () => {
-    if (isFree) { showUpgrade("starter"); return; }
     if (!freeText.trim() || !chatbotId) return;
     setUploading(true);
     try {
@@ -295,7 +326,6 @@ const ClientRAGKnowledgeBase = () => {
   };
 
   const handleReprocess = async (source: KBSource) => {
-    if (isFree) { showUpgrade("starter"); return; }
     await supabase.from("knowledge_base" as any).update({ status: "processing" } as any).eq("id", source.id);
     fetchData();
     processSource(source.id);
@@ -304,7 +334,6 @@ const ClientRAGKnowledgeBase = () => {
 
   // --- Search test ---
   const handleSearchTest = async () => {
-    if (isFree) { showUpgrade("starter"); return; }
     if (!searchQuery.trim() || !chatbotId) return;
     setSearching(true);
     setSearchResults([]);
@@ -322,6 +351,21 @@ const ClientRAGKnowledgeBase = () => {
     } finally { setSearching(false); }
   };
 
+  const handleTemplateApply = async (promptText: string) => {
+    if (!chatbotId) return;
+    try {
+      const { error } = await supabase
+        .from("chatbot_configs")
+        .update({ knowledge_base: promptText } as any)
+        .eq("id", chatbotId);
+      if (error) throw error;
+      setSystemPrompt(promptText);
+      toast({ title: "✅", description: t("System prompt salvato con successo!", "System prompt saved successfully!") });
+    } catch (err: any) {
+      toast({ title: "Errore", description: err.message, variant: "destructive" });
+    }
+  };
+
   const totalChunks = sources.filter(s => s.status === "ready").reduce((sum, s) => sum + s.chunk_count, 0);
   const readySources = sources.filter(s => s.status === "ready").length;
   const processingSources = sources.filter(s => s.status === "processing").length;
@@ -335,119 +379,158 @@ const ClientRAGKnowledgeBase = () => {
     md: FileText, csv: FileText, xlsx: FileText, url: Globe, faq: HelpCircle,
   };
 
-  const handleTemplateApply = async (systemPrompt: string) => {
-    if (!chatbotId) return;
-    try {
-      const { error } = await supabase
-        .from("chatbot_configs")
-        .update({ knowledge_base: systemPrompt } as any)
-        .eq("id", chatbotId);
-      if (error) throw error;
-      toast({ title: "✅", description: t("System prompt salvato con successo!", "System prompt saved successfully!") });
-    } catch (err: any) {
-      toast({ title: "Errore", description: err.message, variant: "destructive" });
-    }
+  // ─── Free FAQ helpers ───
+  const addFreeFaq = () => {
+    if (freeFaqs.length >= MAX_FREE_FAQS) return;
+    setFreeFaqs(prev => [...prev, { q: "", a: "" }]);
+  };
+  const updateFreeFaq = (idx: number, field: "q" | "a", val: string) => {
+    setFreeFaqs(prev => prev.map((item, i) => i === idx ? { ...item, [field]: val } : item));
+  };
+  const removeFreeFaq = (idx: number) => {
+    setFreeFaqs(prev => prev.filter((_, i) => i !== idx));
   };
 
-  // ─── FREE PLAN: Template wizard + locked advanced features ───
+  // ═══════════════════════════════════════════════════
+  // FREE PLAN VIEW
+  // ═══════════════════════════════════════════════════
   if (isFree) {
     return (
       <div className="p-4 md:p-6 space-y-6 animate-fade-in-up">
         <div>
           <h1 className="text-2xl font-bold text-foreground" style={{ fontFamily: "Syne, sans-serif" }}>
-            {t("Knowledge Base", "Knowledge Base")}
+            Knowledge Base
           </h1>
           <p className="text-muted-foreground text-sm mt-1">
-            {t("Configura le conoscenze del tuo chatbot partendo da un template di settore",
-              "Configure your chatbot's knowledge starting from an industry template")}
+            {t("Configura le conoscenze del tuo chatbot", "Configure your chatbot's knowledge")}
           </p>
         </div>
 
-        {/* Step 1: Industry Template (accessible) */}
+        {/* Section A: System Prompt + FAQ */}
+        <div className="glass rounded-xl p-5 space-y-5">
+          <div className="flex items-center gap-2">
+            <BrainCircuit className="w-5 h-5 text-primary" />
+            <h2 className="text-sm font-semibold text-foreground">
+              {t("System Prompt / Istruzioni base", "System Prompt / Base Instructions")}
+            </h2>
+          </div>
+
+          <div className="space-y-2">
+            <Label className="text-xs text-muted-foreground">
+              {t("Scrivi le istruzioni che il bot seguirà per rispondere", "Write the instructions the bot will follow to respond")}
+            </Label>
+            <Textarea
+              value={systemPrompt}
+              onChange={(e) => {
+                if (e.target.value.length <= MAX_FREE_PROMPT_CHARS) {
+                  setSystemPrompt(e.target.value);
+                }
+              }}
+              placeholder={t(
+                "Es: Sei l'assistente di [nome azienda]. Rispondi in modo cordiale...",
+                "E.g.: You are the assistant of [company name]. Reply in a friendly tone..."
+              )}
+              rows={8}
+              className="bg-secondary border-border resize-none font-mono text-sm"
+            />
+            <div className="flex justify-between text-xs text-muted-foreground">
+              <span>{t("Usato come system prompt per il bot", "Used as system prompt for the bot")}</span>
+              <span className={systemPrompt.length >= MAX_FREE_PROMPT_CHARS ? "text-destructive" : ""}>
+                {systemPrompt.length}/{MAX_FREE_PROMPT_CHARS}
+              </span>
+            </div>
+          </div>
+
+          {/* Free FAQ section */}
+          <div className="border-t border-border pt-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <Label className="text-sm font-medium text-foreground">FAQ</Label>
+              <span className="text-xs text-muted-foreground">{freeFaqs.length}/{MAX_FREE_FAQS}</span>
+            </div>
+
+            {freeFaqs.map((faq, idx) => (
+              <div key={idx} className="flex gap-2 items-start group">
+                <div className="flex-1 space-y-1.5">
+                  <Input
+                    placeholder={t("Domanda...", "Question...")}
+                    value={faq.q}
+                    onChange={(e) => updateFreeFaq(idx, "q", e.target.value)}
+                    className="bg-secondary border-border text-sm"
+                  />
+                  <Textarea
+                    placeholder={t("Risposta...", "Answer...")}
+                    value={faq.a}
+                    onChange={(e) => updateFreeFaq(idx, "a", e.target.value)}
+                    rows={2}
+                    className="bg-secondary border-border text-sm resize-none"
+                  />
+                </div>
+                <Button variant="ghost" size="icon" onClick={() => removeFreeFaq(idx)}
+                  className="text-muted-foreground hover:text-destructive mt-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <X className="w-4 h-4" />
+                </Button>
+              </div>
+            ))}
+
+            {freeFaqs.length >= MAX_FREE_FAQS ? (
+              <p className="text-xs text-amber-500 flex items-center gap-1">
+                <AlertTriangle className="w-3.5 h-3.5" />
+                {t(
+                  `Limite piano Free: ${MAX_FREE_FAQS} FAQ. Fai upgrade per aggiungere FAQ illimitate.`,
+                  `Free plan limit: ${MAX_FREE_FAQS} FAQs. Upgrade for unlimited FAQs.`
+                )}
+              </p>
+            ) : (
+              <Button variant="outline" size="sm" onClick={addFreeFaq} className="gap-1.5 border-border text-foreground">
+                <Plus className="w-3.5 h-3.5" />
+                {t("Aggiungi FAQ", "Add FAQ")}
+              </Button>
+            )}
+          </div>
+
+          <Button onClick={saveKnowledgeBase} disabled={savingPrompt} className="gradient-primary text-white border-0 glow-sm w-full h-11">
+            {savingPrompt ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
+            {t("Salva", "Save")}
+          </Button>
+        </div>
+
+        {/* Section B: Template wizard */}
         <div className="glass rounded-xl p-5">
           <div className="flex items-center gap-2 mb-1">
-            <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center text-xs font-bold text-primary-foreground">1</div>
+            <Wand2 className="w-5 h-5 text-primary" />
             <h2 className="text-sm font-semibold text-foreground">
-              {t("Template di settore", "Industry Template")}
+              {t("🧙 Wizard Guidato", "🧙 Guided Wizard")}
             </h2>
             <Badge variant="secondary" className="text-xs ml-auto">{t("Gratuito", "Free")}</Badge>
           </div>
-          <p className="text-xs text-muted-foreground mb-4 ml-8">
-            {t("Scegli un modello pre-compilato e personalizzalo per la tua attività",
-              "Choose a pre-filled template and customize it for your business")}
+          <p className="text-xs text-muted-foreground mb-4">
+            {t("Configura la knowledge base con il wizard passo-passo",
+              "Configure the knowledge base with the step-by-step wizard")}
           </p>
           <IndustryTemplateSelector onApply={handleTemplateApply} />
         </div>
 
-        {/* Step 2: Documents (locked) */}
-        <div
-          className="glass rounded-xl p-5 opacity-60 cursor-pointer relative overflow-hidden"
-          onClick={() => showUpgrade("starter")}
-        >
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center text-xs font-bold text-muted-foreground">2</div>
-            <h2 className="text-sm font-semibold text-muted-foreground">
-              {t("Carica documenti", "Upload Documents")}
-            </h2>
-            <Lock className="w-3.5 h-3.5 text-muted-foreground ml-auto" />
+        {/* Section C: RAG locked */}
+        <div className="glass rounded-xl p-5 border border-border">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center">
+              <Lock className="w-5 h-5 text-muted-foreground" />
+            </div>
+            <div className="flex-1">
+              <h2 className="text-sm font-semibold text-foreground">
+                {t("🔒 Ricerca Avanzata (RAG)", "🔒 Advanced Search (RAG)")}
+              </h2>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                {t(
+                  "Carica PDF, Word, analizza il tuo sito web e usa la ricerca semantica. Disponibile dal piano Starter.",
+                  "Upload PDF, Word, analyze your website and use semantic search. Available on Starter plan."
+                )}
+              </p>
+            </div>
+            <Button variant="outline" size="sm" onClick={() => showUpgrade("starter")} className="shrink-0">
+              Upgrade
+            </Button>
           </div>
-          <p className="text-xs text-muted-foreground mt-1 ml-8">
-            {t("PDF, DOCX, TXT — disponibile dal piano Starter", "PDF, DOCX, TXT — available on Starter plan")}
-          </p>
-        </div>
-
-        {/* Step 3: Web scraping (locked) */}
-        <div
-          className="glass rounded-xl p-5 opacity-60 cursor-pointer relative overflow-hidden"
-          onClick={() => showUpgrade("starter")}
-        >
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center text-xs font-bold text-muted-foreground">3</div>
-            <h2 className="text-sm font-semibold text-muted-foreground">
-              {t("Scraping sito web e sitemap", "Website & Sitemap Scraping")}
-            </h2>
-            <Lock className="w-3.5 h-3.5 text-muted-foreground ml-auto" />
-          </div>
-          <p className="text-xs text-muted-foreground mt-1 ml-8">
-            {t("Importa automaticamente contenuti dal tuo sito — disponibile dal piano Starter",
-              "Automatically import content from your site — available on Starter plan")}
-          </p>
-        </div>
-
-        {/* Step 4: RAG search (locked) */}
-        <div
-          className="glass rounded-xl p-5 opacity-60 cursor-pointer relative overflow-hidden"
-          onClick={() => showUpgrade("starter")}
-        >
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center text-xs font-bold text-muted-foreground">4</div>
-            <h2 className="text-sm font-semibold text-muted-foreground">
-              {t("Ricerca semantica RAG", "RAG Semantic Search")}
-            </h2>
-            <Lock className="w-3.5 h-3.5 text-muted-foreground ml-auto" />
-          </div>
-          <p className="text-xs text-muted-foreground mt-1 ml-8">
-            {t("Ricerca avanzata con embedding vettoriali — disponibile dal piano Starter",
-              "Advanced search with vector embeddings — available on Starter plan")}
-          </p>
-        </div>
-
-        {/* Upgrade CTA */}
-        <div className="glass rounded-xl p-5 border-primary/20 text-center">
-          <Sparkles className="w-6 h-6 text-primary mx-auto mb-2" />
-          <p className="text-sm font-medium text-foreground mb-1">
-            {t("Sblocca tutte le funzionalità", "Unlock all features")}
-          </p>
-          <p className="text-xs text-muted-foreground mb-4">
-            {t("Fai upgrade a Starter per caricare documenti, scraping web e ricerca RAG.",
-              "Upgrade to Starter to upload documents, web scraping and RAG search.")}
-          </p>
-          <Button
-            className="gradient-primary text-white border-0 glow-sm"
-            onClick={() => showUpgrade("starter")}
-          >
-            {t("Fai Upgrade →", "Upgrade →")}
-          </Button>
         </div>
 
         <UpgradeModal open={upgradeOpen} onClose={() => setUpgradeOpen(false)} requiredPlan={upgradeRequiredPlan} variant="rag" />
@@ -455,7 +538,9 @@ const ClientRAGKnowledgeBase = () => {
     );
   }
 
-  // ─── STARTER / PRO: Full access ───
+  // ═══════════════════════════════════════════════════
+  // STARTER / PRO VIEW
+  // ═══════════════════════════════════════════════════
   return (
     <div className="p-4 md:p-6 space-y-6 animate-fade-in-up">
       {/* Header */}
@@ -466,6 +551,15 @@ const ClientRAGKnowledgeBase = () => {
         <p className="text-muted-foreground text-sm mt-1">
           {t("Gestisci le fonti di conoscenza del tuo chatbot con ricerca semantica avanzata",
             "Manage your chatbot's knowledge sources with advanced semantic search")}
+        </p>
+      </div>
+
+      {/* Green info banner */}
+      <div className="flex items-center gap-3 p-4 rounded-xl bg-success/10 border border-success/30">
+        <CheckCircle2 className="w-5 h-5 text-success shrink-0" />
+        <p className="text-sm text-foreground">
+          {t("✅ RAG attivo — il bot usa la ricerca semantica per rispondere con precisione dai tuoi documenti.",
+            "✅ RAG active — the bot uses semantic search to answer precisely from your documents.")}
         </p>
       </div>
 
@@ -501,35 +595,88 @@ const ClientRAGKnowledgeBase = () => {
         </div>
       )}
 
-      {/* Add sources panel */}
-      <div className="glass rounded-xl p-5">
-        <h2 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2">
-          <Plus className="w-4 h-4 text-primary" />
-          {t("Aggiungi fonti di conoscenza", "Add knowledge sources")}
-        </h2>
+      {/* Main Tabs */}
+      <Tabs defaultValue="wizard" className="space-y-4">
+        <TabsList className="grid w-full grid-cols-5">
+          <TabsTrigger value="wizard" className="gap-1.5 text-xs"><Wand2 className="w-3.5 h-3.5" /> {t("Wizard", "Wizard")}</TabsTrigger>
+          <TabsTrigger value="prompt" className="gap-1.5 text-xs"><BrainCircuit className="w-3.5 h-3.5" /> {t("Prompt", "Prompt")}</TabsTrigger>
+          <TabsTrigger value="documents" className="gap-1.5 text-xs"><Upload className="w-3.5 h-3.5" /> {t("Documenti", "Documents")}</TabsTrigger>
+          <TabsTrigger value="web" className="gap-1.5 text-xs"><Globe className="w-3.5 h-3.5" /> {t("Sito Web", "Website")}</TabsTrigger>
+          <TabsTrigger value="sources" className="gap-1.5 text-xs"><Database className="w-3.5 h-3.5" /> {t("Fonti", "Sources")}</TabsTrigger>
+        </TabsList>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-5 mb-4">
-            <TabsTrigger value="file" className="gap-1.5 text-xs"><Upload className="w-3.5 h-3.5" /> File</TabsTrigger>
-            <TabsTrigger value="url" className="gap-1.5 text-xs"><Globe className="w-3.5 h-3.5" /> URL</TabsTrigger>
-            <TabsTrigger value="sitemap" className="gap-1.5 text-xs"><Map className="w-3.5 h-3.5" /> Sitemap</TabsTrigger>
-            <TabsTrigger value="faq" className="gap-1.5 text-xs"><HelpCircle className="w-3.5 h-3.5" /> FAQ</TabsTrigger>
-            <TabsTrigger value="text" className="gap-1.5 text-xs"><FileText className="w-3.5 h-3.5" /> {t("Testo", "Text")}</TabsTrigger>
-          </TabsList>
+        {/* WIZARD TAB */}
+        <TabsContent value="wizard">
+          <div className="glass rounded-xl p-5">
+            <IndustryTemplateSelector onApply={handleTemplateApply} />
+          </div>
+        </TabsContent>
 
-          {/* FILE TAB */}
-          <TabsContent value="file" className="mt-0">
-            {!canUploadDocs ? (
-              <div className="border-2 border-dashed rounded-xl p-8 text-center border-border">
-                <Lock className="w-8 h-8 text-muted-foreground/40 mx-auto mb-3" />
-                <p className="text-sm text-muted-foreground mb-3">
-                  {t("L'upload di documenti è disponibile dal piano Starter.", "Document upload is available on the Starter plan.")}
-                </p>
-                <Button variant="outline" size="sm" onClick={() => showUpgrade("starter")}>
-                  {t("Fai Upgrade →", "Upgrade →")}
-                </Button>
-              </div>
-            ) : (
+        {/* PROMPT TAB */}
+        <TabsContent value="prompt">
+          <div className="glass rounded-xl p-5 space-y-4">
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">{t("System Prompt / Istruzioni", "System Prompt / Instructions")}</Label>
+              <Textarea
+                value={systemPrompt}
+                onChange={(e) => setSystemPrompt(e.target.value)}
+                placeholder={t(
+                  "Es: Sei l'assistente di [nome azienda]. Rispondi in modo cordiale...",
+                  "E.g.: You are the assistant of [company name]. Reply in a friendly tone..."
+                )}
+                rows={12}
+                className="bg-secondary border-border resize-none font-mono text-sm"
+              />
+            </div>
+
+            {/* Inline FAQ manager (unlimited for paid) */}
+            <div className="border-t border-border pt-4 space-y-3">
+              <Label className="text-sm font-medium">FAQ</Label>
+              {freeFaqs.map((faq, idx) => (
+                <div key={idx} className="flex gap-2 items-start group">
+                  <div className="flex-1 space-y-1.5">
+                    <Input
+                      placeholder={t("Domanda...", "Question...")}
+                      value={faq.q}
+                      onChange={(e) => updateFreeFaq(idx, "q", e.target.value)}
+                      className="bg-secondary border-border text-sm"
+                    />
+                    <Textarea
+                      placeholder={t("Risposta...", "Answer...")}
+                      value={faq.a}
+                      onChange={(e) => updateFreeFaq(idx, "a", e.target.value)}
+                      rows={2}
+                      className="bg-secondary border-border text-sm resize-none"
+                    />
+                  </div>
+                  <Button variant="ghost" size="icon" onClick={() => removeFreeFaq(idx)}
+                    className="text-muted-foreground hover:text-destructive mt-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <X className="w-4 h-4" />
+                  </Button>
+                </div>
+              ))}
+              <Button variant="outline" size="sm" onClick={addFreeFaq} className="gap-1.5 border-border text-foreground">
+                <Plus className="w-3.5 h-3.5" />
+                {t("Aggiungi FAQ", "Add FAQ")}
+              </Button>
+            </div>
+
+            <Button onClick={saveKnowledgeBase} disabled={savingPrompt} className="gradient-primary text-white border-0 glow-sm w-full h-11">
+              {savingPrompt ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
+              {t("Salva Knowledge Base", "Save Knowledge Base")}
+            </Button>
+          </div>
+        </TabsContent>
+
+        {/* DOCUMENTS TAB */}
+        <TabsContent value="documents">
+          <div className="glass rounded-xl p-5 space-y-4">
+            <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
+              <Upload className="w-4 h-4 text-primary" />
+              {t("Carica Documenti", "Upload Documents")}
+            </h2>
+
+            {/* File drop zone */}
             <div
               ref={dropRef}
               onDragEnter={handleDragEnter}
@@ -562,7 +709,7 @@ const ClientRAGKnowledgeBase = () => {
                     {t("Trascina i file qui o clicca per selezionare", "Drag files here or click to select")}
                   </p>
                   <p className="text-xs text-muted-foreground mt-1">
-                    PDF, DOCX, TXT, MD, CSV, XLSX · Max 50MB · {t("File multipli supportati", "Multiple files supported")}
+                    PDF, DOCX, TXT, MD, CSV, XLSX · Max 50MB
                   </p>
                 </div>
               </div>
@@ -572,57 +719,50 @@ const ClientRAGKnowledgeBase = () => {
                 </div>
               )}
             </div>
-            )}
-          </TabsContent>
 
-          {/* URL TAB */}
-          <TabsContent value="url" className="mt-0 space-y-3">
-            <p className="text-xs text-muted-foreground">
-              {t("Inserisci l'URL della pagina da importare e scrapare", "Enter the page URL to import and scrape")}
-            </p>
-            <div className="flex gap-2">
-              <Input
-                placeholder="https://example.com/page"
-                value={urlInput}
-                onChange={(e) => setUrlInput(e.target.value)}
-                className="bg-secondary border-border text-sm"
-                onKeyDown={(e) => e.key === "Enter" && handleAddUrl()}
-              />
-              <Button onClick={handleAddUrl} disabled={uploading || !urlInput.trim()} className="gap-1.5 shrink-0">
-                {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Globe className="w-4 h-4" />}
-                {t("Importa", "Import")}
-              </Button>
-            </div>
-          </TabsContent>
-
-          {/* SITEMAP TAB */}
-          <TabsContent value="sitemap" className="mt-0 space-y-3">
-            <p className="text-xs text-muted-foreground">
-              {t("Inserisci l'URL della sitemap XML per importare automaticamente tutte le pagine (max 50)",
-                "Enter the XML sitemap URL to auto-import all pages (max 50)")}
-            </p>
-            <div className="flex gap-2">
-              <Input
-                placeholder="https://example.com/sitemap.xml"
-                value={sitemapInput}
-                onChange={(e) => setSitemapInput(e.target.value)}
-                className="bg-secondary border-border text-sm"
-                onKeyDown={(e) => e.key === "Enter" && handleAddSitemap()}
-              />
-              <Button onClick={handleAddSitemap} disabled={uploading || !sitemapInput.trim()} className="gap-1.5 shrink-0">
-                {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Map className="w-4 h-4" />}
-                {t("Importa sitemap", "Import sitemap")}
-              </Button>
-            </div>
-          </TabsContent>
-
-          {/* FAQ TAB */}
-          <TabsContent value="faq" className="mt-0 space-y-3">
-            <p className="text-xs text-muted-foreground">
-              {t("Aggiungi domande e risposte frequenti. Puoi aggiungere più FAQ contemporaneamente.",
-                "Add frequently asked questions and answers. You can add multiple FAQs at once.")}
-            </p>
+            {/* URL input */}
             <div className="space-y-2">
+              <Label className="text-xs text-muted-foreground">{t("Oppure importa da URL", "Or import from URL")}</Label>
+              <div className="flex gap-2">
+                <Input
+                  placeholder="https://example.com/page"
+                  value={urlInput}
+                  onChange={(e) => setUrlInput(e.target.value)}
+                  className="bg-secondary border-border text-sm"
+                  onKeyDown={(e) => e.key === "Enter" && handleAddUrl()}
+                />
+                <Button onClick={handleAddUrl} disabled={uploading || !urlInput.trim()} className="gap-1.5 shrink-0">
+                  {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Globe className="w-4 h-4" />}
+                  {t("Importa", "Import")}
+                </Button>
+              </div>
+            </div>
+
+            {/* Sitemap */}
+            <div className="space-y-2">
+              <Label className="text-xs text-muted-foreground">{t("Importa da Sitemap XML", "Import from XML Sitemap")}</Label>
+              <div className="flex gap-2">
+                <Input
+                  placeholder="https://example.com/sitemap.xml"
+                  value={sitemapInput}
+                  onChange={(e) => setSitemapInput(e.target.value)}
+                  className="bg-secondary border-border text-sm"
+                  onKeyDown={(e) => e.key === "Enter" && handleAddSitemap()}
+                />
+                <Button onClick={handleAddSitemap} disabled={uploading || !sitemapInput.trim()} className="gap-1.5 shrink-0">
+                  {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Map className="w-4 h-4" />}
+                  {t("Importa", "Import")}
+                </Button>
+              </div>
+            </div>
+
+            {/* FAQ RAG */}
+            <div className="border-t border-border pt-4 space-y-3">
+              <Label className="text-sm font-medium">{t("FAQ (RAG)", "FAQ (RAG)")}</Label>
+              <p className="text-xs text-muted-foreground">
+                {t("Queste FAQ vengono elaborate come fonti RAG con embedding vettoriali.",
+                  "These FAQs are processed as RAG sources with vector embeddings.")}
+              </p>
               {faqItems.map((item, idx) => (
                 <div key={idx} className="flex gap-2 items-start group">
                   <GripVertical className="w-4 h-4 text-muted-foreground/30 mt-2.5 shrink-0" />
@@ -649,169 +789,217 @@ const ClientRAGKnowledgeBase = () => {
                   )}
                 </div>
               ))}
+              {faqLimitReached && (
+                <p className="text-xs text-amber-500 flex items-center gap-1">
+                  <AlertTriangle className="w-3.5 h-3.5" />
+                  {t(`Limite di ${maxFaqs} FAQ raggiunto.`, `Limit of ${maxFaqs} FAQs reached.`)}
+                </p>
+              )}
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" onClick={faqLimitReached ? () => showUpgrade("starter") : addFaqRow} className="gap-1.5 border-border text-foreground">
+                  {faqLimitReached ? <Lock className="w-3.5 h-3.5" /> : <Plus className="w-3.5 h-3.5" />}
+                  {t("Altra FAQ", "Add FAQ")}
+                </Button>
+                <Button size="sm" onClick={handleSaveFaqs}
+                  disabled={uploading || !faqItems.some(f => f.q.trim() && f.a.trim())} className="gap-1.5 ml-auto">
+                  {uploading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
+                  {t("Salva FAQ", "Save FAQs")}
+                </Button>
+              </div>
             </div>
-            {faqLimitReached && (
-              <p className="text-xs text-amber-500 flex items-center gap-1">
-                <AlertTriangle className="w-3.5 h-3.5" />
-                {t(`Limite di ${maxFaqs} FAQ raggiunto. Fai upgrade per sbloccare FAQ illimitate.`,
-                  `Limit of ${maxFaqs} FAQs reached. Upgrade to unlock unlimited FAQs.`)}
-              </p>
-            )}
-            <div className="flex gap-2">
-              <Button variant="outline" size="sm" onClick={faqLimitReached ? () => showUpgrade("starter") : addFaqRow} className="gap-1.5 border-border text-foreground">
-                {faqLimitReached ? <Lock className="w-3.5 h-3.5" /> : <Plus className="w-3.5 h-3.5" />}
-                {t("Altra FAQ", "Add FAQ")}
-              </Button>
-              <Button size="sm" onClick={handleSaveFaqs}
-                disabled={uploading || !faqItems.some(f => f.q.trim() && f.a.trim())} className="gap-1.5 ml-auto">
-                {uploading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
-                {t("Salva FAQ", "Save FAQs")}
+
+            {/* Free text */}
+            <div className="border-t border-border pt-4 space-y-3">
+              <Label className="text-sm font-medium">{t("Testo Libero (RAG)", "Free Text (RAG)")}</Label>
+              <Input
+                placeholder={t("Nome (opzionale)", "Name (optional)")}
+                value={freeTextName}
+                onChange={(e) => setFreeTextName(e.target.value)}
+                className="bg-secondary border-border text-sm"
+              />
+              <Textarea
+                placeholder={t("Incolla qui il testo...", "Paste text here...")}
+                value={freeText}
+                onChange={(e) => setFreeText(e.target.value)}
+                rows={6}
+                className="bg-secondary border-border text-sm resize-none"
+              />
+              <Button onClick={handleAddFreeText} disabled={uploading || !freeText.trim()} className="w-full gap-1.5">
+                {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileText className="w-4 h-4" />}
+                {t("Aggiungi testo", "Add text")}
               </Button>
             </div>
-          </TabsContent>
-
-          {/* TEXT TAB */}
-          <TabsContent value="text" className="mt-0 space-y-3">
-            <Input
-              placeholder={t("Nome (opzionale)", "Name (optional)")}
-              value={freeTextName}
-              onChange={(e) => setFreeTextName(e.target.value)}
-              className="bg-secondary border-border text-sm"
-            />
-            <Textarea
-              placeholder={t("Incolla qui il testo della knowledge base...", "Paste knowledge base text here...")}
-              value={freeText}
-              onChange={(e) => setFreeText(e.target.value)}
-              rows={6}
-              className="bg-secondary border-border text-sm resize-none"
-            />
-            <Button onClick={handleAddFreeText} disabled={uploading || !freeText.trim()} className="w-full gap-1.5">
-              {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileText className="w-4 h-4" />}
-              {t("Aggiungi testo", "Add text")}
-            </Button>
-          </TabsContent>
-        </Tabs>
-      </div>
-
-      {/* Sources list */}
-      <div className="glass rounded-xl p-5">
-        <h2 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2">
-          <Database className="w-4 h-4 text-primary" />
-          {t("Fonti caricate", "Uploaded sources")}
-          <Badge variant="outline" className="ml-auto text-xs">{sources.length}</Badge>
-        </h2>
-
-        {sources.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-12 text-center">
-            <Database className="w-10 h-10 text-muted-foreground/20 mb-3" />
-            <p className="text-sm font-medium text-muted-foreground">
-              {t("Nessuna fonte aggiunta", "No sources added")}
-            </p>
-            <p className="text-xs text-muted-foreground/70 mt-1 max-w-sm">
-              {t("Usa il pannello sopra per aggiungere documenti, URL, FAQ o testo.",
-                "Use the panel above to add documents, URLs, FAQs or text.")}
-            </p>
           </div>
-        ) : (
-          <div className="space-y-2">
-            {sources.map((source) => {
-              const status = statusConfig[source.status] || statusConfig.error;
-              const StatusIcon = status.icon;
-              const TypeIcon = typeIcons[source.type] || FileText;
+        </TabsContent>
 
-              return (
-                <div
-                  key={source.id}
-                  className="flex items-center gap-3 p-3 rounded-lg bg-secondary/50 hover:bg-secondary transition-colors group"
-                >
-                  <div className="w-9 h-9 rounded-lg bg-muted flex items-center justify-center shrink-0">
-                    <TypeIcon className="w-4 h-4 text-muted-foreground" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-foreground truncate">{source.name}</p>
-                    <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
-                      <Badge variant="outline" className="text-[10px] uppercase px-1.5 py-0">{source.type}</Badge>
-                      <Badge variant="outline" className={`text-[10px] px-1.5 py-0 ${status.cls}`}>
-                        <StatusIcon className="w-2.5 h-2.5 mr-0.5" />
-                        {status.label}
-                      </Badge>
-                      {source.status === "ready" && (
-                        <span className="text-[10px] text-muted-foreground">{source.chunk_count} chunks</span>
-                      )}
+        {/* WEB TAB (same as URL/Sitemap but dedicated) */}
+        <TabsContent value="web">
+          <div className="glass rounded-xl p-5 space-y-4">
+            <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
+              <Globe className="w-4 h-4 text-primary" />
+              {t("Importa dal Sito Web", "Import from Website")}
+            </h2>
+
+            <div className="space-y-2">
+              <Label className="text-xs text-muted-foreground">{t("URL singola pagina", "Single page URL")}</Label>
+              <div className="flex gap-2">
+                <Input
+                  placeholder="https://example.com/page"
+                  value={urlInput}
+                  onChange={(e) => setUrlInput(e.target.value)}
+                  className="bg-secondary border-border text-sm"
+                  onKeyDown={(e) => e.key === "Enter" && handleAddUrl()}
+                />
+                <Button onClick={handleAddUrl} disabled={uploading || !urlInput.trim()} className="gap-1.5 shrink-0">
+                  {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Globe className="w-4 h-4" />}
+                  {t("Importa", "Import")}
+                </Button>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-xs text-muted-foreground">{t("Sitemap XML (importa fino a 50 pagine)", "XML Sitemap (import up to 50 pages)")}</Label>
+              <div className="flex gap-2">
+                <Input
+                  placeholder="https://example.com/sitemap.xml"
+                  value={sitemapInput}
+                  onChange={(e) => setSitemapInput(e.target.value)}
+                  className="bg-secondary border-border text-sm"
+                  onKeyDown={(e) => e.key === "Enter" && handleAddSitemap()}
+                />
+                <Button onClick={handleAddSitemap} disabled={uploading || !sitemapInput.trim()} className="gap-1.5 shrink-0">
+                  {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Map className="w-4 h-4" />}
+                  {t("Importa sitemap", "Import sitemap")}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </TabsContent>
+
+        {/* SOURCES TAB */}
+        <TabsContent value="sources">
+          {/* Sources list */}
+          <div className="glass rounded-xl p-5 space-y-4">
+            <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
+              <Database className="w-4 h-4 text-primary" />
+              {t("Fonti caricate", "Uploaded sources")}
+              <Badge variant="outline" className="ml-auto text-xs">{sources.length}</Badge>
+            </h2>
+
+            {sources.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-12 text-center">
+                <Database className="w-10 h-10 text-muted-foreground/20 mb-3" />
+                <p className="text-sm font-medium text-muted-foreground">
+                  {t("Nessuna fonte aggiunta", "No sources added")}
+                </p>
+                <p className="text-xs text-muted-foreground/70 mt-1 max-w-sm">
+                  {t("Usa le tab Documenti o Sito Web per aggiungere fonti.",
+                    "Use the Documents or Website tabs to add sources.")}
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {sources.map((source) => {
+                  const status = statusConfig[source.status] || statusConfig.error;
+                  const StatusIcon = status.icon;
+                  const TypeIcon = typeIcons[source.type] || FileText;
+
+                  return (
+                    <div
+                      key={source.id}
+                      className="flex items-center gap-3 p-3 rounded-lg bg-secondary/50 hover:bg-secondary transition-colors group"
+                    >
+                      <div className="w-9 h-9 rounded-lg bg-muted flex items-center justify-center shrink-0">
+                        <TypeIcon className="w-4 h-4 text-muted-foreground" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-foreground truncate">{source.name}</p>
+                        <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                          <Badge variant="outline" className="text-[10px] uppercase px-1.5 py-0">{source.type}</Badge>
+                          <Badge variant="outline" className={`text-[10px] px-1.5 py-0 ${status.cls}`}>
+                            <StatusIcon className="w-2.5 h-2.5 mr-0.5" />
+                            {status.label}
+                          </Badge>
+                          {source.status === "ready" && (
+                            <span className="text-[10px] text-muted-foreground">{source.chunk_count} chunks</span>
+                          )}
+                        </div>
+                        {source.error_message && (
+                          <p className="text-[11px] text-destructive mt-0.5 truncate flex items-center gap-1">
+                            <AlertTriangle className="w-3 h-3 shrink-0" /> {source.error_message}
+                          </p>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                        {(source.status === "error" || source.status === "ready" || source.status === "outdated") && (
+                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleReprocess(source)}
+                            title={t("Rielabora", "Reprocess")}>
+                            <RefreshCw className="w-3.5 h-3.5" />
+                          </Button>
+                        )}
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive"
+                          onClick={() => handleDelete(source)}>
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </Button>
+                      </div>
                     </div>
-                    {source.error_message && (
-                      <p className="text-[11px] text-destructive mt-0.5 truncate flex items-center gap-1">
-                        <AlertTriangle className="w-3 h-3 shrink-0" /> {source.error_message}
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* Search test tool */}
+          <div className="glass rounded-xl p-5 mt-4">
+            <h2 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2">
+              <Search className="w-4 h-4 text-primary" />
+              {t("Test Ricerca Semantica", "Semantic Search Test")}
+            </h2>
+            <p className="text-xs text-muted-foreground mb-3">
+              {t("Verifica il retrieval cercando nella knowledge base come farebbe il chatbot.",
+                "Test retrieval by searching the knowledge base as the chatbot would.")}
+            </p>
+            <div className="flex gap-2 mb-4">
+              <Input
+                placeholder={t("Es: Quali sono i vostri orari di apertura?", "E.g. What are your opening hours?")}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="bg-secondary border-border text-sm"
+                onKeyDown={(e) => e.key === "Enter" && handleSearchTest()}
+              />
+              <Button onClick={handleSearchTest} disabled={searching || !searchQuery.trim()} className="gap-1.5 shrink-0">
+                {searching ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
+                {t("Cerca", "Search")}
+              </Button>
+            </div>
+
+            {searchResults.length > 0 && (
+              <div className="space-y-2">
+                {searchResults.map((chunk, i) => (
+                  <div key={chunk.id || i} className="p-3 rounded-lg bg-secondary/50 border border-border">
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="text-[10px] text-muted-foreground uppercase font-medium">
+                        {t("Risultato", "Result")} #{i + 1}
+                      </span>
+                      <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-success/10 text-success border-success/30">
+                        {(chunk.similarity * 100).toFixed(1)}% match
+                      </Badge>
+                    </div>
+                    <p className="text-xs text-foreground/80 line-clamp-4 whitespace-pre-wrap">{chunk.content}</p>
+                    {chunk.metadata?.source_name && (
+                      <p className="text-[10px] text-muted-foreground mt-1.5">
+                        📄 {chunk.metadata.source_name}
+                        {chunk.metadata.section && ` → ${chunk.metadata.section}`}
                       </p>
                     )}
                   </div>
-                  <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                    {(source.status === "error" || source.status === "ready" || source.status === "outdated") && (
-                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleReprocess(source)}
-                        title={t("Rielabora", "Reprocess")}>
-                        <RefreshCw className="w-3.5 h-3.5" />
-                      </Button>
-                    )}
-                    <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive"
-                      onClick={() => handleDelete(source)}>
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </Button>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
-
-      {/* Search test tool */}
-      <div className="glass rounded-xl p-5">
-        <h2 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2">
-          <Search className="w-4 h-4 text-primary" />
-          {t("Test Ricerca Semantica", "Semantic Search Test")}
-        </h2>
-        <p className="text-xs text-muted-foreground mb-3">
-          {t("Verifica il retrieval cercando nella knowledge base come farebbe il chatbot.",
-            "Test retrieval by searching the knowledge base as the chatbot would.")}
-        </p>
-        <div className="flex gap-2 mb-4">
-          <Input
-            placeholder={t("Es: Quali sono i vostri orari di apertura?", "E.g. What are your opening hours?")}
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="bg-secondary border-border text-sm"
-            onKeyDown={(e) => e.key === "Enter" && handleSearchTest()}
-          />
-          <Button onClick={handleSearchTest} disabled={searching || !searchQuery.trim()} className="gap-1.5 shrink-0">
-            {searching ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
-            {t("Cerca", "Search")}
-          </Button>
-        </div>
-
-        {searchResults.length > 0 && (
-          <div className="space-y-2">
-            {searchResults.map((chunk, i) => (
-              <div key={chunk.id || i} className="p-3 rounded-lg bg-secondary/50 border border-border">
-                <div className="flex items-center justify-between mb-1.5">
-                  <span className="text-[10px] text-muted-foreground uppercase font-medium">
-                    {t("Risultato", "Result")} #{i + 1}
-                  </span>
-                  <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-success/10 text-success border-success/30">
-                    {(chunk.similarity * 100).toFixed(1)}% match
-                  </Badge>
-                </div>
-                <p className="text-xs text-foreground/80 line-clamp-4 whitespace-pre-wrap">{chunk.content}</p>
-                {chunk.metadata?.source_name && (
-                  <p className="text-[10px] text-muted-foreground mt-1.5">
-                    📄 {chunk.metadata.source_name}
-                    {chunk.metadata.section && ` → ${chunk.metadata.section}`}
-                  </p>
-                )}
+                ))}
               </div>
-            ))}
+            )}
           </div>
-        )}
-      </div>
+        </TabsContent>
+      </Tabs>
+
       <UpgradeModal open={upgradeOpen} onClose={() => setUpgradeOpen(false)} requiredPlan={upgradeRequiredPlan} variant="rag" />
     </div>
   );
