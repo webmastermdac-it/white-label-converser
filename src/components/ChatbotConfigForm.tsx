@@ -126,10 +126,13 @@ const ChatbotConfigForm: React.FC<ChatbotConfigFormProps> = ({ clientId, onSaved
             notification_email: config.notification_email,
             email_notifications_enabled: config.email_notifications_enabled,
             launcher_position: config.launcher_position,
-          } as any)
+          })
           .eq("id", config.id);
 
-        if (error) throw error;
+        if (error) {
+          console.error("[ChatbotConfigForm] Save error:", error);
+          throw error;
+        }
       } else {
         const { data, error } = await supabase
           .from("chatbot_configs")
