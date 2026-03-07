@@ -29,7 +29,7 @@ serve(async (req) => {
     // Step 1: fetch bot config (required for everything else)
     const { data: botConfig, error: configError } = await supabase
       .from("chatbot_configs")
-      .select("*")
+      .select("id, client_id, name, knowledge_base, fallback_message, fallback_msg_en, welcome_msg_it, welcome_msg_en, knowledge_base_products")
       .eq("embed_token", embed_token)
       .single();
 
@@ -37,25 +37,21 @@ serve(async (req) => {
       return jsonResp({ error: "Invalid embed token" }, 401);
     }
 
-    // Step 2: fetch client + planConfig IN PARALLEL
+    // Step 2: fetch client, session count, AND plan configs ALL in parallel
     const monthStart = new Date();
     monthStart.setDate(1);
     monthStart.setHours(0, 0, 0, 0);
 
-    const [clientRes, sessionCountRes] = await Promise.all([
+    const [clientRes, sessionCountRes, planConfigRes] = await Promise.all([
       supabase.from("clients").select("plan").eq("id", botConfig.client_id).single(),
       supabase.from("chat_sessions").select("id", { count: "exact", head: true })
         .eq("client_id", botConfig.client_id).gte("started_at", monthStart.toISOString()),
+      supabase.from("plan_configs")
+        .select("plan_name, max_conversations_month, chat_model, knowledge_base_wizard"),
     ]);
 
     const plan = clientRes.data?.plan || "free";
-
-    // Fetch plan config (needs plan value)
-    const { data: planConfig } = await supabase
-      .from("plan_configs")
-      .select("max_conversations_month, chat_model, knowledge_base_wizard")
-      .eq("plan_name", plan)
-      .single();
+    const planConfig = planConfigRes.data?.find((p: any) => p.plan_name === plan);
 
     const maxConv = planConfig?.max_conversations_month ?? 50;
     const chatModel = planConfig?.chat_model || "gpt-4o-mini";
