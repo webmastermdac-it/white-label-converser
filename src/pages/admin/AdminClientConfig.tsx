@@ -38,6 +38,9 @@ const AdminClientConfig = () => {
 .hint{text-align:center;padding:2rem;}.hint p{font-size:14px;margin:8px 0;}.hint small{opacity:.6;font-size:12px;}</style>
 </head><body>
 <div class="hint"><p>👇 Clicca sul pulsante in basso a destra per aprire il chatbot</p><small>Anteprima live del widget</small></div>
+<script>
+try { Object.keys(sessionStorage).forEach(function(k) { if (k.startsWith('genius_widget_')) sessionStorage.removeItem(k); }); } catch(e) {}
+<\/script>
 <script src="${widgetScriptUrl}" data-token="${embedToken}" async><\/script>
 </body></html>`
     : "";
