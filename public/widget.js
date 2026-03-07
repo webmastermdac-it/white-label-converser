@@ -142,6 +142,7 @@
   // ── Session ─────────────────────────────────────────────
   var SESSION_KEY = "genius_widget_session_" + EMBED_TOKEN;
   var MSG_KEY = "genius_widget_msgs_" + EMBED_TOKEN;
+  var WELCOME_KEY = "genius_widget_welcome_" + EMBED_TOKEN;
 
   function getSessionToken() {
     var tk = sessionStorage.getItem(SESSION_KEY);
@@ -459,22 +460,35 @@
       if (!data || !data.length) { console.error("[Genius Widget] Invalid embed token"); return; }
       config = data[0];
 
+      // Determine the correct welcome message based on language
+      var welcomeMsg;
+      if (baseLang === "en") {
+        welcomeMsg = config.welcome_msg_en || config.welcome_msg_it || config.welcome_message || "Hello! How can I help you?";
+      } else if (baseLang === "it") {
+        welcomeMsg = config.welcome_msg_it || config.welcome_message || "Ciao! Come posso aiutarti?";
+      } else {
+        welcomeMsg = config.welcome_msg_en || config.welcome_msg_it || config.welcome_message || "Hello! How can I help you?";
+      }
+
+      // Check if welcome message changed since last session — if so, reset conversation
+      var prevWelcome = null;
+      try { prevWelcome = sessionStorage.getItem(WELCOME_KEY); } catch(e) {}
+      var welcomeChanged = prevWelcome !== null && prevWelcome !== welcomeMsg;
+
       var saved = loadMessages();
-      if (saved && saved.length) {
+      if (saved && saved.length && !welcomeChanged) {
         messages = saved;
       } else {
-        var welcomeMsg;
-        if (baseLang === "en") {
-          welcomeMsg = config.welcome_msg_en || config.welcome_msg_it || config.welcome_message || "Hello! How can I help you?";
-        } else if (baseLang === "it") {
-          welcomeMsg = config.welcome_msg_it || config.welcome_message || "Ciao! Come posso aiutarti?";
-        } else {
-          // For other languages, prefer English welcome then Italian
-          welcomeMsg = config.welcome_msg_en || config.welcome_msg_it || config.welcome_message || "Hello! How can I help you?";
-        }
         messages = [{ role: "assistant", content: welcomeMsg }];
         saveMessages(messages);
+        // Also reset session token so chat history starts fresh
+        if (welcomeChanged) {
+          sessionStorage.removeItem(SESSION_KEY);
+          sessionToken = getSessionToken();
+        }
       }
+      // Store current welcome message for future change detection
+      try { sessionStorage.setItem(WELCOME_KEY, welcomeMsg); } catch(e) {}
 
       render();
     })
