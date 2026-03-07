@@ -35,6 +35,14 @@ const ClientChatPreview = () => {
 .hint{text-align:center;padding:2rem;}.hint p{font-size:14px;margin:8px 0;}.hint small{opacity:.6;font-size:12px;}</style>
 </head><body>
 <div class="hint"><p>👇 ${t("widgetPreviewDesc")}</p></div>
+<script>
+// Clear widget session storage to force fresh config + welcome message
+try {
+  Object.keys(sessionStorage).forEach(function(k) {
+    if (k.startsWith('genius_widget_')) sessionStorage.removeItem(k);
+  });
+} catch(e) {}
+<\/script>
 <script src="${widgetScriptUrl}" data-token="${embedToken}" async><\/script>
 </body></html>`;
 
