@@ -142,6 +142,7 @@
   // ── Session ─────────────────────────────────────────────
   var SESSION_KEY = "genius_widget_session_" + EMBED_TOKEN;
   var MSG_KEY = "genius_widget_msgs_" + EMBED_TOKEN;
+  var WELCOME_KEY = "genius_widget_welcome_" + EMBED_TOKEN;
 
   function getSessionToken() {
     var tk = sessionStorage.getItem(SESSION_KEY);
