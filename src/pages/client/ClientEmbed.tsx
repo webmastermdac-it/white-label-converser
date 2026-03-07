@@ -31,7 +31,7 @@ const ClientEmbed = () => {
       });
   }, [clientId]);
 
-  const fallbackUrl = `${window.location.origin}/widget.js`;
+  const fallbackUrl = `${window.location.origin}/widget.js?v=${Date.now()}`;
 
   const snippet = `<!-- ${botName || "Genius Chatbot"} -->
 <script 
