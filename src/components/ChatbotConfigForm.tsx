@@ -1,17 +1,14 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { usePlanConfig } from "@/hooks/usePlanConfig";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Save, Bot, Palette, MessageSquare, Zap, Mail, Star, SendHorizonal, Lock, FileText, BrainCircuit, Plug } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Loader2, Save, Bot, Palette, MessageSquare, Zap, Mail, SendHorizonal } from "lucide-react";
 import { useLanguage } from "@/hooks/useLanguage";
-import { UpgradeModal } from "@/components/UpgradeModal";
 
 interface Config {
   id?: string;
@@ -23,7 +20,6 @@ interface Config {
   welcome_message: string;
   welcome_msg_it: string;
   welcome_msg_en: string;
-  knowledge_base: string;
   fallback_message: string;
   fallback_msg_it: string;
   fallback_msg_en: string;
@@ -51,7 +47,6 @@ const defaultConfig: Config = {
   welcome_message: "Ciao! Come posso aiutarti oggi?",
   welcome_msg_it: "Ciao! Come posso aiutarti?",
   welcome_msg_en: "Hello! How can I help you?",
-  knowledge_base: "",
   fallback_message: "Non ho questa informazione, ma posso metterti in contatto con un nostro consulente!",
   fallback_msg_it: "Non ho questa informazione, ma posso metterti in contatto con un nostro consulente!",
   fallback_msg_en: "I don't have this information, but I can connect you with one of our consultants!",
@@ -66,9 +61,7 @@ const POSITIONS = ["bottom-right", "bottom-left"];
 
 const ChatbotConfigForm: React.FC<ChatbotConfigFormProps> = ({ clientId, onSaved }) => {
   const { toast } = useToast();
-  const { role } = useAuth();
-  const { t, lang } = useLanguage();
-  const { canUseKBWizard, canUseCalendly, config: planConfig } = usePlanConfig();
+  const { t } = useLanguage();
   const [config, setConfig] = useState<Config>(defaultConfig);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -92,12 +85,11 @@ const ChatbotConfigForm: React.FC<ChatbotConfigFormProps> = ({ clientId, onSaved
           background_color: data.background_color || "#1A1A2E",
           text_color: data.text_color || "#FFFFFF",
           welcome_message: data.welcome_message || "",
-          welcome_msg_it: (data as any).welcome_msg_it || defaultConfig.welcome_msg_it,
-          welcome_msg_en: (data as any).welcome_msg_en || defaultConfig.welcome_msg_en,
-          knowledge_base: data.knowledge_base || "",
+          welcome_msg_it: data.welcome_msg_it || defaultConfig.welcome_msg_it,
+          welcome_msg_en: data.welcome_msg_en || defaultConfig.welcome_msg_en,
           fallback_message: data.fallback_message || "",
-          fallback_msg_it: (data as any).fallback_msg_it || defaultConfig.fallback_msg_it,
-          fallback_msg_en: (data as any).fallback_msg_en || defaultConfig.fallback_msg_en,
+          fallback_msg_it: data.fallback_msg_it || defaultConfig.fallback_msg_it,
+          fallback_msg_en: data.fallback_msg_en || defaultConfig.fallback_msg_en,
           calendly_url: data.calendly_url || "",
           notification_email: data.notification_email || "",
           email_notifications_enabled: data.email_notifications_enabled ?? true,
@@ -127,7 +119,6 @@ const ChatbotConfigForm: React.FC<ChatbotConfigFormProps> = ({ clientId, onSaved
             welcome_message: config.welcome_message,
             welcome_msg_it: config.welcome_msg_it,
             welcome_msg_en: config.welcome_msg_en,
-            knowledge_base: config.knowledge_base,
             fallback_message: config.fallback_message,
             fallback_msg_it: config.fallback_msg_it,
             fallback_msg_en: config.fallback_msg_en,
@@ -160,10 +151,6 @@ const ChatbotConfigForm: React.FC<ChatbotConfigFormProps> = ({ clientId, onSaved
 
   const set = (key: keyof Config, value: any) => setConfig((prev) => ({ ...prev, [key]: value }));
 
-  const isProOrAdmin = canUseKBWizard;
-  const isFree = planConfig?.plan_name === "free";
-  const [upgradeOpen, setUpgradeOpen] = useState(false);
-
   const sections = [
     { id: "identity", label: t("identity"), icon: Bot },
     { id: "appearance", label: t("appearance"), icon: Palette },
@@ -184,25 +171,20 @@ const ChatbotConfigForm: React.FC<ChatbotConfigFormProps> = ({ clientId, onSaved
     <div className="space-y-6">
       {/* Section Tabs */}
       <div className="flex gap-2 flex-wrap overflow-x-auto -mx-1 px-1 pb-1">
-        {sections.map((s) => {
-          const isLocked = (s as any).locked;
-          return (
-            <button
-              key={s.id}
-              onClick={() => isLocked ? setUpgradeOpen(true) : setActiveSection(s.id)}
-              className={`flex items-center gap-2 px-3 md:px-4 py-2.5 md:py-2 rounded-lg text-sm font-medium transition-all duration-150 min-h-[44px] whitespace-nowrap ${
-                isLocked
-                  ? "bg-secondary/50 text-muted-foreground/40 cursor-pointer"
-                  : activeSection === s.id
-                    ? "bg-primary/15 text-primary border border-primary/30"
-                    : "bg-secondary text-muted-foreground hover:text-foreground hover:bg-secondary/80"
-              }`}
-            >
-              {isLocked ? <Lock className="w-3.5 h-3.5" /> : <s.icon className="w-4 h-4 md:w-3.5 md:h-3.5" />}
-              <span className="hidden sm:inline">{s.label}</span>
-            </button>
-          );
-        })}
+        {sections.map((s) => (
+          <button
+            key={s.id}
+            onClick={() => setActiveSection(s.id)}
+            className={`flex items-center gap-2 px-3 md:px-4 py-2.5 md:py-2 rounded-lg text-sm font-medium transition-all duration-150 min-h-[44px] whitespace-nowrap ${
+              activeSection === s.id
+                ? "bg-primary/15 text-primary border border-primary/30"
+                : "bg-secondary text-muted-foreground hover:text-foreground hover:bg-secondary/80"
+            }`}
+          >
+            <s.icon className="w-4 h-4 md:w-3.5 md:h-3.5" />
+            <span className="hidden sm:inline">{s.label}</span>
+          </button>
+        ))}
       </div>
 
       {/* Identity */}
@@ -343,69 +325,6 @@ const ChatbotConfigForm: React.FC<ChatbotConfigFormProps> = ({ clientId, onSaved
               </div>
             </div>
           </div>
-
-          <div className="space-y-2">
-            <Label>
-              {t("knowledgeBase")}
-              <span className="ml-2 text-xs text-muted-foreground">({t("usedAsSystemPrompt")})</span>
-            </Label>
-
-            {/* Banner KB avanzata per piani paganti */}
-            {isProOrAdmin && (
-              <div className="flex items-start gap-3 p-4 rounded-xl bg-primary/10 border border-primary/20 mb-3">
-                <BrainCircuit className="w-5 h-5 text-primary shrink-0 mt-0.5" />
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-foreground">
-                    {t("Advanced Knowledge Base available", "Knowledge Base avanzata disponibile")}
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {t(
-                      "Upload documents, scrape websites and use RAG semantic search from the dedicated page.",
-                      "Carica documenti, analizza siti web e usa la ricerca semantica RAG dalla pagina dedicata."
-                    )}
-                  </p>
-                  <Link
-                    to="/dashboard/knowledge-base"
-                    className="inline-block mt-2 text-xs font-medium text-primary hover:underline"
-                  >
-                    {t("Go to Knowledge Base", "Vai alla Knowledge Base")} →
-                  </Link>
-                </div>
-              </div>
-            )}
-
-            {/* Upgrade banner for free users */}
-            {!isProOrAdmin && (
-              <div className="flex items-start gap-3 p-4 rounded-xl bg-primary/10 border border-primary/20 mb-3">
-                <Star className="w-5 h-5 text-primary shrink-0 mt-0.5" />
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-foreground">
-                    {t("upgradeWizardTitle")}
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {t("upgradeWizardDesc")}
-                  </p>
-                  <a
-                    href="/dashboard/upgrade"
-                    className="inline-block mt-2 text-xs font-medium text-primary hover:underline"
-                  >
-                    {t("upgradeToProLink")}
-                  </a>
-                </div>
-              </div>
-            )}
-
-            <Textarea
-              value={config.knowledge_base}
-              onChange={(e) => set("knowledge_base", e.target.value)}
-              placeholder={t("kbPlaceholder")}
-              rows={14}
-              className="bg-secondary border-border resize-none font-mono text-sm"
-            />
-            <p className="text-xs text-muted-foreground">
-              {t("kbHelp")}
-            </p>
-          </div>
         </div>
       )}
 
@@ -516,8 +435,6 @@ const ChatbotConfigForm: React.FC<ChatbotConfigFormProps> = ({ clientId, onSaved
           {t("saveConfig")}
         </Button>
       </div>
-
-      <UpgradeModal open={upgradeOpen} onClose={() => setUpgradeOpen(false)} requiredPlan="starter" variant="rag" />
     </div>
   );
 };
