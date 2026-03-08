@@ -374,32 +374,77 @@
     isLoading = true;
     render();
 
+    // Push a placeholder bot message for streaming
+    messages.push({ role: "assistant", content: "" });
+    var botIdx = messages.length - 1;
+
     fetch(SUPABASE_URL + "/functions/v1/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        messages: messages,
+        messages: messages.slice(0, -1), // send without the empty placeholder
         embed_token: EMBED_TOKEN,
         session_token: sessionToken,
         source_url: window.location.href,
         language: widgetLang,
       }),
     })
-      .then(function (r) { return r.json(); })
-      .then(function (data) {
-        var botMsg = data.message || t.errorReply;
-        messages.push({ role: "assistant", content: botMsg });
-
-        if (data.trigger_lead_form) {
-          showLeadForm = true;
+      .then(function (r) {
+        if (!r.ok) throw new Error("HTTP " + r.status);
+        // Check if response is SSE stream
+        var ct = r.headers.get("content-type") || "";
+        if (ct.indexOf("text/event-stream") !== -1 && r.body) {
+          // Stream mode
+          var reader = r.body.getReader();
+          var decoder = new TextDecoder();
+          var fullText = "";
+          function pump() {
+            return reader.read().then(function (result) {
+              if (result.done) {
+                // Check for lead form trigger
+                if (fullText.indexOf("[TRIGGER_LEAD_FORM]") !== -1) {
+                  fullText = fullText.replace("[TRIGGER_LEAD_FORM]", "").trim();
+                  showLeadForm = true;
+                }
+                messages[botIdx].content = fullText || t.errorReply;
+                saveMessages(messages);
+                isLoading = false;
+                render();
+                return;
+              }
+              var chunk = decoder.decode(result.value, { stream: true });
+              var lines = chunk.split("\n");
+              for (var i = 0; i < lines.length; i++) {
+                var line = lines[i];
+                if (!line.startsWith("data: ") || line.trim() === "data: [DONE]") continue;
+                try {
+                  var delta = JSON.parse(line.slice(6));
+                  var content = delta && delta.choices && delta.choices[0] && delta.choices[0].delta && delta.choices[0].delta.content;
+                  if (content) fullText += content;
+                } catch (e) { /* skip malformed */ }
+              }
+              messages[botIdx].content = fullText;
+              render();
+              return pump();
+            });
+          }
+          return pump();
+        } else {
+          // Fallback: JSON mode
+          return r.json().then(function (data) {
+            var botMsg = data.message || t.errorReply;
+            messages[botIdx].content = botMsg;
+            if (data.trigger_lead_form) {
+              showLeadForm = true;
+            }
+            saveMessages(messages);
+            isLoading = false;
+            render();
+          });
         }
-
-        saveMessages(messages);
-        isLoading = false;
-        render();
       })
       .catch(function () {
-        messages.push({ role: "assistant", content: t.errorMsg });
+        messages[botIdx].content = t.errorMsg;
         saveMessages(messages);
         isLoading = false;
         render();
