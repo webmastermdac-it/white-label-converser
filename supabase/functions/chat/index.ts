@@ -29,7 +29,7 @@ serve(async (req) => {
     // Step 1: fetch bot config (required for everything else)
     const { data: botConfig, error: configError } = await supabase
       .from("chatbot_configs")
-      .select("id, client_id, name, knowledge_base, fallback_message, fallback_msg_en, welcome_msg_it, welcome_msg_en, knowledge_base_products")
+      .select("id, client_id, name, knowledge_base, fallback_message, fallback_msg_en, fallback_msg_it, welcome_msg_it, welcome_msg_en, knowledge_base_products")
       .eq("embed_token", embed_token)
       .single();
 
