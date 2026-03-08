@@ -76,6 +76,14 @@ const ClientRAGKnowledgeBase = () => {
   const dropRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Web crawler
+  const [webMode, setWebMode] = useState<"single" | "crawl" | "sitemap">("single");
+  const [crawlerUrl, setCrawlerUrl] = useState("");
+  const [analyzing, setAnalyzing] = useState(false);
+  const [crawledPages, setCrawledPages] = useState<{ url: string; title: string; selected: boolean }[]>([]);
+  const [crawlImporting, setCrawlImporting] = useState(false);
+  const [crawlProgress, setCrawlProgress] = useState({ current: 0, total: 0 });
+
   // Search test
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<any[]>([]);
@@ -265,6 +273,69 @@ const ClientRAGKnowledgeBase = () => {
     } catch (err: any) {
       toast({ title: err.message, variant: "destructive" });
     } finally { setUploading(false); }
+  };
+
+  // --- Crawl: analyze site ---
+  const handleAnalyzeSite = async () => {
+    if (!crawlerUrl.trim()) return;
+    setAnalyzing(true);
+    setCrawledPages([]);
+    try {
+      const { data, error } = await supabase.functions.invoke("scrape-website", {
+        body: { url: crawlerUrl.trim(), mode: "analyze" },
+      });
+      if (error) throw error;
+      const links = (data?.links || []).slice(0, 20).map((l: any) => ({
+        url: l.url,
+        title: l.title || new URL(l.url).pathname,
+        selected: false,
+      }));
+      setCrawledPages(links);
+      if (!links.length) {
+        toast({
+          title: t("Nessuna pagina trovata", "No pages found"),
+          description: t("Prova la modalità Sitemap se il sito usa JavaScript.", "Try Sitemap mode if the site uses JavaScript."),
+          variant: "destructive",
+        });
+      }
+    } catch (err: any) {
+      toast({ title: t("Errore analisi", "Analysis error"), description: err.message, variant: "destructive" });
+    } finally { setAnalyzing(false); }
+  };
+
+  const toggleCrawlPage = (idx: number) => {
+    setCrawledPages(prev => prev.map((p, i) => i === idx ? { ...p, selected: !p.selected } : p));
+  };
+  const selectAllCrawl = (val: boolean) => {
+    setCrawledPages(prev => prev.map(p => ({ ...p, selected: val })));
+  };
+
+  const handleImportCrawledPages = async () => {
+    if (!chatbotId) return;
+    const selected = crawledPages.filter(p => p.selected);
+    if (!selected.length) {
+      toast({ title: t("Nessuna pagina selezionata", "No pages selected"), variant: "destructive" });
+      return;
+    }
+    setCrawlImporting(true);
+    setCrawlProgress({ current: 0, total: selected.length });
+    for (let i = 0; i < selected.length; i++) {
+      const page = selected[i];
+      setCrawlProgress({ current: i + 1, total: selected.length });
+      try {
+        const { data: source, error } = await supabase
+          .from("knowledge_base" as any)
+          .insert({ chatbot_id: chatbotId, name: new URL(page.url).pathname || page.url, type: "url", source_url: page.url, status: "processing" } as any)
+          .select().single();
+        if (!error && source) processSource((source as any).id);
+      } catch (err: any) {
+        console.error("Import error:", err);
+      }
+    }
+    toast({ title: t(`${selected.length} pagine importate`, `${selected.length} pages imported`) });
+    setCrawlImporting(false);
+    setCrawledPages([]);
+    fetchData();
   };
 
   // --- Inline FAQ (RAG) ---
