@@ -249,9 +249,10 @@
     var pc = config.primary_color || "#F59E0B";
     var avatar = config.avatar || "genie";
     var isGenie = avatar === "genie";
-    var genieImgTag = '<img src="' + (scriptTag.src ? new URL("/images/genius-icon.png", scriptTag.src).href : "/images/genius-icon.png") + '" style="width:28px;height:28px;" alt="Genius" />';
+    var PROD_ORIGIN = "https://chatbot.your-genius.com";
+    var genieImgTag = '<img src="' + new URL("/images/genius-icon.png", PROD_ORIGIN).href + '" style="width:28px;height:28px;" alt="Genius" />';
     var avatarDisplay = isGenie ? genieImgTag : esc(avatar);
-    var avatarSmall = isGenie ? '<img src="' + (scriptTag.src ? new URL("/images/genius-icon.png", scriptTag.src).href : "/images/genius-icon.png") + '" style="width:18px;height:18px;" alt="G" />' : esc(avatar);
+    var avatarSmall = isGenie ? '<img src="' + new URL("/images/genius-icon.png", PROD_ORIGIN).href + '" style="width:18px;height:18px;" alt="G" />' : esc(avatar);
 
     var html = '<style>' + buildStyles(config) + '</style>';
 
