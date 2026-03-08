@@ -984,39 +984,147 @@ const ClientRAGKnowledgeBase = () => {
                 {t("Importa dal Sito Web", "Import from Website")}
               </h3>
 
-              <div className="space-y-2">
-                <Label className="text-xs text-muted-foreground">{t("URL singola pagina", "Single page URL")}</Label>
-                <div className="flex gap-2">
-                  <Input
-                    placeholder="https://example.com/page"
-                    value={urlInput}
-                    onChange={(e) => setUrlInput(e.target.value)}
-                    className="bg-secondary border-border text-sm"
-                    onKeyDown={(e) => e.key === "Enter" && handleAddUrl()}
-                  />
-                  <Button onClick={handleAddUrl} disabled={uploading || !urlInput.trim()} className="gap-1.5 shrink-0">
-                    {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Globe className="w-4 h-4" />}
-                    {t("Importa", "Import")}
-                  </Button>
-                </div>
+              {/* 3-mode toggle */}
+              <div className="flex gap-1 p-1 rounded-lg bg-muted/50 w-fit">
+                {([
+                  { key: "single" as const, icon: "📄", label: t("Pagina singola", "Single page") },
+                  { key: "crawl" as const, icon: "🕷️", label: t("Scansiona sito", "Scan site") },
+                  { key: "sitemap" as const, icon: "🗺️", label: t("Sitemap XML", "Sitemap XML") },
+                ]).map((mode) => (
+                  <button
+                    key={mode.key}
+                    onClick={() => setWebMode(mode.key)}
+                    className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
+                      webMode === mode.key
+                        ? "bg-background text-foreground shadow-sm"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    {mode.icon} {mode.label}
+                  </button>
+                ))}
               </div>
 
-              <div className="space-y-2">
-                <Label className="text-xs text-muted-foreground">{t("Sitemap XML (importa fino a 50 pagine)", "XML Sitemap (import up to 50 pages)")}</Label>
-                <div className="flex gap-2">
-                  <Input
-                    placeholder="https://example.com/sitemap.xml"
-                    value={sitemapInput}
-                    onChange={(e) => setSitemapInput(e.target.value)}
-                    className="bg-secondary border-border text-sm"
-                    onKeyDown={(e) => e.key === "Enter" && handleAddSitemap()}
-                  />
-                  <Button onClick={handleAddSitemap} disabled={uploading || !sitemapInput.trim()} className="gap-1.5 shrink-0">
-                    {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Map className="w-4 h-4" />}
-                    {t("Importa sitemap", "Import sitemap")}
-                  </Button>
+              {/* MODE 1: Pagina singola */}
+              {webMode === "single" && (
+                <div className="space-y-2">
+                  <Label className="text-xs text-muted-foreground">{t("URL della pagina da importare", "URL of the page to import")}</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder="https://example.com/page"
+                      value={urlInput}
+                      onChange={(e) => setUrlInput(e.target.value)}
+                      className="bg-secondary border-border text-sm"
+                      onKeyDown={(e) => e.key === "Enter" && handleAddUrl()}
+                    />
+                    <Button onClick={handleAddUrl} disabled={uploading || !urlInput.trim()} className="gap-1.5 shrink-0">
+                      {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Globe className="w-4 h-4" />}
+                      {t("Importa", "Import")}
+                    </Button>
+                  </div>
                 </div>
-              </div>
+              )}
+
+              {/* MODE 2: Scansiona sito */}
+              {webMode === "crawl" && (
+                <div className="space-y-3">
+                  <Label className="text-xs text-muted-foreground">{t("URL del sito da analizzare", "Website URL to analyze")}</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder="https://example.com"
+                      value={crawlerUrl}
+                      onChange={(e) => setCrawlerUrl(e.target.value)}
+                      className="bg-secondary border-border text-sm"
+                      onKeyDown={(e) => e.key === "Enter" && handleAnalyzeSite()}
+                    />
+                    <Button onClick={handleAnalyzeSite} disabled={analyzing || !crawlerUrl.trim()} className="gap-1.5 shrink-0">
+                      {analyzing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
+                      {t("Analizza sito", "Analyze site")}
+                    </Button>
+                  </div>
+
+                  {/* Crawled pages checklist */}
+                  {crawledPages.length > 0 && (
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <p className="text-xs font-medium text-foreground">
+                          {t(`${crawledPages.length} pagine trovate`, `${crawledPages.length} pages found`)}
+                        </p>
+                        <div className="flex gap-2">
+                          <button onClick={() => selectAllCrawl(true)} className="text-[11px] text-primary hover:underline">
+                            {t("Seleziona tutto", "Select all")}
+                          </button>
+                          <button onClick={() => selectAllCrawl(false)} className="text-[11px] text-muted-foreground hover:underline">
+                            {t("Deseleziona tutto", "Deselect all")}
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="max-h-64 overflow-y-auto space-y-1 rounded-lg border border-border p-2">
+                        {crawledPages.map((page, i) => (
+                          <label
+                            key={i}
+                            className={`flex items-center gap-2.5 p-2 rounded-md cursor-pointer transition-colors ${
+                              page.selected ? "bg-primary/10" : "hover:bg-accent/50"
+                            } ${crawlImporting ? "opacity-60 pointer-events-none" : ""}`}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={page.selected}
+                              onChange={() => toggleCrawlPage(i)}
+                              className="rounded border-border"
+                            />
+                            <div className="min-w-0 flex-1">
+                              <p className="text-xs text-foreground truncate">{page.title}</p>
+                              <p className="text-[10px] text-muted-foreground truncate">{page.url}</p>
+                            </div>
+                          </label>
+                        ))}
+                      </div>
+
+                      {crawlImporting && (
+                        <div className="flex items-center gap-2 text-xs text-foreground">
+                          <Loader2 className="w-3.5 h-3.5 animate-spin text-primary" />
+                          {t(`Importando ${crawlProgress.current}/${crawlProgress.total}...`, `Importing ${crawlProgress.current}/${crawlProgress.total}...`)}
+                        </div>
+                      )}
+
+                      <Button
+                        onClick={handleImportCrawledPages}
+                        disabled={crawlImporting || !crawledPages.some(p => p.selected)}
+                        className="w-full gap-1.5"
+                      >
+                        {crawlImporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+                        {t("Importa selezionate", "Import selected")}
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* MODE 3: Sitemap XML */}
+              {webMode === "sitemap" && (
+                <div className="space-y-2">
+                  <Label className="text-xs text-muted-foreground">{t("URL della sitemap XML (importa fino a 50 pagine)", "XML Sitemap URL (imports up to 50 pages)")}</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder="https://example.com/sitemap.xml"
+                      value={sitemapInput}
+                      onChange={(e) => setSitemapInput(e.target.value)}
+                      className="bg-secondary border-border text-sm"
+                      onKeyDown={(e) => e.key === "Enter" && handleAddSitemap()}
+                    />
+                    <Button onClick={handleAddSitemap} disabled={uploading || !sitemapInput.trim()} className="gap-1.5 shrink-0">
+                      {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Map className="w-4 h-4" />}
+                      {t("Importa sitemap", "Import sitemap")}
+                    </Button>
+                  </div>
+                  <p className="text-[11px] text-muted-foreground">
+                    {t("💡 Non sai dove trovare la sitemap? Prova https://tuosito.com/sitemap.xml",
+                      "💡 Don't know where to find the sitemap? Try https://yoursite.com/sitemap.xml")}
+                  </p>
+                </div>
+              )}
             </div>
           </TabsContent>
 
