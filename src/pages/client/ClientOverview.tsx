@@ -109,7 +109,7 @@ const ClientOverview = () => {
   }, [clientId]);
 
   const copyEmbed = () => {
-    const snippet = `<script src="${window.location.origin}/widget.js" data-token="${embedToken}" async></script>`;
+    const snippet = `<script src="https://chatbot.your-genius.com/widget.js" data-token="${embedToken}" async></script>`;
     navigator.clipboard.writeText(snippet);
     toast({ title: t("copied"), description: t("embedCopied") });
   };
