@@ -76,6 +76,14 @@ const ClientRAGKnowledgeBase = () => {
   const dropRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Web crawler
+  const [webMode, setWebMode] = useState<"single" | "crawl" | "sitemap">("single");
+  const [crawlerUrl, setCrawlerUrl] = useState("");
+  const [analyzing, setAnalyzing] = useState(false);
+  const [crawledPages, setCrawledPages] = useState<{ url: string; title: string; selected: boolean }[]>([]);
+  const [crawlImporting, setCrawlImporting] = useState(false);
+  const [crawlProgress, setCrawlProgress] = useState({ current: 0, total: 0 });
+
   // Search test
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<any[]>([]);
@@ -265,6 +273,69 @@ const ClientRAGKnowledgeBase = () => {
     } catch (err: any) {
       toast({ title: err.message, variant: "destructive" });
     } finally { setUploading(false); }
+  };
+
+  // --- Crawl: analyze site ---
+  const handleAnalyzeSite = async () => {
+    if (!crawlerUrl.trim()) return;
+    setAnalyzing(true);
+    setCrawledPages([]);
+    try {
+      const { data, error } = await supabase.functions.invoke("scrape-website", {
+        body: { url: crawlerUrl.trim(), mode: "analyze" },
+      });
+      if (error) throw error;
+      const links = (data?.links || []).slice(0, 20).map((l: any) => ({
+        url: l.url,
+        title: l.title || new URL(l.url).pathname,
+        selected: false,
+      }));
+      setCrawledPages(links);
+      if (!links.length) {
+        toast({
+          title: t("Nessuna pagina trovata", "No pages found"),
+          description: t("Prova la modalità Sitemap se il sito usa JavaScript.", "Try Sitemap mode if the site uses JavaScript."),
+          variant: "destructive",
+        });
+      }
+    } catch (err: any) {
+      toast({ title: t("Errore analisi", "Analysis error"), description: err.message, variant: "destructive" });
+    } finally { setAnalyzing(false); }
+  };
+
+  const toggleCrawlPage = (idx: number) => {
+    setCrawledPages(prev => prev.map((p, i) => i === idx ? { ...p, selected: !p.selected } : p));
+  };
+  const selectAllCrawl = (val: boolean) => {
+    setCrawledPages(prev => prev.map(p => ({ ...p, selected: val })));
+  };
+
+  const handleImportCrawledPages = async () => {
+    if (!chatbotId) return;
+    const selected = crawledPages.filter(p => p.selected);
+    if (!selected.length) {
+      toast({ title: t("Nessuna pagina selezionata", "No pages selected"), variant: "destructive" });
+      return;
+    }
+    setCrawlImporting(true);
+    setCrawlProgress({ current: 0, total: selected.length });
+    for (let i = 0; i < selected.length; i++) {
+      const page = selected[i];
+      setCrawlProgress({ current: i + 1, total: selected.length });
+      try {
+        const { data: source, error } = await supabase
+          .from("knowledge_base" as any)
+          .insert({ chatbot_id: chatbotId, name: new URL(page.url).pathname || page.url, type: "url", source_url: page.url, status: "processing" } as any)
+          .select().single();
+        if (!error && source) processSource((source as any).id);
+      } catch (err: any) {
+        console.error("Import error:", err);
+      }
+    }
+    toast({ title: t(`${selected.length} pagine importate`, `${selected.length} pages imported`) });
+    setCrawlImporting(false);
+    setCrawledPages([]);
+    fetchData();
   };
 
   // --- Inline FAQ (RAG) ---
@@ -793,43 +864,7 @@ const ClientRAGKnowledgeBase = () => {
                 )}
               </div>
 
-              {/* URL input */}
-              <div className="space-y-2">
-                <Label className="text-xs text-muted-foreground">{t("Oppure importa da URL", "Or import from URL")}</Label>
-                <div className="flex gap-2">
-                  <Input
-                    placeholder="https://example.com/page"
-                    value={urlInput}
-                    onChange={(e) => setUrlInput(e.target.value)}
-                    className="bg-secondary border-border text-sm"
-                    onKeyDown={(e) => e.key === "Enter" && handleAddUrl()}
-                  />
-                  <Button onClick={handleAddUrl} disabled={uploading || !urlInput.trim()} className="gap-1.5 shrink-0">
-                    {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Globe className="w-4 h-4" />}
-                    {t("Importa", "Import")}
-                  </Button>
-                </div>
-              </div>
 
-              {/* Sitemap */}
-              <div className="space-y-2">
-                <Label className="text-xs text-muted-foreground">{t("Importa da Sitemap XML", "Import from XML Sitemap")}</Label>
-                <div className="flex gap-2">
-                  <Input
-                    placeholder="https://example.com/sitemap.xml"
-                    value={sitemapInput}
-                    onChange={(e) => setSitemapInput(e.target.value)}
-                    className="bg-secondary border-border text-sm"
-                    onKeyDown={(e) => e.key === "Enter" && handleAddSitemap()}
-                  />
-                  <Button onClick={handleAddSitemap} disabled={uploading || !sitemapInput.trim()} className="gap-1.5 shrink-0">
-                    {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Map className="w-4 h-4" />}
-                    {t("Importa", "Import")}
-                  </Button>
-                </div>
-              </div>
-
-              {/* FAQ RAG */}
               <div className="border-t border-border pt-4 space-y-3">
                 <Label className="text-sm font-medium">{t("FAQ (RAG)", "FAQ (RAG)")}</Label>
                 <p className="text-xs text-muted-foreground">
@@ -913,39 +948,147 @@ const ClientRAGKnowledgeBase = () => {
                 {t("Importa dal Sito Web", "Import from Website")}
               </h3>
 
-              <div className="space-y-2">
-                <Label className="text-xs text-muted-foreground">{t("URL singola pagina", "Single page URL")}</Label>
-                <div className="flex gap-2">
-                  <Input
-                    placeholder="https://example.com/page"
-                    value={urlInput}
-                    onChange={(e) => setUrlInput(e.target.value)}
-                    className="bg-secondary border-border text-sm"
-                    onKeyDown={(e) => e.key === "Enter" && handleAddUrl()}
-                  />
-                  <Button onClick={handleAddUrl} disabled={uploading || !urlInput.trim()} className="gap-1.5 shrink-0">
-                    {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Globe className="w-4 h-4" />}
-                    {t("Importa", "Import")}
-                  </Button>
-                </div>
+              {/* 3-mode toggle */}
+              <div className="flex gap-1 p-1 rounded-lg bg-muted/50 w-fit">
+                {([
+                  { key: "single" as const, icon: "📄", label: t("Pagina singola", "Single page") },
+                  { key: "crawl" as const, icon: "🕷️", label: t("Scansiona sito", "Scan site") },
+                  { key: "sitemap" as const, icon: "🗺️", label: t("Sitemap XML", "Sitemap XML") },
+                ]).map((mode) => (
+                  <button
+                    key={mode.key}
+                    onClick={() => setWebMode(mode.key)}
+                    className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
+                      webMode === mode.key
+                        ? "bg-background text-foreground shadow-sm"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    {mode.icon} {mode.label}
+                  </button>
+                ))}
               </div>
 
-              <div className="space-y-2">
-                <Label className="text-xs text-muted-foreground">{t("Sitemap XML (importa fino a 50 pagine)", "XML Sitemap (import up to 50 pages)")}</Label>
-                <div className="flex gap-2">
-                  <Input
-                    placeholder="https://example.com/sitemap.xml"
-                    value={sitemapInput}
-                    onChange={(e) => setSitemapInput(e.target.value)}
-                    className="bg-secondary border-border text-sm"
-                    onKeyDown={(e) => e.key === "Enter" && handleAddSitemap()}
-                  />
-                  <Button onClick={handleAddSitemap} disabled={uploading || !sitemapInput.trim()} className="gap-1.5 shrink-0">
-                    {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Map className="w-4 h-4" />}
-                    {t("Importa sitemap", "Import sitemap")}
-                  </Button>
+              {/* MODE 1: Pagina singola */}
+              {webMode === "single" && (
+                <div className="space-y-2">
+                  <Label className="text-xs text-muted-foreground">{t("URL della pagina da importare", "URL of the page to import")}</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder="https://example.com/page"
+                      value={urlInput}
+                      onChange={(e) => setUrlInput(e.target.value)}
+                      className="bg-secondary border-border text-sm"
+                      onKeyDown={(e) => e.key === "Enter" && handleAddUrl()}
+                    />
+                    <Button onClick={handleAddUrl} disabled={uploading || !urlInput.trim()} className="gap-1.5 shrink-0">
+                      {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Globe className="w-4 h-4" />}
+                      {t("Importa", "Import")}
+                    </Button>
+                  </div>
                 </div>
-              </div>
+              )}
+
+              {/* MODE 2: Scansiona sito */}
+              {webMode === "crawl" && (
+                <div className="space-y-3">
+                  <Label className="text-xs text-muted-foreground">{t("URL del sito da analizzare", "Website URL to analyze")}</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder="https://example.com"
+                      value={crawlerUrl}
+                      onChange={(e) => setCrawlerUrl(e.target.value)}
+                      className="bg-secondary border-border text-sm"
+                      onKeyDown={(e) => e.key === "Enter" && handleAnalyzeSite()}
+                    />
+                    <Button onClick={handleAnalyzeSite} disabled={analyzing || !crawlerUrl.trim()} className="gap-1.5 shrink-0">
+                      {analyzing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
+                      {t("Analizza sito", "Analyze site")}
+                    </Button>
+                  </div>
+
+                  {/* Crawled pages checklist */}
+                  {crawledPages.length > 0 && (
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <p className="text-xs font-medium text-foreground">
+                          {t(`${crawledPages.length} pagine trovate`, `${crawledPages.length} pages found`)}
+                        </p>
+                        <div className="flex gap-2">
+                          <button onClick={() => selectAllCrawl(true)} className="text-[11px] text-primary hover:underline">
+                            {t("Seleziona tutto", "Select all")}
+                          </button>
+                          <button onClick={() => selectAllCrawl(false)} className="text-[11px] text-muted-foreground hover:underline">
+                            {t("Deseleziona tutto", "Deselect all")}
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="max-h-64 overflow-y-auto space-y-1 rounded-lg border border-border p-2">
+                        {crawledPages.map((page, i) => (
+                          <label
+                            key={i}
+                            className={`flex items-center gap-2.5 p-2 rounded-md cursor-pointer transition-colors ${
+                              page.selected ? "bg-primary/10" : "hover:bg-accent/50"
+                            } ${crawlImporting ? "opacity-60 pointer-events-none" : ""}`}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={page.selected}
+                              onChange={() => toggleCrawlPage(i)}
+                              className="rounded border-border"
+                            />
+                            <div className="min-w-0 flex-1">
+                              <p className="text-xs text-foreground truncate">{page.title}</p>
+                              <p className="text-[10px] text-muted-foreground truncate">{page.url}</p>
+                            </div>
+                          </label>
+                        ))}
+                      </div>
+
+                      {crawlImporting && (
+                        <div className="flex items-center gap-2 text-xs text-foreground">
+                          <Loader2 className="w-3.5 h-3.5 animate-spin text-primary" />
+                          {t(`Importando ${crawlProgress.current}/${crawlProgress.total}...`, `Importing ${crawlProgress.current}/${crawlProgress.total}...`)}
+                        </div>
+                      )}
+
+                      <Button
+                        onClick={handleImportCrawledPages}
+                        disabled={crawlImporting || !crawledPages.some(p => p.selected)}
+                        className="w-full gap-1.5"
+                      >
+                        {crawlImporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+                        {t("Importa selezionate", "Import selected")}
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* MODE 3: Sitemap XML */}
+              {webMode === "sitemap" && (
+                <div className="space-y-2">
+                  <Label className="text-xs text-muted-foreground">{t("URL della sitemap XML (importa fino a 50 pagine)", "XML Sitemap URL (imports up to 50 pages)")}</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder="https://example.com/sitemap.xml"
+                      value={sitemapInput}
+                      onChange={(e) => setSitemapInput(e.target.value)}
+                      className="bg-secondary border-border text-sm"
+                      onKeyDown={(e) => e.key === "Enter" && handleAddSitemap()}
+                    />
+                    <Button onClick={handleAddSitemap} disabled={uploading || !sitemapInput.trim()} className="gap-1.5 shrink-0">
+                      {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Map className="w-4 h-4" />}
+                      {t("Importa sitemap", "Import sitemap")}
+                    </Button>
+                  </div>
+                  <p className="text-[11px] text-muted-foreground">
+                    {t("💡 Non sai dove trovare la sitemap? Prova https://tuosito.com/sitemap.xml",
+                      "💡 Don't know where to find the sitemap? Try https://yoursite.com/sitemap.xml")}
+                  </p>
+                </div>
+              )}
             </div>
           </TabsContent>
 
