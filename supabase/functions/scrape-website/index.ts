@@ -36,55 +36,53 @@ Deno.serve(async (req) => {
 
 async function analyzeSite(url: string) {
   let formattedUrl = url.trim();
-  if (!formattedUrl.startsWith("http")) {
-    formattedUrl = `https://${formattedUrl}`;
-  }
+  if (!formattedUrl.startsWith("http")) formattedUrl = `https://${formattedUrl}`;
 
-  const response = await fetch(formattedUrl, {
+  const baseHostname = new URL(formattedUrl).hostname;
+  const visited = new Set<string>();
+  const allLinks: { url: string; title: string }[] = [];
+
+  const res1 = await fetch(formattedUrl, {
     headers: { "User-Agent": "Mozilla/5.0 (compatible; GeniusBot/1.0)" },
+    signal: AbortSignal.timeout(10000),
   });
 
-  if (!response.ok) {
-    throw new Error(`Failed to fetch: ${response.status}`);
+  if (!res1.ok) throw new Error(`Failed to fetch: ${res1.status}`);
+
+  const html1 = await res1.text();
+  const mainContent = extractMainContent(html1);
+  const level1Links = extractLinks(html1, formattedUrl);
+
+  visited.add(formattedUrl);
+  for (const link of level1Links) {
+    if (!visited.has(link.url)) {
+      allLinks.push(link);
+      visited.add(link.url);
+    }
   }
 
-  const html = await response.text();
-  const content = extractMainContent(html);
-  const homepageLinks = extractLinks(html, formattedUrl);
-
-  // Shallow 2-level crawl: fetch up to 15 discovered pages to find more links
-  const allLinks = new Map<string, string>();
-  for (const link of homepageLinks) {
-    allLinks.set(link.url, link.title);
-  }
-
-  const level2Urls = homepageLinks.slice(0, 15);
-  const level2Promises = level2Urls.map(async (link) => {
+  await Promise.all(level1Links.slice(0, 8).map(async (page) => {
     try {
-      const res = await fetch(link.url, {
+      const res2 = await fetch(page.url, {
         headers: { "User-Agent": "Mozilla/5.0 (compatible; GeniusBot/1.0)" },
-        signal: AbortSignal.timeout(5000),
+        signal: AbortSignal.timeout(6000),
       });
-      if (res.ok) {
-        const pageHtml = await res.text();
-        const pageLinks = extractLinks(pageHtml, formattedUrl);
-        for (const pl of pageLinks) {
-          if (!allLinks.has(pl.url)) {
-            allLinks.set(pl.url, pl.title);
-          }
+      if (!res2.ok) return;
+
+      const html2 = await res2.text();
+      const deeper = extractLinks(html2, formattedUrl);
+
+      for (const link of deeper) {
+        if (!visited.has(link.url) && new URL(link.url).hostname === baseHostname) {
+          allLinks.push(link);
+          visited.add(link.url);
         }
       }
-    } catch {
-      // skip failed pages
-    }
-  });
-
-  await Promise.all(level2Promises);
-
-  const links = Array.from(allLinks.entries()).map(([u, t]) => ({ url: u, title: t }));
+    } catch { /* skip */ }
+  }));
 
   return new Response(
-    JSON.stringify({ content, links }),
+    JSON.stringify({ content: mainContent, links: allLinks.slice(0, 100) }),
     { headers: { ...corsHeaders, "Content-Type": "application/json" } }
   );
 }
