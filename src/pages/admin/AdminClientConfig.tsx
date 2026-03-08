@@ -28,7 +28,7 @@ const AdminClientConfig = () => {
     });
   }, [clientId]);
 
-  const widgetScriptUrl = `${window.location.origin}/widget.js`;
+  const widgetScriptUrl = "https://chatbot.your-genius.com/widget.js";
 
   const iframeSrcDoc = embedToken
     ? `<!DOCTYPE html>
