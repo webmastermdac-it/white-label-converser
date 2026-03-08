@@ -15,7 +15,8 @@ import { useToast } from "@/hooks/use-toast";
 import {
   Loader2, Upload, Globe, HelpCircle, FileText, Trash2,
   RefreshCw, CheckCircle2, XCircle, Clock, Plus, Database,
-  Search, Map, Send, AlertTriangle, GripVertical, X, Lock, BrainCircuit, Sparkles, Save, Wand2
+  Search, Map, Send, AlertTriangle, GripVertical, X, Lock, BrainCircuit, Sparkles, Save, Wand2,
+  Info, Lightbulb, PenLine, ArrowDown
 } from "lucide-react";
 import IndustryTemplateSelector from "@/components/knowledge-base/IndustryTemplateSelector";
 
