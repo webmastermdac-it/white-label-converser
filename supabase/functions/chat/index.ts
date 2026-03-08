@@ -119,10 +119,10 @@ serve(async (req) => {
 
     const systemPrompt = `${botConfig.knowledge_base || "You are a helpful assistant."}${productKnowledge ? "\n\n" + productKnowledge : ""}${ragContext}\n\nIMPORTANT INSTRUCTIONS:\n- Be concise, helpful, and professional${languageInstruction}${fallbackInstruction}${productInstruction}${formattingInstruction}`;
 
-    // Step 4: Call AI gateway
+    // Step 4: Call AI gateway (streaming)
     const gatewayModel = MODEL_MAP[chatModel] || "openai/gpt-5-mini";
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${LOVABLE_API_KEY}`,
@@ -130,37 +130,51 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         model: gatewayModel,
-        messages: [
-          { role: "system", content: systemPrompt },
-          ...messages,
-        ],
+        messages: [{ role: "system", content: systemPrompt }, ...messages],
+        stream: true,
       }),
     });
 
-    if (!response.ok) {
-      const status = response.status;
+    if (!aiResponse.ok) {
+      const status = aiResponse.status;
       if (status === 429) return jsonResp({ error: "Rate limit exceeded" }, 429);
       if (status === 402) return jsonResp({ error: "AI credits exhausted" }, 402);
       throw new Error(`AI gateway error: ${status}`);
     }
 
-    const aiData = await response.json();
-    const aiMessage = aiData.choices?.[0]?.message?.content || "";
+    const [streamForClient, streamForSave] = aiResponse.body!.tee();
 
-    const triggerLeadForm = aiMessage.includes("[TRIGGER_LEAD_FORM]");
-    const cleanMessage = aiMessage.replace("[TRIGGER_LEAD_FORM]", "").trim();
-
-    // Step 5: Save session (fire-and-forget, don't await)
     if (session_token) {
-      const allMessages = [...messages, { role: "assistant", content: cleanMessage }];
-      saveSession(supabase, session_token, botConfig, allMessages, source_url, lang);
+      (async () => {
+        try {
+          let fullMessage = "";
+          const reader = streamForSave.getReader();
+          const decoder = new TextDecoder();
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            const lines = decoder.decode(value).split("\n");
+            for (const line of lines) {
+              if (!line.startsWith("data: ") || line.trim() === "data: [DONE]") continue;
+              try {
+                const delta = JSON.parse(line.slice(6))?.choices?.[0]?.delta?.content || "";
+                fullMessage += delta;
+              } catch {}
+            }
+          }
+          const cleanMessage = fullMessage.replace("[TRIGGER_LEAD_FORM]", "").trim();
+          saveSession(supabase, session_token, botConfig, [...messages, { role: "assistant", content: cleanMessage }], source_url, lang);
+        } catch {}
+      })();
     }
 
-    return jsonResp({
-      message: cleanMessage,
-      trigger_lead_form: triggerLeadForm,
-      bot_id: botConfig.id,
-      client_id: botConfig.client_id,
+    return new Response(streamForClient, {
+      headers: {
+        ...corsHeaders,
+        "Content-Type": "text/event-stream",
+        "Cache-Control": "no-cache",
+        "X-Accel-Buffering": "no",
+      },
     });
   } catch (error: any) {
     console.error("chat error:", error);
