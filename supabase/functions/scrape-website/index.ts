@@ -50,7 +50,38 @@ async function analyzeSite(url: string) {
 
   const html = await response.text();
   const content = extractMainContent(html);
-  const links = extractLinks(html, formattedUrl);
+  const homepageLinks = extractLinks(html, formattedUrl);
+
+  // Shallow 2-level crawl: fetch up to 15 discovered pages to find more links
+  const allLinks = new Map<string, string>();
+  for (const link of homepageLinks) {
+    allLinks.set(link.url, link.title);
+  }
+
+  const level2Urls = homepageLinks.slice(0, 15);
+  const level2Promises = level2Urls.map(async (link) => {
+    try {
+      const res = await fetch(link.url, {
+        headers: { "User-Agent": "Mozilla/5.0 (compatible; GeniusBot/1.0)" },
+        signal: AbortSignal.timeout(5000),
+      });
+      if (res.ok) {
+        const pageHtml = await res.text();
+        const pageLinks = extractLinks(pageHtml, formattedUrl);
+        for (const pl of pageLinks) {
+          if (!allLinks.has(pl.url)) {
+            allLinks.set(pl.url, pl.title);
+          }
+        }
+      }
+    } catch {
+      // skip failed pages
+    }
+  });
+
+  await Promise.all(level2Promises);
+
+  const links = Array.from(allLinks.entries()).map(([u, t]) => ({ url: u, title: t }));
 
   return new Response(
     JSON.stringify({ content, links }),
@@ -61,7 +92,7 @@ async function analyzeSite(url: string) {
 async function scrapePages(urls: string[]) {
   const contents: string[] = [];
 
-  for (const url of urls.slice(0, 10)) {
+  for (const url of urls.slice(0, 50)) {
     try {
       const response = await fetch(url, {
         headers: { "User-Agent": "Mozilla/5.0 (compatible; GeniusBot/1.0)" },
@@ -153,5 +184,5 @@ function extractLinks(html: string, baseUrl: string): { url: string; title: stri
     }
   }
 
-  return links.slice(0, 10);
+  return links.slice(0, 100);
 }
