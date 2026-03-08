@@ -864,43 +864,7 @@ const ClientRAGKnowledgeBase = () => {
                 )}
               </div>
 
-              {/* URL input */}
-              <div className="space-y-2">
-                <Label className="text-xs text-muted-foreground">{t("Oppure importa da URL", "Or import from URL")}</Label>
-                <div className="flex gap-2">
-                  <Input
-                    placeholder="https://example.com/page"
-                    value={urlInput}
-                    onChange={(e) => setUrlInput(e.target.value)}
-                    className="bg-secondary border-border text-sm"
-                    onKeyDown={(e) => e.key === "Enter" && handleAddUrl()}
-                  />
-                  <Button onClick={handleAddUrl} disabled={uploading || !urlInput.trim()} className="gap-1.5 shrink-0">
-                    {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Globe className="w-4 h-4" />}
-                    {t("Importa", "Import")}
-                  </Button>
-                </div>
-              </div>
 
-              {/* Sitemap */}
-              <div className="space-y-2">
-                <Label className="text-xs text-muted-foreground">{t("Importa da Sitemap XML", "Import from XML Sitemap")}</Label>
-                <div className="flex gap-2">
-                  <Input
-                    placeholder="https://example.com/sitemap.xml"
-                    value={sitemapInput}
-                    onChange={(e) => setSitemapInput(e.target.value)}
-                    className="bg-secondary border-border text-sm"
-                    onKeyDown={(e) => e.key === "Enter" && handleAddSitemap()}
-                  />
-                  <Button onClick={handleAddSitemap} disabled={uploading || !sitemapInput.trim()} className="gap-1.5 shrink-0">
-                    {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Map className="w-4 h-4" />}
-                    {t("Importa", "Import")}
-                  </Button>
-                </div>
-              </div>
-
-              {/* FAQ RAG */}
               <div className="border-t border-border pt-4 space-y-3">
                 <Label className="text-sm font-medium">{t("FAQ (RAG)", "FAQ (RAG)")}</Label>
                 <p className="text-xs text-muted-foreground">
