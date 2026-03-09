@@ -1,0 +1,1 @@
+ALTER TABLE public.brand_settings ADD COLUMN widget_script_url text NOT NULL DEFAULT 'https://chatbot.your-genius.com/widget.js';

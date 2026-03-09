@@ -43,6 +43,7 @@ export type Database = {
           logo_url: string | null
           primary_color: string
           updated_at: string
+          widget_script_url: string
         }
         Insert: {
           app_name?: string
@@ -51,6 +52,7 @@ export type Database = {
           logo_url?: string | null
           primary_color?: string
           updated_at?: string
+          widget_script_url?: string
         }
         Update: {
           app_name?: string
@@ -59,6 +61,7 @@ export type Database = {
           logo_url?: string | null
           primary_color?: string
           updated_at?: string
+          widget_script_url?: string
         }
         Relationships: []
       }
