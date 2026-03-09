@@ -72,7 +72,7 @@ const AdminSettings = () => {
   const saveBrandSettings = async () => {
     setSavingBrand(true);
     try {
-      const payload = { logo_url: logoUrl, app_name: appName, primary_color: primaryColor, footer_text: footerText };
+      const payload = { logo_url: logoUrl, app_name: appName, primary_color: primaryColor, footer_text: footerText, widget_script_url: widgetScriptUrl } as any;
       if (brandId) {
         const { error } = await supabase.from("brand_settings" as any).update(payload as any).eq("id", brandId);
         if (error) throw error;
