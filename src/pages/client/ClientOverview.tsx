@@ -109,9 +109,12 @@ const ClientOverview = () => {
     fetchData();
   }, [clientId]);
 
+  const widgetBaseUrl = useWidgetUrl();
   const copyEmbed = () => {
-    const snippet = `<script src="https://chatbot.your-genius.com/widget.js" data-token="${embedToken}" async></script>`;
+    const snippet = `<script src="${widgetBaseUrl}" data-token="${embedToken}" async></script>`;
     navigator.clipboard.writeText(snippet);
+    toast({ title: t("copied"), description: t("embedCopied") });
+  };
     toast({ title: t("copied"), description: t("embedCopied") });
   };
 

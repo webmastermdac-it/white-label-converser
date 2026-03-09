@@ -2,12 +2,14 @@ import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/hooks/useLanguage";
+import { useWidgetUrl } from "@/hooks/useWidgetUrl";
 import { Loader2, Bot, RefreshCw, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const ClientChatPreview = () => {
   const { clientId } = useAuth();
   const { t } = useLanguage();
+  const widgetScriptUrl = useWidgetUrl();
   const [embedToken, setEmbedToken] = useState("");
   const [loading, setLoading] = useState(true);
   const iframeRef = useRef<HTMLIFrameElement>(null);
@@ -25,8 +27,6 @@ const ClientChatPreview = () => {
         setLoading(false);
       });
   }, [clientId]);
-
-  const widgetScriptUrl = "https://chatbot.your-genius.com/widget.js";
 
   const previewHtml = `<!DOCTYPE html>
 <html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">

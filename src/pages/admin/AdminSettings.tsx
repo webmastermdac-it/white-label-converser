@@ -163,6 +163,12 @@ const AdminSettings = () => {
           <Input value={footerText} onChange={(e) => setFooterText(e.target.value)} className="bg-secondary border-border text-sm" />
         </div>
 
+        <div className="space-y-2">
+          <Label className="text-muted-foreground text-sm">URL Script Widget</Label>
+          <Input value={widgetScriptUrl} onChange={(e) => setWidgetScriptUrl(e.target.value)} placeholder="https://chatbot.your-genius.com/widget.js" className="bg-secondary border-border text-sm font-mono" />
+          <p className="text-xs text-muted-foreground">URL dello script widget.js usato negli snippet embed e nelle anteprime.</p>
+        </div>
+
         <Button onClick={saveBrandSettings} disabled={savingBrand} className="gradient-primary text-white border-0 w-full">
           {savingBrand ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
           Salva Brand
