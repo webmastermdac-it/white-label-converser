@@ -130,6 +130,7 @@ export type Database = {
           fallback_msg_it: string | null
           id: string
           is_active: boolean | null
+          is_platform_bot: boolean
           knowledge_base: string | null
           knowledge_base_documents: Json | null
           knowledge_base_products: string | null
@@ -158,6 +159,7 @@ export type Database = {
           fallback_msg_it?: string | null
           id?: string
           is_active?: boolean | null
+          is_platform_bot?: boolean
           knowledge_base?: string | null
           knowledge_base_documents?: Json | null
           knowledge_base_products?: string | null
@@ -186,6 +188,7 @@ export type Database = {
           fallback_msg_it?: string | null
           id?: string
           is_active?: boolean | null
+          is_platform_bot?: boolean
           knowledge_base?: string | null
           knowledge_base_documents?: Json | null
           knowledge_base_products?: string | null
