@@ -223,14 +223,24 @@ const ClientRAGKnowledgeBase = () => {
   };
 
   // --- URL ---
+  const preScrapeUrl = async (url: string): Promise<string> => {
+    const { data, error } = await supabase.functions.invoke("scrape-website", {
+      body: { mode: "scrape", urls: [url] },
+    });
+    if (error) throw error;
+    return (data?.contents || []).join("\n\n");
+  };
+
   const handleAddUrl = async () => {
     if (!urlInput.trim() || !chatbotId) return;
     setUploading(true);
     try {
       const formattedUrl = urlInput.startsWith("http") ? urlInput : `https://${urlInput}`;
+      const scraped = await preScrapeUrl(formattedUrl);
+      if (!scraped.trim()) throw new Error(t("Nessun testo estratto dall'URL", "No text extracted from URL"));
       const { data: source, error } = await supabase
         .from("knowledge_base" as any)
-        .insert({ chatbot_id: chatbotId, name: new URL(formattedUrl).hostname, type: "url", source_url: urlInput.trim(), status: "processing" } as any)
+        .insert({ chatbot_id: chatbotId, name: new URL(formattedUrl).hostname, type: "txt", source_url: scraped, status: "processing" } as any)
         .select().single();
       if (error) throw error;
       setUrlInput("");
