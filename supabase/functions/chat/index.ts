@@ -122,6 +122,8 @@ serve(async (req) => {
     // Step 4: Call AI gateway (streaming)
     const gatewayModel = MODEL_MAP[chatModel] || "openai/gpt-5-mini";
 
+    // TEMPORARY: Non-streaming mode for diagnostic purposes
+    // To restore streaming, revert stream to true and uncomment the tee/reader logic below
     const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -131,7 +133,7 @@ serve(async (req) => {
       body: JSON.stringify({
         model: gatewayModel,
         messages: [{ role: "system", content: systemPrompt }, ...messages],
-        stream: true,
+        stream: false,
       }),
     });
 
@@ -142,6 +144,22 @@ serve(async (req) => {
       throw new Error(`AI gateway error: ${status}`);
     }
 
+    const aiData = await aiResponse.json();
+    const fullMessage = aiData.choices?.[0]?.message?.content || "";
+    const cleanMessage = fullMessage.replace("[TRIGGER_LEAD_FORM]", "").trim();
+    const triggerLead = fullMessage.indexOf("[TRIGGER_LEAD_FORM]") !== -1;
+
+    // Save session in background
+    if (session_token) {
+      saveSession(supabase, session_token, botConfig, [...messages, { role: "assistant", content: cleanMessage }], source_url, lang);
+    }
+
+    return jsonResp({
+      message: cleanMessage,
+      trigger_lead_form: triggerLead,
+    });
+
+    /* STREAMING CODE (commented out for diagnostic)
     const [streamForClient, streamForSave] = aiResponse.body!.tee();
 
     if (session_token) {
@@ -176,6 +194,7 @@ serve(async (req) => {
         "X-Accel-Buffering": "no",
       },
     });
+    END STREAMING CODE */
   } catch (error: any) {
     console.error("chat error:", error);
     return jsonResp({ error: error.message }, 500);
