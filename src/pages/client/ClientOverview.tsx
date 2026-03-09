@@ -115,8 +115,6 @@ const ClientOverview = () => {
     navigator.clipboard.writeText(snippet);
     toast({ title: t("copied"), description: t("embedCopied") });
   };
-    toast({ title: t("copied"), description: t("embedCopied") });
-  };
 
   const chatLimit = maxConversationsMonth === -1 ? null : maxConversationsMonth;
   const leadLimit = maxLeadsMonth === -1 ? null : maxLeadsMonth;
