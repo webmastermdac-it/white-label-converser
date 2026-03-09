@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/hooks/useLanguage";
+import { useWidgetUrl } from "@/hooks/useWidgetUrl";
 import { usePlan } from "@/hooks/usePlan";
 import { usePlanConfig } from "@/hooks/usePlanConfig";
 import { Inbox, MessageSquare, Bot, TrendingUp, ArrowUpRight, Activity, Settings, Code2, Copy, Sparkles, Star } from "lucide-react";
@@ -108,8 +109,9 @@ const ClientOverview = () => {
     fetchData();
   }, [clientId]);
 
+  const widgetBaseUrl = useWidgetUrl();
   const copyEmbed = () => {
-    const snippet = `<script src="https://chatbot.your-genius.com/widget.js" data-token="${embedToken}" async></script>`;
+    const snippet = `<script src="${widgetBaseUrl}" data-token="${embedToken}" async></script>`;
     navigator.clipboard.writeText(snippet);
     toast({ title: t("copied"), description: t("embedCopied") });
   };

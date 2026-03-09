@@ -7,10 +7,12 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useLanguage } from "@/hooks/useLanguage";
+import { useWidgetUrl } from "@/hooks/useWidgetUrl";
 
 const AdminClientConfig = () => {
   const { clientId } = useParams<{ clientId: string }>();
   const { t } = useLanguage();
+  const widgetScriptUrl = useWidgetUrl();
   const [clientName, setClientName] = useState("");
   const [loading, setLoading] = useState(true);
   const [embedToken, setEmbedToken] = useState("");
@@ -27,8 +29,6 @@ const AdminClientConfig = () => {
       setLoading(false);
     });
   }, [clientId]);
-
-  const widgetScriptUrl = "https://chatbot.your-genius.com/widget.js";
 
   const iframeSrcDoc = embedToken
     ? `<!DOCTYPE html>

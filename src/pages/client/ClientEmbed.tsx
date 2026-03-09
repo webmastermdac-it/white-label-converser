@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/hooks/useLanguage";
+import { useWidgetUrl } from "@/hooks/useWidgetUrl";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Copy, Check, Code2, Loader2, ExternalLink, Eye } from "lucide-react";
@@ -12,6 +13,7 @@ const ClientEmbed = () => {
   const { t } = useLanguage();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const widgetBaseUrl = useWidgetUrl();
   const [embedToken, setEmbedToken] = useState("");
   const [botName, setBotName] = useState("");
   const [loading, setLoading] = useState(true);
@@ -31,7 +33,7 @@ const ClientEmbed = () => {
       });
   }, [clientId]);
 
-  const fallbackUrl = `https://chatbot.your-genius.com/widget.js?v=${Date.now()}`;
+  const fallbackUrl = `${widgetBaseUrl}?v=${Date.now()}`;
 
   const snippet = `<!-- ${botName || "Genius Chatbot"} -->
 <script 

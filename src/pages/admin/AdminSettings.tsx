@@ -22,6 +22,7 @@ const AdminSettings = () => {
   const [appName, setAppName] = useState("Genius Chatbot");
   const [primaryColor, setPrimaryColor] = useState("#1A1A1A");
   const [footerText, setFooterText] = useState("Genius Chatbot Builder — Un prodotto MDAC S.r.l.");
+  const [widgetScriptUrl, setWidgetScriptUrl] = useState("https://chatbot.your-genius.com/widget.js");
   const [savingBrand, setSavingBrand] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
 
@@ -42,6 +43,7 @@ const AdminSettings = () => {
       setAppName(d.app_name || "Genius Chatbot");
       setPrimaryColor(d.primary_color || "#1A1A1A");
       setFooterText(d.footer_text || "");
+      setWidgetScriptUrl(d.widget_script_url || "https://chatbot.your-genius.com/widget.js");
     }
   };
 
@@ -70,7 +72,7 @@ const AdminSettings = () => {
   const saveBrandSettings = async () => {
     setSavingBrand(true);
     try {
-      const payload = { logo_url: logoUrl, app_name: appName, primary_color: primaryColor, footer_text: footerText };
+      const payload = { logo_url: logoUrl, app_name: appName, primary_color: primaryColor, footer_text: footerText, widget_script_url: widgetScriptUrl } as any;
       if (brandId) {
         const { error } = await supabase.from("brand_settings" as any).update(payload as any).eq("id", brandId);
         if (error) throw error;
@@ -159,6 +161,12 @@ const AdminSettings = () => {
         <div className="space-y-2">
           <Label className="text-muted-foreground text-sm">Testo footer email</Label>
           <Input value={footerText} onChange={(e) => setFooterText(e.target.value)} className="bg-secondary border-border text-sm" />
+        </div>
+
+        <div className="space-y-2">
+          <Label className="text-muted-foreground text-sm">URL Script Widget</Label>
+          <Input value={widgetScriptUrl} onChange={(e) => setWidgetScriptUrl(e.target.value)} placeholder="https://chatbot.your-genius.com/widget.js" className="bg-secondary border-border text-sm font-mono" />
+          <p className="text-xs text-muted-foreground">URL dello script widget.js usato negli snippet embed e nelle anteprime.</p>
         </div>
 
         <Button onClick={saveBrandSettings} disabled={savingBrand} className="gradient-primary text-white border-0 w-full">
