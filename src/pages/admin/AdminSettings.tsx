@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Key, Save, Mail, Upload, Palette, X } from "lucide-react";
+import { Loader2, Key, Save, Mail, Upload, Palette, X, Bot } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
 import AIConfigSection from "@/components/admin/AIConfigSection";
 
 const AdminSettings = () => {
