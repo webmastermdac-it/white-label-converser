@@ -270,11 +270,15 @@ const ClientRAGKnowledgeBase = () => {
       }
 
       for (const url of urls) {
-        const { data: source, error } = await supabase
-          .from("knowledge_base" as any)
-          .insert({ chatbot_id: chatbotId, name: new URL(url).pathname || url, type: "url", source_url: url, status: "processing" } as any)
-          .select().single();
-        if (!error && source) processSource((source as any).id);
+        try {
+          const scraped = await preScrapeUrl(url);
+          if (!scraped.trim()) continue;
+          const { data: source, error } = await supabase
+            .from("knowledge_base" as any)
+            .insert({ chatbot_id: chatbotId, name: new URL(url).pathname || url, type: "txt", source_url: scraped, status: "processing" } as any)
+            .select().single();
+          if (!error && source) processSource((source as any).id);
+        } catch { continue; }
       }
 
       setSitemapInput("");
