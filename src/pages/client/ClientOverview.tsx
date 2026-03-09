@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/hooks/useLanguage";
+import { useWidgetUrl } from "@/hooks/useWidgetUrl";
 import { usePlan } from "@/hooks/usePlan";
 import { usePlanConfig } from "@/hooks/usePlanConfig";
 import { Inbox, MessageSquare, Bot, TrendingUp, ArrowUpRight, Activity, Settings, Code2, Copy, Sparkles, Star } from "lucide-react";
