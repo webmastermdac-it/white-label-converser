@@ -399,6 +399,7 @@
         render();
         var reader = response.body.getReader();
         var decoder = new TextDecoder();
+        var lineBuf = "";
         function read() {
           reader.read().then(function(result) {
             if (result.done) {
@@ -409,10 +410,12 @@
               render();
               return;
             }
-            var lines = decoder.decode(result.value).split("\n");
-            for (var i = 0; i < lines.length; i++) {
-              var line = lines[i];
-              if (!line.startsWith("data: ") || line.trim() === "data: [DONE]") continue;
+            lineBuf += decoder.decode(result.value, { stream: true });
+            var parts = lineBuf.split("\n");
+            lineBuf = parts.pop() || "";
+            for (var i = 0; i < parts.length; i++) {
+              var line = parts[i].trim();
+              if (!line.startsWith("data: ") || line === "data: [DONE]") continue;
               try {
                 var parsed = JSON.parse(line.slice(6));
                 var delta = (parsed.choices && parsed.choices[0] && parsed.choices[0].delta && parsed.choices[0].delta.content) || "";
