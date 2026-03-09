@@ -22,6 +22,7 @@ const AdminSettings = () => {
   const [appName, setAppName] = useState("Genius Chatbot");
   const [primaryColor, setPrimaryColor] = useState("#1A1A1A");
   const [footerText, setFooterText] = useState("Genius Chatbot Builder — Un prodotto MDAC S.r.l.");
+  const [widgetScriptUrl, setWidgetScriptUrl] = useState("https://chatbot.your-genius.com/widget.js");
   const [savingBrand, setSavingBrand] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
 
