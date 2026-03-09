@@ -43,6 +43,7 @@ const AdminSettings = () => {
       setAppName(d.app_name || "Genius Chatbot");
       setPrimaryColor(d.primary_color || "#1A1A1A");
       setFooterText(d.footer_text || "");
+      setWidgetScriptUrl(d.widget_script_url || "https://chatbot.your-genius.com/widget.js");
     }
   };
 
