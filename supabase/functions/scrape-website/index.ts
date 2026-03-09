@@ -125,10 +125,13 @@ function extractMainContent(html: string): string {
     .replace(/<aside[\s\S]*?<\/aside>/gi, "")
     .replace(/<noscript[\s\S]*?<\/noscript>/gi, "");
 
-  // Replace block elements with newlines
-  text = text.replace(/<(p|div|h[1-6]|li|br|tr)[^>]*>/gi, "\n");
-  // Strip remaining HTML tags
-  text = text.replace(/<[^>]+>/g, " ");
+  // Before stripping tags, add space around inline elements to prevent word merging
+  text = text.replace(/<\/(span|a|strong|em|b|i|label|button|td|th|li)>/gi, " $0");
+  text = text.replace(/<(br|hr)[^>]*>/gi, "\n");
+  // Then strip all remaining tags
+  text = text.replace(/<[^>]+>/g, "");
+  // Collapse multiple spaces
+  text = text.replace(/ {2,}/g, " ");
   // Decode entities
   text = text
     .replace(/&amp;/g, "&")
