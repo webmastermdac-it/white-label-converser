@@ -39,7 +39,7 @@ const AdminClients = () => {
   );
 
   const fetchClients = async () => {
-    const { data } = await supabase.from("clients").select("*").order("created_at", { ascending: false });
+    const { data } = await supabase.from("clients").select("*").neq("id", "00000000-0000-0000-0000-000000000001").order("created_at", { ascending: false });
     setClients(data || []);
     setLoading(false);
   };
