@@ -77,6 +77,35 @@ const AdminSettings = () => {
 
   const removeLogo = () => setLogoUrl(null);
 
+  const loadPlatformBot = async () => {
+    setLoadingPlatformBot(true);
+    const { data } = await supabase
+      .from("chatbot_configs")
+      .select("knowledge_base, embed_token")
+      .eq("id", "00000000-0000-0000-0000-000000000002")
+      .single();
+    if (data) {
+      setPlatformBotPrompt(data.knowledge_base || "");
+      setPlatformBotToken(data.embed_token || "");
+    }
+    setLoadingPlatformBot(false);
+  };
+
+  const savePlatformBot = async () => {
+    setSavingPlatformBot(true);
+    try {
+      const { error } = await supabase
+        .from("chatbot_configs")
+        .update({ knowledge_base: platformBotPrompt } as any)
+        .eq("id", "00000000-0000-0000-0000-000000000002");
+      if (error) throw error;
+      toast({ title: "Platform bot salvato!" });
+    } catch (err: any) {
+      toast({ title: "Errore", description: err.message, variant: "destructive" });
+    }
+    setSavingPlatformBot(false);
+  };
+
   const saveBrandSettings = async () => {
     setSavingBrand(true);
     try {
