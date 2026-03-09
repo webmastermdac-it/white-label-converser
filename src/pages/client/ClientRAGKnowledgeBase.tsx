@@ -337,9 +337,11 @@ const ClientRAGKnowledgeBase = () => {
       const page = selected[i];
       setCrawlProgress({ current: i + 1, total: selected.length });
       try {
+        const scraped = await preScrapeUrl(page.url);
+        if (!scraped.trim()) continue;
         const { data: source, error } = await supabase
           .from("knowledge_base" as any)
-          .insert({ chatbot_id: chatbotId, name: new URL(page.url).pathname || page.url, type: "url", source_url: page.url, status: "processing" } as any)
+          .insert({ chatbot_id: chatbotId, name: new URL(page.url).pathname || page.url, type: "txt", source_url: scraped, status: "processing" } as any)
           .select().single();
         if (!error && source) processSource((source as any).id);
       } catch (err: any) {
