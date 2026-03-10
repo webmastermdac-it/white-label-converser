@@ -893,6 +893,7 @@ export type Database = {
           content: string
           id: string
           metadata: Json
+          priority: number
           similarity: number
         }[]
       }
