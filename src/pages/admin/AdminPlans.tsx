@@ -116,6 +116,7 @@ const AdminPlans = () => {
         max_conversations_month: current.max_conversations_month,
         max_leads_month: current.max_leads_month,
         max_faqs: current.max_faqs,
+        max_documents: current.max_documents,
         remove_branding: current.remove_branding,
         doc_upload: current.doc_upload,
         sector_templates: current.sector_templates,
