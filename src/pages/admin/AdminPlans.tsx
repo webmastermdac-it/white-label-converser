@@ -65,6 +65,7 @@ const ENFORCED_FEATURES = new Set([
   "max_conversations_month",
   "max_leads_month",
   "max_faqs",
+  "max_documents",
 ]);
 
 const AdminPlans = () => {
