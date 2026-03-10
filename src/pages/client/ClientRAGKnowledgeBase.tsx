@@ -489,23 +489,30 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
   // ══════════════════════════════════════════════════════
   // RENDER
   // ══════════════════════════════════════════════════════
+  const showAll = !section;
+  const showFaq = showAll || section === "faq";
+  const showKnowledge = showAll || section === "knowledge";
+  const showInstructions = showAll || section === "instructions";
+
   return (
-    <div className="p-4 md:p-6 space-y-5 animate-fade-in-up">
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-foreground" style={{ fontFamily: "Syne, sans-serif" }}>
-          Knowledge Base
-        </h1>
-        <p className="text-muted-foreground text-sm mt-1">
-          {t(
-            "Gestisci le fonti di conoscenza del tuo chatbot. Le risposte seguono un ordine di priorità: FAQ → Documenti → Istruzioni.",
-            "Manage your chatbot's knowledge sources. Responses follow a priority order: FAQ → Knowledge → Instructions."
-          )}
-        </p>
-      </div>
+    <div className={section ? "space-y-5" : "p-4 md:p-6 space-y-5 animate-fade-in-up"}>
+      {/* Header — only when showing full page */}
+      {showAll && (
+        <div>
+          <h1 className="text-2xl font-bold text-foreground" style={{ fontFamily: "Syne, sans-serif" }}>
+            Knowledge Base
+          </h1>
+          <p className="text-muted-foreground text-sm mt-1">
+            {t(
+              "Gestisci le fonti di conoscenza del tuo chatbot. Le risposte seguono un ordine di priorità: FAQ → Documenti → Istruzioni.",
+              "Manage your chatbot's knowledge sources. Responses follow a priority order: FAQ → Knowledge → Instructions."
+            )}
+          </p>
+        </div>
+      )}
 
       {/* Processing banner */}
-      {processingSources > 0 && (
+      {showKnowledge && processingSources > 0 && (
         <div className="glass rounded-lg px-3 py-2.5 border-warning/30 flex items-center gap-2.5">
           <Loader2 className="w-4 h-4 animate-spin text-warning" />
           <p className="text-xs font-medium text-foreground">
@@ -517,6 +524,7 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
       {/* ══════════════════════════════════════════════════ */}
       {/* SECTION 1 — FAQ (Priority: HIGH ★★★)             */}
       {/* ══════════════════════════════════════════════════ */}
+      {showFaq && (
       <div className="glass rounded-xl p-5">
         <PriorityHeader
           num={1}
