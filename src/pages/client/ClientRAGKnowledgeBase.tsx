@@ -13,11 +13,12 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
+import KnowledgeBaseWizard from "@/components/knowledge-base/KnowledgeBaseWizard";
 import {
   Loader2, Upload, Globe, HelpCircle, FileText, Trash2,
   RefreshCw, CheckCircle2, XCircle, Clock, Plus, Database,
   Search, Map, Send, AlertTriangle, GripVertical, X, Lock,
-  Save, Star, Info,
+  Save, Star, Info, Wand2, Store, ExternalLink,
 } from "lucide-react";
 
 // ── Types ──
@@ -33,6 +34,7 @@ interface KBSource {
   error_message: string | null;
   created_at: string;
   updated_at: string;
+  priority?: number;
 }
 
 interface FaqEntry {
@@ -63,8 +65,71 @@ const statusConfig: Record<string, { icon: any; cls: string; label: string }> = 
   outdated: { icon: RefreshCw, cls: "bg-primary/10 text-primary border-primary/30", label: "Outdated" },
 };
 
+// ── E-commerce KB Status inline component ──
+const EcommerceKBStatus: React.FC<{ clientId: string }> = ({ clientId }) => {
+  const [config, setConfig] = useState<any>(null);
+  const [syncing, setSyncing] = useState(false);
+  const { toast } = useToast();
+  const { lang } = useLanguage();
+  const t = (it: string, en: string) => lang === "it" ? it : en;
+
+  useEffect(() => {
+    supabase
+      .from("ecommerce_configs" as any)
+      .select("platform, sync_status, last_sync_at")
+      .eq("client_id", clientId)
+      .maybeSingle()
+      .then(({ data }) => setConfig(data));
+  }, [clientId]);
+
+  const handleSync = async () => {
+    setSyncing(true);
+    try {
+      await supabase.functions.invoke("sync-products", { body: { client_id: clientId } });
+      toast({ title: t("Sincronizzazione avviata", "Sync started") });
+    } catch (err: any) {
+      toast({ title: err.message, variant: "destructive" });
+    } finally {
+      setSyncing(false);
+    }
+  };
+
+  if (!config) {
+    return (
+      <div className="flex items-center gap-2 p-3 rounded-lg bg-secondary/50 text-xs text-muted-foreground">
+        <Store className="w-4 h-4" />
+        {t("Nessuna integrazione configurata.", "No integration configured.")}
+        <button
+          className="ml-auto text-primary underline"
+          onClick={() => window.location.href = "/dashboard/ecommerce"}
+        >
+          {t("Configura ora →", "Configure now →")}
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex items-center gap-3 p-3 rounded-lg bg-secondary/50">
+      <Store className="w-4 h-4 text-primary shrink-0" />
+      <div className="flex-1 min-w-0">
+        <p className="text-xs font-medium text-foreground capitalize">{config.platform}</p>
+        <p className="text-[10px] text-muted-foreground">
+          {config.last_sync_at ? `${t("Sync", "Sync")}: ${new Date(config.last_sync_at).toLocaleDateString()}` : ""}
+        </p>
+      </div>
+      <Badge variant={config.sync_status === "success" ? "default" : "destructive"} className="text-[10px]">
+        {config.sync_status}
+      </Badge>
+      <Button size="icon" variant="ghost" className="h-7 w-7" onClick={handleSync} disabled={syncing}>
+        <RefreshCw className={`w-3.5 h-3.5 ${syncing ? "animate-spin" : ""}`} />
+      </Button>
+    </div>
+  );
+};
+
 const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }: { overrideClientId?: string; overrideChatbotId?: string; section?: "faq" | "knowledge" | "instructions" } = {}) => {
-  const { clientId: authClientId } = useAuth();
+  const { clientId: authClientId, role } = useAuth();
   const clientId = overrideClientId || authClientId;
   const { lang } = useLanguage();
   const { toast } = useToast();
@@ -102,6 +167,7 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
   const [bulkDeleting, setBulkDeleting] = useState(false);
   const [freeText, setFreeText] = useState("");
   const [freeTextName, setFreeTextName] = useState("");
+  const [updatingPriorityId, setUpdatingPriorityId] = useState<string | null>(null);
 
   // Instructions state
   const [systemPrompt, setSystemPrompt] = useState("");
@@ -109,6 +175,8 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
 
   const t = (it: string, en: string) => lang === "it" ? it : en;
   const isFree = planConfig?.plan_name === "free";
+  const isAdmin = role === "super_admin";
+  const isPro = planConfig?.plan_name === "pro" || isAdmin;
 
   const showUpgrade = (plan: "starter" | "pro" = "starter") => {
     setUpgradeRequiredPlan(plan);
@@ -209,7 +277,6 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
     if (!chatbotId) return;
     setSavingFaqs(true);
     try {
-      // Delete all existing FAQs for this bot, then re-insert
       await supabase.from("faqs" as any).delete().eq("chatbot_id", chatbotId);
       const validFaqs = faqs.filter(f => f.question.trim() && f.answer.trim());
       if (validFaqs.length > 0) {
@@ -293,14 +360,6 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
     if (e.dataTransfer.files.length) uploadFiles(e.dataTransfer.files);
   };
 
-  const preScrapeUrl = async (url: string): Promise<string> => {
-    const { data, error } = await supabase.functions.invoke("scrape-website", {
-      body: { mode: "scrape", urls: [url] },
-    });
-    if (error) throw error;
-    return (data?.contents || []).join("\n\n");
-  };
-
   const handleAddUrl = async () => {
     if (!urlInput.trim() || !chatbotId) return;
     if (docLimitReached) { showUpgrade("pro"); return; }
@@ -309,7 +368,6 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
       const formattedUrl = urlInput.startsWith("http") ? urlInput : `https://${urlInput}`;
       const normalized = normalizeUrl(formattedUrl);
 
-      // Check for existing source with same URL
       const { data: existing } = await supabase
         .from("knowledge_base")
         .select("id, status, name")
@@ -330,7 +388,6 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
         return;
       }
 
-      // Pre-scrape content client-side to avoid 503 errors in edge function
       const { data: scrapeData, error: scrapeErr } = await supabase.functions.invoke("scrape-website", {
         body: { url: normalized, mode: "analyze" },
       });
@@ -351,7 +408,6 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
         .insert({ chatbot_id: chatbotId, name: new URL(normalized).hostname + new URL(normalized).pathname, type: "txt", source_url: normalized, status: "processing" } as any)
         .select().single();
       if (error) throw error;
-      // Save scraped content to source_url field for txt type processing
       await supabase.from("knowledge_base" as any).update({ source_url: scrapeData.content } as any).eq("id", (source as any).id);
       setUrlInput("");
       processSource((source as any).id);
@@ -378,7 +434,6 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
         return;
       }
 
-      // Fetch all existing source_urls for this chatbot in one query
       const { data: existingSources } = await supabase
         .from("knowledge_base")
         .select("source_url")
@@ -402,7 +457,6 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
       let addedCount = 0;
       for (const url of newUrls) {
         try {
-          // Pre-scrape each URL to avoid 503 in edge function
           const { data: scrapeData } = await supabase.functions.invoke("scrape-website", {
             body: { url, mode: "analyze" },
           });
@@ -461,7 +515,6 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
     setCrawlImporting(true);
     setCrawlProgress({ current: 0, total: selected.length });
 
-    // Fetch existing URLs for deduplication
     const { data: existingSources } = await supabase
       .from("knowledge_base")
       .select("source_url")
@@ -475,7 +528,6 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
       const normalized = normalizeUrl(selected[i].url);
       if (existingUrls.has(normalized)) { skippedCount++; continue; }
       try {
-        // Pre-scrape to avoid 503 in edge function
         const { data: scrapeData } = await supabase.functions.invoke("scrape-website", {
           body: { url: normalized, mode: "analyze" },
         });
@@ -569,6 +621,13 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
     } else {
       setSelectedIds(new Set(sources.map(s => s.id)));
     }
+  };
+
+  const handleSetPriority = async (sourceId: string, priority: number) => {
+    setUpdatingPriorityId(sourceId);
+    await supabase.from("knowledge_base" as any).update({ priority } as any).eq("id", sourceId);
+    setUpdatingPriorityId(null);
+    fetchData();
   };
 
   const handleSearchTest = async () => {
@@ -747,6 +806,49 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
       )}
 
       {/* ══════════════════════════════════════════════════ */}
+      {/* WIZARD — Available on ALL plans                    */}
+      {/* ══════════════════════════════════════════════════ */}
+      {showInstructions && (
+      <div className="glass rounded-xl p-5">
+        <div className="flex items-center gap-2 mb-1">
+          <Wand2 className="w-5 h-5 text-primary" />
+          <h2 className="text-sm font-semibold text-foreground">
+            {t("🧙 Wizard Guidato", "🧙 Guided Wizard")}
+          </h2>
+          <Badge variant="secondary" className="text-xs ml-auto">
+            {t("Gratuito", "Free")}
+          </Badge>
+        </div>
+        <p className="text-xs text-muted-foreground mb-4">
+          {t(
+            "Configura le istruzioni del bot con il wizard passo-passo.",
+            "Set up bot instructions with the step-by-step wizard."
+          )}
+        </p>
+        {chatbotId && (
+          <KnowledgeBaseWizard
+            clientId={clientId!}
+            configId={chatbotId}
+            currentKnowledgeBase={systemPrompt}
+            plan={planConfig?.plan_name || "free"}
+            onSave={async (kb: string) => {
+              setSystemPrompt(kb);
+              try {
+                await supabase
+                  .from("chatbot_configs")
+                  .update({ knowledge_base: kb } as any)
+                  .eq("id", chatbotId);
+                toast({ title: "✅", description: t("Istruzioni salvate!", "Instructions saved!") });
+              } catch (err: any) {
+                toast({ title: "Errore", description: err.message, variant: "destructive" });
+              }
+            }}
+          />
+        )}
+      </div>
+      )}
+
+      {/* ══════════════════════════════════════════════════ */}
       {/* SECTION 2 — Knowledge Base (Priority: MEDIUM ★★)  */}
       {/* ══════════════════════════════════════════════════ */}
       {showKnowledge && (
@@ -764,7 +866,6 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
         />
 
         {isFree || !canUploadDocs ? (
-          // Locked for free plan
           <div className="flex items-center gap-3 p-4 rounded-xl border border-border bg-muted/30">
             <Lock className="w-5 h-5 text-muted-foreground shrink-0" />
             <div className="flex-1">
@@ -1010,6 +1111,25 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
                                 </p>
                               )}
                             </div>
+                            {/* Priority stars */}
+                            <div className="flex items-center gap-0.5" title={t("Priorità", "Priority")}>
+                              {[1, 2, 3].map((star) => (
+                                <button
+                                  key={star}
+                                  onClick={() => handleSetPriority(source.id, star)}
+                                  disabled={updatingPriorityId === source.id}
+                                  className="transition-colors"
+                                >
+                                  <Star
+                                    className={`w-3.5 h-3.5 ${
+                                      star <= (source.priority ?? 2)
+                                        ? "text-yellow-400 fill-yellow-400"
+                                        : "text-muted-foreground/30"
+                                    }`}
+                                  />
+                                </button>
+                              ))}
+                            </div>
                             <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
                               {["error", "ready", "outdated"].includes(source.status) && (
                                 <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleReprocess(source)}>
@@ -1065,12 +1185,72 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
       )}
 
       {/* ══════════════════════════════════════════════════ */}
-      {/* SECTION 3 — Instructions (Priority: LOW ★)        */}
+      {/* SECTION 3 — E-commerce Catalog (Pro only)         */}
+      {/* ══════════════════════════════════════════════════ */}
+      {showKnowledge && !isFree && (
+        <>
+          {!isPro ? (
+            <div className="glass rounded-xl p-5 border border-border opacity-80">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center">
+                  <Lock className="w-5 h-5 text-muted-foreground" />
+                </div>
+                <div className="flex-1">
+                  <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                    <span>3️⃣</span>
+                    {t("🛒 Catalogo E-commerce", "🛒 E-commerce Catalog")}
+                    <Badge variant="outline" className="text-xs ml-1 border-primary/40 text-primary">Pro</Badge>
+                  </h2>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {t(
+                      "Sincronizza automaticamente WooCommerce, Shopify, PrestaShop, feed XML/CSV. Il catalogo prodotti viene usato dal chatbot per rispondere sugli ordini e la disponibilità.",
+                      "Auto-sync WooCommerce, Shopify, PrestaShop, XML/CSV feeds. The product catalog is used by the chatbot to answer about orders and availability."
+                    )}
+                  </p>
+                </div>
+                <Button size="sm" variant="outline" className="border-primary text-primary"
+                  onClick={() => showUpgrade("pro")}>
+                  {t("Upgrade a Pro", "Upgrade to Pro")}
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div className="glass rounded-xl p-5 space-y-3">
+              <div className="flex items-center justify-between">
+                <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                  <span>3️⃣</span>
+                  {t("🛒 Catalogo E-commerce", "🛒 E-commerce Catalog")}
+                  <Badge variant="secondary" className="text-xs">Pro</Badge>
+                </h2>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="gap-1.5 border-border text-foreground text-xs"
+                  onClick={() => window.location.href = "/dashboard/ecommerce"}
+                >
+                  <ExternalLink className="w-3.5 h-3.5" />
+                  {t("Configura integrazione", "Configure integration")}
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {t(
+                  "Il catalogo prodotti viene sincronizzato automaticamente e usato dal chatbot per rispondere su prezzi, disponibilità e varianti.",
+                  "The product catalog is automatically synced and used by the chatbot to answer about prices, availability and variants."
+                )}
+              </p>
+              {clientId && <EcommerceKBStatus clientId={clientId} />}
+            </div>
+          )}
+        </>
+      )}
+
+      {/* ══════════════════════════════════════════════════ */}
+      {/* SECTION 4 — Instructions (Priority: LOW ★)        */}
       {/* ══════════════════════════════════════════════════ */}
       {showInstructions && (
       <div className="glass rounded-xl p-5">
         <PriorityHeader
-          num={3}
+          num={isFree ? 2 : 3}
           icon="⚙️"
           title={t("Istruzioni", "Instructions")}
           subtitle={t(
