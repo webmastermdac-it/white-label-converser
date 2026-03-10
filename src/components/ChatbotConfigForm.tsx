@@ -32,6 +32,7 @@ interface Config {
 
 interface ChatbotConfigFormProps {
   clientId: string;
+  chatbotId?: string;
   onSaved?: () => void;
 }
 
