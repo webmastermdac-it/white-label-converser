@@ -67,7 +67,20 @@ serve(async (req) => {
 
     if (error) throw new Error(`Search failed: ${error.message}`);
 
-    return jsonResp({ chunks: chunks || [], has_rag: true });
+    // Apply priority boost: priority 3 = +0.08, priority 2 = 0, priority 1 = -0.05
+    const boostedChunks = (chunks || []).map((chunk: any) => {
+      const priority = chunk.priority ?? 2;
+      const boost = priority === 3 ? 0.08 : priority === 1 ? -0.05 : 0;
+      return {
+        ...chunk,
+        similarity: Math.min(1.0, (chunk.similarity || 0) + boost),
+      };
+    });
+
+    // Re-sort by boosted similarity
+    boostedChunks.sort((a: any, b: any) => b.similarity - a.similarity);
+
+    return jsonResp({ chunks: boostedChunks, has_rag: true });
   } catch (error: any) {
     console.error("rag-search error:", error);
     return jsonResp({ error: error.message }, 500);
