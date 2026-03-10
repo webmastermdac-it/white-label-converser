@@ -475,9 +475,15 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
       const normalized = normalizeUrl(selected[i].url);
       if (existingUrls.has(normalized)) { skippedCount++; continue; }
       try {
+        // Pre-scrape to avoid 503 in edge function
+        const { data: scrapeData } = await supabase.functions.invoke("scrape-website", {
+          body: { url: normalized, mode: "analyze" },
+        });
+        const content = scrapeData?.content?.trim();
+        if (!content) { skippedCount++; continue; }
         const { data: source, error } = await supabase
           .from("knowledge_base" as any)
-          .insert({ chatbot_id: chatbotId, name: new URL(normalized).pathname || selected[i].url, type: "url", source_url: normalized, status: "processing" } as any)
+          .insert({ chatbot_id: chatbotId, name: new URL(normalized).pathname || selected[i].url, type: "txt", source_url: content, status: "processing" } as any)
           .select().single();
         if (!error && source) { processSource((source as any).id); addedCount++; existingUrls.add(normalized); }
       } catch { continue; }
