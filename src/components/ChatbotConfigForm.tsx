@@ -71,11 +71,13 @@ const ChatbotConfigForm: React.FC<ChatbotConfigFormProps> = ({ clientId, chatbot
 
   useEffect(() => {
     const fetchConfig = async () => {
-      const { data } = await supabase
-        .from("chatbot_configs")
-        .select("*")
-        .eq("client_id", clientId)
-        .single();
+      let query = supabase.from("chatbot_configs").select("*");
+      if (overrideChatbotId) {
+        query = query.eq("id", overrideChatbotId);
+      } else {
+        query = query.eq("client_id", clientId);
+      }
+      const { data } = await query.limit(1).single();
 
       if (data) {
         setConfig({
