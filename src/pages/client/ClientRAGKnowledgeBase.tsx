@@ -83,6 +83,8 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [searching, setSearching] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkDeleting, setBulkDeleting] = useState(false);
   const [freeText, setFreeText] = useState("");
   const [freeTextName, setFreeTextName] = useState("");
 
