@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Key, Save, Mail, Upload, Palette, X, Bot } from "lucide-react";
+import { Loader2, Key, Save, Mail, Upload, Palette, X } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import AIConfigSection from "@/components/admin/AIConfigSection";
 
@@ -27,15 +27,9 @@ const AdminSettings = () => {
   const [savingBrand, setSavingBrand] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
 
-  // Platform bot state
-  const [platformBotPrompt, setPlatformBotPrompt] = useState("");
-  const [platformBotToken, setPlatformBotToken] = useState("");
-  const [savingPlatformBot, setSavingPlatformBot] = useState(false);
-  const [loadingPlatformBot, setLoadingPlatformBot] = useState(true);
 
   useEffect(() => {
     loadBrandSettings();
-    loadPlatformBot();
   }, []);
 
   const loadBrandSettings = async () => {
@@ -77,34 +71,6 @@ const AdminSettings = () => {
 
   const removeLogo = () => setLogoUrl(null);
 
-  const loadPlatformBot = async () => {
-    setLoadingPlatformBot(true);
-    const { data } = await supabase
-      .from("chatbot_configs")
-      .select("knowledge_base, embed_token")
-      .eq("id", "00000000-0000-0000-0000-000000000002")
-      .single();
-    if (data) {
-      setPlatformBotPrompt(data.knowledge_base || "");
-      setPlatformBotToken(data.embed_token || "");
-    }
-    setLoadingPlatformBot(false);
-  };
-
-  const savePlatformBot = async () => {
-    setSavingPlatformBot(true);
-    try {
-      const { error } = await supabase
-        .from("chatbot_configs")
-        .update({ knowledge_base: platformBotPrompt } as any)
-        .eq("id", "00000000-0000-0000-0000-000000000002");
-      if (error) throw error;
-      toast({ title: "Platform bot salvato!" });
-    } catch (err: any) {
-      toast({ title: "Errore", description: err.message, variant: "destructive" });
-    }
-    setSavingPlatformBot(false);
-  };
 
   const saveBrandSettings = async () => {
     setSavingBrand(true);
@@ -265,47 +231,6 @@ const AdminSettings = () => {
             Invia Email di Test
           </Button>
         </div>
-      </div>
-
-      {/* Platform Bot */}
-      <div className="glass rounded-xl p-6 space-y-6 max-w-lg">
-        <div className="flex items-center gap-3 mb-2">
-          <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
-            <Bot className="w-4 h-4 text-primary" />
-          </div>
-          <div>
-            <h2 className="font-semibold text-foreground text-sm">Platform Bot (Genius Assistant)</h2>
-            <p className="text-xs text-muted-foreground">Bot dedicato al sito chatbot.your-genius.com</p>
-          </div>
-        </div>
-
-        {loadingPlatformBot ? (
-          <div className="flex justify-center py-4"><Loader2 className="w-5 h-5 animate-spin text-muted-foreground" /></div>
-        ) : (
-          <>
-            <div className="space-y-2">
-              <Label className="text-muted-foreground text-sm">Embed Token (per il widget sul sito)</Label>
-              <Input value={platformBotToken} readOnly className="bg-secondary border-border text-sm font-mono" />
-              <p className="text-xs text-muted-foreground">Usa questo token nel tag script del widget su chatbot.your-genius.com</p>
-            </div>
-
-            <div className="space-y-2">
-              <Label className="text-muted-foreground text-sm">System Prompt / Knowledge Base</Label>
-              <Textarea
-                value={platformBotPrompt}
-                onChange={(e) => setPlatformBotPrompt(e.target.value)}
-                rows={8}
-                className="bg-secondary border-border text-sm"
-                placeholder="Inserisci le istruzioni per Genius Assistant..."
-              />
-            </div>
-
-            <Button onClick={savePlatformBot} disabled={savingPlatformBot} className="gradient-primary text-white border-0 w-full">
-              {savingPlatformBot ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
-              Salva Platform Bot
-            </Button>
-          </>
-        )}
       </div>
 
       <AIConfigSection />

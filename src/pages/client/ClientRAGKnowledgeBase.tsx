@@ -44,8 +44,9 @@ const statusConfig: Record<string, { icon: any; cls: string; label: string }> = 
 const MAX_FREE_PROMPT_CHARS = 2000;
 const MAX_FREE_FAQS = 5;
 
-const ClientRAGKnowledgeBase = () => {
-  const { clientId } = useAuth();
+const ClientRAGKnowledgeBase = ({ overrideClientId }: { overrideClientId?: string } = {}) => {
+  const { clientId: authClientId } = useAuth();
+  const clientId = overrideClientId || authClientId;
   const { lang } = useLanguage();
   const { toast } = useToast();
   const { canUploadDocs, canUseKBWizard, maxFaqs, config: planConfig } = usePlanConfig();

@@ -26,6 +26,9 @@ import AdminPlans from "@/pages/admin/AdminPlans";
 import AdminAnalytics from "@/pages/admin/AdminAnalytics";
 import AdminEcommerce from "@/pages/admin/AdminEcommerce";
 import AdminEmailTemplates from "@/pages/admin/AdminEmailTemplates";
+import AdminPlatformBot from "@/pages/admin/AdminPlatformBot";
+import AdminPlatformKB from "@/pages/admin/AdminPlatformKB";
+import AdminPlatformLeads from "@/pages/admin/AdminPlatformLeads";
 import ClientEmbed from "@/pages/client/ClientEmbed";
 import ClientChatPreview from "@/pages/client/ClientChatPreview";
 import NotFound from "@/pages/NotFound";
@@ -77,6 +80,9 @@ const App = () => (
               <Route path="analytics" element={<AdminAnalytics />} />
               <Route path="ecommerce" element={<AdminEcommerce />} />
               <Route path="email-templates" element={<AdminEmailTemplates />} />
+              <Route path="platform-bot" element={<AdminPlatformBot />} />
+              <Route path="platform-bot/kb" element={<AdminPlatformKB />} />
+              <Route path="platform-leads" element={<AdminPlatformLeads />} />
             </Route>
 
             {/* Client Routes */}
