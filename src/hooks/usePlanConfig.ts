@@ -31,6 +31,7 @@ const DEFAULTS: PlanConfig = {
   max_conversations_month: 50,
   max_leads_month: 10,
   max_faqs: 5,
+  max_documents: 0,
   remove_branding: false,
   doc_upload: false,
   sector_templates: false,
