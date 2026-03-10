@@ -132,7 +132,7 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
     const { data: faqData } = await supabase
       .from("faqs" as any)
       .select("id, question, answer")
-      .eq("chatbot_id", config.id)
+      .eq("chatbot_id", configId!)
       .order("created_at", { ascending: true });
     setFaqs((faqData as any as FaqEntry[]) || []);
 
@@ -140,11 +140,11 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
     const { data: sourcesData } = await supabase
       .from("knowledge_base" as any)
       .select("*")
-      .eq("chatbot_id", config.id)
+      .eq("chatbot_id", configId!)
       .order("created_at", { ascending: false });
     setSources((sourcesData as any as KBSource[]) || []);
     setLoading(false);
-  }, [clientId]);
+  }, [clientId, overrideChatbotId]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
