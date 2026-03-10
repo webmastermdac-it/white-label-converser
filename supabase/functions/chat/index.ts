@@ -11,6 +11,8 @@ const MODEL_MAP: Record<string, string> = {
   "gpt-4o": "openai/gpt-5",
 };
 
+type ResponseSource = "FAQ" | "KNOWLEDGE" | "INSTRUCTIONS";
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -26,7 +28,7 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
-    // Step 1: fetch bot config (required for everything else)
+    // ── Step 0: Fetch bot config ──
     const { data: botConfig, error: configError } = await supabase
       .from("chatbot_configs")
       .select("id, client_id, name, knowledge_base, fallback_message, fallback_msg_en, fallback_msg_it, welcome_msg_it, welcome_msg_en, knowledge_base_products")
@@ -37,7 +39,7 @@ serve(async (req) => {
       return jsonResp({ error: "Invalid embed token" }, 401);
     }
 
-    // Step 2: fetch client, session count, AND plan configs ALL in parallel
+    // ── Parallel: client plan, session count, plan config ──
     const monthStart = new Date();
     monthStart.setDate(1);
     monthStart.setHours(0, 0, 0, 0);
@@ -52,7 +54,6 @@ serve(async (req) => {
 
     const plan = clientRes.data?.plan || "free";
     const planConfig = planConfigRes.data?.find((p: any) => p.plan_name === plan);
-
     const maxConv = planConfig?.max_conversations_month ?? 50;
     const chatModel = planConfig?.chat_model || "gpt-4o-mini";
     const ragAllowed = plan !== "free";
@@ -66,25 +67,34 @@ serve(async (req) => {
       }, 429);
     }
 
-    // Step 3: Build system prompt + RAG search IN PARALLEL with prompt construction
-    const fallbackConcept = botConfig.fallback_msg_en || botConfig.fallback_message || "I don't have this information, but I can connect you with one of our consultants!";
+    const lastUserMessage = messages[messages.length - 1]?.content || "";
 
-    let productKnowledge = botConfig.knowledge_base_products || "";
+    // ══════════════════════════════════════════════════════
+    // STEP 1 — FAQ LOOKUP (highest priority)
+    // ══════════════════════════════════════════════════════
+    const faqResult = await lookupFaq(supabase, botConfig.id, lastUserMessage);
+    if (faqResult) {
+      console.log(`[chat] source: FAQ | question matched: "${faqResult.question}"`);
+      const cleanAnswer = faqResult.answer;
 
-    const productInstruction = productKnowledge
-      ? `\n\nYou have access to the store's updated product catalog. When users ask about products: search the catalog and answer accurately, always mention the exact price and availability, if there are variants list them with prices and stock, if a product is out of stock say so and suggest similar available products, never invent products not in the catalog, you can provide a direct link to the product if available.`
-      : "";
+      if (session_token) {
+        saveSession(supabase, session_token, botConfig, [...messages, { role: "assistant", content: cleanAnswer }], source_url, lang);
+      }
 
-    const languageInstruction = `\n\nIMPORTANT LANGUAGE RULE:\nThe visitor is using language code: ${lang}\nYou MUST always respond in the same language the visitor is writing in, regardless of the language of the knowledge base.\nAdapt naturally to any language the visitor uses.\nThe only exception: if the visitor explicitly asks you to switch to a different language, do so.`;
+      return jsonResp({
+        message: cleanAnswer,
+        source: "FAQ" as ResponseSource,
+        trigger_lead_form: false,
+      });
+    }
 
-    const fallbackInstruction = `\n\nFALLBACK RULE:\nWhen you don't know the answer or are uncertain, you must:\n1. Write a fallback message in the SAME language the visitor is using.\n2. The concept to convey is: "${fallbackConcept}" — translate and adapt this naturally.\n3. After saying the fallback message, include the special marker: [TRIGGER_LEAD_FORM]\n4. Never make up information not provided in your knowledge base.`;
-
-    const formattingInstruction = `\n\nFORMATTING RULES:\n- Use **bold** only for plan names and prices\n- Use bullet lists only when listing 3+ items\n- Keep responses concise: max 4-5 lines per answer\n- No headers (##) in responses\n- End with ONE short question to keep the conversation going\n- Never use excessive formatting — write naturally`;
-
-    // RAG search (non-blocking, only for paid plans)
+    // ══════════════════════════════════════════════════════
+    // STEP 2 — KNOWLEDGE LOOKUP (RAG, medium priority)
+    // ══════════════════════════════════════════════════════
     let ragContext = "";
+    let responseSource: ResponseSource = "INSTRUCTIONS";
+
     if (ragAllowed) {
-      const lastUserMessage = messages[messages.length - 1]?.content || "";
       try {
         const ragResponse = await fetch(
           `${Deno.env.get("SUPABASE_URL")}/functions/v1/rag-search`,
@@ -98,7 +108,7 @@ serve(async (req) => {
               query: lastUserMessage,
               chatbot_id: botConfig.id,
               match_count: 5,
-              match_threshold: 0.5,
+              match_threshold: 0.75,
             }),
           }
         );
@@ -110,20 +120,42 @@ serve(async (req) => {
                 `[Source ${i + 1} (relevance: ${(c.similarity * 100).toFixed(0)}%)]\n${c.content}`
               ).join("\n\n") +
               "\n--- END CONTEXT ---\n\nIMPORTANT: Use the above context to answer the user's question accurately. If the context contains the answer, use it. If not, use your general knowledge base instructions.";
+            responseSource = "KNOWLEDGE";
+            console.log(`[chat] source: KNOWLEDGE | ${ragData.chunks.length} chunks found`);
           }
         }
       } catch (ragErr) {
-        console.error("RAG search error (non-blocking):", ragErr);
+        console.error("[chat] RAG search error (non-blocking):", ragErr);
       }
     }
 
-    const systemPrompt = `${botConfig.knowledge_base || "You are a helpful assistant."}${productKnowledge ? "\n\n" + productKnowledge : ""}${ragContext}\n\nIMPORTANT INSTRUCTIONS:\n- Be concise, helpful, and professional${languageInstruction}${fallbackInstruction}${productInstruction}${formattingInstruction}`;
+    if (responseSource === "INSTRUCTIONS") {
+      console.log("[chat] source: INSTRUCTIONS | using system prompt fallback");
+    }
 
-    // Step 4: Call AI gateway (streaming)
+    // ══════════════════════════════════════════════════════
+    // STEP 3 — INSTRUCTIONS FALLBACK (lowest priority)
+    // Build system prompt and call AI
+    // ══════════════════════════════════════════════════════
+    const fallbackConcept = botConfig.fallback_msg_en || botConfig.fallback_message || "I don't have this information, but I can connect you with one of our consultants!";
+    let productKnowledge = botConfig.knowledge_base_products || "";
+
+    const productInstruction = productKnowledge
+      ? `\n\nYou have access to the store's updated product catalog. When users ask about products: search the catalog and answer accurately, always mention the exact price and availability, if there are variants list them with prices and stock, if a product is out of stock say so and suggest similar available products, never invent products not in the catalog, you can provide a direct link to the product if available.`
+      : "";
+
+    const languageInstruction = `\n\nIMPORTANT LANGUAGE RULE:\nThe visitor is using language code: ${lang}\nYou MUST always respond in the same language the visitor is writing in, regardless of the language of the knowledge base.\nAdapt naturally to any language the visitor uses.\nThe only exception: if the visitor explicitly asks you to switch to a different language, do so.`;
+
+    const fallbackInstruction = `\n\nFALLBACK RULE:\nWhen you don't know the answer or are uncertain, you must:\n1. Write a fallback message in the SAME language the visitor is using.\n2. The concept to convey is: "${fallbackConcept}" — translate and adapt this naturally.\n3. After saying the fallback message, include the special marker: [TRIGGER_LEAD_FORM]\n4. Never make up information not provided in your knowledge base.`;
+
+    const formattingInstruction = `\n\nFORMATTING RULES:\n- Use **bold** only for plan names and prices\n- Use bullet lists only when listing 3+ items\n- Keep responses concise: max 4-5 lines per answer\n- No headers (##) in responses\n- End with ONE short question to keep the conversation going\n- Never use excessive formatting — write naturally`;
+
+    const instructions = botConfig.knowledge_base || "You are a helpful assistant.";
+    const systemPrompt = `${instructions}${productKnowledge ? "\n\n" + productKnowledge : ""}${ragContext}\n\nIMPORTANT INSTRUCTIONS:\n- Be concise, helpful, and professional${languageInstruction}${fallbackInstruction}${productInstruction}${formattingInstruction}`;
+
+    // ── Call AI gateway ──
     const gatewayModel = MODEL_MAP[chatModel] || "openai/gpt-5-mini";
 
-    // TEMPORARY: Non-streaming mode for diagnostic purposes
-    // To restore streaming, revert stream to true and uncomment the tee/reader logic below
     const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -156,50 +188,68 @@ serve(async (req) => {
 
     return jsonResp({
       message: cleanMessage,
+      source: responseSource,
       trigger_lead_form: triggerLead,
     });
 
-    /* STREAMING CODE (commented out for diagnostic)
-    const [streamForClient, streamForSave] = aiResponse.body!.tee();
-
-    if (session_token) {
-      (async () => {
-        try {
-          let fullMessage = "";
-          const reader = streamForSave.getReader();
-          const decoder = new TextDecoder();
-          while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-            const lines = decoder.decode(value).split("\n");
-            for (const line of lines) {
-              if (!line.startsWith("data: ") || line.trim() === "data: [DONE]") continue;
-              try {
-                const delta = JSON.parse(line.slice(6))?.choices?.[0]?.delta?.content || "";
-                fullMessage += delta;
-              } catch {}
-            }
-          }
-          const cleanMessage = fullMessage.replace("[TRIGGER_LEAD_FORM]", "").trim();
-          saveSession(supabase, session_token, botConfig, [...messages, { role: "assistant", content: cleanMessage }], source_url, lang);
-        } catch {}
-      })();
-    }
-
-    return new Response(streamForClient, {
-      headers: {
-        ...corsHeaders,
-        "Content-Type": "text/event-stream",
-        "Cache-Control": "no-cache",
-        "X-Accel-Buffering": "no",
-      },
-    });
-    END STREAMING CODE */
   } catch (error: any) {
     console.error("chat error:", error);
     return jsonResp({ error: error.message }, 500);
   }
 });
+
+// ══════════════════════════════════════════════════════
+// FAQ LOOKUP — exact match then fuzzy (similarity > 0.85)
+// ══════════════════════════════════════════════════════
+async function lookupFaq(
+  supabase: any,
+  chatbotId: string,
+  userMessage: string
+): Promise<{ question: string; answer: string } | null> {
+  const { data: faqs, error } = await supabase
+    .from("faqs")
+    .select("question, answer")
+    .eq("chatbot_id", chatbotId);
+
+  if (error || !faqs?.length) return null;
+
+  const normalizedQuery = userMessage.toLowerCase().trim();
+
+  // Pass 1: Exact match (case-insensitive)
+  for (const faq of faqs) {
+    if (faq.question.toLowerCase().trim() === normalizedQuery) {
+      return faq;
+    }
+  }
+
+  // Pass 2: Fuzzy match using word overlap similarity
+  let bestMatch: { question: string; answer: string } | null = null;
+  let bestScore = 0;
+
+  for (const faq of faqs) {
+    const score = wordSimilarity(normalizedQuery, faq.question.toLowerCase().trim());
+    if (score > 0.85 && score > bestScore) {
+      bestScore = score;
+      bestMatch = faq;
+    }
+  }
+
+  return bestMatch;
+}
+
+function wordSimilarity(a: string, b: string): number {
+  const wordsA = new Set(a.split(/\s+/).filter(w => w.length > 2));
+  const wordsB = new Set(b.split(/\s+/).filter(w => w.length > 2));
+  if (wordsA.size === 0 && wordsB.size === 0) return 1;
+  if (wordsA.size === 0 || wordsB.size === 0) return 0;
+
+  let intersection = 0;
+  for (const w of wordsA) {
+    if (wordsB.has(w)) intersection++;
+  }
+  const union = new Set([...wordsA, ...wordsB]).size;
+  return union > 0 ? intersection / union : 0;
+}
 
 function jsonResp(data: any, status = 200) {
   return new Response(JSON.stringify(data), {

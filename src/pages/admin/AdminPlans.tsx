@@ -18,6 +18,7 @@ interface PlanRow {
   max_conversations_month: number;
   max_leads_month: number;
   max_faqs: number;
+  max_documents: number;
   remove_branding: boolean;
   doc_upload: boolean;
   sector_templates: boolean;
@@ -64,6 +65,7 @@ const ENFORCED_FEATURES = new Set([
   "max_conversations_month",
   "max_leads_month",
   "max_faqs",
+  "max_documents",
 ]);
 
 const AdminPlans = () => {
@@ -115,6 +117,7 @@ const AdminPlans = () => {
         max_conversations_month: current.max_conversations_month,
         max_leads_month: current.max_leads_month,
         max_faqs: current.max_faqs,
+        max_documents: current.max_documents,
         remove_branding: current.remove_branding,
         doc_upload: current.doc_upload,
         sector_templates: current.sector_templates,
@@ -202,12 +205,13 @@ const AdminPlans = () => {
                 <div className="space-y-3">
                   <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Limiti numerici</h4>
 
-                  {[
-                    { key: "max_chatbots" as keyof PlanRow, label: "Chatbot max" },
-                    { key: "max_conversations_month" as keyof PlanRow, label: "Conv/mese" },
-                    { key: "max_leads_month" as keyof PlanRow, label: "Lead/mese" },
-                    { key: "max_faqs" as keyof PlanRow, label: "FAQ max" },
-                  ].map(({ key, label }) => (
+                    {[
+                      { key: "max_chatbots" as keyof PlanRow, label: "Chatbot max" },
+                      { key: "max_conversations_month" as keyof PlanRow, label: "Conv/mese" },
+                      { key: "max_leads_month" as keyof PlanRow, label: "Lead/mese" },
+                      { key: "max_faqs" as keyof PlanRow, label: "FAQ max" },
+                      { key: "max_documents" as keyof PlanRow, label: "Documenti max" },
+                    ].map(({ key, label }) => (
                     <div key={key} className="flex items-center justify-between gap-3">
                       <Label className="text-sm text-foreground">{label}</Label>
                       <Input

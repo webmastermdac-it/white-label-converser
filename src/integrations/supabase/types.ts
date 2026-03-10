@@ -386,6 +386,41 @@ export type Database = {
         }
         Relationships: []
       }
+      faqs: {
+        Row: {
+          answer: string
+          chatbot_id: string
+          created_at: string
+          id: string
+          question: string
+          updated_at: string
+        }
+        Insert: {
+          answer: string
+          chatbot_id: string
+          created_at?: string
+          id?: string
+          question: string
+          updated_at?: string
+        }
+        Update: {
+          answer?: string
+          chatbot_id?: string
+          created_at?: string
+          id?: string
+          question?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "faqs_chatbot_id_fkey"
+            columns: ["chatbot_id"]
+            isOneToOne: false
+            referencedRelation: "chatbot_configs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       knowledge_base: {
         Row: {
           chatbot_id: string
@@ -564,6 +599,7 @@ export type Database = {
           knowledge_base_wizard: boolean
           max_chatbots: number
           max_conversations_month: number
+          max_documents: number
           max_faqs: number
           max_leads_month: number
           plan_name: string
@@ -584,6 +620,7 @@ export type Database = {
           knowledge_base_wizard?: boolean
           max_chatbots?: number
           max_conversations_month?: number
+          max_documents?: number
           max_faqs?: number
           max_leads_month?: number
           plan_name: string
@@ -604,6 +641,7 @@ export type Database = {
           knowledge_base_wizard?: boolean
           max_chatbots?: number
           max_conversations_month?: number
+          max_documents?: number
           max_faqs?: number
           max_leads_month?: number
           plan_name?: string
