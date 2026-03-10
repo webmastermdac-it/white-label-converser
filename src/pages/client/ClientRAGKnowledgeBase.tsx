@@ -330,11 +330,29 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
         return;
       }
 
+      // Pre-scrape content client-side to avoid 503 errors in edge function
+      const { data: scrapeData, error: scrapeErr } = await supabase.functions.invoke("scrape-website", {
+        body: { url: normalized, mode: "analyze" },
+      });
+      if (scrapeErr || !scrapeData?.content?.trim()) {
+        toast({
+          title: t("Impossibile leggere il sito", "Cannot read website"),
+          description: t(
+            "Il sito potrebbe avere protezioni anti-bot. Prova a copiare il testo manualmente nel tab 'Testo'.",
+            "The site may have anti-bot protection. Try copying text manually in the 'Text' tab."
+          ),
+          variant: "destructive",
+        });
+        setUploading(false);
+        return;
+      }
       const { data: source, error } = await supabase
         .from("knowledge_base" as any)
-        .insert({ chatbot_id: chatbotId, name: new URL(normalized).hostname + new URL(normalized).pathname, type: "url", source_url: normalized, status: "processing" } as any)
+        .insert({ chatbot_id: chatbotId, name: new URL(normalized).hostname + new URL(normalized).pathname, type: "txt", source_url: normalized, status: "processing" } as any)
         .select().single();
       if (error) throw error;
+      // Save scraped content to source_url field for txt type processing
+      await supabase.from("knowledge_base" as any).update({ source_url: scrapeData.content } as any).eq("id", (source as any).id);
       setUrlInput("");
       processSource((source as any).id);
       toast({ title: t("URL aggiunto", "URL added") });
