@@ -21,16 +21,15 @@ const ClientSidebar = () => {
 
   const clientNav = [
     { label: t("overview"), href: "/dashboard", icon: LayoutDashboard, end: true },
+    { label: tl("I miei Bot", "My Bots"), href: "/dashboard/bots", icon: Bot },
     { label: t("leads"), href: "/dashboard/leads", icon: Inbox },
     { label: t("chatHistory"), href: "/dashboard/chats", icon: MessageSquare },
-    { label: t("botSettings"), href: "/dashboard/settings", icon: Settings },
-    { label: "Knowledge Base", href: "/dashboard/knowledge-base", icon: BrainCircuit },
-    { label: t("testChatbot"), href: "/dashboard/preview", icon: PlayCircle },
-    { label: t("embedCode"), href: "/dashboard/embed", icon: Code2 },
     { label: "Analytics", href: "/dashboard/analytics", icon: BarChart3 },
     ...(canUseEcommerce ? [{ label: "Ecommerce", href: "/dashboard/ecommerce", icon: Store }] : []),
     { label: "Upgrade", href: "/dashboard/upgrade", icon: ArrowUpCircle },
   ];
+
+  const tl = (it: string, en: string) => lang === "it" ? it : en;
 
   const handleSignOut = async () => {
     await signOut();

@@ -97,6 +97,8 @@ const App = () => (
               }
             >
               <Route index element={<ClientOverview />} />
+              <Route path="bots" element={<ClientChatbots />} />
+              <Route path="bots/:botId" element={<ClientChatbotSettings />} />
               <Route path="leads" element={<ClientLeads />} />
               <Route path="chats" element={<ClientChats />} />
               <Route path="settings" element={<ClientBotSettings />} />
