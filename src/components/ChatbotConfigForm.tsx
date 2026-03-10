@@ -60,7 +60,7 @@ const defaultConfig: Config = {
 const EMOJIS = [GENIE_AVATAR, "🤖", "💬", "✨", "🎯", "🚀", "💡", "🤝", "⭐", "🌟", "🎪"];
 const POSITIONS = ["bottom-right", "bottom-left"];
 
-const ChatbotConfigForm: React.FC<ChatbotConfigFormProps> = ({ clientId, onSaved }) => {
+const ChatbotConfigForm: React.FC<ChatbotConfigFormProps> = ({ clientId, chatbotId: overrideChatbotId, onSaved }) => {
   const { toast } = useToast();
   const { t } = useLanguage();
   const [config, setConfig] = useState<Config>(defaultConfig);
