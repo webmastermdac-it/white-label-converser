@@ -307,11 +307,32 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
     setUploading(true);
     try {
       const formattedUrl = urlInput.startsWith("http") ? urlInput : `https://${urlInput}`;
-      const scraped = await preScrapeUrl(formattedUrl);
-      if (!scraped.trim()) throw new Error(t("Nessun testo estratto dall'URL", "No text extracted from URL"));
+      const normalized = normalizeUrl(formattedUrl);
+
+      // Check for existing source with same URL
+      const { data: existing } = await supabase
+        .from("knowledge_base")
+        .select("id, status, name")
+        .eq("chatbot_id", chatbotId)
+        .eq("source_url", normalized)
+        .maybeSingle();
+
+      if (existing) {
+        toast({
+          title: t("URL già presente", "URL already exists"),
+          description: t(
+            `"${existing.name}" è già nella Knowledge Base (stato: ${existing.status}). Usa il tasto Rielabora se vuoi aggiornarlo.`,
+            `"${existing.name}" is already in the Knowledge Base (status: ${existing.status}). Use Reprocess to update it.`
+          ),
+          variant: "destructive",
+        });
+        setUploading(false);
+        return;
+      }
+
       const { data: source, error } = await supabase
         .from("knowledge_base" as any)
-        .insert({ chatbot_id: chatbotId, name: new URL(formattedUrl).hostname, type: "txt", source_url: scraped, status: "processing" } as any)
+        .insert({ chatbot_id: chatbotId, name: new URL(normalized).hostname + new URL(normalized).pathname, type: "url", source_url: normalized, status: "processing" } as any)
         .select().single();
       if (error) throw error;
       setUrlInput("");
