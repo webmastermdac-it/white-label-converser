@@ -880,10 +880,12 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
           </div>
         )}
       </div>
+      )}
 
       {/* ══════════════════════════════════════════════════ */}
       {/* SECTION 3 — Instructions (Priority: LOW ★)        */}
       {/* ══════════════════════════════════════════════════ */}
+      {showInstructions && (
       <div className="glass rounded-xl p-5">
         <PriorityHeader
           num={3}
