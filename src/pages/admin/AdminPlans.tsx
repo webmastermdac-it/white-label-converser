@@ -18,6 +18,7 @@ interface PlanRow {
   max_conversations_month: number;
   max_leads_month: number;
   max_faqs: number;
+  max_documents: number;
   remove_branding: boolean;
   doc_upload: boolean;
   sector_templates: boolean;
