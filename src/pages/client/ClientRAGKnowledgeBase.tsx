@@ -346,31 +346,58 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
 
   const handleAddSitemap = async () => {
     if (!sitemapInput.trim() || !chatbotId) return;
+    if (isFree) { showUpgrade("starter"); return; }
     setUploading(true);
     try {
       const sitemapUrl = sitemapInput.startsWith("http") ? sitemapInput : `https://${sitemapInput}`;
       const res = await fetch(sitemapUrl);
       const text = await res.text();
       const urlMatches = text.match(/<loc>(.*?)<\/loc>/g) || [];
-      const urls = urlMatches.map(m => m.replace(/<\/?loc>/g, "")).slice(0, 50);
+      const urls = urlMatches.map(m => normalizeUrl(m.replace(/<\/?loc>/g, ""))).slice(0, 50);
       if (!urls.length) {
         toast({ title: t("Nessun URL trovato nella sitemap", "No URLs found in sitemap"), variant: "destructive" });
         setUploading(false);
         return;
       }
-      for (const url of urls) {
+
+      // Fetch all existing source_urls for this chatbot in one query
+      const { data: existingSources } = await supabase
+        .from("knowledge_base")
+        .select("source_url")
+        .eq("chatbot_id", chatbotId);
+      const existingUrls = new Set((existingSources || []).map((s: any) => normalizeUrl(s.source_url || "")));
+      const newUrls = urls.filter(url => !existingUrls.has(url));
+      const skippedCount = urls.length - newUrls.length;
+
+      if (!newUrls.length) {
+        toast({
+          title: t("Tutte le pagine già presenti", "All pages already indexed"),
+          description: t(
+            `Tutte le ${urls.length} pagine della sitemap sono già nella Knowledge Base.`,
+            `All ${urls.length} sitemap pages are already in the Knowledge Base.`
+          ),
+        });
+        setUploading(false);
+        return;
+      }
+
+      let addedCount = 0;
+      for (const url of newUrls) {
         try {
-          const scraped = await preScrapeUrl(url);
-          if (!scraped.trim()) continue;
           const { data: source, error } = await supabase
             .from("knowledge_base" as any)
-            .insert({ chatbot_id: chatbotId, name: new URL(url).pathname || url, type: "txt", source_url: scraped, status: "processing" } as any)
+            .insert({ chatbot_id: chatbotId, name: new URL(url).pathname || url, type: "url", source_url: url, status: "processing" } as any)
             .select().single();
-          if (!error && source) processSource((source as any).id);
+          if (!error && source) { processSource((source as any).id); addedCount++; }
         } catch { continue; }
       }
       setSitemapInput("");
-      toast({ title: t(`${urls.length} pagine importate dalla sitemap`, `${urls.length} pages imported from sitemap`) });
+      toast({
+        title: t(`${addedCount} pagine importate`, `${addedCount} pages imported`),
+        description: skippedCount > 0
+          ? t(`${skippedCount} pagine già presenti ignorate.`, `${skippedCount} already existing pages skipped.`)
+          : undefined,
+      });
       fetchData();
     } catch (err: any) {
       toast({ title: err.message, variant: "destructive" });
