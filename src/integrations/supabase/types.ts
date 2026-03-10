@@ -140,6 +140,7 @@ export type Database = {
           name: string
           notification_email: string | null
           primary_color: string | null
+          site_url: string | null
           text_color: string | null
           updated_at: string
           welcome_message: string | null
@@ -169,6 +170,7 @@ export type Database = {
           name?: string
           notification_email?: string | null
           primary_color?: string | null
+          site_url?: string | null
           text_color?: string | null
           updated_at?: string
           welcome_message?: string | null
@@ -198,6 +200,7 @@ export type Database = {
           name?: string
           notification_email?: string | null
           primary_color?: string | null
+          site_url?: string | null
           text_color?: string | null
           updated_at?: string
           welcome_message?: string | null

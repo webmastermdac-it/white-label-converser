@@ -18,6 +18,8 @@ import AdminLeads from "@/pages/admin/AdminLeads";
 import AdminSettings from "@/pages/admin/AdminSettings";
 import AdminClientConfig from "@/pages/admin/AdminClientConfig";
 import ClientOverview from "@/pages/client/ClientOverview";
+import ClientChatbots from "@/pages/client/ClientChatbots";
+import ClientChatbotSettings from "@/pages/client/ClientChatbotSettings";
 import ClientLeads from "@/pages/client/ClientLeads";
 import ClientChats from "@/pages/client/ClientChats";
 import ClientBotSettings from "@/pages/client/ClientBotSettings";
@@ -95,6 +97,8 @@ const App = () => (
               }
             >
               <Route index element={<ClientOverview />} />
+              <Route path="bots" element={<ClientChatbots />} />
+              <Route path="bots/:botId" element={<ClientChatbotSettings />} />
               <Route path="leads" element={<ClientLeads />} />
               <Route path="chats" element={<ClientChats />} />
               <Route path="settings" element={<ClientBotSettings />} />

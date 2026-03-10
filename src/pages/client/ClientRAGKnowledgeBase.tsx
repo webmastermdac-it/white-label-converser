@@ -47,7 +47,7 @@ const statusConfig: Record<string, { icon: any; cls: string; label: string }> = 
   outdated: { icon: RefreshCw, cls: "bg-primary/10 text-primary border-primary/30", label: "Outdated" },
 };
 
-const ClientRAGKnowledgeBase = ({ overrideClientId }: { overrideClientId?: string } = {}) => {
+const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }: { overrideClientId?: string; overrideChatbotId?: string; section?: "faq" | "knowledge" | "instructions" } = {}) => {
   const { clientId: authClientId } = useAuth();
   const clientId = overrideClientId || authClientId;
   const { lang } = useLanguage();
@@ -99,22 +99,40 @@ const ClientRAGKnowledgeBase = ({ overrideClientId }: { overrideClientId?: strin
 
   // ── Fetch all data ──
   const fetchData = useCallback(async () => {
-    if (!clientId) return;
-    const { data: config } = await supabase
-      .from("chatbot_configs")
-      .select("*")
-      .eq("client_id", clientId)
-      .limit(1)
-      .single();
-    if (!config) { setLoading(false); return; }
-    setChatbotId(config.id);
-    setSystemPrompt(config.knowledge_base || "");
+    if (!clientId && !overrideChatbotId) return;
+    
+    let configId = overrideChatbotId;
+    let promptValue = "";
+    
+    if (overrideChatbotId) {
+      const { data: config } = await supabase
+        .from("chatbot_configs")
+        .select("id, knowledge_base")
+        .eq("id", overrideChatbotId)
+        .single();
+      if (!config) { setLoading(false); return; }
+      configId = config.id;
+      promptValue = config.knowledge_base || "";
+    } else {
+      const { data: config } = await supabase
+        .from("chatbot_configs")
+        .select("*")
+        .eq("client_id", clientId!)
+        .limit(1)
+        .single();
+      if (!config) { setLoading(false); return; }
+      configId = config.id;
+      promptValue = config.knowledge_base || "";
+    }
+    
+    setChatbotId(configId!);
+    setSystemPrompt(promptValue);
 
     // Fetch FAQs from dedicated table
     const { data: faqData } = await supabase
       .from("faqs" as any)
       .select("id, question, answer")
-      .eq("chatbot_id", config.id)
+      .eq("chatbot_id", configId!)
       .order("created_at", { ascending: true });
     setFaqs((faqData as any as FaqEntry[]) || []);
 
@@ -122,11 +140,11 @@ const ClientRAGKnowledgeBase = ({ overrideClientId }: { overrideClientId?: strin
     const { data: sourcesData } = await supabase
       .from("knowledge_base" as any)
       .select("*")
-      .eq("chatbot_id", config.id)
+      .eq("chatbot_id", configId!)
       .order("created_at", { ascending: false });
     setSources((sourcesData as any as KBSource[]) || []);
     setLoading(false);
-  }, [clientId]);
+  }, [clientId, overrideChatbotId]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
@@ -471,23 +489,30 @@ const ClientRAGKnowledgeBase = ({ overrideClientId }: { overrideClientId?: strin
   // ══════════════════════════════════════════════════════
   // RENDER
   // ══════════════════════════════════════════════════════
+  const showAll = !section;
+  const showFaq = showAll || section === "faq";
+  const showKnowledge = showAll || section === "knowledge";
+  const showInstructions = showAll || section === "instructions";
+
   return (
-    <div className="p-4 md:p-6 space-y-5 animate-fade-in-up">
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-foreground" style={{ fontFamily: "Syne, sans-serif" }}>
-          Knowledge Base
-        </h1>
-        <p className="text-muted-foreground text-sm mt-1">
-          {t(
-            "Gestisci le fonti di conoscenza del tuo chatbot. Le risposte seguono un ordine di priorità: FAQ → Documenti → Istruzioni.",
-            "Manage your chatbot's knowledge sources. Responses follow a priority order: FAQ → Knowledge → Instructions."
-          )}
-        </p>
-      </div>
+    <div className={section ? "space-y-5" : "p-4 md:p-6 space-y-5 animate-fade-in-up"}>
+      {/* Header — only when showing full page */}
+      {showAll && (
+        <div>
+          <h1 className="text-2xl font-bold text-foreground" style={{ fontFamily: "Syne, sans-serif" }}>
+            Knowledge Base
+          </h1>
+          <p className="text-muted-foreground text-sm mt-1">
+            {t(
+              "Gestisci le fonti di conoscenza del tuo chatbot. Le risposte seguono un ordine di priorità: FAQ → Documenti → Istruzioni.",
+              "Manage your chatbot's knowledge sources. Responses follow a priority order: FAQ → Knowledge → Instructions."
+            )}
+          </p>
+        </div>
+      )}
 
       {/* Processing banner */}
-      {processingSources > 0 && (
+      {showKnowledge && processingSources > 0 && (
         <div className="glass rounded-lg px-3 py-2.5 border-warning/30 flex items-center gap-2.5">
           <Loader2 className="w-4 h-4 animate-spin text-warning" />
           <p className="text-xs font-medium text-foreground">
@@ -499,6 +524,7 @@ const ClientRAGKnowledgeBase = ({ overrideClientId }: { overrideClientId?: strin
       {/* ══════════════════════════════════════════════════ */}
       {/* SECTION 1 — FAQ (Priority: HIGH ★★★)             */}
       {/* ══════════════════════════════════════════════════ */}
+      {showFaq && (
       <div className="glass rounded-xl p-5">
         <PriorityHeader
           num={1}
@@ -562,10 +588,12 @@ const ClientRAGKnowledgeBase = ({ overrideClientId }: { overrideClientId?: strin
             "FAQs are searched first — if the question matches, the bot responds immediately without using AI.")}
         </p>
       </div>
+      )}
 
       {/* ══════════════════════════════════════════════════ */}
       {/* SECTION 2 — Knowledge Base (Priority: MEDIUM ★★)  */}
       {/* ══════════════════════════════════════════════════ */}
+      {showKnowledge && (
       <div className="glass rounded-xl p-5">
         <PriorityHeader
           num={2}
@@ -852,10 +880,12 @@ const ClientRAGKnowledgeBase = ({ overrideClientId }: { overrideClientId?: strin
           </div>
         )}
       </div>
+      )}
 
       {/* ══════════════════════════════════════════════════ */}
       {/* SECTION 3 — Instructions (Priority: LOW ★)        */}
       {/* ══════════════════════════════════════════════════ */}
+      {showInstructions && (
       <div className="glass rounded-xl p-5">
         <PriorityHeader
           num={3}
@@ -892,6 +922,7 @@ const ClientRAGKnowledgeBase = ({ overrideClientId }: { overrideClientId?: strin
             "Instructions are only used when no FAQ and no document are relevant.")}
         </p>
       </div>
+      )}
 
       <UpgradeModal open={upgradeOpen} onClose={() => setUpgradeOpen(false)} requiredPlan={upgradeRequiredPlan} variant="rag" />
     </div>
