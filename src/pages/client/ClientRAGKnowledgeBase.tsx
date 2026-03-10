@@ -402,9 +402,15 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
       let addedCount = 0;
       for (const url of newUrls) {
         try {
+          // Pre-scrape each URL to avoid 503 in edge function
+          const { data: scrapeData } = await supabase.functions.invoke("scrape-website", {
+            body: { url, mode: "analyze" },
+          });
+          const content = scrapeData?.content?.trim();
+          if (!content) continue;
           const { data: source, error } = await supabase
             .from("knowledge_base" as any)
-            .insert({ chatbot_id: chatbotId, name: new URL(url).pathname || url, type: "url", source_url: url, status: "processing" } as any)
+            .insert({ chatbot_id: chatbotId, name: new URL(url).pathname || url, type: "txt", source_url: content, status: "processing" } as any)
             .select().single();
           if (!error && source) { processSource((source as any).id); addedCount++; }
         } catch { continue; }
