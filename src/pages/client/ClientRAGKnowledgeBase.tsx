@@ -436,19 +436,34 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
     if (!selected.length) return;
     setCrawlImporting(true);
     setCrawlProgress({ current: 0, total: selected.length });
+
+    // Fetch existing URLs for deduplication
+    const { data: existingSources } = await supabase
+      .from("knowledge_base")
+      .select("source_url")
+      .eq("chatbot_id", chatbotId);
+    const existingUrls = new Set((existingSources || []).map((s: any) => normalizeUrl(s.source_url || "")));
+
+    let addedCount = 0;
+    let skippedCount = 0;
     for (let i = 0; i < selected.length; i++) {
       setCrawlProgress({ current: i + 1, total: selected.length });
+      const normalized = normalizeUrl(selected[i].url);
+      if (existingUrls.has(normalized)) { skippedCount++; continue; }
       try {
-        const scraped = await preScrapeUrl(selected[i].url);
-        if (!scraped.trim()) continue;
         const { data: source, error } = await supabase
           .from("knowledge_base" as any)
-          .insert({ chatbot_id: chatbotId, name: new URL(selected[i].url).pathname || selected[i].url, type: "txt", source_url: scraped, status: "processing" } as any)
+          .insert({ chatbot_id: chatbotId, name: new URL(normalized).pathname || selected[i].url, type: "url", source_url: normalized, status: "processing" } as any)
           .select().single();
-        if (!error && source) processSource((source as any).id);
+        if (!error && source) { processSource((source as any).id); addedCount++; existingUrls.add(normalized); }
       } catch { continue; }
     }
-    toast({ title: t(`${selected.length} pagine importate`, `${selected.length} pages imported`) });
+    toast({
+      title: t(`${addedCount} pagine importate`, `${addedCount} pages imported`),
+      description: skippedCount > 0
+        ? t(`${skippedCount} pagine già presenti ignorate.`, `${skippedCount} already existing pages skipped.`)
+        : undefined,
+    });
     setCrawlImporting(false);
     setCrawledPages([]);
     fetchData();
