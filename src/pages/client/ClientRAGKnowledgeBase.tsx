@@ -47,7 +47,7 @@ const statusConfig: Record<string, { icon: any; cls: string; label: string }> = 
   outdated: { icon: RefreshCw, cls: "bg-primary/10 text-primary border-primary/30", label: "Outdated" },
 };
 
-const ClientRAGKnowledgeBase = ({ overrideClientId }: { overrideClientId?: string } = {}) => {
+const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }: { overrideClientId?: string; overrideChatbotId?: string; section?: "faq" | "knowledge" | "instructions" } = {}) => {
   const { clientId: authClientId } = useAuth();
   const clientId = overrideClientId || authClientId;
   const { lang } = useLanguage();
