@@ -131,6 +131,15 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
     setChatbotId(configId!);
     setSystemPrompt(promptValue);
 
+    // Staleness watchdog: auto-mark stuck "processing" sources as error
+    const staleThreshold = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+    await supabase
+      .from("knowledge_base" as any)
+      .update({ status: "error", error_message: "Timeout: elaborazione troppo lunga. Riprova." } as any)
+      .eq("chatbot_id", configId!)
+      .eq("status", "processing")
+      .lt("updated_at", staleThreshold);
+
     // Fetch FAQs from dedicated table
     const { data: faqData } = await supabase
       .from("faqs" as any)
