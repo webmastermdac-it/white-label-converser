@@ -41,6 +41,21 @@ interface FaqEntry {
   answer: string;
 }
 
+const normalizeUrl = (url: string): string => {
+  try {
+    const u = new URL(url.trim().toLowerCase());
+    u.hash = "";
+    u.searchParams.delete("utm_source");
+    u.searchParams.delete("utm_medium");
+    u.searchParams.delete("utm_campaign");
+    let normalized = u.toString();
+    if (normalized.endsWith("/")) normalized = normalized.slice(0, -1);
+    return normalized;
+  } catch {
+    return url.trim().toLowerCase();
+  }
+};
+
 const statusConfig: Record<string, { icon: any; cls: string; label: string }> = {
   processing: { icon: Clock, cls: "bg-warning/10 text-warning border-warning/30", label: "Processing..." },
   ready: { icon: CheckCircle2, cls: "bg-success/10 text-success border-success/30", label: "Ready" },
@@ -292,11 +307,32 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
     setUploading(true);
     try {
       const formattedUrl = urlInput.startsWith("http") ? urlInput : `https://${urlInput}`;
-      const scraped = await preScrapeUrl(formattedUrl);
-      if (!scraped.trim()) throw new Error(t("Nessun testo estratto dall'URL", "No text extracted from URL"));
+      const normalized = normalizeUrl(formattedUrl);
+
+      // Check for existing source with same URL
+      const { data: existing } = await supabase
+        .from("knowledge_base")
+        .select("id, status, name")
+        .eq("chatbot_id", chatbotId)
+        .eq("source_url", normalized)
+        .maybeSingle();
+
+      if (existing) {
+        toast({
+          title: t("URL già presente", "URL already exists"),
+          description: t(
+            `"${existing.name}" è già nella Knowledge Base (stato: ${existing.status}). Usa il tasto Rielabora se vuoi aggiornarlo.`,
+            `"${existing.name}" is already in the Knowledge Base (status: ${existing.status}). Use Reprocess to update it.`
+          ),
+          variant: "destructive",
+        });
+        setUploading(false);
+        return;
+      }
+
       const { data: source, error } = await supabase
         .from("knowledge_base" as any)
-        .insert({ chatbot_id: chatbotId, name: new URL(formattedUrl).hostname, type: "txt", source_url: scraped, status: "processing" } as any)
+        .insert({ chatbot_id: chatbotId, name: new URL(normalized).hostname + new URL(normalized).pathname, type: "url", source_url: normalized, status: "processing" } as any)
         .select().single();
       if (error) throw error;
       setUrlInput("");
@@ -310,31 +346,58 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
 
   const handleAddSitemap = async () => {
     if (!sitemapInput.trim() || !chatbotId) return;
+    if (isFree) { showUpgrade("starter"); return; }
     setUploading(true);
     try {
       const sitemapUrl = sitemapInput.startsWith("http") ? sitemapInput : `https://${sitemapInput}`;
       const res = await fetch(sitemapUrl);
       const text = await res.text();
       const urlMatches = text.match(/<loc>(.*?)<\/loc>/g) || [];
-      const urls = urlMatches.map(m => m.replace(/<\/?loc>/g, "")).slice(0, 50);
+      const urls = urlMatches.map(m => normalizeUrl(m.replace(/<\/?loc>/g, ""))).slice(0, 50);
       if (!urls.length) {
         toast({ title: t("Nessun URL trovato nella sitemap", "No URLs found in sitemap"), variant: "destructive" });
         setUploading(false);
         return;
       }
-      for (const url of urls) {
+
+      // Fetch all existing source_urls for this chatbot in one query
+      const { data: existingSources } = await supabase
+        .from("knowledge_base")
+        .select("source_url")
+        .eq("chatbot_id", chatbotId);
+      const existingUrls = new Set((existingSources || []).map((s: any) => normalizeUrl(s.source_url || "")));
+      const newUrls = urls.filter(url => !existingUrls.has(url));
+      const skippedCount = urls.length - newUrls.length;
+
+      if (!newUrls.length) {
+        toast({
+          title: t("Tutte le pagine già presenti", "All pages already indexed"),
+          description: t(
+            `Tutte le ${urls.length} pagine della sitemap sono già nella Knowledge Base.`,
+            `All ${urls.length} sitemap pages are already in the Knowledge Base.`
+          ),
+        });
+        setUploading(false);
+        return;
+      }
+
+      let addedCount = 0;
+      for (const url of newUrls) {
         try {
-          const scraped = await preScrapeUrl(url);
-          if (!scraped.trim()) continue;
           const { data: source, error } = await supabase
             .from("knowledge_base" as any)
-            .insert({ chatbot_id: chatbotId, name: new URL(url).pathname || url, type: "txt", source_url: scraped, status: "processing" } as any)
+            .insert({ chatbot_id: chatbotId, name: new URL(url).pathname || url, type: "url", source_url: url, status: "processing" } as any)
             .select().single();
-          if (!error && source) processSource((source as any).id);
+          if (!error && source) { processSource((source as any).id); addedCount++; }
         } catch { continue; }
       }
       setSitemapInput("");
-      toast({ title: t(`${urls.length} pagine importate dalla sitemap`, `${urls.length} pages imported from sitemap`) });
+      toast({
+        title: t(`${addedCount} pagine importate`, `${addedCount} pages imported`),
+        description: skippedCount > 0
+          ? t(`${skippedCount} pagine già presenti ignorate.`, `${skippedCount} already existing pages skipped.`)
+          : undefined,
+      });
       fetchData();
     } catch (err: any) {
       toast({ title: err.message, variant: "destructive" });
@@ -373,19 +436,34 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
     if (!selected.length) return;
     setCrawlImporting(true);
     setCrawlProgress({ current: 0, total: selected.length });
+
+    // Fetch existing URLs for deduplication
+    const { data: existingSources } = await supabase
+      .from("knowledge_base")
+      .select("source_url")
+      .eq("chatbot_id", chatbotId);
+    const existingUrls = new Set((existingSources || []).map((s: any) => normalizeUrl(s.source_url || "")));
+
+    let addedCount = 0;
+    let skippedCount = 0;
     for (let i = 0; i < selected.length; i++) {
       setCrawlProgress({ current: i + 1, total: selected.length });
+      const normalized = normalizeUrl(selected[i].url);
+      if (existingUrls.has(normalized)) { skippedCount++; continue; }
       try {
-        const scraped = await preScrapeUrl(selected[i].url);
-        if (!scraped.trim()) continue;
         const { data: source, error } = await supabase
           .from("knowledge_base" as any)
-          .insert({ chatbot_id: chatbotId, name: new URL(selected[i].url).pathname || selected[i].url, type: "txt", source_url: scraped, status: "processing" } as any)
+          .insert({ chatbot_id: chatbotId, name: new URL(normalized).pathname || selected[i].url, type: "url", source_url: normalized, status: "processing" } as any)
           .select().single();
-        if (!error && source) processSource((source as any).id);
+        if (!error && source) { processSource((source as any).id); addedCount++; existingUrls.add(normalized); }
       } catch { continue; }
     }
-    toast({ title: t(`${selected.length} pagine importate`, `${selected.length} pages imported`) });
+    toast({
+      title: t(`${addedCount} pagine importate`, `${addedCount} pages imported`),
+      description: skippedCount > 0
+        ? t(`${skippedCount} pagine già presenti ignorate.`, `${skippedCount} already existing pages skipped.`)
+        : undefined,
+    });
     setCrawlImporting(false);
     setCrawledPages([]);
     fetchData();
