@@ -422,9 +422,45 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
   };
 
   const handleReprocess = async (source: KBSource) => {
-    await supabase.from("knowledge_base" as any).update({ status: "processing" } as any).eq("id", source.id);
+    await supabase.from("knowledge_base" as any).update({ status: "processing", updated_at: new Date().toISOString() } as any).eq("id", source.id);
     fetchData();
     processSource(source.id);
+  };
+
+  const handleBulkDelete = async () => {
+    if (!window.confirm(`Eliminare ${selectedIds.size} fonti selezionate?`)) return;
+    setBulkDeleting(true);
+    try {
+      for (const id of selectedIds) {
+        const source = sources.find(s => s.id === id);
+        await supabase.from("knowledge_chunks" as any).delete().eq("knowledge_base_id", id);
+        if (source?.file_path) await supabase.storage.from("kb-documents").remove([source.file_path]);
+        await supabase.from("knowledge_base" as any).delete().eq("id", id);
+      }
+      toast({ title: `✅ ${selectedIds.size} fonti eliminate` });
+      setSelectedIds(new Set());
+      fetchData();
+    } catch (err: any) {
+      toast({ title: "Errore", description: err.message, variant: "destructive" });
+    } finally {
+      setBulkDeleting(false);
+    }
+  };
+
+  const toggleSourceSelection = (id: string) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.size === sources.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(sources.map(s => s.id)));
+    }
   };
 
   const handleSearchTest = async () => {
