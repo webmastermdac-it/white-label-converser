@@ -5,8 +5,8 @@ import { useLanguage } from "@/hooks/useLanguage";
 import { usePlanConfig } from "@/hooks/usePlanConfig";
 import { Button } from "@/components/ui/button";
 import {
-  LayoutDashboard, MessageSquare, Settings, Code2,
-  ChevronLeft, ChevronRight, Bot, LogOut, Inbox, PlayCircle, Globe, ArrowUpCircle, BarChart3, Store, BrainCircuit, Lock
+  LayoutDashboard, MessageSquare,
+  ChevronLeft, ChevronRight, Bot, LogOut, Inbox, Globe, ArrowUpCircle, BarChart3, Store
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import ThemeSelector from "@/components/ThemeSelector";

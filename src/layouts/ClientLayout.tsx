@@ -11,11 +11,9 @@ const ClientLayout = () => {
 
   const clientNav = [
     { label: t("overview"), href: "/dashboard", icon: LayoutDashboard, end: true },
+    { label: "I miei Bot", href: "/dashboard/bots", icon: Bot },
     { label: t("leads"), href: "/dashboard/leads", icon: Inbox },
     { label: t("chatHistory"), href: "/dashboard/chats", icon: MessageSquare },
-    { label: t("botSettings"), href: "/dashboard/settings", icon: Settings },
-    { label: t("testChatbot"), href: "/dashboard/preview", icon: PlayCircle },
-    { label: t("embedCode"), href: "/dashboard/embed", icon: Code2 },
     { label: "Analytics", href: "/dashboard/analytics", icon: BarChart3 },
     { label: "Ecommerce", href: "/dashboard/ecommerce", icon: Store },
     { label: "Upgrade", href: "/dashboard/upgrade", icon: ArrowUpCircle },
