@@ -27,11 +27,6 @@ const AdminSettings = () => {
   const [savingBrand, setSavingBrand] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
 
-  // Platform bot state
-  const [platformBotPrompt, setPlatformBotPrompt] = useState("");
-  const [platformBotToken, setPlatformBotToken] = useState("");
-  const [savingPlatformBot, setSavingPlatformBot] = useState(false);
-  const [loadingPlatformBot, setLoadingPlatformBot] = useState(true);
 
   useEffect(() => {
     loadBrandSettings();
