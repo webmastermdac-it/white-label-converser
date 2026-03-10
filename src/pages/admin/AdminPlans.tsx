@@ -203,12 +203,13 @@ const AdminPlans = () => {
                 <div className="space-y-3">
                   <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Limiti numerici</h4>
 
-                  {[
-                    { key: "max_chatbots" as keyof PlanRow, label: "Chatbot max" },
-                    { key: "max_conversations_month" as keyof PlanRow, label: "Conv/mese" },
-                    { key: "max_leads_month" as keyof PlanRow, label: "Lead/mese" },
-                    { key: "max_faqs" as keyof PlanRow, label: "FAQ max" },
-                  ].map(({ key, label }) => (
+                    {[
+                      { key: "max_chatbots" as keyof PlanRow, label: "Chatbot max" },
+                      { key: "max_conversations_month" as keyof PlanRow, label: "Conv/mese" },
+                      { key: "max_leads_month" as keyof PlanRow, label: "Lead/mese" },
+                      { key: "max_faqs" as keyof PlanRow, label: "FAQ max" },
+                      { key: "max_documents" as keyof PlanRow, label: "Documenti max" },
+                    ].map(({ key, label }) => (
                     <div key={key} className="flex items-center justify-between gap-3">
                       <Label className="text-sm text-foreground">{label}</Label>
                       <Input
