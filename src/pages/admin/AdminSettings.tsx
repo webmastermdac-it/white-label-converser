@@ -30,7 +30,6 @@ const AdminSettings = () => {
 
   useEffect(() => {
     loadBrandSettings();
-    loadPlatformBot();
   }, []);
 
   const loadBrandSettings = async () => {
