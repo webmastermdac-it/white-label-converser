@@ -434,6 +434,7 @@ export type Database = {
           file_path: string | null
           id: string
           name: string
+          priority: number
           source_url: string | null
           status: string
           type: string
@@ -448,6 +449,7 @@ export type Database = {
           file_path?: string | null
           id?: string
           name: string
+          priority?: number
           source_url?: string | null
           status?: string
           type?: string
@@ -462,6 +464,7 @@ export type Database = {
           file_path?: string | null
           id?: string
           name?: string
+          priority?: number
           source_url?: string | null
           status?: string
           type?: string
@@ -890,6 +893,7 @@ export type Database = {
           content: string
           id: string
           metadata: Json
+          priority: number
           similarity: number
         }[]
       }

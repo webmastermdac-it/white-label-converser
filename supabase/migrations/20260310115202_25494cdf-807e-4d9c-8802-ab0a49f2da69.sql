@@ -1,0 +1,2 @@
+ALTER TABLE public.knowledge_base ADD COLUMN IF NOT EXISTS priority integer NOT NULL DEFAULT 2;
+COMMENT ON COLUMN public.knowledge_base.priority IS '1=low, 2=normal (default), 3=high. Higher priority sources boost RAG relevance score.';
