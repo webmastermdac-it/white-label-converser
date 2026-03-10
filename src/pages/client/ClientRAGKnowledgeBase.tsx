@@ -588,10 +588,12 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
             "FAQs are searched first — if the question matches, the bot responds immediately without using AI.")}
         </p>
       </div>
+      )}
 
       {/* ══════════════════════════════════════════════════ */}
       {/* SECTION 2 — Knowledge Base (Priority: MEDIUM ★★)  */}
       {/* ══════════════════════════════════════════════════ */}
+      {showKnowledge && (
       <div className="glass rounded-xl p-5">
         <PriorityHeader
           num={2}
