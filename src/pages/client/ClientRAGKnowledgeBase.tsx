@@ -99,16 +99,34 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
 
   // ── Fetch all data ──
   const fetchData = useCallback(async () => {
-    if (!clientId) return;
-    const { data: config } = await supabase
-      .from("chatbot_configs")
-      .select("*")
-      .eq("client_id", clientId)
-      .limit(1)
-      .single();
-    if (!config) { setLoading(false); return; }
-    setChatbotId(config.id);
-    setSystemPrompt(config.knowledge_base || "");
+    if (!clientId && !overrideChatbotId) return;
+    
+    let configId = overrideChatbotId;
+    let promptValue = "";
+    
+    if (overrideChatbotId) {
+      const { data: config } = await supabase
+        .from("chatbot_configs")
+        .select("id, knowledge_base")
+        .eq("id", overrideChatbotId)
+        .single();
+      if (!config) { setLoading(false); return; }
+      configId = config.id;
+      promptValue = config.knowledge_base || "";
+    } else {
+      const { data: config } = await supabase
+        .from("chatbot_configs")
+        .select("*")
+        .eq("client_id", clientId!)
+        .limit(1)
+        .single();
+      if (!config) { setLoading(false); return; }
+      configId = config.id;
+      promptValue = config.knowledge_base || "";
+    }
+    
+    setChatbotId(configId!);
+    setSystemPrompt(promptValue);
 
     // Fetch FAQs from dedicated table
     const { data: faqData } = await supabase
