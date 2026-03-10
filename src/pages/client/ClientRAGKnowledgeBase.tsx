@@ -41,6 +41,21 @@ interface FaqEntry {
   answer: string;
 }
 
+const normalizeUrl = (url: string): string => {
+  try {
+    const u = new URL(url.trim().toLowerCase());
+    u.hash = "";
+    u.searchParams.delete("utm_source");
+    u.searchParams.delete("utm_medium");
+    u.searchParams.delete("utm_campaign");
+    let normalized = u.toString();
+    if (normalized.endsWith("/")) normalized = normalized.slice(0, -1);
+    return normalized;
+  } catch {
+    return url.trim().toLowerCase();
+  }
+};
+
 const statusConfig: Record<string, { icon: any; cls: string; label: string }> = {
   processing: { icon: Clock, cls: "bg-warning/10 text-warning border-warning/30", label: "Processing..." },
   ready: { icon: CheckCircle2, cls: "bg-success/10 text-success border-success/30", label: "Ready" },
