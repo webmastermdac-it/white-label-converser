@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/hooks/useLanguage";
 import { usePlanConfig } from "@/hooks/usePlanConfig";
@@ -82,6 +83,8 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [searching, setSearching] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkDeleting, setBulkDeleting] = useState(false);
   const [freeText, setFreeText] = useState("");
   const [freeTextName, setFreeTextName] = useState("");
 
@@ -127,6 +130,15 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
     
     setChatbotId(configId!);
     setSystemPrompt(promptValue);
+
+    // Staleness watchdog: auto-mark stuck "processing" sources as error
+    const staleThreshold = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+    await supabase
+      .from("knowledge_base" as any)
+      .update({ status: "error", error_message: "Timeout: elaborazione troppo lunga. Riprova." } as any)
+      .eq("chatbot_id", configId!)
+      .eq("status", "processing")
+      .lt("updated_at", staleThreshold);
 
     // Fetch FAQs from dedicated table
     const { data: faqData } = await supabase
@@ -410,9 +422,45 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
   };
 
   const handleReprocess = async (source: KBSource) => {
-    await supabase.from("knowledge_base" as any).update({ status: "processing" } as any).eq("id", source.id);
+    await supabase.from("knowledge_base" as any).update({ status: "processing", updated_at: new Date().toISOString() } as any).eq("id", source.id);
     fetchData();
     processSource(source.id);
+  };
+
+  const handleBulkDelete = async () => {
+    if (!window.confirm(`Eliminare ${selectedIds.size} fonti selezionate?`)) return;
+    setBulkDeleting(true);
+    try {
+      for (const id of selectedIds) {
+        const source = sources.find(s => s.id === id);
+        await supabase.from("knowledge_chunks" as any).delete().eq("knowledge_base_id", id);
+        if (source?.file_path) await supabase.storage.from("kb-documents").remove([source.file_path]);
+        await supabase.from("knowledge_base" as any).delete().eq("id", id);
+      }
+      toast({ title: `✅ ${selectedIds.size} fonti eliminate` });
+      setSelectedIds(new Set());
+      fetchData();
+    } catch (err: any) {
+      toast({ title: "Errore", description: err.message, variant: "destructive" });
+    } finally {
+      setBulkDeleting(false);
+    }
+  };
+
+  const toggleSourceSelection = (id: string) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.size === sources.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(sources.map(s => s.id)));
+    }
   };
 
   const handleSearchTest = async () => {
@@ -805,43 +853,69 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
                       <p className="text-sm text-muted-foreground">{t("Nessuna fonte aggiunta", "No sources added")}</p>
                     </div>
                   ) : (
-                    sources.map(source => {
-                      const status = statusConfig[source.status] || statusConfig.error;
-                      const StatusIcon = status.icon;
-                      const TypeIcon = typeIcons[source.type] || FileText;
-                      return (
-                        <div key={source.id} className="flex items-center gap-3 p-3 rounded-lg bg-secondary/50 hover:bg-secondary transition-colors group">
-                          <div className="w-9 h-9 rounded-lg bg-muted flex items-center justify-center shrink-0">
-                            <TypeIcon className="w-4 h-4 text-muted-foreground" />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-foreground truncate">{source.name}</p>
-                            <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
-                              <Badge variant="outline" className="text-[10px] uppercase px-1.5 py-0">{source.type}</Badge>
-                              <Badge variant="outline" className={`text-[10px] px-1.5 py-0 ${status.cls}`}>
-                                <StatusIcon className="w-2.5 h-2.5 mr-0.5" />{status.label}
-                              </Badge>
-                              {source.status === "ready" && <span className="text-[10px] text-muted-foreground">{source.chunk_count} chunks</span>}
-                            </div>
-                            {source.error_message && (
-                              <p className="text-[11px] text-destructive mt-0.5 truncate flex items-center gap-1">
-                                <AlertTriangle className="w-3 h-3 shrink-0" /> {source.error_message}
-                              </p>
-                            )}
-                          </div>
-                          <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                            {["error", "ready", "outdated"].includes(source.status) && (
-                              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleReprocess(source)}>
-                                <RefreshCw className="w-3.5 h-3.5" />
-                              </Button>
-                            )}
-                            <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => handleDelete(source)}>
-                              <Trash2 className="w-3.5 h-3.5" />
+                    <>
+                      {/* Bulk toolbar */}
+                      <div className="flex items-center justify-between px-1">
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <Checkbox
+                            checked={selectedIds.size === sources.length && sources.length > 0}
+                            onCheckedChange={toggleSelectAll}
+                          />
+                          <span className="text-xs text-muted-foreground">{t("Seleziona tutti", "Select all")}</span>
+                        </label>
+                        {selectedIds.size > 0 && (
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs text-muted-foreground">{selectedIds.size} {t("selezionate", "selected")}</span>
+                            <Button variant="destructive" size="sm" onClick={handleBulkDelete} disabled={bulkDeleting} className="gap-1.5 h-7 text-xs">
+                              {bulkDeleting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+                              {t("Elimina selezionate", "Delete selected")}
                             </Button>
                           </div>
-                        </div>
-                      );
-                    })
+                        )}
+                      </div>
+                      {sources.map(source => {
+                        const status = statusConfig[source.status] || statusConfig.error;
+                        const StatusIcon = status.icon;
+                        const TypeIcon = typeIcons[source.type] || FileText;
+                        return (
+                          <div key={source.id} className="flex items-center gap-3 p-3 rounded-lg bg-secondary/50 hover:bg-secondary transition-colors group">
+                            <Checkbox
+                              checked={selectedIds.has(source.id)}
+                              onCheckedChange={() => toggleSourceSelection(source.id)}
+                              className="shrink-0"
+                            />
+                            <div className="w-9 h-9 rounded-lg bg-muted flex items-center justify-center shrink-0">
+                              <TypeIcon className="w-4 h-4 text-muted-foreground" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium text-foreground truncate">{source.name}</p>
+                              <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                                <Badge variant="outline" className="text-[10px] uppercase px-1.5 py-0">{source.type}</Badge>
+                                <Badge variant="outline" className={`text-[10px] px-1.5 py-0 ${status.cls}`}>
+                                  <StatusIcon className="w-2.5 h-2.5 mr-0.5" />{status.label}
+                                </Badge>
+                                {source.status === "ready" && <span className="text-[10px] text-muted-foreground">{source.chunk_count} chunks</span>}
+                              </div>
+                              {source.error_message && (
+                                <p className="text-[11px] text-destructive mt-0.5 flex items-center gap-1" title={source.error_message}>
+                                  <AlertTriangle className="w-3 h-3 shrink-0" /> {source.error_message.length > 60 ? source.error_message.slice(0, 60) + "…" : source.error_message}
+                                </p>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                              {["error", "ready", "outdated"].includes(source.status) && (
+                                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleReprocess(source)}>
+                                  <RefreshCw className="w-3.5 h-3.5" />
+                                </Button>
+                              )}
+                              <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => handleDelete(source)}>
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </Button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </>
                   )}
 
                   {/* Search test */}
