@@ -3,7 +3,7 @@ import ClientSidebar from "@/components/ClientSidebar";
 import MobileNav from "@/components/MobileNav";
 import { useLanguage } from "@/hooks/useLanguage";
 import {
-  LayoutDashboard, Inbox, MessageSquare, Settings, PlayCircle, Code2, ArrowUpCircle, BarChart3, Store
+  LayoutDashboard, Inbox, MessageSquare, Bot, ArrowUpCircle, BarChart3, Store
 } from "lucide-react";
 
 const ClientLayout = () => {
