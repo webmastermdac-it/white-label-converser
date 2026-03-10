@@ -26,6 +26,8 @@ const AdminSidebar = () => {
     { label: "Analytics", href: "/admin/analytics", icon: TrendingUp },
     { label: "Ecommerce", href: "/admin/ecommerce", icon: Store },
     { label: "Email & Notifiche", href: "/admin/email-templates", icon: Mail },
+    { label: "🧞 Platform Bot", href: "/admin/platform-bot", icon: Bot },
+    { label: "🧞 Platform Leads", href: "/admin/platform-leads", icon: Inbox },
   ];
 
   const handleSignOut = async () => {

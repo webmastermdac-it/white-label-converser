@@ -80,6 +80,9 @@ const App = () => (
               <Route path="analytics" element={<AdminAnalytics />} />
               <Route path="ecommerce" element={<AdminEcommerce />} />
               <Route path="email-templates" element={<AdminEmailTemplates />} />
+              <Route path="platform-bot" element={<AdminPlatformBot />} />
+              <Route path="platform-bot/kb" element={<AdminPlatformKB />} />
+              <Route path="platform-leads" element={<AdminPlatformLeads />} />
             </Route>
 
             {/* Client Routes */}
