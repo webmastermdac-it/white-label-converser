@@ -18,6 +18,7 @@ const ClientSidebar = () => {
   const { canUseEcommerce, config: planConfig } = usePlanConfig();
   const isFree = planConfig?.plan_name === "free";
   const navigate = useNavigate();
+  const tl = (it: string, en: string) => lang === "it" ? it : en;
 
   const clientNav = [
     { label: t("overview"), href: "/dashboard", icon: LayoutDashboard, end: true },
@@ -28,8 +29,6 @@ const ClientSidebar = () => {
     ...(canUseEcommerce ? [{ label: "Ecommerce", href: "/dashboard/ecommerce", icon: Store }] : []),
     { label: "Upgrade", href: "/dashboard/upgrade", icon: ArrowUpCircle },
   ];
-
-  const tl = (it: string, en: string) => lang === "it" ? it : en;
 
   const handleSignOut = async () => {
     await signOut();
