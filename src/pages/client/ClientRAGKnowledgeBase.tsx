@@ -922,6 +922,7 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
             "Instructions are only used when no FAQ and no document are relevant.")}
         </p>
       </div>
+      )}
 
       <UpgradeModal open={upgradeOpen} onClose={() => setUpgradeOpen(false)} requiredPlan={upgradeRequiredPlan} variant="rag" />
     </div>
