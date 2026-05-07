@@ -129,6 +129,11 @@ export type Database = {
           fallback_msg_en: string | null
           fallback_msg_it: string | null
           id: string
+          instagram_access_token: string | null
+          instagram_connected: boolean
+          instagram_connected_at: string | null
+          instagram_page_id: string | null
+          instagram_username: string | null
           is_active: boolean | null
           is_platform_bot: boolean
           knowledge_base: string | null
@@ -159,6 +164,11 @@ export type Database = {
           fallback_msg_en?: string | null
           fallback_msg_it?: string | null
           id?: string
+          instagram_access_token?: string | null
+          instagram_connected?: boolean
+          instagram_connected_at?: string | null
+          instagram_page_id?: string | null
+          instagram_username?: string | null
           is_active?: boolean | null
           is_platform_bot?: boolean
           knowledge_base?: string | null
@@ -189,6 +199,11 @@ export type Database = {
           fallback_msg_en?: string | null
           fallback_msg_it?: string | null
           id?: string
+          instagram_access_token?: string | null
+          instagram_connected?: boolean
+          instagram_connected_at?: string | null
+          instagram_page_id?: string | null
+          instagram_username?: string | null
           is_active?: boolean | null
           is_platform_bot?: boolean
           knowledge_base?: string | null
@@ -424,6 +439,39 @@ export type Database = {
           },
         ]
       }
+      instagram_messages: {
+        Row: {
+          bot_id: string | null
+          client_id: string
+          created_at: string
+          direction: string
+          id: string
+          instagram_sender_id: string | null
+          instagram_sender_username: string | null
+          message: string
+        }
+        Insert: {
+          bot_id?: string | null
+          client_id: string
+          created_at?: string
+          direction: string
+          id?: string
+          instagram_sender_id?: string | null
+          instagram_sender_username?: string | null
+          message?: string
+        }
+        Update: {
+          bot_id?: string | null
+          client_id?: string
+          created_at?: string
+          direction?: string
+          id?: string
+          instagram_sender_id?: string | null
+          instagram_sender_username?: string | null
+          message?: string
+        }
+        Relationships: []
+      }
       knowledge_base: {
         Row: {
           chatbot_id: string
@@ -602,6 +650,7 @@ export type Database = {
           doc_upload: boolean
           ecommerce_integration: boolean
           id: string
+          instagram_integration: boolean
           knowledge_base_wizard: boolean
           max_chatbots: number
           max_conversations_month: number
@@ -623,6 +672,7 @@ export type Database = {
           doc_upload?: boolean
           ecommerce_integration?: boolean
           id?: string
+          instagram_integration?: boolean
           knowledge_base_wizard?: boolean
           max_chatbots?: number
           max_conversations_month?: number
@@ -644,6 +694,7 @@ export type Database = {
           doc_upload?: boolean
           ecommerce_integration?: boolean
           id?: string
+          instagram_integration?: boolean
           knowledge_base_wizard?: boolean
           max_chatbots?: number
           max_conversations_month?: number
