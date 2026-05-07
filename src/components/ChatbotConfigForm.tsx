@@ -57,7 +57,7 @@ const defaultConfig: Config = {
   launcher_position: "bottom-right",
 };
 
-const EMOJIS = [GENIE_AVATAR, "🤖", "💬", "✨", "🎯", "🚀", "💡", "🤝", "⭐", "🌟", "🎪"];
+const EMOJIS = [GENIE_AVATAR, "🤖", "💬", "✨", "🎯", "🚀", "💡", "🤝", "⭐", "🌟", "🎪", "💖", "💕", "💗", "💝", "🌸", "🌷", "🌹", "🦋", "👩", "👩‍💼", "💄", "👜", "🛍️", "💅", "👑", "🎀", "🧚", "🪄", "🦄"];
 const POSITIONS = ["bottom-right", "bottom-left"];
 
 const ChatbotConfigForm: React.FC<ChatbotConfigFormProps> = ({ clientId, chatbotId: overrideChatbotId, onSaved }) => {
