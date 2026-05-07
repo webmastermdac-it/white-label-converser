@@ -43,6 +43,7 @@ import ClientUpgrade from "@/pages/client/ClientUpgrade";
 import ClientAnalytics from "@/pages/client/ClientAnalytics";
 import ClientEcommerce from "@/pages/client/ClientEcommerce";
 import ClientRAGKnowledgeBase from "@/pages/client/ClientRAGKnowledgeBase";
+import ClientInstagram from "@/pages/client/ClientInstagram";
 
 const queryClient = new QueryClient();
 
@@ -108,6 +109,7 @@ const App = () => (
               <Route path="analytics" element={<ClientAnalytics />} />
               <Route path="ecommerce" element={<ClientEcommerce />} />
               <Route path="knowledge-base" element={<ClientRAGKnowledgeBase />} />
+              <Route path="instagram" element={<ClientInstagram />} />
             </Route>
 
             <Route path="*" element={<NotFound />} />

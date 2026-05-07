@@ -6,7 +6,7 @@ import { usePlanConfig } from "@/hooks/usePlanConfig";
 import { Button } from "@/components/ui/button";
 import {
   LayoutDashboard, MessageSquare,
-  ChevronLeft, ChevronRight, Bot, LogOut, Inbox, Globe, ArrowUpCircle, BarChart3, Store
+  ChevronLeft, ChevronRight, Bot, LogOut, Inbox, Globe, ArrowUpCircle, BarChart3, Store, Instagram
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import ThemeSelector from "@/components/ThemeSelector";
@@ -27,6 +27,7 @@ const ClientSidebar = () => {
     { label: t("chatHistory"), href: "/dashboard/chats", icon: MessageSquare },
     { label: "Analytics", href: "/dashboard/analytics", icon: BarChart3 },
     ...(canUseEcommerce ? [{ label: "Ecommerce", href: "/dashboard/ecommerce", icon: Store }] : []),
+    { label: "Instagram", href: "/dashboard/instagram", icon: Instagram },
     { label: "Upgrade", href: "/dashboard/upgrade", icon: ArrowUpCircle },
   ];
 
