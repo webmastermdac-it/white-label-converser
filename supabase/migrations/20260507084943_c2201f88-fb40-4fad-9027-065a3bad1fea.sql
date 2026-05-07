@@ -1,0 +1,1 @@
+UPDATE public.clients SET plan='pro', updated_at=now() WHERE email='support@florieintimates.com';
