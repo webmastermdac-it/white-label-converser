@@ -129,10 +129,9 @@ async function fetchPrestaShopStock(config: any) {
 }
 
 function resolvePrestaShopStock(product: any, stockRows: any[], configValues: { stockManaged: boolean | null; orderOutOfStock: boolean | null }) {
-  const active = String(product.active ?? "1") !== "0";
   const availableForOrder = String(product.available_for_order ?? "1") !== "0";
 
-  if (!active || !availableForOrder) {
+  if (!availableForOrder) {
     return { inStock: false, stockQuantity: 0 };
   }
 
