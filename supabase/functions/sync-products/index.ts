@@ -506,6 +506,10 @@ function buildProductKnowledge(products: any[], lastSyncAt: string): string {
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+
+  let supabase: ReturnType<typeof createClient> | null = null;
+  let currentConfigId: string | null = null;
+  let currentSyncLogId: string | null = null;
   
   try {
     const parsed = SyncBodySchema.safeParse(await req.json().catch(() => null));
@@ -521,7 +525,7 @@ serve(async (req) => {
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
     if (!supabaseUrl || !serviceRoleKey) throw new Error("Backend environment is not configured");
 
-    const supabase = createClient(
+    supabase = createClient(
       supabaseUrl,
       serviceRoleKey,
     );
@@ -534,6 +538,7 @@ serve(async (req) => {
       .single();
     
     if (cfgErr || !config) throw new Error("No ecommerce config found for client");
+    currentConfigId = config.id;
     
     // Update status to syncing
     await supabase.from("ecommerce_configs").update({ sync_status: "syncing", sync_error: null }).eq("id", config.id);
@@ -543,6 +548,7 @@ serve(async (req) => {
       client_id,
       status: "running",
     }).select("id").single();
+    currentSyncLogId = syncLog?.id || null;
     
     let rawProducts: any[] = [];
     
@@ -700,6 +706,19 @@ serve(async (req) => {
     
   } catch (error: any) {
     console.error("sync-products error:", error);
+    if (supabase && currentConfigId) {
+      await supabase.from("ecommerce_configs").update({
+        sync_status: "error",
+        sync_error: error.message,
+      }).eq("id", currentConfigId);
+    }
+    if (supabase && currentSyncLogId) {
+      await supabase.from("sync_logs").update({
+        ended_at: new Date().toISOString(),
+        status: "error",
+        errors: [{ message: error.message }],
+      }).eq("id", currentSyncLogId);
+    }
     return new Response(JSON.stringify({ error: error.message }), {
       status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
