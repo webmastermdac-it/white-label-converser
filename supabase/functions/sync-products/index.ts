@@ -1,12 +1,173 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
+import { z } from "https://esm.sh/zod@3.23.8";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+const SyncBodySchema = z.object({
+  client_id: z.string().uuid(),
+});
+
+const PRESTASHOP_PAGE_SIZE = 100;
 
 function stripHtml(html: string): string {
   return (html || "").replace(/<[^>]*>/g, "").replace(/&nbsp;/g, " ").replace(/\s+/g, " ").trim();
+}
+
+function toNumber(value: unknown, fallback = 0): number {
+  if (value === null || value === undefined || value === "") return fallback;
+  const parsed = typeof value === "number"
+    ? value
+    : parseFloat(String(value).replace(",", "."));
+  return Number.isFinite(parsed) ? parsed : fallback;
+}
+
+function formatPrice(value: unknown): string {
+  return toNumber(value, 0).toFixed(2);
+}
+
+function normalizeStoreUrl(url: string): string {
+  return url.replace(/\/$/, "");
+}
+
+function asArray<T>(value: T | T[] | null | undefined): T[] {
+  if (!value) return [];
+  return Array.isArray(value) ? value : [value];
+}
+
+function getLocalizedText(value: any): string {
+  if (!value) return "";
+  if (typeof value === "string") return value;
+  const languages = asArray(value.language);
+  const firstLanguage = languages[0] as any;
+  if (typeof firstLanguage === "string") return firstLanguage;
+  return firstLanguage?.value || firstLanguage?.['#text'] || "";
+}
+
+function isTruthyFlag(value: unknown): boolean {
+  return ["1", "true", "yes"].includes(String(value ?? "").toLowerCase());
+}
+
+async function fetchWithTimeout(url: string, init: RequestInit = {}, timeoutMs = 30000): Promise<Response> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(url, { ...init, signal: controller.signal });
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+async function fetchPrestaShopJson(config: any, path: string, params: Record<string, string> = {}) {
+  const apiKey = config.api_key;
+  if (!apiKey) throw new Error("PrestaShop API key missing");
+
+  const url = new URL(`${normalizeStoreUrl(config.store_url)}/api${path}`);
+  url.searchParams.set("output_format", "JSON");
+  for (const [key, value] of Object.entries(params)) {
+    url.searchParams.set(key, value);
+  }
+
+  const res = await fetchWithTimeout(url.toString(), {
+    headers: { Authorization: `Basic ${btoa(`${apiKey}:`)}` },
+  });
+  if (!res.ok) {
+    const body = await res.text().catch(() => "");
+    throw new Error(`PrestaShop API error ${res.status}: ${body || res.statusText}`);
+  }
+  return await res.json();
+}
+
+async function fetchPrestaShopConfigurations(config: any) {
+  const defaults = { stockManaged: null as boolean | null, orderOutOfStock: null as boolean | null };
+  const names = ["PS_STOCK_MANAGEMENT", "PS_ORDER_OUT_OF_STOCK"];
+
+  for (const name of names) {
+    try {
+      const data = await fetchPrestaShopJson(config, "/configurations", {
+        "filter[name]": `[${name}]`,
+        display: "[name,value]",
+      });
+      const row = asArray<any>(data.configurations)[0];
+      const value = row?.value;
+      if (name === "PS_STOCK_MANAGEMENT") defaults.stockManaged = isTruthyFlag(value);
+      if (name === "PS_ORDER_OUT_OF_STOCK") defaults.orderOutOfStock = isTruthyFlag(value);
+    } catch (error) {
+      console.warn(`PrestaShop configuration ${name} unavailable:`, error);
+    }
+  }
+
+  return defaults;
+}
+
+async function fetchPrestaShopStock(config: any) {
+  const stockByProduct = new Map<string, any[]>();
+  let offset = 0;
+
+  while (true) {
+    const data = await fetchPrestaShopJson(config, "/stock_availables", {
+      display: "[id_product,id_product_attribute,quantity,out_of_stock,depends_on_stock]",
+      limit: `${offset},${PRESTASHOP_PAGE_SIZE}`,
+    });
+
+    const rows = asArray<any>(data.stock_availables);
+    if (!rows.length) break;
+
+    for (const row of rows) {
+      const productId = String(row.id_product ?? "");
+      if (!productId) continue;
+      const current = stockByProduct.get(productId) || [];
+      current.push(row);
+      stockByProduct.set(productId, current);
+    }
+
+    if (rows.length < PRESTASHOP_PAGE_SIZE) break;
+    offset += PRESTASHOP_PAGE_SIZE;
+    if (offset > 10000) break;
+  }
+
+  return stockByProduct;
+}
+
+function resolvePrestaShopStock(product: any, stockRows: any[], configValues: { stockManaged: boolean | null; orderOutOfStock: boolean | null }) {
+  const availableForOrder = String(product.available_for_order ?? "1") !== "0";
+
+  if (!availableForOrder) {
+    return { inStock: false, stockQuantity: 0 };
+  }
+
+  const quantities = stockRows
+    .map(row => row.quantity)
+    .filter(value => value !== null && value !== undefined && value !== "")
+    .map(value => parseInt(String(value), 10))
+    .filter(value => Number.isFinite(value));
+  const stockQuantity = quantities.length ? quantities.reduce((sum, value) => sum + value, 0) : null;
+  const rowAllowsOutOfStock = stockRows.some(row => String(row.out_of_stock ?? "") === "1");
+  const rowUsesShopDefault = stockRows.some(row => String(row.out_of_stock ?? "") === "2");
+
+  // If PrestaShop stock management is disabled, quantity is not meaningful: orderable products are available.
+  if (configValues.stockManaged === false) {
+    return { inStock: true, stockQuantity };
+  }
+
+  if (stockQuantity !== null && stockQuantity > 0) {
+    return { inStock: true, stockQuantity };
+  }
+
+  if (rowAllowsOutOfStock) {
+    return { inStock: true, stockQuantity };
+  }
+
+  // `out_of_stock = 2` means “use shop default”; when the default is unavailable from the API,
+  // prefer not to mark orderable PrestaShop products as exhausted just because quantity is 0.
+  if (rowUsesShopDefault && configValues.orderOutOfStock !== false) {
+    return { inStock: true, stockQuantity };
+  }
+
+  if (!stockRows.length) {
+    return { inStock: true, stockQuantity: null };
+  }
+
+  return { inStock: false, stockQuantity };
 }
 
 async function fetchWooCommerce(config: any, supabase: any) {
@@ -107,44 +268,43 @@ async function fetchShopify(config: any) {
 
 async function fetchPrestaShop(config: any) {
   const products: any[] = [];
-  const auth = btoa(`${config.api_key}:`);
-  const res = await fetch(
-    `${config.store_url}/api/products?output_format=JSON&display=full`,
-    { headers: { Authorization: `Basic ${auth}` } }
-  );
-  if (!res.ok) throw new Error(`PrestaShop API error: ${res.status}`);
-  const data = await res.json();
+  const stockByProduct = await fetchPrestaShopStock(config);
+  const configValues = await fetchPrestaShopConfigurations(config);
+  let offset = 0;
   
-  for (const p of (data.products || [])) {
-    // PrestaShop stock resolution:
-    // - quantity > 0 → in stock
-    // - out_of_stock === "1" → shop allows orders even when OOS → treat as available
-    // - quantity missing/null AND available_for_order === "1" → stock not tracked → available
-    // - otherwise → out of stock
-    const qtyRaw = p.quantity;
-    const qtyNum = qtyRaw === undefined || qtyRaw === null || qtyRaw === ""
-      ? null
-      : parseInt(qtyRaw);
-    const allowOOS = String(p.out_of_stock ?? "") === "1";
-    const stockUntracked = qtyNum === null && String(p.available_for_order ?? "1") === "1";
-    const inStock = (qtyNum !== null && qtyNum > 0) || allowOOS || stockUntracked;
-
-    products.push({
-      external_id: String(p.id),
-      name: typeof p.name === "object" ? (p.name?.language?.[0]?.value || p.name?.language?.value || "") : (p.name || ""),
-      description: stripHtml(typeof p.description === "object" ? (p.description?.language?.[0]?.value || "") : (p.description || "")),
-      price: parseFloat(p.price || "0"),
-      sale_price: null,
-      in_stock: inStock,
-      stock_quantity: qtyNum,
-      categories: [],
-      tags: [],
-      variants: [],
-      image_url: null,
-      product_url: null,
-      raw_data: p,
+  while (true) {
+    const data = await fetchPrestaShopJson(config, "/products", {
+      display: "full",
+      limit: `${offset},${PRESTASHOP_PAGE_SIZE}`,
     });
+    const pageProducts = asArray<any>(data.products);
+    if (!pageProducts.length) break;
+
+    for (const p of pageProducts) {
+      const stock = resolvePrestaShopStock(p, stockByProduct.get(String(p.id)) || [], configValues);
+
+      products.push({
+        external_id: String(p.id),
+        name: getLocalizedText(p.name),
+        description: stripHtml(getLocalizedText(p.description) || getLocalizedText(p.description_short)),
+        price: toNumber(p.price, 0),
+        sale_price: null,
+        in_stock: stock.inStock,
+        stock_quantity: stock.stockQuantity,
+        categories: [],
+        tags: [],
+        variants: [],
+        image_url: null,
+        product_url: null,
+        raw_data: { ...p, stock_availables: stockByProduct.get(String(p.id)) || [] },
+      });
+    }
+
+    if (pageProducts.length < PRESTASHOP_PAGE_SIZE) break;
+    offset += PRESTASHOP_PAGE_SIZE;
+    if (offset > 10000) break;
   }
+
   return products;
 }
 
@@ -314,15 +474,15 @@ function buildProductKnowledge(products: any[], lastSyncAt: string): string {
       
       const desc = p.description?.substring(0, truncated ? 100 : 200) || "";
       let entry = `**${p.name}**\n`;
-      entry += `- Prezzo: €${p.price}`;
-      if (p.sale_price) entry += ` ~~€${p.sale_price}~~ SCONTATO`;
+      entry += `- Prezzo: €${formatPrice(p.price)}`;
+      if (p.sale_price) entry += ` ~~€${formatPrice(p.sale_price)}~~ SCONTATO`;
       entry += "\n";
       entry += `- Disponibilità: ${p.in_stock ? `In stock${p.stock_quantity != null && p.stock_quantity >= 0 ? ` (Qtà: ${p.stock_quantity})` : ""}` : "Esaurito"}\n`;
       if (desc) entry += `- Descrizione: ${desc}\n`;
       
       if (p.variants?.length && !(truncated && !p.in_stock)) {
         const variantStrs = p.variants.slice(0, 10).map((v: any) =>
-          `${v.name || v.value}: €${v.price} (${(v.stock ?? -1) > 0 || v.stock === -1 ? "disponibile" : "esaurito"})`
+          `${v.name || v.value}: €${formatPrice(v.price)} (${(v.stock ?? -1) > 0 || v.stock === -1 ? "disponibile" : "esaurito"})`
         );
         entry += `- Varianti: ${variantStrs.join(", ")}\n`;
       }
@@ -344,17 +504,30 @@ function buildProductKnowledge(products: any[], lastSyncAt: string): string {
 }
 
 serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+
+  let supabase: any = null;
+  let currentConfigId: string | null = null;
+  let currentSyncLogId: string | null = null;
   
   try {
-    const { client_id } = await req.json();
-    if (!client_id) throw new Error("client_id required");
-    
-    const { createClient } = await import("https://esm.sh/@supabase/supabase-js@2");
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
-    );
+    const parsed = SyncBodySchema.safeParse(await req.json().catch(() => null));
+    if (!parsed.success) {
+      return new Response(JSON.stringify({ error: parsed.error.flatten().fieldErrors }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const { client_id } = parsed.data;
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    if (!supabaseUrl || !serviceRoleKey) throw new Error("Backend environment is not configured");
+
+    supabase = createClient(
+      supabaseUrl,
+      serviceRoleKey,
+    ) as any;
     
     // Get ecommerce config
     const { data: config, error: cfgErr } = await supabase
@@ -364,6 +537,7 @@ serve(async (req) => {
       .single();
     
     if (cfgErr || !config) throw new Error("No ecommerce config found for client");
+    currentConfigId = config.id;
     
     // Update status to syncing
     await supabase.from("ecommerce_configs").update({ sync_status: "syncing", sync_error: null }).eq("id", config.id);
@@ -373,6 +547,7 @@ serve(async (req) => {
       client_id,
       status: "running",
     }).select("id").single();
+    currentSyncLogId = syncLog?.id || null;
     
     let rawProducts: any[] = [];
     
@@ -530,6 +705,19 @@ serve(async (req) => {
     
   } catch (error: any) {
     console.error("sync-products error:", error);
+    if (supabase && currentConfigId) {
+      await supabase.from("ecommerce_configs").update({
+        sync_status: "error",
+        sync_error: error.message,
+      }).eq("id", currentConfigId);
+    }
+    if (supabase && currentSyncLogId) {
+      await supabase.from("sync_logs").update({
+        ended_at: new Date().toISOString(),
+        status: "error",
+        errors: [{ message: error.message }],
+      }).eq("id", currentSyncLogId);
+    }
     return new Response(JSON.stringify({ error: error.message }), {
       status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
