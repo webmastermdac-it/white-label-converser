@@ -116,14 +116,27 @@ async function fetchPrestaShop(config: any) {
   const data = await res.json();
   
   for (const p of (data.products || [])) {
+    // PrestaShop stock resolution:
+    // - quantity > 0 → in stock
+    // - out_of_stock === "1" → shop allows orders even when OOS → treat as available
+    // - quantity missing/null AND available_for_order === "1" → stock not tracked → available
+    // - otherwise → out of stock
+    const qtyRaw = p.quantity;
+    const qtyNum = qtyRaw === undefined || qtyRaw === null || qtyRaw === ""
+      ? null
+      : parseInt(qtyRaw);
+    const allowOOS = String(p.out_of_stock ?? "") === "1";
+    const stockUntracked = qtyNum === null && String(p.available_for_order ?? "1") === "1";
+    const inStock = (qtyNum !== null && qtyNum > 0) || allowOOS || stockUntracked;
+
     products.push({
       external_id: String(p.id),
       name: typeof p.name === "object" ? (p.name?.language?.[0]?.value || p.name?.language?.value || "") : (p.name || ""),
       description: stripHtml(typeof p.description === "object" ? (p.description?.language?.[0]?.value || "") : (p.description || "")),
       price: parseFloat(p.price || "0"),
       sale_price: null,
-      in_stock: parseInt(p.quantity || "0") > 0,
-      stock_quantity: parseInt(p.quantity || "0"),
+      in_stock: inStock,
+      stock_quantity: qtyNum,
       categories: [],
       tags: [],
       variants: [],
