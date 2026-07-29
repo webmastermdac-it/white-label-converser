@@ -507,7 +507,7 @@ function buildProductKnowledge(products: any[], lastSyncAt: string): string {
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
-  let supabase: ReturnType<typeof createClient> | null = null;
+  let supabase: any = null;
   let currentConfigId: string | null = null;
   let currentSyncLogId: string | null = null;
   
@@ -528,7 +528,7 @@ serve(async (req) => {
     supabase = createClient(
       supabaseUrl,
       serviceRoleKey,
-    );
+    ) as any;
     
     // Get ecommerce config
     const { data: config, error: cfgErr } = await supabase
