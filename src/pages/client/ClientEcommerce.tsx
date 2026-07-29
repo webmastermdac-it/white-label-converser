@@ -58,6 +58,16 @@ const ClientEcommerce = () => {
   const [page, setPage] = useState(0);
   const [loading, setLoading] = useState(true);
 
+  const formatCurrency = (value: unknown) => {
+    const amount = typeof value === "number" ? value : parseFloat(String(value ?? "0"));
+    return new Intl.NumberFormat(isIt ? "it-IT" : "en-US", {
+      style: "currency",
+      currency: "EUR",
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(Number.isFinite(amount) ? amount : 0);
+  };
+
   const isStarterOnly = plan === "starter";
   const isFree = plan === "free";
 
@@ -145,7 +155,20 @@ const ClientEcommerce = () => {
       const { data, error } = await supabase.functions.invoke("sync-products", {
         body: { client_id: clientId },
       });
-      if (error) throw error;
+      if (error) {
+        let details = error.message;
+        const context = (error as any).context;
+        if (context && typeof context.text === "function") {
+          try {
+            const raw = await context.text();
+            const parsed = JSON.parse(raw);
+            details = parsed.error || raw;
+          } catch {
+            details = error.message;
+          }
+        }
+        throw new Error(details);
+      }
       setSyncStatus("success");
       setLastSyncAt(new Date().toISOString());
       setSyncError(null);
@@ -160,8 +183,10 @@ const ClientEcommerce = () => {
       setSyncStatus("error");
       setSyncError(e.message);
       toast({ title: "Error", description: e.message, variant: "destructive" });
+    } finally {
+      setSyncing(false);
+      loadConfig();
     }
-    setSyncing(false);
   };
 
   const copyWebhookUrl = () => {
@@ -411,8 +436,8 @@ const ClientEcommerce = () => {
                     <TableRow key={p.id}>
                       <TableCell className="font-medium max-w-[200px] truncate">{p.name}</TableCell>
                       <TableCell>
-                        €{p.price}
-                        {p.sale_price && <span className="ml-1 text-xs line-through text-muted-foreground">€{p.sale_price}</span>}
+                        {formatCurrency(p.price)}
+                        {p.sale_price && <span className="ml-1 text-xs line-through text-muted-foreground">{formatCurrency(p.sale_price)}</span>}
                       </TableCell>
                       <TableCell>
                         <Badge variant={p.in_stock ? "default" : "destructive"} className={p.in_stock ? "bg-green-600" : ""}>
