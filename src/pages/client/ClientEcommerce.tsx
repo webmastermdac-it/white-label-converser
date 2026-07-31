@@ -10,11 +10,11 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Switch } from "@/components/ui/switch";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { toast } from "@/hooks/use-toast";
 import {
-  ShoppingCart, RefreshCw, Copy, ChevronDown, Search,
+  ShoppingCart, RefreshCw, Search,
   CheckCircle2, XCircle, Clock, Loader2, ExternalLink, AlertTriangle, ArrowUpCircle, Store
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -48,7 +48,8 @@ const ClientEcommerce = () => {
   const [syncStatus, setSyncStatus] = useState("idle");
   const [syncError, setSyncError] = useState<string | null>(null);
   const [lastSyncAt, setLastSyncAt] = useState<string | null>(null);
-  const [webhookSecret, setWebhookSecret] = useState("");
+  const [syncEnabled, setSyncEnabled] = useState(true);
+  const [savingAutoSync, setSavingAutoSync] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [products, setProducts] = useState<any[]>([]);
@@ -94,7 +95,7 @@ const ClientEcommerce = () => {
       setSyncStatus(d.sync_status || "idle");
       setSyncError(d.sync_error);
       setLastSyncAt(d.last_sync_at);
-      setWebhookSecret(d.webhook_secret || "");
+      setSyncEnabled(d.sync_enabled !== false);
     }
     setLoading(false);
   }, [clientId]);
@@ -189,10 +190,29 @@ const ClientEcommerce = () => {
     }
   };
 
-  const copyWebhookUrl = () => {
-    const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ecommerce-webhook?client=${clientId}`;
-    navigator.clipboard.writeText(url);
-    toast({ title: isIt ? "URL copiato!" : "URL copied!" });
+  const handleToggleAutoSync = async (checked: boolean) => {
+    if (!configId) return;
+    setSavingAutoSync(true);
+    const previous = syncEnabled;
+    setSyncEnabled(checked);
+    const { error } = await supabase
+      .from("ecommerce_configs" as any)
+      .update({ sync_enabled: checked } as any)
+      .eq("id", configId);
+    setSavingAutoSync(false);
+    if (error) {
+      setSyncEnabled(previous);
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+      return;
+    }
+    toast({
+      title: checked
+        ? (isIt ? "Sincronizzazione automatica attiva" : "Automatic sync enabled")
+        : (isIt ? "Sincronizzazione automatica disattivata" : "Automatic sync disabled"),
+      description: checked
+        ? (isIt ? "Il catalogo verrà aggiornato ogni 6 ore." : "The catalog will refresh every 6 hours.")
+        : (isIt ? "Potrai sempre sincronizzare manualmente." : "You can still sync manually."),
+    });
   };
 
   if (loading || planLoading) {
@@ -345,43 +365,25 @@ const ClientEcommerce = () => {
               </Button>
             </div>
 
-            {/* Webhook section */}
-            {canUseAPI && (
-              <Collapsible>
-                <CollapsibleTrigger asChild>
-                  <Button variant="ghost" size="sm" className="text-xs text-muted-foreground">
-                    <ChevronDown className="w-3 h-3 mr-1" />
-                    {isIt ? "Webhook (aggiornamenti real-time)" : "Webhook (real-time updates)"}
-                  </Button>
-                </CollapsibleTrigger>
-                <CollapsibleContent className="mt-3 space-y-3 p-4 rounded-lg bg-muted/30">
-                  <div>
-                    <Label className="text-xs">{isIt ? "URL Webhook" : "Webhook URL"}</Label>
-                    <div className="flex gap-2 mt-1">
-                      <Input
-                        readOnly
-                        value={`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ecommerce-webhook?client=${clientId}`}
-                        className="text-xs font-mono"
-                      />
-                      <Button size="sm" variant="outline" onClick={copyWebhookUrl}>
-                        <Copy className="w-3 h-3" />
-                      </Button>
-                    </div>
-                  </div>
-                  {webhookSecret && (
-                    <div>
-                      <Label className="text-xs">Webhook Secret</Label>
-                      <Input readOnly value={webhookSecret} className="text-xs font-mono" type="password" />
-                    </div>
-                  )}
-                  <p className="text-xs text-muted-foreground">
-                    {isIt
-                      ? "Incolla questo URL nelle impostazioni webhook della tua piattaforma per ricevere aggiornamenti in tempo reale."
-                      : "Paste this URL in your platform's webhook settings to receive real-time updates."}
-                  </p>
-                </CollapsibleContent>
-              </Collapsible>
-            )}
+            {/* Sincronizzazione automatica */}
+            <div className="flex items-start justify-between gap-4 p-4 rounded-lg bg-muted/30">
+              <div className="space-y-1">
+                <Label className="text-sm font-medium">
+                  {isIt ? "Sincronizzazione automatica" : "Automatic synchronization"}
+                </Label>
+                <p className="text-xs text-muted-foreground">
+                  {isIt
+                    ? "Se attiva, il catalogo viene riallineato automaticamente ogni 6 ore. Nessuna configurazione richiesta sul tuo store."
+                    : "When enabled, the catalog is refreshed automatically every 6 hours. No setup required on your store."}
+                </p>
+              </div>
+              <Switch
+                checked={syncEnabled}
+                disabled={savingAutoSync}
+                onCheckedChange={handleToggleAutoSync}
+              />
+            </div>
+
           </CardContent>
         </Card>
       )}
