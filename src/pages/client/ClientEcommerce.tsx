@@ -95,7 +95,7 @@ const ClientEcommerce = () => {
       setSyncStatus(d.sync_status || "idle");
       setSyncError(d.sync_error);
       setLastSyncAt(d.last_sync_at);
-      setWebhookSecret(d.webhook_secret || "");
+      setSyncEnabled(d.sync_enabled !== false);
     }
     setLoading(false);
   }, [clientId]);
