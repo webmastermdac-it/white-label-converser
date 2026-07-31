@@ -311,6 +311,7 @@ async function fetchPrestaShop(config: any) {
   const products: any[] = [];
   const stockByProduct = await fetchPrestaShopStock(config);
   const configValues = await fetchPrestaShopConfigurations(config);
+  const categoryNames = await fetchPrestaShopCategories(config);
   let offset = 0;
   
   while (true) {
@@ -323,23 +324,29 @@ async function fetchPrestaShop(config: any) {
 
     for (const p of pageProducts) {
       const stock = resolvePrestaShopStock(p, stockByProduct.get(String(p.id)) || [], configValues);
+      const longDesc = stripHtml(getLocalizedText(p.description));
+      const shortDesc = stripHtml(getLocalizedText(p.description_short));
+      const description = [shortDesc, longDesc].filter(Boolean).join(" — ").slice(0, 4000);
 
       products.push({
         external_id: String(p.id),
         name: getLocalizedText(p.name),
-        description: stripHtml(getLocalizedText(p.description) || getLocalizedText(p.description_short)),
+        description,
         price: toNumber(p.price, 0),
         sale_price: null,
         in_stock: stock.inStock,
         stock_quantity: stock.stockQuantity,
-        categories: [],
-        tags: [],
+        categories: resolvePrestaShopCategories(p, categoryNames),
+        tags: [getLocalizedText(p.reference) || "", getLocalizedText(p.ean13) || ""].filter(Boolean),
         variants: [],
         image_url: null,
-        product_url: null,
+        product_url: getLocalizedText(p.link_rewrite)
+          ? `${normalizeStoreUrl(config.store_url)}/${p.id}-${getLocalizedText(p.link_rewrite)}.html`
+          : null,
         raw_data: { ...p, stock_availables: stockByProduct.get(String(p.id)) || [] },
       });
     }
+
 
     if (pageProducts.length < PRESTASHOP_PAGE_SIZE) break;
     offset += PRESTASHOP_PAGE_SIZE;
