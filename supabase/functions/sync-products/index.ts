@@ -338,6 +338,8 @@ async function fetchPrestaShop(config: any) {
     if (!pageProducts.length) break;
 
     for (const p of pageProducts) {
+      // Skip offline/hidden products: they get deactivated in the catalog by the sync cleanup.
+      if (!isPrestaShopOnline(p)) continue;
       const stock = resolvePrestaShopStock(p, stockByProduct.get(String(p.id)) || [], configValues);
       const longDesc = stripHtml(getLocalizedText(p.description));
       const shortDesc = stripHtml(getLocalizedText(p.description_short));
