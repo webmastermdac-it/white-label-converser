@@ -169,12 +169,27 @@ function resolvePrestaShopCategories(product: any, categoryNames: Map<string, st
   return [...new Set(labels)].slice(0, 5);
 }
 
+function isPrestaShopOnline(product: any) {
+  const active = String(product.active ?? "1");
+  if (active === "0" || active.toLowerCase() === "false") return false;
+  // `visibility` can be none/catalog/search/both; "none" means hidden from the store front
+  const visibility = String(product.visibility ?? "both").toLowerCase();
+  if (visibility === "none") return false;
+  return true;
+}
+
 function resolvePrestaShopStock(product: any, stockRows: any[], configValues: { stockManaged: boolean | null; orderOutOfStock: boolean | null }) {
+  // Offline / hidden products must never be presented as available.
+  if (!isPrestaShopOnline(product)) {
+    return { inStock: false, stockQuantity: 0 };
+  }
+
   const availableForOrder = String(product.available_for_order ?? "1") !== "0";
 
   if (!availableForOrder) {
     return { inStock: false, stockQuantity: 0 };
   }
+
 
   const quantities = stockRows
     .map(row => row.quantity)
