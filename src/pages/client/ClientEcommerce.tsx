@@ -190,10 +190,29 @@ const ClientEcommerce = () => {
     }
   };
 
-  const copyWebhookUrl = () => {
-    const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ecommerce-webhook?client=${clientId}`;
-    navigator.clipboard.writeText(url);
-    toast({ title: isIt ? "URL copiato!" : "URL copied!" });
+  const handleToggleAutoSync = async (checked: boolean) => {
+    if (!configId) return;
+    setSavingAutoSync(true);
+    const previous = syncEnabled;
+    setSyncEnabled(checked);
+    const { error } = await supabase
+      .from("ecommerce_configs" as any)
+      .update({ sync_enabled: checked } as any)
+      .eq("id", configId);
+    setSavingAutoSync(false);
+    if (error) {
+      setSyncEnabled(previous);
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+      return;
+    }
+    toast({
+      title: checked
+        ? (isIt ? "Sincronizzazione automatica attiva" : "Automatic sync enabled")
+        : (isIt ? "Sincronizzazione automatica disattivata" : "Automatic sync disabled"),
+      description: checked
+        ? (isIt ? "Il catalogo verrà aggiornato ogni 6 ore." : "The catalog will refresh every 6 hours.")
+        : (isIt ? "Potrai sempre sincronizzare manualmente." : "You can still sync manually."),
+    });
   };
 
   if (loading || planLoading) {
