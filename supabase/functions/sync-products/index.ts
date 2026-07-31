@@ -128,6 +128,47 @@ async function fetchPrestaShopStock(config: any) {
   return stockByProduct;
 }
 
+async function fetchPrestaShopCategories(config: any) {
+  const names = new Map<string, string>();
+  let offset = 0;
+
+  try {
+    while (true) {
+      const data = await fetchPrestaShopJson(config, "/categories", {
+        display: "[id,name]",
+        limit: `${offset},${PRESTASHOP_PAGE_SIZE}`,
+      });
+      const rows = asArray<any>(data.categories);
+      if (!rows.length) break;
+      for (const row of rows) {
+        const label = getLocalizedText(row.name);
+        if (row.id != null && label) names.set(String(row.id), label);
+      }
+      if (rows.length < PRESTASHOP_PAGE_SIZE) break;
+      offset += PRESTASHOP_PAGE_SIZE;
+      if (offset > 5000) break;
+    }
+  } catch (error) {
+    console.warn("PrestaShop categories unavailable:", error);
+  }
+
+  return names;
+}
+
+function resolvePrestaShopCategories(product: any, categoryNames: Map<string, string>): string[] {
+  const ids: string[] = [];
+  const defaultId = product.id_category_default != null ? String(product.id_category_default) : "";
+  if (defaultId) ids.push(defaultId);
+  for (const assoc of asArray<any>(product.associations?.categories)) {
+    const id = String(assoc?.id ?? "");
+    if (id && !ids.includes(id)) ids.push(id);
+  }
+  const labels = ids
+    .map(id => categoryNames.get(id))
+    .filter((label): label is string => Boolean(label) && !["Root", "Home", "Casa"].includes(label as string));
+  return [...new Set(labels)].slice(0, 5);
+}
+
 function resolvePrestaShopStock(product: any, stockRows: any[], configValues: { stockManaged: boolean | null; orderOutOfStock: boolean | null }) {
   const availableForOrder = String(product.available_for_order ?? "1") !== "0";
 
