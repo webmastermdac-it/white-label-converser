@@ -169,7 +169,7 @@ serve(async (req) => {
     // ── Call AI gateway ──
     const gatewayModel = MODEL_MAP[chatModel] || "openai/gpt-5-mini";
 
-    const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    let aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${LOVABLE_API_KEY}`,
@@ -181,6 +181,27 @@ serve(async (req) => {
         stream: false,
       }),
     });
+
+    // Keep customer chatbots available if the workspace AI Gateway limit blocks usage.
+    // The OpenAI key is server-side only and is already used by this project for embeddings.
+    if (aiResponse.status === 403) {
+      const openAiKey = Deno.env.get("OPENAI_API_KEY");
+      if (openAiKey) {
+        console.warn("[chat] AI Gateway blocked the request; using configured OpenAI fallback");
+        aiResponse = await fetch("https://api.openai.com/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${openAiKey}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            model: chatModel === "gpt-4o" ? "gpt-4o" : "gpt-4o-mini",
+            messages: [{ role: "system", content: systemPrompt }, ...messages],
+            stream: false,
+          }),
+        });
+      }
+    }
 
     if (!aiResponse.ok) {
       const status = aiResponse.status;
