@@ -10,11 +10,11 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Switch } from "@/components/ui/switch";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { toast } from "@/hooks/use-toast";
 import {
-  ShoppingCart, RefreshCw, Copy, ChevronDown, Search,
+  ShoppingCart, RefreshCw, Search,
   CheckCircle2, XCircle, Clock, Loader2, ExternalLink, AlertTriangle, ArrowUpCircle, Store
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
