@@ -48,7 +48,8 @@ const ClientEcommerce = () => {
   const [syncStatus, setSyncStatus] = useState("idle");
   const [syncError, setSyncError] = useState<string | null>(null);
   const [lastSyncAt, setLastSyncAt] = useState<string | null>(null);
-  const [webhookSecret, setWebhookSecret] = useState("");
+  const [syncEnabled, setSyncEnabled] = useState(true);
+  const [savingAutoSync, setSavingAutoSync] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [products, setProducts] = useState<any[]>([]);
