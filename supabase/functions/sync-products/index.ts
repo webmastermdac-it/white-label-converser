@@ -128,6 +128,47 @@ async function fetchPrestaShopStock(config: any) {
   return stockByProduct;
 }
 
+async function fetchPrestaShopCategories(config: any) {
+  const names = new Map<string, string>();
+  let offset = 0;
+
+  try {
+    while (true) {
+      const data = await fetchPrestaShopJson(config, "/categories", {
+        display: "[id,name]",
+        limit: `${offset},${PRESTASHOP_PAGE_SIZE}`,
+      });
+      const rows = asArray<any>(data.categories);
+      if (!rows.length) break;
+      for (const row of rows) {
+        const label = getLocalizedText(row.name);
+        if (row.id != null && label) names.set(String(row.id), label);
+      }
+      if (rows.length < PRESTASHOP_PAGE_SIZE) break;
+      offset += PRESTASHOP_PAGE_SIZE;
+      if (offset > 5000) break;
+    }
+  } catch (error) {
+    console.warn("PrestaShop categories unavailable:", error);
+  }
+
+  return names;
+}
+
+function resolvePrestaShopCategories(product: any, categoryNames: Map<string, string>): string[] {
+  const ids: string[] = [];
+  const defaultId = product.id_category_default != null ? String(product.id_category_default) : "";
+  if (defaultId) ids.push(defaultId);
+  for (const assoc of asArray<any>(product.associations?.categories)) {
+    const id = String(assoc?.id ?? "");
+    if (id && !ids.includes(id)) ids.push(id);
+  }
+  const labels = ids
+    .map(id => categoryNames.get(id))
+    .filter((label): label is string => Boolean(label) && !["Root", "Home", "Casa"].includes(label as string));
+  return [...new Set(labels)].slice(0, 5);
+}
+
 function resolvePrestaShopStock(product: any, stockRows: any[], configValues: { stockManaged: boolean | null; orderOutOfStock: boolean | null }) {
   const availableForOrder = String(product.available_for_order ?? "1") !== "0";
 
@@ -270,6 +311,7 @@ async function fetchPrestaShop(config: any) {
   const products: any[] = [];
   const stockByProduct = await fetchPrestaShopStock(config);
   const configValues = await fetchPrestaShopConfigurations(config);
+  const categoryNames = await fetchPrestaShopCategories(config);
   let offset = 0;
   
   while (true) {
@@ -282,23 +324,29 @@ async function fetchPrestaShop(config: any) {
 
     for (const p of pageProducts) {
       const stock = resolvePrestaShopStock(p, stockByProduct.get(String(p.id)) || [], configValues);
+      const longDesc = stripHtml(getLocalizedText(p.description));
+      const shortDesc = stripHtml(getLocalizedText(p.description_short));
+      const description = [shortDesc, longDesc].filter(Boolean).join(" — ").slice(0, 4000);
 
       products.push({
         external_id: String(p.id),
         name: getLocalizedText(p.name),
-        description: stripHtml(getLocalizedText(p.description) || getLocalizedText(p.description_short)),
+        description,
         price: toNumber(p.price, 0),
         sale_price: null,
         in_stock: stock.inStock,
         stock_quantity: stock.stockQuantity,
-        categories: [],
-        tags: [],
+        categories: resolvePrestaShopCategories(p, categoryNames),
+        tags: [getLocalizedText(p.reference) || "", getLocalizedText(p.ean13) || ""].filter(Boolean),
         variants: [],
         image_url: null,
-        product_url: null,
+        product_url: getLocalizedText(p.link_rewrite)
+          ? `${normalizeStoreUrl(config.store_url)}/${p.id}-${getLocalizedText(p.link_rewrite)}.html`
+          : null,
         raw_data: { ...p, stock_availables: stockByProduct.get(String(p.id)) || [] },
       });
     }
+
 
     if (pageProducts.length < PRESTASHOP_PAGE_SIZE) break;
     offset += PRESTASHOP_PAGE_SIZE;
@@ -472,13 +520,15 @@ function buildProductKnowledge(products: any[], lastSyncAt: string): string {
     for (const p of prods) {
       if (tokenEstimate > MAX_TOKENS) { truncated = true; break; }
       
-      const desc = p.description?.substring(0, truncated ? 100 : 200) || "";
+      const desc = p.description?.substring(0, 320) || "";
       let entry = `**${p.name}**\n`;
+      if (p.categories?.length) entry += `- Categoria: ${p.categories.join(" > ")}\n`;
       entry += `- Prezzo: €${formatPrice(p.price)}`;
       if (p.sale_price) entry += ` ~~€${formatPrice(p.sale_price)}~~ SCONTATO`;
       entry += "\n";
       entry += `- Disponibilità: ${p.in_stock ? `In stock${p.stock_quantity != null && p.stock_quantity >= 0 ? ` (Qtà: ${p.stock_quantity})` : ""}` : "Esaurito"}\n`;
       if (desc) entry += `- Descrizione: ${desc}\n`;
+
       
       if (p.variants?.length && !(truncated && !p.in_stock)) {
         const variantStrs = p.variants.slice(0, 10).map((v: any) =>
