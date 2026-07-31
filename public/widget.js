@@ -23,8 +23,15 @@
       .replace(/^\d+\. (.+)$/gm, '<li>$1</li>')
       .replace(/(<li>[\s\S]*?<\/li>)/g, '<ul>$1</ul>')
       .replace(/<\/ul>\s*<ul>/g, '')
+      // markdown links [testo](url)
+      .replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline">$1</a>')
+      // url nude (non già dentro un tag <a>)
+      .replace(/(^|[\s>])(https?:\/\/[^\s<]+[^\s<.,;:!?)\]])/g, function (m, pre, url) {
+        return pre + '<a href="' + url + '" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline">' + url + '</a>';
+      })
       .replace(/\n/g, '<br>');
   }
+
 
   // ── Language detection (full code) ─────────────────────
   var widgetLang = navigator.language || "en";
