@@ -345,43 +345,25 @@ const ClientEcommerce = () => {
               </Button>
             </div>
 
-            {/* Webhook section */}
-            {canUseAPI && (
-              <Collapsible>
-                <CollapsibleTrigger asChild>
-                  <Button variant="ghost" size="sm" className="text-xs text-muted-foreground">
-                    <ChevronDown className="w-3 h-3 mr-1" />
-                    {isIt ? "Webhook (aggiornamenti real-time)" : "Webhook (real-time updates)"}
-                  </Button>
-                </CollapsibleTrigger>
-                <CollapsibleContent className="mt-3 space-y-3 p-4 rounded-lg bg-muted/30">
-                  <div>
-                    <Label className="text-xs">{isIt ? "URL Webhook" : "Webhook URL"}</Label>
-                    <div className="flex gap-2 mt-1">
-                      <Input
-                        readOnly
-                        value={`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ecommerce-webhook?client=${clientId}`}
-                        className="text-xs font-mono"
-                      />
-                      <Button size="sm" variant="outline" onClick={copyWebhookUrl}>
-                        <Copy className="w-3 h-3" />
-                      </Button>
-                    </div>
-                  </div>
-                  {webhookSecret && (
-                    <div>
-                      <Label className="text-xs">Webhook Secret</Label>
-                      <Input readOnly value={webhookSecret} className="text-xs font-mono" type="password" />
-                    </div>
-                  )}
-                  <p className="text-xs text-muted-foreground">
-                    {isIt
-                      ? "Incolla questo URL nelle impostazioni webhook della tua piattaforma per ricevere aggiornamenti in tempo reale."
-                      : "Paste this URL in your platform's webhook settings to receive real-time updates."}
-                  </p>
-                </CollapsibleContent>
-              </Collapsible>
-            )}
+            {/* Sincronizzazione automatica */}
+            <div className="flex items-start justify-between gap-4 p-4 rounded-lg bg-muted/30">
+              <div className="space-y-1">
+                <Label className="text-sm font-medium">
+                  {isIt ? "Sincronizzazione automatica" : "Automatic synchronization"}
+                </Label>
+                <p className="text-xs text-muted-foreground">
+                  {isIt
+                    ? "Se attiva, il catalogo viene riallineato automaticamente ogni 6 ore. Nessuna configurazione richiesta sul tuo store."
+                    : "When enabled, the catalog is refreshed automatically every 6 hours. No setup required on your store."}
+                </p>
+              </div>
+              <Switch
+                checked={syncEnabled}
+                disabled={savingAutoSync}
+                onCheckedChange={handleToggleAutoSync}
+              />
+            </div>
+
           </CardContent>
         </Card>
       )}
