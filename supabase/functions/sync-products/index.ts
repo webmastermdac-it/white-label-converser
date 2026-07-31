@@ -520,13 +520,15 @@ function buildProductKnowledge(products: any[], lastSyncAt: string): string {
     for (const p of prods) {
       if (tokenEstimate > MAX_TOKENS) { truncated = true; break; }
       
-      const desc = p.description?.substring(0, truncated ? 100 : 200) || "";
+      const desc = p.description?.substring(0, 320) || "";
       let entry = `**${p.name}**\n`;
+      if (p.categories?.length) entry += `- Categoria: ${p.categories.join(" > ")}\n`;
       entry += `- Prezzo: €${formatPrice(p.price)}`;
       if (p.sale_price) entry += ` ~~€${formatPrice(p.sale_price)}~~ SCONTATO`;
       entry += "\n";
       entry += `- Disponibilità: ${p.in_stock ? `In stock${p.stock_quantity != null && p.stock_quantity >= 0 ? ` (Qtà: ${p.stock_quantity})` : ""}` : "Esaurito"}\n`;
       if (desc) entry += `- Descrizione: ${desc}\n`;
+
       
       if (p.variants?.length && !(truncated && !p.in_stock)) {
         const variantStrs = p.variants.slice(0, 10).map((v: any) =>
