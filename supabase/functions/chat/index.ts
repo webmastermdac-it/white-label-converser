@@ -264,7 +264,80 @@ function wordSimilarity(a: string, b: string): number {
   return union > 0 ? intersection / union : 0;
 }
 
+// ══════════════════════════════════════════════════════
+// PRODUCT SEARCH — keyword scoring over the synced catalog
+// ══════════════════════════════════════════════════════
+const STOPWORDS = new Set([
+  "the","and","for","with","che","con","per","del","della","dei","delle","una","uno","gli","hai","avete","vorrei","cerco","quanto","costa","prezzo","price","have","какой",
+  "sono","questo","questa","quale","quali","mi","puoi","potete","info","informazioni","about","tell","dimmi","voglio","vorresti","disponibile","disponibilità",
+]);
+
+function tokenize(text: string): string[] {
+  return (text || "")
+    .toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9+]+/g, " ")
+    .split(/\s+/)
+    .filter((w) => w.length > 2 && !STOPWORDS.has(w));
+}
+
+async function searchProducts(supabase: any, clientId: string, query: string): Promise<string> {
+  const terms = tokenize(query);
+  if (!terms.length) return "";
+
+  const { data: products, error } = await supabase
+    .from("products")
+    .select("name, description, price, sale_price, currency, in_stock, stock_quantity, categories, tags, variants, product_url")
+    .eq("client_id", clientId)
+    .eq("is_active", true)
+    .limit(1500);
+
+  if (error || !products?.length) return "";
+
+  const scored = products.map((p: any) => {
+    const nameTokens = new Set(tokenize(p.name));
+    const catTokens = new Set(tokenize([...(p.categories || []), ...(p.tags || [])].join(" ")));
+    const descTokens = new Set(tokenize(p.description));
+
+    let score = 0;
+    for (const t of terms) {
+      if (nameTokens.has(t)) score += 5;
+      else if (catTokens.has(t)) score += 3;
+      else if (descTokens.has(t)) score += 1.5;
+      else if ((p.name || "").toLowerCase().includes(t)) score += 2;
+    }
+    if (p.in_stock) score += 0.5;
+    return { p, score };
+  }).filter((r: any) => r.score > 0);
+
+  if (!scored.length) return "";
+
+  scored.sort((a: any, b: any) => b.score - a.score);
+  const top = scored.slice(0, 8);
+
+  const fmt = (n: any) => Number(n ?? 0).toFixed(2);
+  let text = `## PRODOTTI PIÙ RILEVANTI PER LA RICHIESTA DEL VISITATORE\n\n`;
+  for (const { p } of top) {
+    const cur = p.currency || "EUR";
+    text += `**${p.name}**\n`;
+    text += `- Categoria: ${(p.categories || []).join(" > ") || "n/d"}\n`;
+    text += `- Prezzo: ${cur === "EUR" ? "€" : cur + " "}${fmt(p.sale_price ?? p.price)}`;
+    if (p.sale_price) text += ` (invece di ${cur === "EUR" ? "€" : cur + " "}${fmt(p.price)}, in offerta)`;
+    text += "\n";
+    text += `- Disponibilità: ${p.in_stock ? `disponibile${p.stock_quantity != null && p.stock_quantity > 0 ? ` (${p.stock_quantity} pz)` : ""}` : "esaurito"}\n`;
+    if (p.description) text += `- Descrizione: ${String(p.description).slice(0, 900)}\n`;
+    if (p.tags?.length) text += `- Tag: ${p.tags.slice(0, 10).join(", ")}\n`;
+    if (Array.isArray(p.variants) && p.variants.length) {
+      text += `- Varianti: ${p.variants.slice(0, 8).map((v: any) => `${v.name || v.value || ""}${v.price != null ? ` (${fmt(v.price)})` : ""}`).join(", ")}\n`;
+    }
+    if (p.product_url) text += `- Link: ${p.product_url}\n`;
+    text += "\n";
+  }
+  return text;
+}
+
 function jsonResp(data: any, status = 200) {
+
   return new Response(JSON.stringify(data), {
     status,
     headers: { ...corsHeaders, "Content-Type": "application/json" },
