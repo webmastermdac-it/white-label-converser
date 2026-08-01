@@ -182,12 +182,13 @@ serve(async (req) => {
       }),
     });
 
-    // Keep customer chatbots available if the workspace AI Gateway limit blocks usage.
+    // Keep customer chatbots available if the workspace AI Gateway limit blocks usage
+    // or the AI Gateway credit balance is exhausted.
     // The OpenAI key is server-side only and is already used by this project for embeddings.
-    if (aiResponse.status === 403) {
+    if (aiResponse.status === 402 || aiResponse.status === 403) {
       const openAiKey = Deno.env.get("OPENAI_API_KEY");
       if (openAiKey) {
-        console.warn("[chat] AI Gateway blocked the request; using configured OpenAI fallback");
+        console.warn(`[chat] AI Gateway returned ${aiResponse.status}; using configured OpenAI fallback`);
         aiResponse = await fetch("https://api.openai.com/v1/chat/completions", {
           method: "POST",
           headers: {
