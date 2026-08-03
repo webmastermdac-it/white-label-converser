@@ -194,12 +194,8 @@ const ClientChatbotSettings = () => {
           <ChatbotConfigForm clientId={clientId!} chatbotId={botId} />
         </TabsContent>
 
-        {/* Tab 3 — FAQ */}
-        <TabsContent value="faq">
-          <ClientRAGKnowledgeBase overrideChatbotId={botId} section="faq" />
-        </TabsContent>
+        {/* Tab 3 — Knowledge */}
 
-        {/* Tab 4 — Knowledge */}
         <TabsContent value="knowledge">
           <ClientRAGKnowledgeBase overrideChatbotId={botId} section="knowledge" />
         </TabsContent>
