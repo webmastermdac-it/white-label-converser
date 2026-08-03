@@ -157,7 +157,7 @@ function PricingGrid({ yearly, t }: { yearly: boolean; t: (en: string, it: strin
         </Link>
         <ul className="space-y-3 text-sm text-white/70">
           {[
-            t("1 chatbot", "1 chatbot"),
+            t("1 custom chatbot for your business type", "1 chatbot personalizzato per il tuo settore"),
             t("50 conversations/month", "50 conversazioni/mese"),
             t("10 leads/month", "10 lead/mese"),
             t("System prompt (tone & bot role)", "Prompt di sistema (tono e ruolo del bot)"),
@@ -211,7 +211,7 @@ function PricingGrid({ yearly, t }: { yearly: boolean; t: (en: string, it: strin
         </Link>
         <ul className="space-y-3 text-sm text-white/70">
           {[
-            t("1 chatbot", "1 chatbot"),
+            t("1 custom chatbot for your business type", "1 chatbot personalizzato per il tuo settore"),
             t("500 conversations/month", "500 conversazioni/mese"),
             t("Unlimited leads", "Lead illimitati"),
             t("Advanced system prompt", "Prompt di sistema avanzato"),
@@ -225,7 +225,6 @@ function PricingGrid({ yearly, t }: { yearly: boolean; t: (en: string, it: strin
             <li key={i} className="flex items-start gap-2"><Check className="w-4 h-4 text-[#F5A623] shrink-0 mt-0.5" />{item}</li>
           ))}
           {[
-            t("🔒 Multiple chatbots", "🔒 Chatbot multipli"),
             t("🔒 Advanced analytics", "🔒 Analytics avanzati"),
           ].map((item, i) => (
             <li key={`lock-${i}`} className="flex items-start gap-2 text-white/30"><Lock className="w-4 h-4 shrink-0 mt-0.5" />{item}</li>
@@ -268,7 +267,7 @@ function PricingGrid({ yearly, t }: { yearly: boolean; t: (en: string, it: strin
         </Link>
         <ul className="space-y-3 text-sm text-white/70">
           {[
-            t("Unlimited chatbots", "Chatbot illimitati"),
+            t("1 custom chatbot for your business type", "1 chatbot personalizzato per il tuo settore"),
             t("Unlimited conversations", "Conversazioni illimitate"),
             t("Unlimited leads", "Lead illimitati"),
             t("All Starter features", "Tutte le funzionalità Starter"),
@@ -683,6 +682,39 @@ export default function LandingPage() {
       </Section>
 
       {/* ─── PRICING ─── */}
+      {/* ─── VERTICALS ─── */}
+      <Section id="verticals" className="py-20 md:py-28">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          <h2 className="text-3xl sm:text-4xl font-bold text-center mb-4" style={{ fontFamily: "'Syne', sans-serif" }}>
+            {t("Choose the chatbot for your business", "Scegli il chatbot per il tuo settore")}
+          </h2>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-12">
+            {[
+              { Icon: CalendarCheck, color: "200 90% 55%", vertical: "booking", title: t("Bookings & Appointments", "Prenotazioni & Appuntamenti"), desc: t("For dentists, physiotherapists, beauty centers, nutritionists, psychologists, clinics and medical practices. Calendly integrated.", "Per dentisti, fisioterapisti, centri estetici, nutrizionisti, psicologi, poliambulatori, studi medici. Calendly integrato.") },
+              { Icon: ShoppingCart, color: "35 91% 55%", vertical: "ecommerce", title: t("Ecommerce", "Ecommerce"), desc: t("For online stores: WooCommerce, Shopify, PrestaShop or API for niche platforms.", "Per negozi online: WooCommerce, Shopify, PrestaShop o API per piattaforme di nicchia.") },
+              { Icon: BookOpen, color: "150 70% 45%", vertical: "hospitality", title: t("Restaurants & Hotels", "Ristorazione & Hotel"), desc: t("Reads menus, documents or your website and saves every request as a lead.", "Legge menu, documenti o il tuo sito e salva ogni richiesta come lead.") },
+            ].map((c, i) => (
+              <div
+                key={i}
+                className="group relative bg-white/[0.03] border border-white/10 rounded-2xl p-6 transition-all duration-500 hover:border-white/25 overflow-hidden flex flex-col"
+                style={{ ["--card-accent" as string]: c.color }}
+              >
+                <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-4" style={{ background: `hsl(${c.color} / 0.15)` }}>
+                  <c.Icon className="w-6 h-6" style={{ color: `hsl(${c.color})` }} />
+                </div>
+                <h3 className="text-lg font-semibold mb-2" style={{ fontFamily: "'Syne', sans-serif" }}>{c.title}</h3>
+                <p className="text-sm text-white/50 leading-relaxed mb-6">{c.desc}</p>
+                <Link to={`/register?vertical=${c.vertical}`} className="mt-auto">
+                  <Button className="w-full bg-[#F5A623] hover:bg-[#E09800] text-black rounded-full h-11 font-semibold">
+                    {t("Choose this", "Scegli questo")}
+                  </Button>
+                </Link>
+              </div>
+            ))}
+          </div>
+        </div>
+      </Section>
+
       <Section id="pricing" className="py-20 md:py-28">
         <div className="max-w-5xl mx-auto px-4 sm:px-6">
           <p className="text-[#F5A623] text-sm font-semibold text-center mb-3 tracking-wider uppercase">{t("Pricing", "Prezzi")}</p>
