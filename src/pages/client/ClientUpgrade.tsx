@@ -75,9 +75,9 @@ const ClientUpgrade = () => {
         isIt ? "Supporto prioritario" : "Priority support",
         isIt ? "🔍 Ricerca Avanzata (RAG)" : "🔍 Advanced Search (RAG)",
         isIt ? "🛒 Feed XML/CSV (sync giornaliero)" : "🛒 XML/CSV Feed (daily sync)",
+        isIt ? "Fino a 500 prodotti ecommerce" : "Up to 500 ecommerce products",
       ],
       lockedFeatures: [
-        isIt ? "Chatbot multipli" : "Multiple chatbots",
         isIt ? "Analytics avanzati" : "Advanced analytics",
       ],
       rag: "included" as const,
@@ -89,7 +89,7 @@ const ClientUpgrade = () => {
       popular: true,
       price: { month: "149", year: "1490" },
       features: [
-        isIt ? "Chatbot illimitati" : "Unlimited chatbots",
+        isIt ? "1 chatbot personalizzato per il tuo settore" : "1 custom chatbot for your business type",
         isIt ? "Conversazioni illimitate" : "Unlimited conversations",
         isIt ? "Lead illimitati" : "Unlimited leads",
         isIt ? "Tutte le funzionalità Starter" : "All Starter features",
@@ -97,6 +97,7 @@ const ClientUpgrade = () => {
         isIt ? "Analytics avanzati" : "Advanced analytics",
         isIt ? "Supporto dedicato" : "Dedicated support",
         isIt ? "🛒 Ecommerce completo (WooCommerce, Shopify, PrestaShop, API + webhook real-time)" : "🛒 Full ecommerce (WooCommerce, Shopify, PrestaShop, API + real-time webhooks)",
+        isIt ? "Prodotti ecommerce illimitati" : "Unlimited ecommerce products",
         isIt ? "White label completo" : "Complete white label",
       ],
       lockedFeatures: [],
