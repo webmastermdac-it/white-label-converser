@@ -14,7 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import ChatbotConfigForm from "@/components/ChatbotConfigForm";
 import ClientRAGKnowledgeBase from "@/pages/client/ClientRAGKnowledgeBase";
 import {
-  Loader2, ArrowLeft, Settings, Palette, HelpCircle, Database,
+  Loader2, ArrowLeft, Settings, Palette, Database,
   FileText, Copy, Code2, Globe, Save, Inbox, MessageSquare,
   Eye, RefreshCw
 } from "lucide-react";
@@ -130,7 +130,7 @@ const ClientChatbotSettings = () => {
         <TabsList className="bg-secondary border border-border flex-wrap h-auto gap-1 p-1">
           <TabsTrigger value="general" className="gap-1.5 text-xs"><Settings className="w-3.5 h-3.5" /> {tl("Generale", "General")}</TabsTrigger>
           <TabsTrigger value="appearance" className="gap-1.5 text-xs"><Palette className="w-3.5 h-3.5" /> {tl("Aspetto", "Appearance")}</TabsTrigger>
-          <TabsTrigger value="faq" className="gap-1.5 text-xs"><HelpCircle className="w-3.5 h-3.5" /> FAQ</TabsTrigger>
+          
           <TabsTrigger value="knowledge" className="gap-1.5 text-xs"><Database className="w-3.5 h-3.5" /> Knowledge</TabsTrigger>
           <TabsTrigger value="instructions" className="gap-1.5 text-xs"><FileText className="w-3.5 h-3.5" /> {tl("Istruzioni", "Instructions")}</TabsTrigger>
           <TabsTrigger value="preview" className="gap-1.5 text-xs"><Eye className="w-3.5 h-3.5" /> Preview</TabsTrigger>
@@ -194,12 +194,8 @@ const ClientChatbotSettings = () => {
           <ChatbotConfigForm clientId={clientId!} chatbotId={botId} />
         </TabsContent>
 
-        {/* Tab 3 — FAQ */}
-        <TabsContent value="faq">
-          <ClientRAGKnowledgeBase overrideChatbotId={botId} section="faq" />
-        </TabsContent>
+        {/* Tab 3 — Knowledge */}
 
-        {/* Tab 4 — Knowledge */}
         <TabsContent value="knowledge">
           <ClientRAGKnowledgeBase overrideChatbotId={botId} section="knowledge" />
         </TabsContent>
