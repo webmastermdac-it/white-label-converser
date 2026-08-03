@@ -660,6 +660,7 @@ export type Database = {
           max_documents: number
           max_faqs: number
           max_leads_month: number
+          max_products: number
           plan_name: string
           price_monthly: number
           price_yearly: number
@@ -682,6 +683,7 @@ export type Database = {
           max_documents?: number
           max_faqs?: number
           max_leads_month?: number
+          max_products?: number
           plan_name: string
           price_monthly?: number
           price_yearly?: number
@@ -704,6 +706,7 @@ export type Database = {
           max_documents?: number
           max_faqs?: number
           max_leads_month?: number
+          max_products?: number
           plan_name?: string
           price_monthly?: number
           price_yearly?: number
