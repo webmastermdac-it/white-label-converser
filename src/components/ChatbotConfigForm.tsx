@@ -14,6 +14,7 @@ interface Config {
   id?: string;
   name: string;
   avatar: string;
+  business_vertical: string;
   primary_color: string;
   background_color: string;
   text_color: string;
@@ -29,6 +30,7 @@ interface Config {
   launcher_position: string;
   embed_token?: string;
 }
+
 
 interface ChatbotConfigFormProps {
   clientId: string;
