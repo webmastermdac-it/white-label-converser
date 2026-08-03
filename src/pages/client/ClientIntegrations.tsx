@@ -16,6 +16,7 @@ import {
   Plug, Lock, Loader2, RefreshCw, CheckCircle2, XCircle, Clock,
   Settings2, FileText, CalendarDays, ShoppingBag, Store, ShoppingCart, Sparkles, X, ArrowUpCircle,
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 
 type IntegrationId = Platform | "calendly";
 
@@ -23,7 +24,7 @@ interface IntegrationDef {
   id: IntegrationId;
   name: string;
   color: string;
-  icon: React.ComponentType<{ className?: string }>;
+  icon: LucideIcon;
 }
 
 const ECOMMERCE_INTEGRATIONS: IntegrationDef[] = [
