@@ -5,12 +5,14 @@ export interface IndustryTemplate {
   icon: string;
   name: { it: string; en: string };
   description: { it: string; en: string };
+  vertical: "booking" | "ecommerce" | "hospitality" | null;
   sections: { it: KBSections; en: KBSections };
 }
 
 export const industryTemplates: IndustryTemplate[] = [
   {
     id: "restaurant",
+    vertical: "hospitality",
     icon: "🍕",
     name: { it: "Ristorante / Pizzeria", en: "Restaurant / Pizzeria" },
     description: { it: "Menu, orari, prenotazioni, consegne, allergeni", en: "Menu, hours, reservations, delivery, allergens" },
@@ -43,6 +45,7 @@ export const industryTemplates: IndustryTemplate[] = [
   },
   {
     id: "dentist",
+    vertical: "booking",
     icon: "🦷",
     name: { it: "Studio Dentistico", en: "Dental Practice" },
     description: { it: "Trattamenti, prenotazioni, assicurazioni, emergenze", en: "Treatments, appointments, insurance, emergencies" },
@@ -75,6 +78,7 @@ export const industryTemplates: IndustryTemplate[] = [
   },
   {
     id: "law-firm",
+    vertical: null,
     icon: "⚖️",
     name: { it: "Studio Legale", en: "Law Firm" },
     description: { it: "Aree di pratica, consulenze, riservatezza, tariffe", en: "Practice areas, consultations, confidentiality, fees" },
@@ -107,6 +111,7 @@ export const industryTemplates: IndustryTemplate[] = [
   },
   {
     id: "gym",
+    vertical: "booking",
     icon: "🏋️",
     name: { it: "Palestra / Centro Fitness", en: "Gym / Fitness Center" },
     description: { it: "Abbonamenti, corsi, trainer, prova gratuita", en: "Memberships, classes, trainers, free trial" },
@@ -139,6 +144,7 @@ export const industryTemplates: IndustryTemplate[] = [
   },
   {
     id: "real-estate",
+    vertical: null,
     icon: "🏠",
     name: { it: "Agenzia Immobiliare", en: "Real Estate Agency" },
     description: { it: "Compravendita, affitti, valutazioni, documentazione", en: "Sales, rentals, valuations, documentation" },
@@ -171,6 +177,7 @@ export const industryTemplates: IndustryTemplate[] = [
   },
   {
     id: "web-agency",
+    vertical: null,
     icon: "💻",
     name: { it: "Agenzia Web / Marketing", en: "Web / Marketing Agency" },
     description: { it: "Servizi digitali, processo, portfolio, contatti", en: "Digital services, process, portfolio, contacts" },
@@ -203,6 +210,7 @@ export const industryTemplates: IndustryTemplate[] = [
   },
   {
     id: "ecommerce",
+    vertical: "ecommerce",
     icon: "🛒",
     name: { it: "E-Commerce", en: "E-Commerce" },
     description: { it: "Spedizioni, resi, pagamenti, supporto prodotti", en: "Shipping, returns, payments, product support" },
@@ -235,6 +243,7 @@ export const industryTemplates: IndustryTemplate[] = [
   },
   {
     id: "medical",
+    vertical: "booking",
     icon: "🏥",
     name: { it: "Studio Medico / Clinica", en: "Medical Practice / Clinic" },
     description: { it: "Specializzazioni, prenotazioni, assicurazioni, limiti del bot", en: "Specializations, appointments, insurance, bot limitations" },
