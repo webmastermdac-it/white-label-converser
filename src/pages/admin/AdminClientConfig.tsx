@@ -89,7 +89,7 @@ const AdminClientConfig = () => {
       {/* Bot list or selected bot */}
       {!selectedBotId ? (
         <div className="space-y-4">
-          <h2 className="font-semibold text-foreground">Chatbot ({bots.length})</h2>
+          <h2 className="font-semibold text-foreground">Il Bot di {clientName}</h2>
           {bots.length === 0 ? (
             <div className="glass rounded-xl p-8 text-center text-muted-foreground">
               <Bot className="w-8 h-8 mx-auto mb-2" />
