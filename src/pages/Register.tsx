@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Navigate, Link, useNavigate } from "react-router-dom";
+import { Navigate, Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/hooks/useLanguage";
 import { Button } from "@/components/ui/button";
@@ -24,7 +24,14 @@ const Register = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [vertical, setVertical] = useState<"booking" | "ecommerce" | "hospitality" | null>(null);
+  const [searchParams] = useSearchParams();
+  const verticalParam = searchParams.get("vertical");
+  const initialVertical = (["booking", "ecommerce", "hospitality"] as const).includes(
+    verticalParam as "booking" | "ecommerce" | "hospitality"
+  )
+    ? (verticalParam as "booking" | "ecommerce" | "hospitality")
+    : null;
+  const [vertical, setVertical] = useState<"booking" | "ecommerce" | "hospitality" | null>(initialVertical);
 
   if (!loading && user) {
     return <Navigate to={role === "super_admin" ? "/admin" : "/dashboard"} replace />;
