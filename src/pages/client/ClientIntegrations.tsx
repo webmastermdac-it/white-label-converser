@@ -47,7 +47,7 @@ const ClientIntegrations = () => {
   const isIt = lang === "it";
   const navigate = useNavigate();
   const { plan } = usePlan();
-  const { canUseCalendly, loading: planLoading } = usePlanConfig();
+  const { canUseCalendly, canUseEcommerce, loading: planLoading } = usePlanConfig();
   const eco = useEcommerceIntegration();
   const cal = useCalendlyIntegration();
 
@@ -67,10 +67,10 @@ const ClientIntegrations = () => {
 
   const lockedFor = (id: IntegrationId): false | "starter" | "pro" => {
     if (id === "calendly") return canUseCalendly ? false : "pro";
-    if (isFree) return "starter";
-    if (isStarterOnly && API_PLATFORMS.includes(id as Platform)) return "pro";
+    if (!canUseEcommerce) return "starter";
     return false;
   };
+
 
   const isConnected = (id: IntegrationId) => {
     if (id === "calendly") return !!cal.calendlyUrl;
