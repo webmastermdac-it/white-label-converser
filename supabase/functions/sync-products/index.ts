@@ -657,7 +657,25 @@ serve(async (req) => {
       }
       throw fetchErr;
     }
-    
+
+    // Enforce plan product limit: keep only the first max_products (source order).
+    // Products above the limit are left out of this sync, so the existing
+    // deactivation step below will deactivate them.
+    let maxProducts = -1;
+    let skippedByLimit = 0;
+    try {
+      const { data: clientRow } = await supabase
+        .from("clients").select("plan").eq("id", client_id).maybeSingle();
+      const { data: planRow } = await supabase
+        .from("plan_configs").select("max_products").eq("plan_name", clientRow?.plan || "free").maybeSingle();
+      if (planRow && typeof planRow.max_products === "number") maxProducts = planRow.max_products;
+    } catch (_e) { /* on failure keep unlimited behaviour */ }
+
+    if (maxProducts >= 0 && rawProducts.length > maxProducts) {
+      skippedByLimit = rawProducts.length - maxProducts;
+      rawProducts = rawProducts.slice(0, maxProducts);
+    }
+
     // Upsert products
     let synced = 0;
     let updated = 0;
