@@ -89,7 +89,7 @@ const ClientUpgrade = () => {
       popular: true,
       price: { month: "149", year: "1490" },
       features: [
-        isIt ? "Chatbot illimitati" : "Unlimited chatbots",
+        isIt ? "1 chatbot personalizzato per il tuo settore" : "1 custom chatbot for your business type",
         isIt ? "Conversazioni illimitate" : "Unlimited conversations",
         isIt ? "Lead illimitati" : "Unlimited leads",
         isIt ? "Tutte le funzionalità Starter" : "All Starter features",
