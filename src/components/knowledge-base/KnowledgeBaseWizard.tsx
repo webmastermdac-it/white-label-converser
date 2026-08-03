@@ -55,10 +55,18 @@ const KnowledgeBaseWizard: React.FC<Props> = ({ clientId, configId, currentKnowl
   const { lang } = useLanguage();
   const l = (it: string, en: string) => lang === "it" ? it : en;
 
-  const [step, setStep] = useState<Step>("template");
-  const [selected, setSelected] = useState<IndustryTemplate | null>(null);
-  const [sections, setSections] = useState<KBSections>({ ...defaultSections });
+  // Only templates matching the client vertical are shown (generic ones are hidden)
+  const visibleTemplates = industryTemplates.filter((tmpl) => !!vertical && tmpl.vertical === vertical);
+  const singleTemplate = visibleTemplates.length === 1 ? visibleTemplates[0] : null;
+  const langKey = lang === "it" ? "it" : "en";
+
+  const [step, setStep] = useState<Step>(singleTemplate ? "about" : "template");
+  const [selected, setSelected] = useState<IndustryTemplate | null>(singleTemplate);
+  const [sections, setSections] = useState<KBSections>(
+    singleTemplate ? { ...singleTemplate.sections[langKey] } : { ...defaultSections }
+  );
   const [saving, setSaving] = useState(false);
+
 
   const handleSelect = (template: IndustryTemplate) => {
     setSelected(template);
