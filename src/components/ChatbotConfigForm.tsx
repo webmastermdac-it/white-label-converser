@@ -71,7 +71,7 @@ const VERTICALS = [
 
 const ChatbotConfigForm: React.FC<ChatbotConfigFormProps> = ({ clientId, chatbotId: overrideChatbotId, onSaved }) => {
   const { toast } = useToast();
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const [config, setConfig] = useState<Config>(defaultConfig);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -220,7 +220,7 @@ const ChatbotConfigForm: React.FC<ChatbotConfigFormProps> = ({ clientId, chatbot
           </div>
 
           <div className="space-y-2">
-            <Label>{t("Business type", "Tipo di attività")}</Label>
+            <Label>{lang === "it" ? "Tipo di attività" : "Business type"}</Label>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               {VERTICALS.map((v) => (
                 <button
@@ -234,15 +234,14 @@ const ChatbotConfigForm: React.FC<ChatbotConfigFormProps> = ({ clientId, chatbot
                   }`}
                 >
                   <span className="text-2xl">{v.emoji}</span>
-                  <span className="text-xs font-medium">{t(v.en, v.it)}</span>
+                  <span className="text-xs font-medium">{lang === "it" ? v.it : v.en}</span>
                 </button>
               ))}
             </div>
             <p className="text-xs text-muted-foreground">
-              {t(
-                "Used to suggest the most relevant integrations for you.",
-                "Serve a consigliarti le integrazioni più pertinenti."
-              )}
+              {lang === "it"
+                ? "Serve a consigliarti le integrazioni più pertinenti."
+                : "Used to suggest the most relevant integrations for you."}
             </p>
           </div>
 
