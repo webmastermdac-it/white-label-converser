@@ -224,6 +224,8 @@ const Register = () => {
             <Link to="/login" className="text-primary hover:underline">{t("signIn")}</Link>
           </p>
         </div>
+        )}
+
 
         <p className="text-center text-muted-foreground/50 text-xs mt-6">
           Genius Chatbot Builder © 2026
