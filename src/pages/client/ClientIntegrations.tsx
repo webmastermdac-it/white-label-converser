@@ -1,7 +1,6 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useLanguage } from "@/hooks/useLanguage";
-import { usePlan } from "@/hooks/usePlan";
 import { usePlanConfig } from "@/hooks/usePlanConfig";
 import { useEcommerceIntegration, type Platform } from "@/hooks/useEcommerceIntegration";
 import { useCalendlyIntegration } from "@/hooks/useCalendlyIntegration";
@@ -45,7 +44,6 @@ const ClientIntegrations = () => {
   const { lang } = useLanguage();
   const isIt = lang === "it";
   const navigate = useNavigate();
-  const { plan } = usePlan();
   const { canUseCalendly, canUseEcommerce, loading: planLoading } = usePlanConfig();
   const eco = useEcommerceIntegration();
   const cal = useCalendlyIntegration();
