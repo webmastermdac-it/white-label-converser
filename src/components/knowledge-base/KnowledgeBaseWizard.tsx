@@ -55,10 +55,18 @@ const KnowledgeBaseWizard: React.FC<Props> = ({ clientId, configId, currentKnowl
   const { lang } = useLanguage();
   const l = (it: string, en: string) => lang === "it" ? it : en;
 
-  const [step, setStep] = useState<Step>("template");
-  const [selected, setSelected] = useState<IndustryTemplate | null>(null);
-  const [sections, setSections] = useState<KBSections>({ ...defaultSections });
+  // Only templates matching the client vertical are shown (generic ones are hidden)
+  const visibleTemplates = industryTemplates.filter((tmpl) => !!vertical && tmpl.vertical === vertical);
+  const singleTemplate = visibleTemplates.length === 1 ? visibleTemplates[0] : null;
+  const langKey = lang === "it" ? "it" : "en";
+
+  const [step, setStep] = useState<Step>(singleTemplate ? "about" : "template");
+  const [selected, setSelected] = useState<IndustryTemplate | null>(singleTemplate);
+  const [sections, setSections] = useState<KBSections>(
+    singleTemplate ? { ...singleTemplate.sections[langKey] } : { ...defaultSections }
+  );
   const [saving, setSaving] = useState(false);
+
 
   const handleSelect = (template: IndustryTemplate) => {
     setSelected(template);
@@ -98,7 +106,7 @@ const KnowledgeBaseWizard: React.FC<Props> = ({ clientId, configId, currentKnowl
   };
 
   const stepIndex = STEPS.indexOf(step);
-  const canGoBack = stepIndex > 0 && step !== "template";
+  const canGoBack = stepIndex > 0 && step !== "template" && !(stepIndex === 1 && singleTemplate);
   const canGoForward = stepIndex < STEPS.length - 1 && step !== "template";
 
   const goBack = () => {
@@ -107,10 +115,7 @@ const KnowledgeBaseWizard: React.FC<Props> = ({ clientId, configId, currentKnowl
   };
   const goForward = () => setStep(STEPS[stepIndex + 1]);
 
-  // Step 1: Template selection — filtered by client vertical
-  const visibleTemplates = industryTemplates.filter(
-    (tmpl) => tmpl.vertical === null || !vertical || tmpl.vertical === vertical
-  );
+
 
   if (step === "template") {
     return (
