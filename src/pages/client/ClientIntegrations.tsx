@@ -1,7 +1,6 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useLanguage } from "@/hooks/useLanguage";
-import { usePlan } from "@/hooks/usePlan";
 import { usePlanConfig } from "@/hooks/usePlanConfig";
 import { useEcommerceIntegration, type Platform } from "@/hooks/useEcommerceIntegration";
 import { useCalendlyIntegration } from "@/hooks/useCalendlyIntegration";
@@ -39,15 +38,13 @@ const APPOINTMENT_INTEGRATIONS: IntegrationDef[] = [
   { id: "calendly", name: "Calendly", color: "#006BFF", icon: CalendarDays },
 ];
 
-const API_PLATFORMS: Platform[] = ["woocommerce", "shopify", "prestashop", "api"];
 const BANNER_KEY = "integrations_banner_dismissed";
 
 const ClientIntegrations = () => {
   const { lang } = useLanguage();
   const isIt = lang === "it";
   const navigate = useNavigate();
-  const { plan } = usePlan();
-  const { canUseCalendly, loading: planLoading } = usePlanConfig();
+  const { canUseCalendly, canUseEcommerce, loading: planLoading } = usePlanConfig();
   const eco = useEcommerceIntegration();
   const cal = useCalendlyIntegration();
 
@@ -56,8 +53,6 @@ const ClientIntegrations = () => {
     () => localStorage.getItem(BANNER_KEY) === "1"
   );
 
-  const isFree = plan === "free";
-  const isStarterOnly = plan === "starter";
   const vertical = cal.vertical;
 
   const dismissBanner = () => {
@@ -67,10 +62,10 @@ const ClientIntegrations = () => {
 
   const lockedFor = (id: IntegrationId): false | "starter" | "pro" => {
     if (id === "calendly") return canUseCalendly ? false : "pro";
-    if (isFree) return "starter";
-    if (isStarterOnly && API_PLATFORMS.includes(id as Platform)) return "pro";
+    if (!canUseEcommerce) return "starter";
     return false;
   };
+
 
   const isConnected = (id: IntegrationId) => {
     if (id === "calendly") return !!cal.calendlyUrl;
