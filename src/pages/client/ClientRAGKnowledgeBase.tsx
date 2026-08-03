@@ -1189,11 +1189,11 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
       )}
 
       {/* ══════════════════════════════════════════════════ */}
-      {/* SECTION 3 — E-commerce Catalog (Pro only)         */}
+      {/* SECTION 3 — E-commerce Catalog                     */}
       {/* ══════════════════════════════════════════════════ */}
       {showKnowledge && !isFree && (
         <>
-          {!isPro ? (
+          {!canUseEcommerce ? (
             <div className="glass rounded-xl p-5 border border-border opacity-80">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center">
@@ -1203,7 +1203,7 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
                   <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
                     <span>3️⃣</span>
                     {t("🛒 Catalogo E-commerce", "🛒 E-commerce Catalog")}
-                    <Badge variant="outline" className="text-xs ml-1 border-primary/40 text-primary">Pro</Badge>
+                    <Badge variant="outline" className="text-xs ml-1 border-primary/40 text-primary">Starter</Badge>
                   </h2>
                   <p className="text-xs text-muted-foreground mt-0.5">
                     {t(
@@ -1213,8 +1213,8 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
                   </p>
                 </div>
                 <Button size="sm" variant="outline" className="border-primary text-primary"
-                  onClick={() => showUpgrade("pro")}>
-                  {t("Upgrade a Pro", "Upgrade to Pro")}
+                  onClick={() => showUpgrade("starter")}>
+                  {t("Passa a Starter", "Upgrade to Starter")}
                 </Button>
               </div>
             </div>
@@ -1224,13 +1224,12 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
                 <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
                   <span>3️⃣</span>
                   {t("🛒 Catalogo E-commerce", "🛒 E-commerce Catalog")}
-                  <Badge variant="secondary" className="text-xs">Pro</Badge>
                 </h2>
                 <Button
                   size="sm"
                   variant="outline"
                   className="gap-1.5 border-border text-foreground text-xs"
-                  onClick={() => window.location.href = "/dashboard/ecommerce"}
+                  onClick={() => window.location.href = "/dashboard/integrations"}
                 >
                   <ExternalLink className="w-3.5 h-3.5" />
                   {t("Configura integrazione", "Configure integration")}
@@ -1247,6 +1246,7 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
           )}
         </>
       )}
+
 
       {/* ══════════════════════════════════════════════════ */}
       {/* SECTION 4 — Instructions (Priority: LOW ★)        */}
