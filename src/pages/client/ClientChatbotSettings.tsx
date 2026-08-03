@@ -14,7 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import ChatbotConfigForm from "@/components/ChatbotConfigForm";
 import ClientRAGKnowledgeBase from "@/pages/client/ClientRAGKnowledgeBase";
 import {
-  Loader2, ArrowLeft, Settings, Palette, HelpCircle, Database,
+  Loader2, ArrowLeft, Settings, Palette, Database,
   FileText, Copy, Code2, Globe, Save, Inbox, MessageSquare,
   Eye, RefreshCw
 } from "lucide-react";
