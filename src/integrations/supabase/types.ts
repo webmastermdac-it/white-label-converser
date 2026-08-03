@@ -148,6 +148,7 @@ export type Database = {
           site_url: string | null
           text_color: string | null
           updated_at: string
+          vertical: string | null
           welcome_message: string | null
           welcome_msg_en: string | null
           welcome_msg_it: string | null
@@ -183,6 +184,7 @@ export type Database = {
           site_url?: string | null
           text_color?: string | null
           updated_at?: string
+          vertical?: string | null
           welcome_message?: string | null
           welcome_msg_en?: string | null
           welcome_msg_it?: string | null
@@ -218,6 +220,7 @@ export type Database = {
           site_url?: string | null
           text_color?: string | null
           updated_at?: string
+          vertical?: string | null
           welcome_message?: string | null
           welcome_msg_en?: string | null
           welcome_msg_it?: string | null
