@@ -120,6 +120,7 @@ export type Database = {
         Row: {
           avatar: string | null
           background_color: string | null
+          business_vertical: string
           calendly_url: string | null
           client_id: string
           created_at: string
@@ -156,6 +157,7 @@ export type Database = {
         Insert: {
           avatar?: string | null
           background_color?: string | null
+          business_vertical?: string
           calendly_url?: string | null
           client_id: string
           created_at?: string
@@ -192,6 +194,7 @@ export type Database = {
         Update: {
           avatar?: string | null
           background_color?: string | null
+          business_vertical?: string
           calendly_url?: string | null
           client_id?: string
           created_at?: string
