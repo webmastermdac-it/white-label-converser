@@ -19,6 +19,7 @@ interface PlanRow {
   max_leads_month: number;
   max_faqs: number;
   max_documents: number;
+  max_products: number;
   remove_branding: boolean;
   doc_upload: boolean;
   sector_templates: boolean;
@@ -66,6 +67,7 @@ const ENFORCED_FEATURES = new Set([
   "max_leads_month",
   "max_faqs",
   "max_documents",
+  "max_products",
 ]);
 
 const AdminPlans = () => {
@@ -118,6 +120,7 @@ const AdminPlans = () => {
         max_leads_month: current.max_leads_month,
         max_faqs: current.max_faqs,
         max_documents: current.max_documents,
+        max_products: current.max_products,
         remove_branding: current.remove_branding,
         doc_upload: current.doc_upload,
         sector_templates: current.sector_templates,
@@ -211,6 +214,7 @@ const AdminPlans = () => {
                       { key: "max_leads_month" as keyof PlanRow, label: "Lead/mese" },
                       { key: "max_faqs" as keyof PlanRow, label: "FAQ max" },
                       { key: "max_documents" as keyof PlanRow, label: "Documenti max" },
+                      { key: "max_products" as keyof PlanRow, label: "Prodotti max" },
                     ].map(({ key, label }) => (
                     <div key={key} className="flex items-center justify-between gap-3">
                       <Label className="text-sm text-foreground">{label}</Label>
