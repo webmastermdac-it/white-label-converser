@@ -44,6 +44,7 @@ const GENIE_AVATAR = "genie";
 const defaultConfig: Config = {
   name: "My Chatbot",
   avatar: GENIE_AVATAR,
+  business_vertical: "general",
   primary_color: "#F59E0B",
   background_color: "#1A1A2E",
   text_color: "#FFFFFF",
@@ -86,6 +87,7 @@ const ChatbotConfigForm: React.FC<ChatbotConfigFormProps> = ({ clientId, chatbot
           id: data.id,
           name: data.name,
           avatar: data.avatar || "🤖",
+          business_vertical: (data as any).business_vertical || "general",
           primary_color: data.primary_color || "#E94560",
           background_color: data.background_color || "#1A1A2E",
           text_color: data.text_color || "#FFFFFF",
@@ -118,6 +120,7 @@ const ChatbotConfigForm: React.FC<ChatbotConfigFormProps> = ({ clientId, chatbot
           .update({
             name: config.name,
             avatar: config.avatar,
+            business_vertical: config.business_vertical,
             primary_color: config.primary_color,
             background_color: config.background_color,
             text_color: config.text_color,
