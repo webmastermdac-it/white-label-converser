@@ -103,7 +103,68 @@ const Register = () => {
           <p className="text-muted-foreground mt-1">Builder Platform</p>
         </div>
 
+        {!vertical ? (
+          <div className="glass rounded-none md:rounded-2xl p-6 md:p-8 animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
+            <h2 className="text-xl font-semibold text-foreground mb-1">
+              {t("What kind of business do you have?", "Che tipo di attività hai?")}
+            </h2>
+            <p className="text-sm text-muted-foreground mb-6">
+              {t("Choose the option that fits best — we'll set up your chatbot accordingly.", "Scegli l'opzione più adatta: configureremo il chatbot di conseguenza.")}
+            </p>
+
+            <div className="space-y-3">
+              {[
+                {
+                  key: "booking" as const,
+                  Icon: CalendarCheck,
+                  title: t("Bookings & Appointments", "Prenotazioni & Appuntamenti"),
+                  subtitle: t("Clinics, dentists, physios, beauty & wellness centers", "Studi medici, dentisti, fisioterapisti, centri estetici e benessere"),
+                },
+                {
+                  key: "ecommerce" as const,
+                  Icon: ShoppingBag,
+                  title: t("Ecommerce", "Ecommerce"),
+                  subtitle: t("Online store with product catalog integration", "Store online con integrazione del catalogo prodotti"),
+                },
+                {
+                  key: "hospitality" as const,
+                  Icon: UtensilsCrossed,
+                  title: t("Restaurants & Hotels", "Ristorazione & Hotel"),
+                  subtitle: t("Menus, rooms and info from your documents or website", "Menù, camere e info dai tuoi documenti o dal sito"),
+                },
+              ].map(({ key, Icon, title, subtitle }) => (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => setVertical(key)}
+                  className="w-full text-left flex items-start gap-4 p-4 rounded-xl bg-secondary border border-border hover:border-primary hover:bg-secondary/70 transition-colors"
+                >
+                  <span className="shrink-0 w-11 h-11 rounded-lg bg-primary/10 flex items-center justify-center">
+                    <Icon className="w-5 h-5 text-primary" />
+                  </span>
+                  <span>
+                    <span className="block font-semibold text-foreground">{title}</span>
+                    <span className="block text-xs text-muted-foreground mt-0.5 leading-snug">{subtitle}</span>
+                  </span>
+                </button>
+              ))}
+            </div>
+
+            <p className="text-center text-muted-foreground text-sm mt-6">
+              {t("registerHasAccount")}{" "}
+              <Link to="/login" className="text-primary hover:underline">{t("signIn")}</Link>
+            </p>
+          </div>
+        ) : (
         <div className="glass rounded-none md:rounded-2xl p-6 md:p-8 animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
+          <button
+            type="button"
+            onClick={() => setVertical(null)}
+            className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-4"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            {t("Back", "Indietro")}
+          </button>
           <h2 className="text-xl font-semibold text-foreground mb-6">{t("registerTitle")}</h2>
 
           <form onSubmit={handleSubmit} className="space-y-4">
