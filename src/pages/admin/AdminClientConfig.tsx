@@ -137,7 +137,7 @@ const AdminClientConfig = () => {
       ) : (
         <div className="space-y-4">
           <Button variant="ghost" size="sm" onClick={() => setSelectedBotId(null)} className="gap-2">
-            <ArrowLeft className="w-4 h-4" /> Tutti i chatbot
+            <ArrowLeft className="w-4 h-4" /> Il Bot di {clientName}
           </Button>
           <h2 className="font-semibold text-foreground text-lg">{selectedBot?.name}</h2>
 
