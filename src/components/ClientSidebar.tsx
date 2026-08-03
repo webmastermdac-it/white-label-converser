@@ -14,22 +14,23 @@ import ThemeSelector from "@/components/ThemeSelector";
 
 const ClientSidebar = () => {
   const [collapsed, setCollapsed] = useState(false);
-  const { user, signOut } = useAuth();
+  const { user, signOut, role } = useAuth();
   const { lang, setLang, t } = useLanguage();
   const { canUseEcommerce, canUseCalendly, config: planConfig } = usePlanConfig();
-  const { botId, vertical } = useCalendlyIntegration();
+  const { botId } = useCalendlyIntegration();
   const isFree = planConfig?.plan_name === "free";
   const navigate = useNavigate();
   const tl = (it: string, en: string) => lang === "it" ? it : en;
 
-  const isEcommerce = vertical === "ecommerce";
-  const botItem = isEcommerce
-    ? {
+  const isAdmin = role === "super_admin";
+  const botItem = isAdmin
+    ? { label: tl("I miei Bot", "My Bots"), href: "/dashboard/bots", icon: Bot }
+    : {
         label: tl("Configura", "Configure"),
         href: botId ? `/dashboard/bots/${botId}` : "/dashboard/bots",
         icon: Settings,
-      }
-    : { label: tl("I miei Bot", "My Bots"), href: "/dashboard/bots", icon: Bot };
+      };
+
 
   const clientNav = [
     { label: t("overview"), href: "/dashboard", icon: LayoutDashboard, end: true },
