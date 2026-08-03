@@ -106,7 +106,7 @@ const KnowledgeBaseWizard: React.FC<Props> = ({ clientId, configId, currentKnowl
   };
 
   const stepIndex = STEPS.indexOf(step);
-  const canGoBack = stepIndex > 0 && step !== "template";
+  const canGoBack = stepIndex > 0 && step !== "template" && !(stepIndex === 1 && singleTemplate);
   const canGoForward = stepIndex < STEPS.length - 1 && step !== "template";
 
   const goBack = () => {
@@ -115,10 +115,7 @@ const KnowledgeBaseWizard: React.FC<Props> = ({ clientId, configId, currentKnowl
   };
   const goForward = () => setStep(STEPS[stepIndex + 1]);
 
-  // Step 1: Template selection — filtered by client vertical
-  const visibleTemplates = industryTemplates.filter(
-    (tmpl) => tmpl.vertical === null || !vertical || tmpl.vertical === vertical
-  );
+
 
   if (step === "template") {
     return (
