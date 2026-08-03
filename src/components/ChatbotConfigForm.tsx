@@ -14,6 +14,7 @@ interface Config {
   id?: string;
   name: string;
   avatar: string;
+  business_vertical: string;
   primary_color: string;
   background_color: string;
   text_color: string;
@@ -30,6 +31,7 @@ interface Config {
   embed_token?: string;
 }
 
+
 interface ChatbotConfigFormProps {
   clientId: string;
   chatbotId?: string;
@@ -42,6 +44,7 @@ const GENIE_AVATAR = "genie";
 const defaultConfig: Config = {
   name: "My Chatbot",
   avatar: GENIE_AVATAR,
+  business_vertical: "general",
   primary_color: "#F59E0B",
   background_color: "#1A1A2E",
   text_color: "#FFFFFF",
@@ -59,10 +62,16 @@ const defaultConfig: Config = {
 
 const EMOJIS = [GENIE_AVATAR, "🤖", "💬", "✨", "🎯", "🚀", "💡", "🤝", "⭐", "🌟", "🎪", "💖", "💕", "💗", "💝", "🌸", "🌷", "🌹", "🦋", "👩", "👩‍💼", "💄", "👜", "🛍️", "💅", "👑", "🎀", "🧚", "🪄", "🦄", "🌙", "🌛", "🌜", "🌚", "🌝"];
 const POSITIONS = ["bottom-right", "bottom-left"];
+const VERTICALS = [
+  { value: "ecommerce", emoji: "🛒", it: "Ecommerce / Vendita prodotti", en: "Ecommerce / Product sales" },
+  { value: "booking", emoji: "📅", it: "Servizi su appuntamento", en: "Appointment-based services" },
+  { value: "general", emoji: "💬", it: "Generico / Assistenza clienti", en: "General / Customer support" },
+];
+
 
 const ChatbotConfigForm: React.FC<ChatbotConfigFormProps> = ({ clientId, chatbotId: overrideChatbotId, onSaved }) => {
   const { toast } = useToast();
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const [config, setConfig] = useState<Config>(defaultConfig);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -84,6 +93,7 @@ const ChatbotConfigForm: React.FC<ChatbotConfigFormProps> = ({ clientId, chatbot
           id: data.id,
           name: data.name,
           avatar: data.avatar || "🤖",
+          business_vertical: (data as any).business_vertical || "general",
           primary_color: data.primary_color || "#E94560",
           background_color: data.background_color || "#1A1A2E",
           text_color: data.text_color || "#FFFFFF",
@@ -116,6 +126,7 @@ const ChatbotConfigForm: React.FC<ChatbotConfigFormProps> = ({ clientId, chatbot
           .update({
             name: config.name,
             avatar: config.avatar,
+            business_vertical: config.business_vertical,
             primary_color: config.primary_color,
             background_color: config.background_color,
             text_color: config.text_color,
@@ -207,6 +218,34 @@ const ChatbotConfigForm: React.FC<ChatbotConfigFormProps> = ({ clientId, chatbot
               className="bg-secondary border-border"
             />
           </div>
+
+          <div className="space-y-2">
+            <Label>{lang === "it" ? "Tipo di attività" : "Business type"}</Label>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              {VERTICALS.map((v) => (
+                <button
+                  key={v.value}
+                  type="button"
+                  onClick={() => set("business_vertical", v.value)}
+                  className={`flex flex-col items-center gap-2 p-4 rounded-lg border-2 text-center transition-all ${
+                    config.business_vertical === v.value
+                      ? "border-primary bg-primary/5"
+                      : "border-border hover:border-muted-foreground/30"
+                  }`}
+                >
+                  <span className="text-2xl">{v.emoji}</span>
+                  <span className="text-xs font-medium">{lang === "it" ? v.it : v.en}</span>
+                </button>
+              ))}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {lang === "it"
+                ? "Serve a consigliarti le integrazioni più pertinenti."
+                : "Used to suggest the most relevant integrations for you."}
+            </p>
+          </div>
+
+
 
           <div className="space-y-2">
             <Label>{t("avatarEmoji")}</Label>

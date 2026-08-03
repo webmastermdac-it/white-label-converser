@@ -6,7 +6,7 @@ import { usePlanConfig } from "@/hooks/usePlanConfig";
 import { Button } from "@/components/ui/button";
 import {
   LayoutDashboard, MessageSquare,
-  ChevronLeft, ChevronRight, Bot, LogOut, Inbox, Globe, ArrowUpCircle, BarChart3, Store, Instagram
+  ChevronLeft, ChevronRight, Bot, LogOut, Inbox, Globe, ArrowUpCircle, BarChart3, Plug, Instagram
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import ThemeSelector from "@/components/ThemeSelector";
@@ -15,7 +15,7 @@ const ClientSidebar = () => {
   const [collapsed, setCollapsed] = useState(false);
   const { user, signOut } = useAuth();
   const { lang, setLang, t } = useLanguage();
-  const { canUseEcommerce, config: planConfig } = usePlanConfig();
+  const { canUseEcommerce, canUseCalendly, config: planConfig } = usePlanConfig();
   const isFree = planConfig?.plan_name === "free";
   const navigate = useNavigate();
   const tl = (it: string, en: string) => lang === "it" ? it : en;
@@ -26,10 +26,13 @@ const ClientSidebar = () => {
     { label: t("leads"), href: "/dashboard/leads", icon: Inbox },
     { label: t("chatHistory"), href: "/dashboard/chats", icon: MessageSquare },
     { label: "Analytics", href: "/dashboard/analytics", icon: BarChart3 },
-    ...(canUseEcommerce ? [{ label: "Ecommerce", href: "/dashboard/ecommerce", icon: Store }] : []),
+    ...(canUseEcommerce || canUseCalendly
+      ? [{ label: tl("Integrazioni", "Integrations"), href: "/dashboard/integrations", icon: Plug }]
+      : []),
     { label: "Instagram", href: "/dashboard/instagram", icon: Instagram },
     { label: "Upgrade", href: "/dashboard/upgrade", icon: ArrowUpCircle },
   ];
+
 
   const handleSignOut = async () => {
     await signOut();

@@ -5,7 +5,7 @@ import { useLanguage } from "@/hooks/useLanguage";
 import { useWidgetUrl } from "@/hooks/useWidgetUrl";
 import { usePlan } from "@/hooks/usePlan";
 import { usePlanConfig } from "@/hooks/usePlanConfig";
-import { Inbox, MessageSquare, Bot, TrendingUp, ArrowUpRight, Activity, Settings, Code2, Copy, Sparkles, Star } from "lucide-react";
+import { Inbox, MessageSquare, Bot, TrendingUp, ArrowUpRight, Activity, Settings, Code2, Copy, Sparkles, Star, Package, CalendarDays } from "lucide-react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -34,6 +34,9 @@ const ClientOverview = () => {
   const [loading, setLoading] = useState(true);
   const [monthlyChats, setMonthlyChats] = useState(0);
   const [monthlyLeads, setMonthlyLeads] = useState(0);
+  const [vertical, setVertical] = useState<"ecommerce" | "booking" | "general">("general");
+  const [calendlyConnected, setCalendlyConnected] = useState(false);
+  const [syncedProducts, setSyncedProducts] = useState(0);
 
   // Handle payment success with polling
   useEffect(() => {
@@ -88,7 +91,7 @@ const ClientOverview = () => {
         supabase.from("chat_sessions").select("id", { count: "exact", head: true }).eq("client_id", clientId),
         supabase.from("chatbot_configs").select("is_active").eq("client_id", clientId).single(),
         supabase.from("leads").select("id, name, email, status, created_at").eq("client_id", clientId).order("created_at", { ascending: false }).limit(5),
-        supabase.from("chatbot_configs").select("embed_token").eq("client_id", clientId).single(),
+        supabase.from("chatbot_configs").select("embed_token, calendly_url, business_vertical").eq("client_id", clientId).single(),
         supabase.from("chat_sessions").select("id", { count: "exact", head: true }).eq("client_id", clientId).gte("started_at", monthStart.toISOString()),
         supabase.from("leads").select("id", { count: "exact", head: true }).eq("client_id", clientId).gte("created_at", monthStart.toISOString()),
       ]);
@@ -101,6 +104,18 @@ const ClientOverview = () => {
       });
       setRecentLeads((recent.data as any) || []);
       setEmbedToken(botConfig.data?.embed_token || "");
+      const bc = botConfig.data as any;
+      const bv = (bc?.business_vertical || "general") as "ecommerce" | "booking" | "general";
+      setVertical(bv);
+      setCalendlyConnected(!!bc?.calendly_url);
+      if (bv === "ecommerce") {
+        const { count } = await supabase
+          .from("products" as any)
+          .select("id", { count: "exact", head: true })
+          .eq("client_id", clientId)
+          .eq("is_active", true);
+        setSyncedProducts(count || 0);
+      }
       setMonthlyChats(monthChats.count || 0);
       setMonthlyLeads(monthLeadsCount.count || 0);
       setLoading(false);
@@ -242,6 +257,31 @@ const ClientOverview = () => {
           </div>
         ))}
       </div>
+
+      {vertical !== "general" && (
+        <Link to="/dashboard/integrations" className="block glass rounded-xl p-5 hover:border-primary/30 transition-all">
+          <div className="flex items-center gap-4">
+            <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+              {vertical === "ecommerce"
+                ? <Package className="w-4 h-4 text-primary" />
+                : <CalendarDays className="w-4 h-4 text-primary" />}
+            </div>
+            <div>
+              <p className="text-xl font-bold text-foreground">
+                {vertical === "ecommerce"
+                  ? syncedProducts
+                  : (calendlyConnected ? t("yes", "Sì") : t("no", "No"))}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {vertical === "ecommerce"
+                  ? t("syncedProducts", "Prodotti sincronizzati")
+                  : t("calendlyConnected", "Calendly collegato")}
+              </p>
+            </div>
+            <ArrowUpRight className="w-4 h-4 text-muted-foreground ml-auto" />
+          </div>
+        </Link>
+      )}
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <Button variant="outline" className="h-auto py-4 flex flex-col items-center gap-2 border-border hover:border-primary/40" onClick={() => navigate("/dashboard/leads")}>
