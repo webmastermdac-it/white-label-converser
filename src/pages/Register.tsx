@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
-import { Bot, Eye, EyeOff, Loader2 } from "lucide-react";
+import { Bot, Eye, EyeOff, Loader2, CalendarCheck, ShoppingBag, UtensilsCrossed, ArrowLeft } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 const Register = () => {
@@ -24,6 +24,7 @@ const Register = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [vertical, setVertical] = useState<"booking" | "ecommerce" | "hospitality" | null>(null);
 
   if (!loading && user) {
     return <Navigate to={role === "super_admin" ? "/admin" : "/dashboard"} replace />;
@@ -48,7 +49,7 @@ const Register = () => {
     setIsLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke("register-client", {
-        body: { full_name: fullName, company_name: companyName, email, password },
+        body: { full_name: fullName, company_name: companyName, email, password, vertical },
       });
 
       if (error) throw error;
