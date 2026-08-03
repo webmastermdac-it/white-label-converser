@@ -27,6 +27,17 @@ serve(async (req) => {
     const message = body.message || lead.message || "";
     const transcript = body.transcript || [];
 
+    if (!name || String(name).trim() === "") {
+      return new Response(JSON.stringify({ error: "Name is required" }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" }
+      });
+    }
+    if ((!email || String(email).trim() === "") && (!phone || String(phone).trim() === "")) {
+      return new Response(JSON.stringify({ error: "Email or phone is required" }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" }
+      });
+    }
+
     const { data: botConfig, error: configError } = await supabase
       .from("chatbot_configs")
       .select("*")

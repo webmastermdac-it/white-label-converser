@@ -43,8 +43,9 @@
       placeholder: "Type a message...",
       leadLabel: "📋 Leave your contact details",
       namePlaceholder: "Name *",
-      emailPlaceholder: "Email *",
-      phonePlaceholder: "Phone",
+      emailPlaceholder: "Email",
+      phonePlaceholder: "Phone *",
+      contactNote: "Please provide at least email or phone",
       messagePlaceholder: "Message",
       submitBtn: "Submit request",
       calendlyBtn: "📅 Book a consultation",
@@ -57,8 +58,9 @@
       placeholder: "Scrivi un messaggio...",
       leadLabel: "📋 Lascia i tuoi contatti",
       namePlaceholder: "Nome *",
-      emailPlaceholder: "Email *",
-      phonePlaceholder: "Telefono",
+      emailPlaceholder: "Email",
+      phonePlaceholder: "Telefono *",
+      contactNote: "Inserisci almeno uno tra email e telefono",
       messagePlaceholder: "Messaggio",
       submitBtn: "Invia richiesta",
       calendlyBtn: "📅 Prenota una consulenza",
@@ -71,8 +73,9 @@
       placeholder: "Écrivez un message...",
       leadLabel: "📋 Laissez vos coordonnées",
       namePlaceholder: "Nom *",
-      emailPlaceholder: "Email *",
-      phonePlaceholder: "Téléphone",
+      emailPlaceholder: "Email",
+      phonePlaceholder: "Téléphone *",
+      contactNote: "Indiquez au moins un email ou un téléphone",
       messagePlaceholder: "Message",
       submitBtn: "Envoyer",
       calendlyBtn: "📅 Réserver une consultation",
@@ -308,6 +311,9 @@
       html += '<input type="text" id="mdac-lead-name" placeholder="' + t.namePlaceholder + '" />';
       html += '<input type="email" id="mdac-lead-email" placeholder="' + t.emailPlaceholder + '" />';
       html += '<input type="tel" id="mdac-lead-phone" placeholder="' + t.phonePlaceholder + '" />';
+      if (t.contactNote) {
+        html += '<div class="mdac-lead-note" style="font-size:11px;opacity:0.7;margin:-2px 0 4px;">' + t.contactNote + '</div>';
+      }
       html += '<textarea id="mdac-lead-message" placeholder="' + t.messagePlaceholder + '"></textarea>';
       html += '<button class="mdac-lead-btn" id="mdac-lead-submit">' + t.submitBtn + '</button>';
       if (config.calendly_url) {
@@ -471,15 +477,17 @@
     var phoneEl = shadow.getElementById("mdac-lead-phone");
     var msgEl = shadow.getElementById("mdac-lead-message");
 
-    if (!nameEl || !emailEl) return;
+    if (!nameEl) return;
     var name = nameEl.value.trim();
-    var email = emailEl.value.trim();
-    if (!name || !email) return;
+    var email = emailEl ? emailEl.value.trim() : "";
+    var phone = phoneEl ? phoneEl.value.trim() : "";
+    if (!name) return;
+    if (!email && !phone) return;
 
     var lead = {
       name: name,
       email: email,
-      phone: phoneEl ? phoneEl.value.trim() : "",
+      phone: phone,
       message: msgEl ? msgEl.value.trim() : "",
     };
 
