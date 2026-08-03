@@ -14,6 +14,7 @@ interface Props {
   configId: string;
   currentKnowledgeBase?: string;
   plan?: string;
+  vertical?: string | null;
   onSave: (systemPrompt: string) => Promise<void>;
 }
 
@@ -50,7 +51,7 @@ function buildPrompt(sections: KBSections, lang: string): string {
 const STEPS = ["template", "about", "products", "faqs", "tone", "contacts", "review"] as const;
 type Step = typeof STEPS[number];
 
-const KnowledgeBaseWizard: React.FC<Props> = ({ clientId, configId, currentKnowledgeBase, plan, onSave }) => {
+const KnowledgeBaseWizard: React.FC<Props> = ({ clientId, configId, currentKnowledgeBase, plan, vertical, onSave }) => {
   const { lang } = useLanguage();
   const l = (it: string, en: string) => lang === "it" ? it : en;
 
@@ -106,7 +107,11 @@ const KnowledgeBaseWizard: React.FC<Props> = ({ clientId, configId, currentKnowl
   };
   const goForward = () => setStep(STEPS[stepIndex + 1]);
 
-  // Step 1: Template selection
+  // Step 1: Template selection — filtered by client vertical
+  const visibleTemplates = industryTemplates.filter(
+    (tmpl) => tmpl.vertical === null || !vertical || tmpl.vertical === vertical
+  );
+
   if (step === "template") {
     return (
       <div className="space-y-4">
@@ -117,7 +122,7 @@ const KnowledgeBaseWizard: React.FC<Props> = ({ clientId, configId, currentKnowl
           </h3>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          {industryTemplates.map((tmpl) => (
+          {visibleTemplates.map((tmpl) => (
             <button
               key={tmpl.id}
               onClick={() => handleSelect(tmpl)}

@@ -171,6 +171,7 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
 
   // Instructions state
   const [systemPrompt, setSystemPrompt] = useState("");
+  const [chatbotVertical, setChatbotVertical] = useState<string | null>(null);
   const [savingPrompt, setSavingPrompt] = useState(false);
 
   const t = (it: string, en: string) => lang === "it" ? it : en;
@@ -193,12 +194,13 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
     if (overrideChatbotId) {
       const { data: config } = await supabase
         .from("chatbot_configs")
-        .select("id, knowledge_base")
+        .select("id, knowledge_base, vertical")
         .eq("id", overrideChatbotId)
         .single();
       if (!config) { setLoading(false); return; }
       configId = config.id;
       promptValue = config.knowledge_base || "";
+      setChatbotVertical((config as any).vertical ?? null);
     } else {
       const { data: config } = await supabase
         .from("chatbot_configs")
@@ -209,6 +211,7 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
       if (!config) { setLoading(false); return; }
       configId = config.id;
       promptValue = config.knowledge_base || "";
+      setChatbotVertical((config as any).vertical ?? null);
     }
     
     setChatbotId(configId!);
@@ -831,6 +834,7 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
             configId={chatbotId}
             currentKnowledgeBase={systemPrompt}
             plan={planConfig?.plan_name || "free"}
+            vertical={chatbotVertical}
             onSave={async (kb: string) => {
               setSystemPrompt(kb);
               try {
