@@ -130,7 +130,7 @@ const ClientChatbotSettings = () => {
         <TabsList className="bg-secondary border border-border flex-wrap h-auto gap-1 p-1">
           <TabsTrigger value="general" className="gap-1.5 text-xs"><Settings className="w-3.5 h-3.5" /> {tl("Generale", "General")}</TabsTrigger>
           <TabsTrigger value="appearance" className="gap-1.5 text-xs"><Palette className="w-3.5 h-3.5" /> {tl("Aspetto", "Appearance")}</TabsTrigger>
-          <TabsTrigger value="faq" className="gap-1.5 text-xs"><HelpCircle className="w-3.5 h-3.5" /> FAQ</TabsTrigger>
+          
           <TabsTrigger value="knowledge" className="gap-1.5 text-xs"><Database className="w-3.5 h-3.5" /> Knowledge</TabsTrigger>
           <TabsTrigger value="instructions" className="gap-1.5 text-xs"><FileText className="w-3.5 h-3.5" /> {tl("Istruzioni", "Instructions")}</TabsTrigger>
           <TabsTrigger value="preview" className="gap-1.5 text-xs"><Eye className="w-3.5 h-3.5" /> Preview</TabsTrigger>
