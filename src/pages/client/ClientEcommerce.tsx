@@ -59,6 +59,8 @@ const ClientEcommerce = () => {
   const [page, setPage] = useState(0);
   const [loading, setLoading] = useState(true);
 
+  const maxProducts = ((planConfig as any)?.max_products ?? -1) as number;
+
   const formatCurrency = (value: unknown) => {
     const amount = typeof value === "number" ? value : parseFloat(String(value ?? "0"));
     return new Intl.NumberFormat(isIt ? "it-IT" : "en-US", {
@@ -359,10 +361,19 @@ const ClientEcommerce = () => {
                   📦 {isIt ? `Prodotti sincronizzati: ${productCount}` : `Synced products: ${productCount}`}
                 </p>
               </div>
-              <Button onClick={handleSync} disabled={syncing} size="sm">
-                <RefreshCw className={`w-4 h-4 mr-2 ${syncing ? "animate-spin" : ""}`} />
-                {isIt ? "Sincronizza ora" : "Sync now"}
-              </Button>
+              <div className="flex flex-col items-end gap-1">
+                <Button onClick={handleSync} disabled={syncing} size="sm">
+                  <RefreshCw className={`w-4 h-4 mr-2 ${syncing ? "animate-spin" : ""}`} />
+                  {isIt ? "Sincronizza ora" : "Sync now"}
+                </Button>
+                <p className="text-xs text-muted-foreground">
+                  {maxProducts === -1
+                    ? (isIt ? "Prodotti illimitati" : "Unlimited products")
+                    : (isIt
+                        ? `${productCount} / ${maxProducts} prodotti sincronizzati`
+                        : `${productCount} / ${maxProducts} products synced`)}
+                </p>
+              </div>
             </div>
 
             {/* Sincronizzazione automatica */}
