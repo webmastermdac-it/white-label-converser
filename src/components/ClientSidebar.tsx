@@ -3,10 +3,11 @@ import { NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/hooks/useLanguage";
 import { usePlanConfig } from "@/hooks/usePlanConfig";
+import { useCalendlyIntegration } from "@/hooks/useCalendlyIntegration";
 import { Button } from "@/components/ui/button";
 import {
   LayoutDashboard, MessageSquare,
-  ChevronLeft, ChevronRight, Bot, LogOut, Inbox, Globe, ArrowUpCircle, BarChart3, Plug, Instagram
+  ChevronLeft, ChevronRight, Bot, LogOut, Inbox, Globe, ArrowUpCircle, BarChart3, Plug, Instagram, Settings
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import ThemeSelector from "@/components/ThemeSelector";
@@ -16,13 +17,23 @@ const ClientSidebar = () => {
   const { user, signOut } = useAuth();
   const { lang, setLang, t } = useLanguage();
   const { canUseEcommerce, canUseCalendly, config: planConfig } = usePlanConfig();
+  const { botId, vertical } = useCalendlyIntegration();
   const isFree = planConfig?.plan_name === "free";
   const navigate = useNavigate();
   const tl = (it: string, en: string) => lang === "it" ? it : en;
 
+  const isEcommerce = vertical === "ecommerce";
+  const botItem = isEcommerce
+    ? {
+        label: tl("Configura", "Configure"),
+        href: botId ? `/dashboard/bots/${botId}` : "/dashboard/bots",
+        icon: Settings,
+      }
+    : { label: tl("I miei Bot", "My Bots"), href: "/dashboard/bots", icon: Bot };
+
   const clientNav = [
     { label: t("overview"), href: "/dashboard", icon: LayoutDashboard, end: true },
-    { label: tl("I miei Bot", "My Bots"), href: "/dashboard/bots", icon: Bot },
+    botItem,
     { label: t("leads"), href: "/dashboard/leads", icon: Inbox },
     { label: t("chatHistory"), href: "/dashboard/chats", icon: MessageSquare },
     { label: "Analytics", href: "/dashboard/analytics", icon: BarChart3 },
@@ -32,6 +43,7 @@ const ClientSidebar = () => {
     { label: "Instagram", href: "/dashboard/instagram", icon: Instagram },
     { label: "Upgrade", href: "/dashboard/upgrade", icon: ArrowUpCircle },
   ];
+
 
 
   const handleSignOut = async () => {
