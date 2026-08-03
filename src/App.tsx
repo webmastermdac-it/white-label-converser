@@ -41,7 +41,7 @@ import Terms from "@/pages/Terms";
 import Register from "@/pages/Register";
 import ClientUpgrade from "@/pages/client/ClientUpgrade";
 import ClientAnalytics from "@/pages/client/ClientAnalytics";
-import ClientEcommerce from "@/pages/client/ClientEcommerce";
+import ClientIntegrations from "@/pages/client/ClientIntegrations";
 import ClientRAGKnowledgeBase from "@/pages/client/ClientRAGKnowledgeBase";
 import ClientInstagram from "@/pages/client/ClientInstagram";
 
@@ -107,7 +107,9 @@ const App = () => (
               <Route path="embed" element={<ClientEmbed />} />
               <Route path="upgrade" element={<ClientUpgrade />} />
               <Route path="analytics" element={<ClientAnalytics />} />
-              <Route path="ecommerce" element={<ClientEcommerce />} />
+              <Route path="integrations" element={<ClientIntegrations />} />
+              <Route path="ecommerce" element={<Navigate to="/dashboard/integrations" replace />} />
+
               <Route path="knowledge-base" element={<ClientRAGKnowledgeBase />} />
               <Route path="instagram" element={<ClientInstagram />} />
             </Route>
