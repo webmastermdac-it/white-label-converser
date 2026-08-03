@@ -62,6 +62,12 @@ const defaultConfig: Config = {
 
 const EMOJIS = [GENIE_AVATAR, "🤖", "💬", "✨", "🎯", "🚀", "💡", "🤝", "⭐", "🌟", "🎪", "💖", "💕", "💗", "💝", "🌸", "🌷", "🌹", "🦋", "👩", "👩‍💼", "💄", "👜", "🛍️", "💅", "👑", "🎀", "🧚", "🪄", "🦄", "🌙", "🌛", "🌜", "🌚", "🌝"];
 const POSITIONS = ["bottom-right", "bottom-left"];
+const VERTICALS = [
+  { value: "ecommerce", emoji: "🛒", it: "Ecommerce / Vendita prodotti", en: "Ecommerce / Product sales" },
+  { value: "booking", emoji: "📅", it: "Servizi su appuntamento", en: "Appointment-based services" },
+  { value: "general", emoji: "💬", it: "Generico / Assistenza clienti", en: "General / Customer support" },
+];
+
 
 const ChatbotConfigForm: React.FC<ChatbotConfigFormProps> = ({ clientId, chatbotId: overrideChatbotId, onSaved }) => {
   const { toast } = useToast();
@@ -212,6 +218,35 @@ const ChatbotConfigForm: React.FC<ChatbotConfigFormProps> = ({ clientId, chatbot
               className="bg-secondary border-border"
             />
           </div>
+
+          <div className="space-y-2">
+            <Label>{t("Business type", "Tipo di attività")}</Label>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              {VERTICALS.map((v) => (
+                <button
+                  key={v.value}
+                  type="button"
+                  onClick={() => set("business_vertical", v.value)}
+                  className={`flex flex-col items-center gap-2 p-4 rounded-lg border-2 text-center transition-all ${
+                    config.business_vertical === v.value
+                      ? "border-primary bg-primary/5"
+                      : "border-border hover:border-muted-foreground/30"
+                  }`}
+                >
+                  <span className="text-2xl">{v.emoji}</span>
+                  <span className="text-xs font-medium">{t(v.en, v.it)}</span>
+                </button>
+              ))}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {t(
+                "Used to suggest the most relevant integrations for you.",
+                "Serve a consigliarti le integrazioni più pertinenti."
+              )}
+            </p>
+          </div>
+
+
 
           <div className="space-y-2">
             <Label>{t("avatarEmoji")}</Label>
