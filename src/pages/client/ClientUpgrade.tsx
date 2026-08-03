@@ -75,9 +75,9 @@ const ClientUpgrade = () => {
         isIt ? "Supporto prioritario" : "Priority support",
         isIt ? "🔍 Ricerca Avanzata (RAG)" : "🔍 Advanced Search (RAG)",
         isIt ? "🛒 Feed XML/CSV (sync giornaliero)" : "🛒 XML/CSV Feed (daily sync)",
+        isIt ? "Fino a 500 prodotti ecommerce" : "Up to 500 ecommerce products",
       ],
       lockedFeatures: [
-        isIt ? "Chatbot multipli" : "Multiple chatbots",
         isIt ? "Analytics avanzati" : "Advanced analytics",
       ],
       rag: "included" as const,
