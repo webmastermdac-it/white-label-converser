@@ -97,6 +97,7 @@ const ClientUpgrade = () => {
         isIt ? "Analytics avanzati" : "Advanced analytics",
         isIt ? "Supporto dedicato" : "Dedicated support",
         isIt ? "🛒 Ecommerce completo (WooCommerce, Shopify, PrestaShop, API + webhook real-time)" : "🛒 Full ecommerce (WooCommerce, Shopify, PrestaShop, API + real-time webhooks)",
+        isIt ? "Prodotti ecommerce illimitati" : "Unlimited ecommerce products",
         isIt ? "White label completo" : "Complete white label",
       ],
       lockedFeatures: [],
