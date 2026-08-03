@@ -39,7 +39,6 @@ const APPOINTMENT_INTEGRATIONS: IntegrationDef[] = [
   { id: "calendly", name: "Calendly", color: "#006BFF", icon: CalendarDays },
 ];
 
-const API_PLATFORMS: Platform[] = ["woocommerce", "shopify", "prestashop", "api"];
 const BANNER_KEY = "integrations_banner_dismissed";
 
 const ClientIntegrations = () => {
@@ -56,8 +55,6 @@ const ClientIntegrations = () => {
     () => localStorage.getItem(BANNER_KEY) === "1"
   );
 
-  const isFree = plan === "free";
-  const isStarterOnly = plan === "starter";
   const vertical = cal.vertical;
 
   const dismissBanner = () => {
