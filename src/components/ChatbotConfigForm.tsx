@@ -340,20 +340,19 @@ const ChatbotConfigForm: React.FC<ChatbotConfigFormProps> = ({ clientId, chatbot
 
           {/* Preview */}
           <div className="mt-4 p-4 rounded-xl border border-border" style={{ backgroundColor: config.background_color }}>
-            <div className="flex items-center gap-2 mb-3">
-              <span className="text-2xl">
-                {config.avatar === GENIE_FULL_AVATAR ? (
-                  <span className="relative inline-flex w-10 h-10 items-center justify-center">
-                    <span
-                      className="absolute inset-[-6px] rounded-full animate-genie-glow"
-                      style={{ background: `radial-gradient(circle, ${config.primary_color}cc 0%, ${config.primary_color}40 45%, transparent 70%)` }}
-                    />
-                    <img src={GENIE_FULL_URL} alt="Genius" className="relative w-10 h-10 object-contain" />
-                  </span>
-                ) : config.avatar === GENIE_AVATAR ? (
-                  <img src={GENIE_ICON_URL} alt="Genius" className="w-8 h-8" />
-                ) : config.avatar}
-              </span>
+            <div className="flex items-center gap-3 mb-3">
+              {IMAGE_AVATARS[config.avatar] ? (
+                <span className="relative inline-flex w-12 h-12 items-center justify-center shrink-0">
+                  <span
+                    className="absolute inset-[-8px] rounded-full animate-genie-glow"
+                    style={{ background: `radial-gradient(circle, ${config.primary_color}cc 0%, ${config.primary_color}40 45%, transparent 70%)` }}
+                  />
+                  <img src={IMAGE_AVATARS[config.avatar]} alt="Genius" className="relative z-10 w-12 h-12 object-contain" />
+                </span>
+              ) : (
+                <span className="text-2xl leading-none">{config.avatar}</span>
+              )}
+
 
               <span className="font-medium" style={{ color: config.text_color }}>{config.name}</span>
             </div>
