@@ -25,6 +25,7 @@ export function useEcommerceIntegration() {
   const [feedUrl, setFeedUrl] = useState("");
   const [feedFormat, setFeedFormat] = useState("xml");
   const [configId, setConfigId] = useState<string | null>(null);
+  const [savedPlatform, setSavedPlatform] = useState<Platform | null>(null);
   const [syncStatus, setSyncStatus] = useState("idle");
   const [syncError, setSyncError] = useState<string | null>(null);
   const [lastSyncAt, setLastSyncAt] = useState<string | null>(null);
@@ -48,6 +49,8 @@ export function useEcommerceIntegration() {
       const d = data as any;
       setConfigId(d.id);
       setPlatform(d.platform);
+      setSavedPlatform(d.platform);
+      setSavedPlatform(d.platform);
       setStoreUrl(d.store_url || "");
       setApiKey(d.api_key || "");
       setApiSecret(d.api_secret || "");
@@ -89,9 +92,11 @@ export function useEcommerceIntegration() {
       };
       if (configId) {
         await supabase.from("ecommerce_configs" as any).update(record).eq("id", configId);
+        setSavedPlatform(record.platform);
       } else {
         const { data } = await supabase.from("ecommerce_configs" as any).insert(record).select("id").single();
         if (data) setConfigId((data as any).id);
+        setSavedPlatform(record.platform);
       }
       toast({ title: isIt ? "Configurazione salvata!" : "Configuration saved!" });
     } catch (e: any) {
@@ -170,7 +175,7 @@ export function useEcommerceIntegration() {
   return {
     // state
     loading, saving, syncing, savingAutoSync,
-    configId, platform, storeUrl, apiKey, apiSecret, feedUrl, feedFormat,
+    configId, platform, savedPlatform, storeUrl, apiKey, apiSecret, feedUrl, feedFormat,
     syncStatus, syncError, lastSyncAt, syncEnabled, productCount, maxProducts,
     // setters
     setPlatform, setStoreUrl, setApiKey, setApiSecret, setFeedUrl, setFeedFormat,
