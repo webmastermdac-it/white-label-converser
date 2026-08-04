@@ -32,6 +32,21 @@
       .replace(/\n/g, '<br>');
   }
 
+  // ── Asset origin (dove sono ospitate le immagini del widget) ─────────
+  var WIDGET_ASSET_ORIGIN = (function () {
+    try {
+      var s = document.currentScript;
+      if (!s) {
+        var all = document.getElementsByTagName("script");
+        for (var i = all.length - 1; i >= 0; i--) {
+          if (all[i].src && all[i].src.indexOf("widget.js") !== -1) { s = all[i]; break; }
+        }
+      }
+      if (s && s.src) return new URL(s.src).origin;
+    } catch (e) {}
+    return "https://chatbot.your-genius.com";
+  })();
+
 
   // ── Language detection (full code) ─────────────────────
   var widgetLang = navigator.language || "en";
