@@ -15,6 +15,8 @@ import {
   Settings2, FileText, CalendarDays, ShoppingBag, Store, ShoppingCart, Sparkles, X, ArrowUpCircle, ArrowLeft,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+import ProductCatalogList from "@/components/ecommerce/ProductCatalogList";
+
 
 type IntegrationId = Platform | "calendly";
 
