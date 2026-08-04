@@ -32,6 +32,21 @@
       .replace(/\n/g, '<br>');
   }
 
+  // ── Asset origin (dove sono ospitate le immagini del widget) ─────────
+  var WIDGET_ASSET_ORIGIN = (function () {
+    try {
+      var s = document.currentScript;
+      if (!s) {
+        var all = document.getElementsByTagName("script");
+        for (var i = all.length - 1; i >= 0; i--) {
+          if (all[i].src && all[i].src.indexOf("widget.js") !== -1) { s = all[i]; break; }
+        }
+      }
+      if (s && s.src) return new URL(s.src).origin;
+    } catch (e) {}
+    return "https://chatbot.your-genius.com";
+  })();
+
 
   // ── Language detection (full code) ─────────────────────
   var widgetLang = navigator.language || "en";
@@ -267,9 +282,9 @@
     var avatar = config.avatar || "genie";
     var isGenie = avatar === "genie";
     var isGenieFull = avatar === "genie-full";
-    var PROD_ORIGIN = "https://chatbot.your-genius.com";
-    var genieUrl = new URL("/images/genius-icon.png", PROD_ORIGIN).href;
-    var genieFullUrl = new URL("/images/genie-full.png", PROD_ORIGIN).href;
+    var ASSET_ORIGIN = WIDGET_ASSET_ORIGIN;
+    var genieUrl = new URL("/images/genius-icon.png", ASSET_ORIGIN).href;
+    var genieFullUrl = new URL("/images/genie-full.png", ASSET_ORIGIN).href;
     var genieImgTag = '<img src="' + genieUrl + '" style="width:28px;height:28px;" alt="Genius" />';
     var genieFullTag = '<img src="' + genieFullUrl + '" alt="Genius" />';
     var avatarDisplay = isGenie ? genieImgTag : (isGenieFull ? '<img src="' + genieFullUrl + '" style="width:30px;height:30px;object-fit:contain;" alt="Genius" />' : esc(avatar));
