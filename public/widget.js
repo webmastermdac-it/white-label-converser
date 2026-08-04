@@ -203,6 +203,7 @@
 .mdac-launcher.mdac-genie-full img{width:100%;height:100%;object-fit:contain;position:relative;z-index:1;filter:drop-shadow(0 2px 6px rgba(0,0,0,.35));}\
 @keyframes mdac-glow{0%,100%{opacity:0;transform:scale(.85);}50%{opacity:1;transform:scale(1.12);}}\
 
+
 .mdac-panel{position:fixed;bottom:90px;" + pos + "width:370px;height:520px;border-radius:16px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 12px 48px rgba(0,0,0,.3);opacity:0;transform:translateY(20px) scale(.95);pointer-events:none;transition:opacity .25s ease,transform .25s ease;z-index:2;background:#fff;}\
 .mdac-panel.open{opacity:1;transform:translateY(0) scale(1);pointer-events:auto;}\
 .mdac-header{background:" + bg + ";padding:14px 16px;display:flex;align-items:center;gap:10px;}\
