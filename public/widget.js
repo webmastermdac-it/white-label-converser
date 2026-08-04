@@ -267,9 +267,9 @@
     var avatar = config.avatar || "genie";
     var isGenie = avatar === "genie";
     var isGenieFull = avatar === "genie-full";
-    var PROD_ORIGIN = "https://chatbot.your-genius.com";
-    var genieUrl = new URL("/images/genius-icon.png", PROD_ORIGIN).href;
-    var genieFullUrl = new URL("/images/genie-full.png", PROD_ORIGIN).href;
+    var ASSET_ORIGIN = WIDGET_ASSET_ORIGIN;
+    var genieUrl = new URL("/images/genius-icon.png", ASSET_ORIGIN).href;
+    var genieFullUrl = new URL("/images/genie-full.png", ASSET_ORIGIN).href;
     var genieImgTag = '<img src="' + genieUrl + '" style="width:28px;height:28px;" alt="Genius" />';
     var genieFullTag = '<img src="' + genieFullUrl + '" alt="Genius" />';
     var avatarDisplay = isGenie ? genieImgTag : (isGenieFull ? '<img src="' + genieFullUrl + '" style="width:30px;height:30px;object-fit:contain;" alt="Genius" />' : esc(avatar));
