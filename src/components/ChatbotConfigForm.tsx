@@ -40,6 +40,13 @@ interface ChatbotConfigFormProps {
 
 const GENIE_ICON_URL = "/images/genius-icon.png";
 const GENIE_AVATAR = "genie";
+const GENIE_FULL_URL = "/images/genie-full.png";
+const GENIE_FULL_AVATAR = "genie-full";
+const IMAGE_AVATARS: Record<string, string> = {
+  [GENIE_AVATAR]: GENIE_ICON_URL,
+  [GENIE_FULL_AVATAR]: GENIE_FULL_URL,
+};
+
 
 const defaultConfig: Config = {
   name: "My Chatbot",
@@ -60,7 +67,7 @@ const defaultConfig: Config = {
   launcher_position: "bottom-right",
 };
 
-const EMOJIS = [GENIE_AVATAR, "🤖", "💬", "✨", "🎯", "🚀", "💡", "🤝", "⭐", "🌟", "🎪", "💖", "💕", "💗", "💝", "🌸", "🌷", "🌹", "🦋", "👩", "👩‍💼", "💄", "👜", "🛍️", "💅", "👑", "🎀", "🧚", "🪄", "🦄", "🌙", "🌛", "🌜", "🌚", "🌝"];
+const EMOJIS = [GENIE_AVATAR, GENIE_FULL_AVATAR, "🤖", "💬", "✨", "🎯", "🚀", "💡", "🤝", "⭐", "🌟", "🎪", "💖", "💕", "💗", "💝", "🌸", "🌷", "🌹", "🦋", "👩", "👩‍💼", "💄", "👜", "🛍️", "💅", "👑", "🎀", "🧚", "🪄", "🦄", "🌙", "🌛", "🌜", "🌚", "🌝"];
 const POSITIONS = ["bottom-right", "bottom-left"];
 const VERTICALS = [
   { value: "ecommerce", emoji: "🛒", it: "Ecommerce / Vendita prodotti", en: "Ecommerce / Product sales" },
@@ -260,11 +267,12 @@ const ChatbotConfigForm: React.FC<ChatbotConfigFormProps> = ({ clientId, chatbot
                       : "bg-secondary hover:bg-accent"
                   }`}
                 >
-                  {emoji === GENIE_AVATAR ? (
-                    <img src={GENIE_ICON_URL} alt="Genius" className="w-7 h-7 mx-auto" />
+                  {IMAGE_AVATARS[emoji] ? (
+                    <img src={IMAGE_AVATARS[emoji]} alt="Genius" className="w-8 h-8 mx-auto object-contain" />
                   ) : (
                     emoji
                   )}
+
                 </button>
               ))}
             </div>
@@ -327,10 +335,19 @@ const ChatbotConfigForm: React.FC<ChatbotConfigFormProps> = ({ clientId, chatbot
           <div className="mt-4 p-4 rounded-xl border border-border" style={{ backgroundColor: config.background_color }}>
             <div className="flex items-center gap-2 mb-3">
               <span className="text-2xl">
-                {config.avatar === GENIE_AVATAR ? (
+                {config.avatar === GENIE_FULL_AVATAR ? (
+                  <span className="relative inline-flex w-10 h-10 items-center justify-center">
+                    <span
+                      className="absolute inset-[-6px] rounded-full animate-genie-glow"
+                      style={{ background: `radial-gradient(circle, ${config.primary_color}cc 0%, ${config.primary_color}40 45%, transparent 70%)` }}
+                    />
+                    <img src={GENIE_FULL_URL} alt="Genius" className="relative w-10 h-10 object-contain" />
+                  </span>
+                ) : config.avatar === GENIE_AVATAR ? (
                   <img src={GENIE_ICON_URL} alt="Genius" className="w-8 h-8" />
                 ) : config.avatar}
               </span>
+
               <span className="font-medium" style={{ color: config.text_color }}>{config.name}</span>
             </div>
             <div className="text-xs px-3 py-2 rounded-xl inline-block" style={{ backgroundColor: config.primary_color, color: "#fff" }}>

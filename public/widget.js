@@ -197,6 +197,13 @@
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;}\
 .mdac-launcher{position:fixed;bottom:20px;" + pos + "width:60px;height:60px;border-radius:50%;background:" + pc + ";color:#fff;border:none;cursor:pointer;box-shadow:0 4px 24px rgba(0,0,0,.25);display:flex;align-items:center;justify-content:center;font-size:28px;transition:transform .2s,box-shadow .2s;z-index:1;}\
 .mdac-launcher:hover{transform:scale(1.08);box-shadow:0 6px 32px rgba(0,0,0,.35);}\
+.mdac-launcher.mdac-genie-full{background:transparent;box-shadow:none;overflow:visible;}\
+.mdac-launcher.mdac-genie-full:hover{box-shadow:none;}\
+.mdac-launcher.mdac-genie-full::before{content:'';position:absolute;inset:-10px;border-radius:50%;background:radial-gradient(circle,rgba(245,166,35,.85) 0%,rgba(245,166,35,.35) 45%,rgba(245,166,35,0) 70%);opacity:0;animation:mdac-glow 4.5s ease-in-out infinite;pointer-events:none;z-index:-1;}\
+.mdac-launcher.mdac-genie-full img{width:100%;height:100%;object-fit:contain;position:relative;z-index:1;filter:drop-shadow(0 2px 6px rgba(0,0,0,.35));}\
+@keyframes mdac-glow{0%,100%{opacity:0;transform:scale(.85);}50%{opacity:1;transform:scale(1.12);}}\
+
+
 .mdac-panel{position:fixed;bottom:90px;" + pos + "width:370px;height:520px;border-radius:16px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 12px 48px rgba(0,0,0,.3);opacity:0;transform:translateY(20px) scale(.95);pointer-events:none;transition:opacity .25s ease,transform .25s ease;z-index:2;background:#fff;}\
 .mdac-panel.open{opacity:1;transform:translateY(0) scale(1);pointer-events:auto;}\
 .mdac-header{background:" + bg + ";padding:14px 16px;display:flex;align-items:center;gap:10px;}\
@@ -259,15 +266,20 @@
     var pc = config.primary_color || "#F59E0B";
     var avatar = config.avatar || "genie";
     var isGenie = avatar === "genie";
+    var isGenieFull = avatar === "genie-full";
     var PROD_ORIGIN = "https://chatbot.your-genius.com";
-    var genieImgTag = '<img src="' + new URL("/images/genius-icon.png", PROD_ORIGIN).href + '" style="width:28px;height:28px;" alt="Genius" />';
-    var avatarDisplay = isGenie ? genieImgTag : esc(avatar);
-    var avatarSmall = isGenie ? '<img src="' + new URL("/images/genius-icon.png", PROD_ORIGIN).href + '" style="width:18px;height:18px;" alt="G" />' : esc(avatar);
+    var genieUrl = new URL("/images/genius-icon.png", PROD_ORIGIN).href;
+    var genieFullUrl = new URL("/images/genie-full.png", PROD_ORIGIN).href;
+    var genieImgTag = '<img src="' + genieUrl + '" style="width:28px;height:28px;" alt="Genius" />';
+    var genieFullTag = '<img src="' + genieFullUrl + '" alt="Genius" />';
+    var avatarDisplay = isGenie ? genieImgTag : (isGenieFull ? '<img src="' + genieFullUrl + '" style="width:30px;height:30px;object-fit:contain;" alt="Genius" />' : esc(avatar));
+    var avatarSmall = (isGenie || isGenieFull) ? '<img src="' + (isGenieFull ? genieFullUrl : genieUrl) + '" style="width:18px;height:18px;object-fit:contain;" alt="G" />' : esc(avatar);
 
     var html = '<style>' + buildStyles(config) + '</style>';
 
     // Launcher
-    html += '<button class="mdac-launcher" id="mdac-toggle">' + avatarDisplay + '</button>';
+    html += '<button class="mdac-launcher' + (isGenieFull ? ' mdac-genie-full' : '') + '" id="mdac-toggle">' + (isGenieFull ? genieFullTag : avatarDisplay) + '</button>';
+
 
     // Panel
     html += '<div class="mdac-panel' + (isOpen ? ' open' : '') + '" id="mdac-panel">';
