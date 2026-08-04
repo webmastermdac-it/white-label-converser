@@ -267,11 +267,12 @@ const ChatbotConfigForm: React.FC<ChatbotConfigFormProps> = ({ clientId, chatbot
                       : "bg-secondary hover:bg-accent"
                   }`}
                 >
-                  {emoji === GENIE_AVATAR ? (
-                    <img src={GENIE_ICON_URL} alt="Genius" className="w-7 h-7 mx-auto" />
+                  {IMAGE_AVATARS[emoji] ? (
+                    <img src={IMAGE_AVATARS[emoji]} alt="Genius" className="w-8 h-8 mx-auto object-contain" />
                   ) : (
                     emoji
                   )}
+
                 </button>
               ))}
             </div>
