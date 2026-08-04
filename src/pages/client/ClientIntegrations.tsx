@@ -68,7 +68,7 @@ const ClientIntegrations = ({ embedded = false }: { embedded?: boolean }) => {
 
   const isConnected = (id: IntegrationId) => {
     if (id === "calendly") return !!cal.calendlyUrl;
-    return !!eco.configId && eco.platform === id;
+    return !!eco.configId && eco.savedPlatform === id;
   };
 
   const recommended = (id: IntegrationId) => {
@@ -250,7 +250,7 @@ const ClientIntegrations = ({ embedded = false }: { embedded?: boolean }) => {
                 {isIt ? "Salva configurazione" : "Save configuration"}
               </Button>
 
-              {eco.configId && eco.platform === openId && (
+              {eco.configId && eco.savedPlatform === openId && (
                 <div className="space-y-4 pt-2 border-t border-border">
                   <h3 className="text-sm font-semibold">{isIt ? "Sincronizzazione" : "Synchronization"}</h3>
 
