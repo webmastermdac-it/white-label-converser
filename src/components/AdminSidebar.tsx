@@ -22,7 +22,7 @@ const AdminSidebar = () => {
     { label: t("allLeads"), href: "/admin/leads", icon: Inbox },
     { label: t("chatSessions"), href: "/admin/chats", icon: MessageSquare },
     { label: t("settings"), href: "/admin/settings", icon: Settings },
-    { label: lang === "it" ? "I miei Bot" : "My Bots", href: "/dashboard/bots", icon: Bot },
+    { label: lang === "it" ? "I miei Bot" : "My Bots", href: "/admin/bots", icon: Bot },
     { label: "Piani", href: "/admin/plans", icon: CreditCard },
     { label: "Analytics", href: "/admin/analytics", icon: TrendingUp },
     { label: "Ecommerce", href: "/admin/ecommerce", icon: Store },
