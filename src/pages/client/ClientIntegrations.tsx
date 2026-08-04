@@ -40,7 +40,7 @@ const APPOINTMENT_INTEGRATIONS: IntegrationDef[] = [
 
 const BANNER_KEY = "integrations_banner_dismissed";
 
-const ClientIntegrations = () => {
+const ClientIntegrations = ({ embedded = false }: { embedded?: boolean }) => {
   const { lang } = useLanguage();
   const isIt = lang === "it";
   const navigate = useNavigate();
@@ -115,16 +115,19 @@ const ClientIntegrations = () => {
   };
 
   return (
-    <div className="p-6 md:p-8 space-y-8 max-w-6xl mx-auto animate-fade-in-up">
-      <div>
-        <h1 className="text-2xl font-bold flex items-center gap-2" style={{ fontFamily: "Syne, sans-serif" }}>
-          <Plug className="w-6 h-6 text-primary" />
-          {isIt ? "Integrazioni" : "Integrations"}
-        </h1>
-        <p className="text-muted-foreground text-sm mt-1">
-          {isIt ? "Collega i tuoi strumenti al chatbot" : "Connect your tools to the chatbot"}
-        </p>
-      </div>
+    <div className={embedded ? "space-y-8 animate-fade-in-up" : "p-6 md:p-8 space-y-8 max-w-6xl mx-auto animate-fade-in-up"}>
+      {!embedded && (
+        <div>
+          <h1 className="text-2xl font-bold flex items-center gap-2" style={{ fontFamily: "Syne, sans-serif" }}>
+            <Plug className="w-6 h-6 text-primary" />
+            {isIt ? "Integrazioni" : "Integrations"}
+          </h1>
+          <p className="text-muted-foreground text-sm mt-1">
+            {isIt ? "Collega i tuoi strumenti al chatbot" : "Connect your tools to the chatbot"}
+          </p>
+        </div>
+      )}
+
 
       {bannerText && !bannerDismissed && (
         <div className="flex items-start gap-3 p-4 rounded-xl bg-primary/5 border border-primary/20">
