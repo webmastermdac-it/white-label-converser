@@ -19,9 +19,13 @@ import {
   Eye, RefreshCw
 } from "lucide-react";
 
-const ClientChatbotSettings = () => {
+interface ClientChatbotSettingsProps {
+  adminMode?: boolean;
+}
+
+const ClientChatbotSettings = ({ adminMode = false }: ClientChatbotSettingsProps) => {
   const { botId } = useParams<{ botId: string }>();
-  const { clientId } = useAuth();
+  const { clientId: authClientId } = useAuth();
   const { lang } = useLanguage();
   const { toast } = useToast();
   const widgetUrl = useWidgetUrl();
@@ -31,6 +35,8 @@ const ClientChatbotSettings = () => {
   const [saving, setSaving] = useState(false);
   const [previewKey, setPreviewKey] = useState(0);
   const [activeTab, setActiveTab] = useState("general");
+  const clientId = botConfig?.client_id || authClientId;
+  const backPath = adminMode ? "/admin/bots" : "/dashboard/bots";
 
   // General tab editable fields
   const [name, setName] = useState("");
@@ -104,7 +110,7 @@ const ClientChatbotSettings = () => {
   if (!botConfig) {
     return (
       <div className="p-6">
-        <Link to="/dashboard/bots" className="flex items-center gap-2 text-muted-foreground hover:text-foreground text-sm">
+        <Link to={backPath} className="flex items-center gap-2 text-muted-foreground hover:text-foreground text-sm">
           <ArrowLeft className="w-4 h-4" /> {tl("Torna ai chatbot", "Back to chatbots")}
         </Link>
         <p className="mt-4 text-muted-foreground">{tl("Chatbot non trovato", "Chatbot not found")}</p>
@@ -116,7 +122,7 @@ const ClientChatbotSettings = () => {
     <div className="p-4 md:p-6 space-y-4 animate-fade-in-up">
       {/* Back link + title */}
       <div>
-        <Link to="/dashboard/bots" className="flex items-center gap-2 text-muted-foreground hover:text-foreground text-sm mb-3">
+        <Link to={backPath} className="flex items-center gap-2 text-muted-foreground hover:text-foreground text-sm mb-3">
           <ArrowLeft className="w-4 h-4" /> {tl("Torna ai chatbot", "Back to chatbots")}
         </Link>
         <h1 className="text-2xl font-bold text-foreground" style={{ fontFamily: "Syne, sans-serif" }}>
@@ -191,7 +197,7 @@ const ClientChatbotSettings = () => {
 
         {/* Tab 2 — Appearance (reuse ChatbotConfigForm) */}
         <TabsContent value="appearance">
-          <ChatbotConfigForm clientId={clientId!} chatbotId={botId} />
+          {clientId && <ChatbotConfigForm clientId={clientId} chatbotId={botId} />}
         </TabsContent>
 
         {/* Tab 3 — Knowledge */}

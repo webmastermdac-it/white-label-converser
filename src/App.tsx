@@ -44,6 +44,7 @@ import ClientAnalytics from "@/pages/client/ClientAnalytics";
 import ClientIntegrations from "@/pages/client/ClientIntegrations";
 import ClientRAGKnowledgeBase from "@/pages/client/ClientRAGKnowledgeBase";
 import ClientInstagram from "@/pages/client/ClientInstagram";
+import AdminBots from "@/pages/admin/AdminBots";
 
 const queryClient = new QueryClient();
 
@@ -76,6 +77,8 @@ const App = () => (
               <Route index element={<AdminOverview />} />
               <Route path="clients" element={<AdminClients />} />
               <Route path="clients/:clientId" element={<AdminClientConfig />} />
+              <Route path="bots" element={<AdminBots />} />
+              <Route path="bots/:botId" element={<ClientChatbotSettings adminMode />} />
               <Route path="leads" element={<AdminLeads />} />
               <Route path="chats" element={<AdminChats />} />
               <Route path="settings" element={<AdminSettings />} />
