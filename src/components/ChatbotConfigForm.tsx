@@ -67,7 +67,7 @@ const defaultConfig: Config = {
   launcher_position: "bottom-right",
 };
 
-const EMOJIS = [GENIE_AVATAR, "🤖", "💬", "✨", "🎯", "🚀", "💡", "🤝", "⭐", "🌟", "🎪", "💖", "💕", "💗", "💝", "🌸", "🌷", "🌹", "🦋", "👩", "👩‍💼", "💄", "👜", "🛍️", "💅", "👑", "🎀", "🧚", "🪄", "🦄", "🌙", "🌛", "🌜", "🌚", "🌝"];
+const EMOJIS = [GENIE_AVATAR, GENIE_FULL_AVATAR, "🤖", "💬", "✨", "🎯", "🚀", "💡", "🤝", "⭐", "🌟", "🎪", "💖", "💕", "💗", "💝", "🌸", "🌷", "🌹", "🦋", "👩", "👩‍💼", "💄", "👜", "🛍️", "💅", "👑", "🎀", "🧚", "🪄", "🦄", "🌙", "🌛", "🌜", "🌚", "🌝"];
 const POSITIONS = ["bottom-right", "bottom-left"];
 const VERTICALS = [
   { value: "ecommerce", emoji: "🛒", it: "Ecommerce / Vendita prodotti", en: "Ecommerce / Product sales" },
