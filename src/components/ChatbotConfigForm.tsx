@@ -40,6 +40,13 @@ interface ChatbotConfigFormProps {
 
 const GENIE_ICON_URL = "/images/genius-icon.png";
 const GENIE_AVATAR = "genie";
+const GENIE_FULL_URL = "/images/genie-full.png";
+const GENIE_FULL_AVATAR = "genie-full";
+const IMAGE_AVATARS: Record<string, string> = {
+  [GENIE_AVATAR]: GENIE_ICON_URL,
+  [GENIE_FULL_AVATAR]: GENIE_FULL_URL,
+};
+
 
 const defaultConfig: Config = {
   name: "My Chatbot",
