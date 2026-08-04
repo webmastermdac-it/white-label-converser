@@ -1188,64 +1188,6 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
       </div>
       )}
 
-      {/* ══════════════════════════════════════════════════ */}
-      {/* SECTION 3 — E-commerce Catalog                     */}
-      {/* ══════════════════════════════════════════════════ */}
-      {showKnowledge && !isFree && (
-        <>
-          {!canUseEcommerce ? (
-            <div className="glass rounded-xl p-5 border border-border opacity-80">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center">
-                  <Lock className="w-5 h-5 text-muted-foreground" />
-                </div>
-                <div className="flex-1">
-                  <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                    <span>3️⃣</span>
-                    {t("🛒 Catalogo E-commerce", "🛒 E-commerce Catalog")}
-                    <Badge variant="outline" className="text-xs ml-1 border-primary/40 text-primary">Starter</Badge>
-                  </h2>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    {t(
-                      "Sincronizza automaticamente WooCommerce, Shopify, PrestaShop, feed XML/CSV. Il catalogo prodotti viene usato dal chatbot per rispondere sugli ordini e la disponibilità.",
-                      "Auto-sync WooCommerce, Shopify, PrestaShop, XML/CSV feeds. The product catalog is used by the chatbot to answer about orders and availability."
-                    )}
-                  </p>
-                </div>
-                <Button size="sm" variant="outline" className="border-primary text-primary"
-                  onClick={() => showUpgrade("starter")}>
-                  {t("Passa a Starter", "Upgrade to Starter")}
-                </Button>
-              </div>
-            </div>
-          ) : (
-            <div className="glass rounded-xl p-5 space-y-3">
-              <div className="flex items-center justify-between">
-                <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                  <span>3️⃣</span>
-                  {t("🛒 Catalogo E-commerce", "🛒 E-commerce Catalog")}
-                </h2>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="gap-1.5 border-border text-foreground text-xs"
-                  onClick={() => window.location.href = "/dashboard/integrations"}
-                >
-                  <ExternalLink className="w-3.5 h-3.5" />
-                  {t("Configura integrazione", "Configure integration")}
-                </Button>
-              </div>
-              <p className="text-xs text-muted-foreground">
-                {t(
-                  "Il catalogo prodotti viene sincronizzato automaticamente e usato dal chatbot per rispondere su prezzi, disponibilità e varianti.",
-                  "The product catalog is automatically synced and used by the chatbot to answer about prices, availability and variants."
-                )}
-              </p>
-              {clientId && <EcommerceKBStatus clientId={clientId} />}
-            </div>
-          )}
-        </>
-      )}
 
 
       {/* ══════════════════════════════════════════════════ */}
