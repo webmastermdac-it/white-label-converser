@@ -38,9 +38,6 @@ const ClientSidebar = () => {
     { label: t("leads"), href: "/dashboard/leads", icon: Inbox },
     { label: t("chatHistory"), href: "/dashboard/chats", icon: MessageSquare },
     { label: "Analytics", href: "/dashboard/analytics", icon: BarChart3 },
-    ...(canUseEcommerce || canUseCalendly
-      ? [{ label: tl("Integrazioni", "Integrations"), href: "/dashboard/integrations", icon: Plug }]
-      : []),
     { label: "Instagram", href: "/dashboard/instagram", icon: Instagram },
     { label: "Upgrade", href: "/dashboard/upgrade", icon: ArrowUpCircle },
   ];
