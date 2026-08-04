@@ -50,6 +50,7 @@ export function useEcommerceIntegration() {
       setConfigId(d.id);
       setPlatform(d.platform);
       setSavedPlatform(d.platform);
+      setSavedPlatform(d.platform);
       setStoreUrl(d.store_url || "");
       setApiKey(d.api_key || "");
       setApiSecret(d.api_secret || "");
