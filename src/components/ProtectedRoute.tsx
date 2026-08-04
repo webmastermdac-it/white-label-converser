@@ -22,7 +22,8 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requiredRole 
     return <Navigate to="/login" replace />;
   }
 
-  if (requiredRole && role !== requiredRole) {
+  // Super admins can access client-side routes too (e.g. /dashboard/bots)
+  if (requiredRole && role !== requiredRole && role !== "super_admin") {
     const redirect = role === "super_admin" ? "/admin" : "/dashboard";
     return <Navigate to={redirect} replace />;
   }
