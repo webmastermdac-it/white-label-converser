@@ -381,6 +381,60 @@ const ClientIntegrations = ({ embedded = false }: { embedded?: boolean }) => {
         </section>
       ))}
 
+      {eco.configId && eco.savedPlatform && canUseEcommerce && (
+        <section className="space-y-3">
+          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+            {isIt ? "Sincronizzazione catalogo" : "Catalog synchronization"}
+          </h2>
+          <div className="glass rounded-xl p-5 space-y-4 max-w-2xl">
+            <div className="flex items-start gap-3">
+              {eco.syncStatus === "success" && <CheckCircle2 className="w-5 h-5 text-green-500 shrink-0" />}
+              {eco.syncStatus === "error" && <XCircle className="w-5 h-5 text-red-500 shrink-0" />}
+              {eco.syncStatus === "syncing" && <Loader2 className="w-5 h-5 animate-spin text-blue-500 shrink-0" />}
+              {eco.syncStatus === "idle" && <Clock className="w-5 h-5 text-muted-foreground shrink-0" />}
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium break-words">
+                  {eco.syncStatus === "success" && (isIt ? `Ultima sync: ${eco.lastSyncAt ? new Date(eco.lastSyncAt).toLocaleString("it-IT") : "-"}` : `Last sync: ${eco.lastSyncAt ? new Date(eco.lastSyncAt).toLocaleString() : "-"}`)}
+                  {eco.syncStatus === "error" && (isIt ? `Errore: ${eco.syncError}` : `Error: ${eco.syncError}`)}
+                  {eco.syncStatus === "syncing" && (isIt ? "Sincronizzazione in corso..." : "Syncing...")}
+                  {eco.syncStatus === "idle" && (isIt ? "Nessuna sincronizzazione effettuata" : "No sync performed yet")}
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  📦 {eco.maxProducts === -1
+                    ? (isIt ? `${eco.productCount} prodotti (illimitati)` : `${eco.productCount} products (unlimited)`)
+                    : `${eco.productCount} / ${eco.maxProducts}`}
+                </p>
+              </div>
+            </div>
+
+            <Button onClick={eco.sync} disabled={eco.syncing} variant="outline" className="w-full">
+              <RefreshCw className={`w-4 h-4 mr-2 ${eco.syncing ? "animate-spin" : ""}`} />
+              {isIt ? "Sincronizza ora" : "Sync now"}
+            </Button>
+
+            <div className="flex items-start justify-between gap-4 p-4 rounded-lg bg-muted/30">
+              <div className="space-y-1">
+                <Label className="text-sm font-medium">
+                  {isIt ? "Sincronizzazione automatica" : "Automatic synchronization"}
+                </Label>
+                <p className="text-xs text-muted-foreground">
+                  {isIt
+                    ? "Se attiva, il catalogo viene riallineato automaticamente ogni 6 ore."
+                    : "When enabled, the catalog is refreshed automatically every 6 hours."}
+                </p>
+              </div>
+              <Switch
+                checked={eco.syncEnabled}
+                disabled={eco.savingAutoSync}
+                onCheckedChange={eco.toggleAutoSync}
+              />
+            </div>
+          </div>
+        </section>
+      )}
+
+
+
       <section className="space-y-3">
         <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-2">
           {isIt ? "Altro" : "More"}
