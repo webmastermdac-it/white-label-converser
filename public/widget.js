@@ -265,15 +265,20 @@
     var pc = config.primary_color || "#F59E0B";
     var avatar = config.avatar || "genie";
     var isGenie = avatar === "genie";
+    var isGenieFull = avatar === "genie-full";
     var PROD_ORIGIN = "https://chatbot.your-genius.com";
-    var genieImgTag = '<img src="' + new URL("/images/genius-icon.png", PROD_ORIGIN).href + '" style="width:28px;height:28px;" alt="Genius" />';
-    var avatarDisplay = isGenie ? genieImgTag : esc(avatar);
-    var avatarSmall = isGenie ? '<img src="' + new URL("/images/genius-icon.png", PROD_ORIGIN).href + '" style="width:18px;height:18px;" alt="G" />' : esc(avatar);
+    var genieUrl = new URL("/images/genius-icon.png", PROD_ORIGIN).href;
+    var genieFullUrl = new URL("/images/genie-full.png", PROD_ORIGIN).href;
+    var genieImgTag = '<img src="' + genieUrl + '" style="width:28px;height:28px;" alt="Genius" />';
+    var genieFullTag = '<img src="' + genieFullUrl + '" alt="Genius" />';
+    var avatarDisplay = isGenie ? genieImgTag : (isGenieFull ? '<img src="' + genieFullUrl + '" style="width:30px;height:30px;object-fit:contain;" alt="Genius" />' : esc(avatar));
+    var avatarSmall = (isGenie || isGenieFull) ? '<img src="' + (isGenieFull ? genieFullUrl : genieUrl) + '" style="width:18px;height:18px;object-fit:contain;" alt="G" />' : esc(avatar);
 
     var html = '<style>' + buildStyles(config) + '</style>';
 
     // Launcher
-    html += '<button class="mdac-launcher" id="mdac-toggle">' + avatarDisplay + '</button>';
+    html += '<button class="mdac-launcher' + (isGenieFull ? ' mdac-genie-full' : '') + '" id="mdac-toggle">' + (isGenieFull ? genieFullTag : avatarDisplay) + '</button>';
+
 
     // Panel
     html += '<div class="mdac-panel' + (isOpen ? ' open' : '') + '" id="mdac-panel">';
