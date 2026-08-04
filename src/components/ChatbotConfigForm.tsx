@@ -261,20 +261,27 @@ const ChatbotConfigForm: React.FC<ChatbotConfigFormProps> = ({ clientId, chatbot
                 <button
                   key={emoji}
                   onClick={() => set("avatar", emoji)}
-                  className={`w-10 h-10 text-xl rounded-lg transition-all ${
+                  className={`w-10 h-10 text-xl flex items-center justify-center transition-all ${
+                    IMAGE_AVATARS[emoji] ? "rounded-full bg-transparent" : "rounded-lg"
+                  } ${
                     config.avatar === emoji
-                      ? "bg-primary/20 ring-2 ring-primary"
-                      : "bg-secondary hover:bg-accent"
+                      ? IMAGE_AVATARS[emoji]
+                        ? "ring-2 ring-primary"
+                        : "bg-primary/20 ring-2 ring-primary"
+                      : IMAGE_AVATARS[emoji]
+                        ? "hover:ring-1 hover:ring-primary/40"
+                        : "bg-secondary hover:bg-accent"
                   }`}
                 >
                   {IMAGE_AVATARS[emoji] ? (
-                    <img src={IMAGE_AVATARS[emoji]} alt="Genius" className="w-8 h-8 mx-auto object-contain" />
+                    <img src={IMAGE_AVATARS[emoji]} alt="Genius" className="w-9 h-9 object-contain" />
                   ) : (
                     emoji
                   )}
 
                 </button>
               ))}
+
             </div>
           </div>
 
