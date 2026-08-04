@@ -430,8 +430,14 @@ const ClientIntegrations = ({ embedded = false }: { embedded?: boolean }) => {
               />
             </div>
           </div>
+
+          <div className="glass rounded-xl p-5 space-y-4">
+            <h3 className="text-sm font-semibold">{isIt ? "Prodotti sincronizzati" : "Synced products"}</h3>
+            <ProductCatalogList refreshKey={eco.productCount} />
+          </div>
         </section>
       )}
+
 
 
 
