@@ -122,6 +122,7 @@ export type Database = {
           background_color: string | null
           business_vertical: string
           calendly_url: string | null
+          circle_color: string | null
           client_id: string
           created_at: string
           email_notifications_enabled: boolean | null
@@ -159,6 +160,7 @@ export type Database = {
           background_color?: string | null
           business_vertical?: string
           calendly_url?: string | null
+          circle_color?: string | null
           client_id: string
           created_at?: string
           email_notifications_enabled?: boolean | null
@@ -196,6 +198,7 @@ export type Database = {
           background_color?: string | null
           business_vertical?: string
           calendly_url?: string | null
+          circle_color?: string | null
           client_id?: string
           created_at?: string
           email_notifications_enabled?: boolean | null
