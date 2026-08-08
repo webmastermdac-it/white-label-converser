@@ -202,22 +202,30 @@
   var shadow = host.attachShadow({ mode: "closed" });
 
   // ── Styles ──────────────────────────────────────────────
+  function hexToRgb(hex) {
+    var h = String(hex || "").replace("#", "");
+    if (h.length === 3) h = h[0] + h[0] + h[1] + h[1] + h[2] + h[2];
+    var n = parseInt(h, 16);
+    if (isNaN(n) || h.length !== 6) return "245,166,35";
+    return [(n >> 16) & 255, (n >> 8) & 255, n & 255].join(",");
+  }
+
   function buildStyles(cfg) {
     var pc = cfg.primary_color || "#F59E0B";
     var bg = cfg.background_color || "#1A1A2E";
     var tc = cfg.text_color || "#FFFFFF";
+    var cc = cfg.circle_color || "#F5A623";
+    var ccRgb = hexToRgb(cc);
     var pos = cfg.launcher_position === "bottom-left" ? "left:20px;" : "right:20px;";
 
     return "\
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;}\
 .mdac-launcher{position:fixed;bottom:20px;" + pos + "width:60px;height:60px;border-radius:50%;background:" + pc + ";color:#fff;border:none;cursor:pointer;box-shadow:0 4px 24px rgba(0,0,0,.25);display:flex;align-items:center;justify-content:center;font-size:28px;transition:transform .2s,box-shadow .2s;z-index:1;}\
 .mdac-launcher:hover{transform:scale(1.08);box-shadow:0 6px 32px rgba(0,0,0,.35);}\
-.mdac-launcher.mdac-genie-full{background:transparent;box-shadow:none;overflow:visible;}\
-.mdac-launcher.mdac-genie-full:hover{box-shadow:none;}\
-.mdac-launcher.mdac-genie-full::before{content:'';position:absolute;inset:-10px;border-radius:50%;background:radial-gradient(circle,rgba(245,166,35,.85) 0%,rgba(245,166,35,.35) 45%,rgba(245,166,35,0) 70%);opacity:0;animation:mdac-glow 4.5s ease-in-out infinite;pointer-events:none;z-index:-1;}\
-.mdac-launcher.mdac-genie-full img{width:100%;height:100%;object-fit:contain;position:relative;z-index:1;filter:drop-shadow(0 2px 6px rgba(0,0,0,.35));}\
-@keyframes mdac-glow{0%,100%{opacity:0;transform:scale(.85);}50%{opacity:1;transform:scale(1.12);}}\
-.mdac-panel{position:fixed;bottom:90px;" + pos + "width:370px;height:520px;border-radius:16px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 12px 48px rgba(0,0,0,.3);opacity:0;transform:translateY(20px) scale(.95);pointer-events:none;transition:opacity .25s ease,transform .25s ease;z-index:2;background:#fff;}\
+.mdac-launcher.mdac-genie-full{background:" + cc + ";box-shadow:0 4px 24px rgba(0,0,0,.25);overflow:visible;}\
+.mdac-launcher.mdac-genie-full:hover{box-shadow:0 6px 32px rgba(0,0,0,.35);}\
+.mdac-launcher.mdac-genie-full::before{content:'';position:absolute;inset:-10px;border-radius:50%;background:radial-gradient(circle,rgba(" + ccRgb + ",.85) 0%,rgba(" + ccRgb + ",.35) 45%,rgba(" + ccRgb + ",0) 70%);opacity:0;animation:mdac-glow 4.5s ease-in-out infinite;pointer-events:none;z-index:-1;}\
+.mdac-launcher.mdac-genie-full img{width:83%;height:83%;object-fit:contain;position:relative;z-index:1;filter:drop-shadow(0 2px 6px rgba(0,0,0,.35));}\
 .mdac-panel.open{opacity:1;transform:translateY(0) scale(1);pointer-events:auto;}\
 .mdac-header{background:" + bg + ";padding:14px 16px;display:flex;align-items:center;gap:10px;}\
 .mdac-header-avatar{width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}\
