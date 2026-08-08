@@ -1,0 +1,1 @@
+ALTER TABLE public.chatbot_configs ADD COLUMN IF NOT EXISTS circle_color text DEFAULT '#F5A623';
