@@ -28,6 +28,7 @@ interface Config {
   notification_email: string;
   email_notifications_enabled: boolean;
   launcher_position: string;
+  circle_color: string;
   embed_token?: string;
 }
 
@@ -65,9 +66,11 @@ const defaultConfig: Config = {
   notification_email: "",
   email_notifications_enabled: true,
   launcher_position: "bottom-right",
+  circle_color: "#F5A623",
 };
 
 const EMOJIS = [GENIE_AVATAR, GENIE_FULL_AVATAR, "🤖", "💬", "✨", "🎯", "🚀", "💡", "🤝", "⭐", "🌟", "🎪", "💖", "💕", "💗", "💝", "🌸", "🌷", "🌹", "🦋", "👩", "👩‍💼", "💄", "👜", "🛍️", "💅", "👑", "🎀", "🧚", "🪄", "🦄", "🌙", "🌛", "🌜", "🌚", "🌝"];
+const CIRCLE_PRESETS = ["#F5A623", "#8B5CF6", "#3B82F6", "#10B981", "#EC4899", "#EF4444"];
 const POSITIONS = ["bottom-right", "bottom-left"];
 const VERTICALS = [
   { value: "ecommerce", emoji: "🛒", it: "Ecommerce / Vendita prodotti", en: "Ecommerce / Product sales" },
@@ -114,6 +117,7 @@ const ChatbotConfigForm: React.FC<ChatbotConfigFormProps> = ({ clientId, chatbot
           notification_email: data.notification_email || "",
           email_notifications_enabled: data.email_notifications_enabled ?? true,
           launcher_position: data.launcher_position || "bottom-right",
+          circle_color: (data as any).circle_color || "#F5A623",
           embed_token: data.embed_token,
         });
       }
@@ -147,7 +151,8 @@ const ChatbotConfigForm: React.FC<ChatbotConfigFormProps> = ({ clientId, chatbot
             notification_email: config.notification_email,
             email_notifications_enabled: config.email_notifications_enabled,
             launcher_position: config.launcher_position,
-          })
+            circle_color: config.circle_color,
+          } as any)
           .eq("id", config.id);
 
         if (error) {
@@ -284,6 +289,53 @@ const ChatbotConfigForm: React.FC<ChatbotConfigFormProps> = ({ clientId, chatbot
 
             </div>
           </div>
+
+          {config.avatar === GENIE_FULL_AVATAR && (
+            <div className="space-y-2">
+              <Label>{lang === "it" ? "Colore del cerchio" : "Circle color"}</Label>
+              <div className="flex items-center gap-3">
+                <input
+                  type="color"
+                  value={config.circle_color}
+                  onChange={(e) => set("circle_color", e.target.value)}
+                  className="w-10 h-10 rounded-lg border border-border cursor-pointer bg-transparent"
+                />
+                <Input
+                  value={config.circle_color}
+                  onChange={(e) => set("circle_color", e.target.value)}
+                  className="bg-secondary border-border font-mono text-sm max-w-32"
+                />
+              </div>
+              <div className="flex flex-wrap gap-2 pt-1">
+                {CIRCLE_PRESETS.map((c) => (
+                  <button
+                    key={c}
+                    type="button"
+                    onClick={() => set("circle_color", c)}
+                    aria-label={c}
+                    className={`w-8 h-8 rounded-full border border-border transition-all ${
+                      config.circle_color.toLowerCase() === c.toLowerCase() ? "ring-2 ring-primary ring-offset-2 ring-offset-background" : ""
+                    }`}
+                    style={{ backgroundColor: c }}
+                  />
+                ))}
+              </div>
+              <div className="flex items-center gap-4 pt-2">
+                <span className="relative inline-flex w-14 h-14 items-center justify-center shrink-0">
+                  <span
+                    className="absolute inset-[-8px] rounded-full animate-genie-glow"
+                    style={{ background: `radial-gradient(circle, ${config.circle_color}d9 0%, ${config.circle_color}59 45%, transparent 70%)` }}
+                  />
+                  <span className="relative z-10 w-14 h-14 rounded-full flex items-center justify-center" style={{ backgroundColor: config.circle_color }}>
+                    <img src={GENIE_FULL_URL} alt="Genius" className="w-[83%] h-[83%] object-contain" />
+                  </span>
+                </span>
+                <p className="text-xs text-muted-foreground">
+                  {lang === "it" ? "Anteprima del pulsante chat con bagliore pulsante." : "Chat launcher preview with pulsing glow."}
+                </p>
+              </div>
+            </div>
+          )}
 
           <div className="space-y-2">
             <Label>{t("launcherPosition")}</Label>
