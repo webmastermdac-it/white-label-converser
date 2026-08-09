@@ -183,12 +183,13 @@ const ChatbotConfigForm: React.FC<ChatbotConfigFormProps> = ({ clientId, chatbot
 
   const set = (key: keyof Config, value: any) => setConfig((prev) => ({ ...prev, [key]: value }));
 
-  const sections = [
+  const allSections = [
     { id: "identity", label: t("identity"), icon: Bot },
     { id: "appearance", label: t("appearance"), icon: Palette },
     { id: "messages", label: t("Messages & fallback", "Messaggi e fallback"), icon: MessageSquare },
     { id: "notifications", label: t("notifications"), icon: Mail },
   ];
+  const sections = sectionFilter ? allSections.filter((s) => sectionFilter.includes(s.id)) : allSections;
 
   if (loading) {
     return (
@@ -201,22 +202,25 @@ const ChatbotConfigForm: React.FC<ChatbotConfigFormProps> = ({ clientId, chatbot
   return (
     <div className="space-y-6">
       {/* Section Tabs */}
-      <div className="flex gap-2 flex-wrap overflow-x-auto -mx-1 px-1 pb-1">
-        {sections.map((s) => (
-          <button
-            key={s.id}
-            onClick={() => setActiveSection(s.id)}
-            className={`flex items-center gap-2 px-3 md:px-4 py-2.5 md:py-2 rounded-lg text-sm font-medium transition-all duration-150 min-h-[44px] whitespace-nowrap ${
-              activeSection === s.id
-                ? "bg-primary/15 text-primary border border-primary/30"
-                : "bg-secondary text-muted-foreground hover:text-foreground hover:bg-secondary/80"
-            }`}
-          >
-            <s.icon className="w-4 h-4 md:w-3.5 md:h-3.5" />
-            <span className="hidden sm:inline">{s.label}</span>
-          </button>
-        ))}
-      </div>
+      {sections.length > 1 && (
+        <div className="flex gap-2 flex-wrap overflow-x-auto -mx-1 px-1 pb-1">
+          {sections.map((s) => (
+            <button
+              key={s.id}
+              onClick={() => setActiveSection(s.id)}
+              className={`flex items-center gap-2 px-3 md:px-4 py-2.5 md:py-2 rounded-lg text-sm font-medium transition-all duration-150 min-h-[44px] whitespace-nowrap ${
+                activeSection === s.id
+                  ? "bg-primary/15 text-primary border border-primary/30"
+                  : "bg-secondary text-muted-foreground hover:text-foreground hover:bg-secondary/80"
+              }`}
+            >
+              <s.icon className="w-4 h-4 md:w-3.5 md:h-3.5" />
+              <span className="hidden sm:inline">{s.label}</span>
+            </button>
+          ))}
+        </div>
+      )}
+
 
       {/* Identity */}
       {activeSection === "identity" && (
