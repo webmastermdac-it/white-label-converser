@@ -444,50 +444,34 @@ const ChatbotConfigForm: React.FC<ChatbotConfigFormProps> = ({ clientId, chatbot
               </div>
             </div>
           </div>
-        </div>
-      )}
 
-      {/* Fallback */}
-      {activeSection === "fallback" && (
-        <div className="glass rounded-xl p-6 space-y-5 animate-fade-in-up">
-          <h3 className="font-semibold text-foreground">{t("fallbackBehavior")}</h3>
+          <div className="pt-2 border-t border-border space-y-5">
+            <h3 className="font-semibold text-foreground">{t("fallbackBehavior")}</h3>
 
-          <div className="space-y-3">
-            <Label>{t("fallbackMsgIt")}</Label>
-            <Textarea
-              value={config.fallback_msg_it}
-              onChange={(e) => set("fallback_msg_it", e.target.value)}
-              placeholder="Non ho questa informazione, ma posso metterti in contatto con un nostro consulente!"
-              rows={3}
-              className="bg-secondary border-border resize-none"
-            />
-          </div>
+            <div className="space-y-3">
+              <Label>{t("fallbackMsgIt")}</Label>
+              <Textarea
+                value={config.fallback_msg_it}
+                onChange={(e) => set("fallback_msg_it", e.target.value)}
+                placeholder="Non ho questa informazione, ma posso metterti in contatto con un nostro consulente!"
+                rows={3}
+                className="bg-secondary border-border resize-none"
+              />
+            </div>
 
-          <div className="space-y-3">
-            <Label>{t("fallbackMsgEn")}</Label>
-            <Textarea
-              value={config.fallback_msg_en}
-              onChange={(e) => set("fallback_msg_en", e.target.value)}
-              placeholder="I don't have this information, but I can connect you with one of our consultants!"
-              rows={3}
-              className="bg-secondary border-border resize-none"
-            />
-            <p className="text-xs text-muted-foreground">
-              {t("fallbackDesc")}
-            </p>
-          </div>
-
-          <div className="space-y-2">
-            <Label>{t("calendlyUrl")}</Label>
-            <Input
-              value={config.calendly_url}
-              onChange={(e) => set("calendly_url", e.target.value)}
-              placeholder="https://calendly.com/yourname/30min"
-              className="bg-secondary border-border"
-            />
-            <p className="text-xs text-muted-foreground">
-              {t("calendlyDesc")}
-            </p>
+            <div className="space-y-3">
+              <Label>{t("fallbackMsgEn")}</Label>
+              <Textarea
+                value={config.fallback_msg_en}
+                onChange={(e) => set("fallback_msg_en", e.target.value)}
+                placeholder="I don't have this information, but I can connect you with one of our consultants!"
+                rows={3}
+                className="bg-secondary border-border resize-none"
+              />
+              <p className="text-xs text-muted-foreground">
+                {t("fallbackDesc")}
+              </p>
+            </div>
           </div>
         </div>
       )}
