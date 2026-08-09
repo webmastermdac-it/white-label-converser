@@ -183,8 +183,7 @@ const ChatbotConfigForm: React.FC<ChatbotConfigFormProps> = ({ clientId, chatbot
   const sections = [
     { id: "identity", label: t("identity"), icon: Bot },
     { id: "appearance", label: t("appearance"), icon: Palette },
-    { id: "messages", label: t("chatMessages"), icon: MessageSquare },
-    { id: "fallback", label: t("fallbackAndLeads"), icon: Zap },
+    { id: "messages", label: t("Messages & fallback", "Messaggi e fallback"), icon: MessageSquare },
     { id: "notifications", label: t("notifications"), icon: Mail },
   ];
 
