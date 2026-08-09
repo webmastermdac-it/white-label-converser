@@ -37,6 +37,8 @@ interface ChatbotConfigFormProps {
   clientId: string;
   chatbotId?: string;
   onSaved?: () => void;
+  /** Restrict which sections are shown (identity | appearance | messages | notifications) */
+  sectionFilter?: string[];
 }
 
 const GENIE_ICON_URL = "/images/genius-icon.png";
