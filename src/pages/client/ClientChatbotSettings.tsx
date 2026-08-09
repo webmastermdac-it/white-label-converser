@@ -196,12 +196,20 @@ const ClientChatbotSettings = ({ adminMode = false }: ClientChatbotSettingsProps
               {tl("Salva", "Save")}
             </Button>
           </div>
+
+          {/* Notifications (moved here from Appearance) */}
+          {clientId && (
+            <div className="mt-6">
+              <ChatbotConfigForm clientId={clientId} chatbotId={botId} sectionFilter={["notifications"]} />
+            </div>
+          )}
         </TabsContent>
 
         {/* Tab 2 — Appearance (reuse ChatbotConfigForm) */}
         <TabsContent value="appearance">
-          {clientId && <ChatbotConfigForm clientId={clientId} chatbotId={botId} />}
+          {clientId && <ChatbotConfigForm clientId={clientId} chatbotId={botId} sectionFilter={["identity", "appearance", "messages"]} />}
         </TabsContent>
+
 
         {/* Tab 3 — Knowledge */}
 
