@@ -81,14 +81,15 @@ const VERTICALS = [
 ];
 
 
-const ChatbotConfigForm: React.FC<ChatbotConfigFormProps> = ({ clientId, chatbotId: overrideChatbotId, onSaved }) => {
+const ChatbotConfigForm: React.FC<ChatbotConfigFormProps> = ({ clientId, chatbotId: overrideChatbotId, onSaved, sectionFilter }) => {
   const { toast } = useToast();
   const { t, lang } = useLanguage();
   const [config, setConfig] = useState<Config>(defaultConfig);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [sendingTest, setSendingTest] = useState(false);
-  const [activeSection, setActiveSection] = useState("identity");
+  const [activeSection, setActiveSection] = useState(sectionFilter?.[0] || "identity");
+
 
   useEffect(() => {
     const fetchConfig = async () => {
