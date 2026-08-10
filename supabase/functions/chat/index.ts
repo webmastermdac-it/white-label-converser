@@ -166,8 +166,10 @@ serve(async (req) => {
       ? `\n\nADD TO CART RULE:\nWhen a user wants to add a product to the cart, answer normally and append, on a separate final line, this marker with the exact product ID taken from the catalog (the "id" or "sku" field shown in the catalog):\n[ADD_TO_CART:{"product_id":"<exact external_id>","qty":<quantity>}]\nNever show this marker to the user, it is removed automatically.`
       : "";
 
+    const orderStatusInstruction = `\n\nSe l'utente chiede lo stato di un ordine, chiedigli SEMPRE numero ordine ed email usata per l'acquisto (se non li ha già forniti entrambi in questo messaggio). Solo quando hai entrambi, includi alla fine del messaggio, su una riga a parte:\n[CHECK_ORDER:{"order_number":"<numero esatto>","email":"<email esatta>"}]\nNon mostrare mai questo marker all'utente, verrà rimosso automaticamente.\nSe il controllo non trova l'ordine, suggerisci di verificare i dati o di contattare l'assistenza.`;
+
     const instructions = botConfig.knowledge_base || "You are a helpful assistant.";
-    const systemPrompt = `${instructions}${productKnowledge ? "\n\n" + productKnowledge : ""}${ragContext}\n\nIMPORTANT INSTRUCTIONS:\n- Be concise, helpful, and professional${languageInstruction}${fallbackInstruction}${productInstruction}${addToCartInstruction}${formattingInstruction}`;
+    const systemPrompt = `${instructions}${productKnowledge ? "\n\n" + productKnowledge : ""}${ragContext}\n\nIMPORTANT INSTRUCTIONS:\n- Be concise, helpful, and professional${languageInstruction}${fallbackInstruction}${productInstruction}${addToCartInstruction}${orderStatusInstruction}${formattingInstruction}`;
 
 
     // ── Call AI gateway ──
@@ -270,11 +272,36 @@ serve(async (req) => {
       }
     }
 
+    // ── Order status marker → verified order lookup ──
+    let orderStatusText = "";
+    const checkOrderMatch = fullMessage.match(/\[CHECK_ORDER:(\{.*?\})\]/);
+    if (checkOrderMatch) {
+      try {
+        const { order_number, email } = JSON.parse(checkOrderMatch[1]);
+        const statusResp = await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/get-order-status`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ embed_token, order_number, email }),
+        });
+        const statusData = await statusResp.json();
+        if (statusData.found) {
+          const dateStr = statusData.order_date ? new Date(statusData.order_date).toLocaleDateString("it-IT") : "";
+          orderStatusText = `\n\n📦 **Stato ordine #${order_number}**: ${statusData.status}${dateStr ? ` (ordinato il ${dateStr})` : ""}`;
+        } else {
+          orderStatusText = `\n\nNon ho trovato nessun ordine con numero "${order_number}" e questa email. Verifica i dati e riprova.`;
+        }
+      } catch (e) {
+        console.error("[chat] check_order error:", e);
+        orderStatusText = "\n\nSi è verificato un errore nel controllo dell'ordine, riprova tra poco.";
+      }
+    }
+
     const cleanMessage =
       fullMessage
         .replace("[TRIGGER_LEAD_FORM]", "")
         .replace(/\[ADD_TO_CART:.*?\]/g, "")
-        .trim() + cartLinkMarkdown;
+        .replace(/\[CHECK_ORDER:.*?\]/g, "")
+        .trim() + cartLinkMarkdown + orderStatusText;
     const triggerLead = fullMessage.indexOf("[TRIGGER_LEAD_FORM]") !== -1;
 
     // Save session in background
