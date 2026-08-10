@@ -73,7 +73,7 @@ const defaultConfig: Config = {
 
 const EMOJIS = [GENIE_AVATAR, GENIE_FULL_AVATAR, "🤖", "💬", "✨", "🎯", "🚀", "💡", "🤝", "⭐", "🌟", "🎪", "💖", "💕", "💗", "💝", "🌸", "🌷", "🌹", "🦋", "👩", "👩‍💼", "💄", "👜", "🛍️", "💅", "👑", "🎀", "🧚", "🪄", "🦄", "🌙", "🌛", "🌜", "🌚", "🌝"];
 const CIRCLE_PRESETS = ["#F5A623", "#8B5CF6", "#3B82F6", "#10B981", "#EC4899", "#EF4444"];
-const POSITIONS = ["bottom-right", "bottom-left"];
+const POSITIONS = ["bottom-left", "bottom-right"];
 const VERTICALS = [
   { value: "ecommerce", emoji: "🛒", it: "Ecommerce / Vendita prodotti", en: "Ecommerce / Product sales" },
   { value: "booking", emoji: "📅", it: "Servizi su appuntamento", en: "Appointment-based services" },
@@ -356,11 +356,18 @@ const ChatbotConfigForm: React.FC<ChatbotConfigFormProps> = ({ clientId, chatbot
                       : "bg-secondary text-muted-foreground hover:text-foreground"
                   }`}
                 >
-                  {pos}
+                  {pos === "bottom-left"
+                    ? lang === "it"
+                      ? "In basso a sinistra"
+                      : "Bottom left"
+                    : lang === "it"
+                      ? "In basso a destra"
+                      : "Bottom right"}
                 </button>
               ))}
             </div>
           </div>
+
         </div>
       )}
 
