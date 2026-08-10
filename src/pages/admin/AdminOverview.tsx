@@ -59,7 +59,7 @@ const AdminOverview = () => {
       const today = new Date();
       const todayStr = today.toISOString().split("T")[0];
       const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
-      const filterOne = <T extends { eq: (c: string, v: string) => T }>(q: T): T =>
+      const filterOne = (q: any): any =>
         selectedClientId !== "all" ? q.eq("client_id", selectedClientId) : q;
 
       const [clients, leads, chats, bots, todayLeads, weekChats, recent] = await Promise.all([
