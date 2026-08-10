@@ -35,7 +35,9 @@ export function useEcommerceIntegration(clientIdOverride?: string | null) {
   const [syncing, setSyncing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [productCount, setProductCount] = useState(0);
+  const [syncHistory, setSyncHistory] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+
 
   const maxProducts = ((planConfig as any)?.max_products ?? -1) as number;
 
