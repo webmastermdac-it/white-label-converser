@@ -291,6 +291,7 @@ async function fetchShopify(config: any) {
     
     for (const p of (data.products || [])) {
       const variants = (p.variants || []).map((v: any) => ({
+        id: v.id,
         name: [v.option1, v.option2, v.option3].filter(Boolean).join(" / "),
         value: v.title || "",
         price: parseFloat(v.price || "0"),
@@ -309,7 +310,7 @@ async function fetchShopify(config: any) {
         tags: p.tags ? p.tags.split(", ") : [],
         variants,
         image_url: p.images?.[0]?.src || null,
-        product_url: null,
+        product_url: p.handle ? config.store_url.replace(/\/$/, "") + "/products/" + p.handle : null,
         raw_data: p,
       });
     }

@@ -23,8 +23,8 @@
       .replace(/^\d+\. (.+)$/gm, '<li>$1</li>')
       .replace(/(<li>[\s\S]*?<\/li>)/g, '<ul>$1</ul>')
       .replace(/<\/ul>\s*<ul>/g, '')
-      // markdown links [testo](url)
-      .replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline">$1</a>')
+      // markdown links [testo](url) → bottone
+      .replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a class="mdac-cta" href="$2" target="_blank" rel="noopener noreferrer">$1</a>')
       // url nude (non già dentro un tag <a>)
       .replace(/(^|[\s>])(https?:\/\/[^\s<]+[^\s<.,;:!?)\]])/g, function (m, pre, url) {
         return pre + '<a href="' + url + '" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline">' + url + '</a>';
@@ -249,6 +249,8 @@
 .mdac-bubble ul,.mdac-bubble ol{margin:4px 0 4px 16px;padding:0;}\
 .mdac-bubble li{margin:2px 0;list-style:disc;}\
 .mdac-bubble ol li{list-style:decimal;}\
+.mdac-cta{display:inline-flex;align-items:center;gap:6px;margin-top:8px;padding:9px 14px;border-radius:10px;background:" + pc + ";color:#fff !important;font-size:13px;font-weight:600;text-decoration:none !important;cursor:pointer;}\
+.mdac-cta:hover{opacity:.9;}\
 .mdac-msg.bot .mdac-msg-avatar{background:#e5e7eb;}\
 .mdac-msg.user .mdac-msg-avatar{background:" + pc + ";color:#fff;font-size:12px;}\
 .mdac-typing{display:flex;gap:4px;padding:10px 14px;}\
