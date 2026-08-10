@@ -169,7 +169,7 @@ serve(async (req) => {
     const orderStatusInstruction = `\n\nSe l'utente chiede lo stato di un ordine, chiedigli SEMPRE numero ordine ed email usata per l'acquisto (se non li ha già forniti entrambi in questo messaggio). Solo quando hai entrambi, includi alla fine del messaggio, su una riga a parte:\n[CHECK_ORDER:{"order_number":"<numero esatto>","email":"<email esatta>"}]\nNon mostrare mai questo marker all'utente, verrà rimosso automaticamente.\nSe il controllo non trova l'ordine, suggerisci di verificare i dati o di contattare l'assistenza.`;
 
     const instructions = botConfig.knowledge_base || "You are a helpful assistant.";
-    const systemPrompt = `${instructions}${productKnowledge ? "\n\n" + productKnowledge : ""}${ragContext}\n\nIMPORTANT INSTRUCTIONS:\n- Be concise, helpful, and professional${languageInstruction}${fallbackInstruction}${productInstruction}${addToCartInstruction}${formattingInstruction}`;
+    const systemPrompt = `${instructions}${productKnowledge ? "\n\n" + productKnowledge : ""}${ragContext}\n\nIMPORTANT INSTRUCTIONS:\n- Be concise, helpful, and professional${languageInstruction}${fallbackInstruction}${productInstruction}${addToCartInstruction}${orderStatusInstruction}${formattingInstruction}`;
 
 
     // ── Call AI gateway ──
