@@ -12,8 +12,9 @@ export type Platform = "woocommerce" | "shopify" | "prestashop" | "api" | "feed"
  * Extracted from the previous ClientEcommerce page so the Integrations page
  * can reuse the exact same queries / save / sync logic.
  */
-export function useEcommerceIntegration() {
-  const { clientId } = useAuth();
+export function useEcommerceIntegration(clientIdOverride?: string | null) {
+  const { clientId: authClientId } = useAuth();
+  const clientId = clientIdOverride ?? authClientId;
   const { lang } = useLanguage();
   const { config: planConfig } = usePlanConfig();
   const isIt = lang === "it";

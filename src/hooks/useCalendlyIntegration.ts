@@ -8,8 +8,9 @@ import { toast } from "@/hooks/use-toast";
  * chatbot_configs.calendly_url stays the only source of truth for Calendly,
  * and chatbot_configs.business_vertical the only source for the vertical.
  */
-export function useCalendlyIntegration() {
-  const { clientId } = useAuth();
+export function useCalendlyIntegration(clientIdOverride?: string | null) {
+  const { clientId: authClientId } = useAuth();
+  const clientId = clientIdOverride ?? authClientId;
   const { lang } = useLanguage();
   const isIt = lang === "it";
 

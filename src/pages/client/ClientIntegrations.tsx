@@ -41,13 +41,13 @@ const APPOINTMENT_INTEGRATIONS: IntegrationDef[] = [
 
 const BANNER_KEY = "integrations_banner_dismissed";
 
-const ClientIntegrations = ({ embedded = false }: { embedded?: boolean }) => {
+const ClientIntegrations = ({ embedded = false, clientIdOverride }: { embedded?: boolean; clientIdOverride?: string | null }) => {
   const { lang } = useLanguage();
   const isIt = lang === "it";
   const navigate = useNavigate();
   const { canUseCalendly, canUseEcommerce, loading: planLoading } = usePlanConfig();
-  const eco = useEcommerceIntegration();
-  const cal = useCalendlyIntegration();
+  const eco = useEcommerceIntegration(clientIdOverride);
+  const cal = useCalendlyIntegration(clientIdOverride);
 
   const [openId, setOpenId] = useState<IntegrationId | null>(null);
   const [bannerDismissed, setBannerDismissed] = useState(
