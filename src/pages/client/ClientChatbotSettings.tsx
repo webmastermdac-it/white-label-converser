@@ -232,7 +232,7 @@ const ClientChatbotSettings = ({ adminMode = false }: ClientChatbotSettingsProps
 
         {/* Integrations */}
         <TabsContent value="integrations">
-          <ClientIntegrations embedded />
+          <ClientIntegrations embedded clientIdOverride={clientId} />
         </TabsContent>
 
 
