@@ -786,15 +786,19 @@ serve(async (req) => {
       await supabase.from("sync_logs").update({
         ended_at: now,
         products_synced: synced + updated,
+        products_added: synced,
+        products_updated: updated,
+        products_removed: removed,
         errors,
         status: errors.length ? "partial" : "success",
       }).eq("id", syncLog.id);
     }
     
     return new Response(JSON.stringify({
-      synced, updated, deactivated, errors,
-      total: rawProducts.length,
+      synced, updated, removed, removedNames: removedNames.slice(0, 20),
+      errors, total: rawProducts.length,
     }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+
     
   } catch (error: any) {
     console.error("sync-products error:", error);
