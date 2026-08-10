@@ -559,12 +559,14 @@
       });
   }
 
-  // ── Init: fetch config ──────────────────────────────────
-  fetch(SUPABASE_URL + "/rest/v1/chatbot_configs?embed_token=eq." + encodeURIComponent(EMBED_TOKEN) + "&select=*,welcome_msg_it,welcome_msg_en&limit=1", {
+  // ── Init: fetch config (safe RPC: only display fields) ──
+  fetch(SUPABASE_URL + "/rest/v1/rpc/get_widget_config", {
+    method: "POST",
     headers: {
       "apikey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhiemdweGF4cnFiYnZjeXZrbGxuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE0NTA3MzEsImV4cCI6MjA4NzAyNjczMX0.ngGgUexd_CYOHtDEyZCd7Cs_XA-EimDAyuguuLgSCUk",
       "Content-Type": "application/json",
     },
+    body: JSON.stringify({ _embed_token: EMBED_TOKEN }),
   })
     .then(function (r) { return r.json(); })
     .then(function (data) {

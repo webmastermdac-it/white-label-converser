@@ -947,6 +947,23 @@ export type Database = {
     }
     Functions: {
       get_user_client_id: { Args: { _user_id: string }; Returns: string }
+      get_widget_config: {
+        Args: { _embed_token: string }
+        Returns: {
+          avatar: string
+          background_color: string
+          calendly_url: string
+          circle_color: string
+          id: string
+          launcher_position: string
+          name: string
+          primary_color: string
+          text_color: string
+          welcome_message: string
+          welcome_msg_en: string
+          welcome_msg_it: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
