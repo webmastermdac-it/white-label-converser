@@ -3,30 +3,36 @@ import { NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/hooks/useLanguage";
 import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   Users, Settings, BarChart3, MessageSquare, ChevronLeft,
   ChevronRight, Bot, LogOut, Shield, Inbox, Globe, CreditCard, TrendingUp, Store, Mail
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import ThemeSelector from "@/components/ThemeSelector";
+import AccountSwitcher from "@/components/AccountSwitcher";
 
 const AdminSidebar = () => {
   const [collapsed, setCollapsed] = useState(false);
   const { user, signOut } = useAuth();
   const { lang, setLang, t } = useLanguage();
   const navigate = useNavigate();
+  const isIt = lang === "it";
 
-  const adminNav = [
+  const dataNav = [
     { label: t("overview"), href: "/admin", icon: BarChart3, end: true },
-    { label: t("clients"), href: "/admin/clients", icon: Users },
+    { label: "Analytics", href: "/admin/analytics", icon: TrendingUp },
     { label: t("allLeads"), href: "/admin/leads", icon: Inbox },
     { label: t("chatSessions"), href: "/admin/chats", icon: MessageSquare },
-    { label: t("settings"), href: "/admin/settings", icon: Settings },
-    { label: lang === "it" ? "I miei Bot" : "My Bots", href: "/admin/bots", icon: Bot },
+  ];
+
+  const configNav = [
+    { label: t("clients"), href: "/admin/clients", icon: Users },
+    { label: isIt ? "I miei Bot" : "My Bots", href: "/admin/bots", icon: Bot },
     { label: "Piani", href: "/admin/plans", icon: CreditCard },
-    { label: "Analytics", href: "/admin/analytics", icon: TrendingUp },
     { label: "Ecommerce", href: "/admin/ecommerce", icon: Store },
     { label: "Email & Notifiche", href: "/admin/email-templates", icon: Mail },
+    { label: t("settings"), href: "/admin/settings", icon: Settings },
     { label: "🧞 Platform Bot", href: "/admin/platform-bot", icon: Bot },
     { label: "🧞 Platform Leads", href: "/admin/platform-leads", icon: Inbox },
   ];
@@ -35,6 +41,45 @@ const AdminSidebar = () => {
     await signOut();
     navigate("/login");
   };
+
+  const renderItem = (item: { label: string; href: string; icon: React.ElementType; end?: boolean }) => {
+    const link = (
+      <NavLink
+        to={item.href}
+        end={item.end}
+        className={({ isActive }) =>
+          cn(
+            "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150",
+            collapsed && "justify-center",
+            isActive
+              ? "nav-item-active"
+              : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-foreground"
+          )
+        }
+      >
+        <item.icon className="w-4.5 h-4.5 flex-shrink-0" />
+        {!collapsed && <span>{item.label}</span>}
+      </NavLink>
+    );
+
+    if (!collapsed) return <div key={item.href}>{link}</div>;
+
+    return (
+      <TooltipProvider key={item.href} delayDuration={200}>
+        <Tooltip>
+          <TooltipTrigger asChild>{link}</TooltipTrigger>
+          <TooltipContent side="right">{item.label}</TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    );
+  };
+
+  const GroupLabel = ({ children }: { children: React.ReactNode }) =>
+    collapsed ? null : (
+      <p className="px-3 pt-1 pb-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+        {children}
+      </p>
+    );
 
   return (
     <aside
@@ -67,26 +112,23 @@ const AdminSidebar = () => {
         </button>
       </div>
 
-      {/* Nav */}
-      <nav className="flex-1 px-2 py-4 space-y-1 overflow-y-auto">
-        {adminNav.map((item) => (
-          <NavLink
-            key={item.href}
-            to={item.href}
-            end={item.end}
-            className={({ isActive }) =>
-              cn(
-                "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150",
-                isActive
-                  ? "nav-item-active"
-                  : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-foreground"
-              )
-            }
-          >
-            <item.icon className="w-4.5 h-4.5 flex-shrink-0" />
-            {!collapsed && <span>{item.label}</span>}
-          </NavLink>
-        ))}
+      {/* Account switcher */}
+      <div className={cn("border-b border-sidebar-border", collapsed ? "px-2 py-2" : "px-3 py-3")}>
+        <AccountSwitcher collapsed={collapsed} />
+      </div>
+
+      {/* Data nav */}
+      <nav className="px-2 py-3 space-y-1 overflow-y-auto">
+        <GroupLabel>{isIt ? "Dati" : "Data"}</GroupLabel>
+        {dataNav.map(renderItem)}
+      </nav>
+
+      <div className="mx-3 border-t border-sidebar-border" />
+
+      {/* Config nav */}
+      <nav className="flex-1 px-2 py-3 space-y-1 overflow-y-auto">
+        <GroupLabel>{isIt ? "Configurazione" : "Configuration"}</GroupLabel>
+        {configNav.map(renderItem)}
       </nav>
 
       {/* Language + User */}

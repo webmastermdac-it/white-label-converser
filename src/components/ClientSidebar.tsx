@@ -5,6 +5,7 @@ import { useLanguage } from "@/hooks/useLanguage";
 import { usePlanConfig } from "@/hooks/usePlanConfig";
 import { useCalendlyIntegration } from "@/hooks/useCalendlyIntegration";
 import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   LayoutDashboard, MessageSquare,
   ChevronLeft, ChevronRight, Bot, LogOut, Inbox, Globe, ArrowUpCircle, BarChart3, Plug, Instagram, Settings
@@ -21,6 +22,7 @@ const ClientSidebar = () => {
   const isFree = planConfig?.plan_name === "free";
   const navigate = useNavigate();
   const tl = (it: string, en: string) => lang === "it" ? it : en;
+  const isIt = lang === "it";
 
   const isAdmin = role === "super_admin";
   const botItem = isAdmin
@@ -31,23 +33,63 @@ const ClientSidebar = () => {
         icon: Settings,
       };
 
-
-  const clientNav = [
+  const dataNav = [
     { label: t("overview"), href: "/dashboard", icon: LayoutDashboard, end: true },
-    botItem,
     { label: t("leads"), href: "/dashboard/leads", icon: Inbox },
     { label: t("chatHistory"), href: "/dashboard/chats", icon: MessageSquare },
     { label: "Analytics", href: "/dashboard/analytics", icon: BarChart3 },
+  ];
+
+  const configNav = [
+    botItem,
+    { label: tl("Integrazioni", "Integrations"), href: "/dashboard/integrations", icon: Plug },
     { label: "Instagram", href: "/dashboard/instagram", icon: Instagram },
     { label: "Upgrade", href: "/dashboard/upgrade", icon: ArrowUpCircle },
   ];
-
-
 
   const handleSignOut = async () => {
     await signOut();
     navigate("/login");
   };
+
+  const renderItem = (item: { label: string; href: string; icon: React.ElementType; end?: boolean }) => {
+    const link = (
+      <NavLink
+        to={item.href}
+        end={(item as any).end}
+        className={({ isActive }) =>
+          cn(
+            "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150",
+            collapsed && "justify-center",
+            isActive
+              ? "nav-item-active"
+              : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-foreground"
+          )
+        }
+      >
+        <item.icon className="w-4.5 h-4.5 flex-shrink-0" />
+        {!collapsed && <span>{item.label}</span>}
+      </NavLink>
+    );
+
+    if (!collapsed) return <div key={item.href}>{link}</div>;
+
+    return (
+      <TooltipProvider key={item.href} delayDuration={200}>
+        <Tooltip>
+          <TooltipTrigger asChild>{link}</TooltipTrigger>
+          <TooltipContent side="right">{item.label}</TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    );
+  };
+
+  const GroupLabel = ({ children }: { children: React.ReactNode }) =>
+    collapsed ? null : (
+      <p className="px-3 pt-1 pb-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+        {children}
+      </p>
+    );
 
   return (
     <aside
@@ -77,26 +119,16 @@ const ClientSidebar = () => {
         </button>
       </div>
 
-      <nav className="flex-1 px-2 py-4 space-y-1 overflow-y-auto">
-        {clientNav.map((item) => (
-          <NavLink
-            key={item.href}
-            to={item.href}
-            end={(item as any).end}
-            className={({ isActive }) =>
-              cn(
-                "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150",
-                (item as any).locked && "opacity-40",
-                isActive
-                  ? "nav-item-active"
-                  : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-foreground"
-              )
-            }
-          >
-            <item.icon className="w-4.5 h-4.5 flex-shrink-0" />
-            {!collapsed && <span>{item.label}</span>}
-          </NavLink>
-        ))}
+      <nav className="px-2 py-3 space-y-1 overflow-y-auto">
+        <GroupLabel>{isIt ? "Dati" : "Data"}</GroupLabel>
+        {dataNav.map(renderItem)}
+      </nav>
+
+      <div className="mx-3 border-t border-sidebar-border" />
+
+      <nav className="flex-1 px-2 py-3 space-y-1 overflow-y-auto">
+        <GroupLabel>{isIt ? "Configurazione" : "Configuration"}</GroupLabel>
+        {configNav.map(renderItem)}
       </nav>
 
       <div className="p-3 border-t border-sidebar-border space-y-2">
