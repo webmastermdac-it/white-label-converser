@@ -381,7 +381,7 @@
     html += '</div>';
 
     // Footer
-    html += '<div class="mdac-footer"><span>' + esc(t.aiDisclaimer) + '</span></div>';
+    html += '<div class="mdac-footer"><span>' + esc(t.aiDisclaimer) + '</span><a href="https://chatbot.your-genius.com" target="_blank" rel="noopener">Chatbot Genius</a></div>';
 
     html += '</div>'; // end panel
 
