@@ -23,7 +23,7 @@ export function useCalendlyIntegration(clientIdOverride?: string | null) {
   const [saving, setSaving] = useState(false);
 
   const load = useCallback(async () => {
-    if (!clientId) return;
+    if (!clientId) { setLoading(false); return; }
     const { data } = await supabase
       .from("chatbot_configs")
       .select("id, name, calendly_url, primary_color, business_vertical")

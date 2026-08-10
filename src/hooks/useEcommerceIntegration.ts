@@ -40,7 +40,7 @@ export function useEcommerceIntegration(clientIdOverride?: string | null) {
   const maxProducts = ((planConfig as any)?.max_products ?? -1) as number;
 
   const loadConfig = useCallback(async () => {
-    if (!clientId) return;
+    if (!clientId) { setLoading(false); return; }
     const { data } = await supabase
       .from("ecommerce_configs" as any)
       .select("*")
