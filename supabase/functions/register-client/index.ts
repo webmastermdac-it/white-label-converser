@@ -55,12 +55,25 @@ serve(async (req) => {
 
     await supabaseAdmin.from("user_roles").insert({ user_id: authData.user.id, role: "client" });
     await supabaseAdmin.from("profiles").upsert({ id: authData.user.id, email, full_name, client_id: clientData.id, language: locale });
+    const ECOMMERCE_KB_IT = `Quando presenti un prodotto, oltre a nome/prezzo/disponibilità, suggerisci sempre in modo naturale (non forzato) un prodotto complementare del catalogo se pertinente, con una frase tipo "spesso acquistato insieme a...".
+Se un prodotto ha disponibilità limitata (es. sotto 5 pezzi), menzionalo con naturalezza per creare urgenza onesta, senza esagerare o inventare numeri non presenti nel catalogo.
+Se l'utente esprime dubbi su spedizione, tempi di consegna, resi o pagamento, rispondi usando le informazioni disponibili nella knowledge base; se non le trovi, non inventare — invita l'utente a lasciare il contatto per essere ricontattato con l'informazione esatta.
+Se l'utente sembra indeciso o interrompe la conversazione senza aver aggiunto nulla al carrello dopo aver mostrato interesse per un prodotto, chiedi gentilmente se vuole lasciare la sua email per ricevere un promemoria o un aiuto extra, prima di chiudere la conversazione.`;
+
+    const ECOMMERCE_KB_EN = `When presenting a product, besides name/price/availability, always naturally suggest (never pushy) a complementary product from the catalog when relevant, with a phrase like "often bought together with...".
+If a product has limited availability (e.g. under 5 units), mention it naturally to create honest urgency, without exaggerating or inventing numbers not present in the catalog.
+If the user raises doubts about shipping, delivery times, returns or payment, answer using the information available in the knowledge base; if you can't find it, don't make it up — invite the user to leave their contact to be followed up with the exact information.
+If the user seems undecided or drops the conversation without adding anything to the cart after showing interest in a product, gently ask if they'd like to leave their email to receive a reminder or extra help, before closing the conversation.`;
+
     await supabaseAdmin.from("chatbot_configs").insert({
       client_id: clientData.id,
       name: `${company_name} Assistant`,
       welcome_message: `Ciao! Sono l'assistente di ${company_name}. Come posso aiutarti?`,
       notification_email: email,
       vertical: safeVertical,
+      ...(safeVertical === "ecommerce"
+        ? { knowledge_base: locale === "it" ? ECOMMERCE_KB_IT : ECOMMERCE_KB_EN }
+        : {}),
     });
 
     // Send welcome email
