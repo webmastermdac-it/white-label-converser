@@ -229,41 +229,6 @@ const ChatbotConfigForm: React.FC<ChatbotConfigFormProps> = ({ clientId, chatbot
         <div className="glass rounded-xl p-6 space-y-5 animate-fade-in-up">
           <h3 className="font-semibold text-foreground">{t("identity")}</h3>
 
-          <div className="space-y-2">
-            <Label>{t("botName")}</Label>
-            <Input
-              value={config.name}
-              onChange={(e) => set("name", e.target.value)}
-              placeholder="My Assistant"
-              className="bg-secondary border-border"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label>{lang === "it" ? "Tipo di attività" : "Business type"}</Label>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              {VERTICALS.map((v) => (
-                <button
-                  key={v.value}
-                  type="button"
-                  onClick={() => set("business_vertical", v.value)}
-                  className={`flex flex-col items-center gap-2 p-4 rounded-lg border-2 text-center transition-all ${
-                    config.business_vertical === v.value
-                      ? "border-primary bg-primary/5"
-                      : "border-border hover:border-muted-foreground/30"
-                  }`}
-                >
-                  <span className="text-2xl">{v.emoji}</span>
-                  <span className="text-xs font-medium">{lang === "it" ? v.it : v.en}</span>
-                </button>
-              ))}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              {lang === "it"
-                ? "Serve a consigliarti le integrazioni più pertinenti."
-                : "Used to suggest the most relevant integrations for you."}
-            </p>
-          </div>
 
 
 
