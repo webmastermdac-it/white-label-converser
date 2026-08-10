@@ -213,7 +213,64 @@ serve(async (req) => {
 
     const aiData = await aiResponse.json();
     const fullMessage = aiData.choices?.[0]?.message?.content || "";
-    const cleanMessage = fullMessage.replace("[TRIGGER_LEAD_FORM]", "").trim();
+
+    // ── Add-to-cart marker → real store cart link ──
+    let cartLinkMarkdown = "";
+    const addToCartMatch = fullMessage.match(/\[ADD_TO_CART:(\{.*?\})\]/);
+    if (addToCartMatch) {
+      try {
+        const { product_id, qty } = JSON.parse(addToCartMatch[1]);
+        const quantity = qty || 1;
+
+        const { data: ecommerceConfig } = await supabase
+          .from("ecommerce_configs")
+          .select("platform, store_url")
+          .eq("client_id", botConfig.client_id)
+          .maybeSingle();
+
+        const { data: product } = await supabase
+          .from("products")
+          .select("external_id, product_url, variants")
+          .eq("client_id", botConfig.client_id)
+          .eq("external_id", String(product_id))
+          .maybeSingle();
+
+        if (ecommerceConfig && product) {
+          const storeUrl = (ecommerceConfig.store_url || "").replace(/\/$/, "");
+          let cartUrl = "";
+
+          if (ecommerceConfig.platform === "woocommerce") {
+            cartUrl = `${storeUrl}/?add-to-cart=${encodeURIComponent(product.external_id)}&quantity=${quantity}`;
+          } else if (ecommerceConfig.platform === "shopify") {
+            const variantId = (product.variants as any[])?.[0]?.id;
+            if (variantId) {
+              cartUrl = `${storeUrl}/cart/${variantId}:${quantity}`;
+            } else if (product.product_url) {
+              cartUrl = product.product_url;
+            }
+          } else if (product.product_url) {
+            // PrestaShop / feed / custom API: no reliable auto add-to-cart, link the product page
+            cartUrl = product.product_url;
+          }
+
+          if (cartUrl) {
+            const label =
+              ecommerceConfig.platform === "woocommerce" || ecommerceConfig.platform === "shopify"
+                ? "Aggiungi al carrello"
+                : "Vai al prodotto";
+            cartLinkMarkdown = `\n\n[🛒 ${label}](${cartUrl})`;
+          }
+        }
+      } catch (e) {
+        console.error("[chat] add_to_cart error:", e);
+      }
+    }
+
+    const cleanMessage =
+      fullMessage
+        .replace("[TRIGGER_LEAD_FORM]", "")
+        .replace(/\[ADD_TO_CART:.*?\]/g, "")
+        .trim() + cartLinkMarkdown;
     const triggerLead = fullMessage.indexOf("[TRIGGER_LEAD_FORM]") !== -1;
 
     // Save session in background
@@ -226,6 +283,7 @@ serve(async (req) => {
       source: responseSource,
       trigger_lead_form: triggerLead,
     });
+
 
   } catch (error: any) {
     console.error("chat error:", error);
