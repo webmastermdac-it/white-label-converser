@@ -249,6 +249,8 @@
 .mdac-bubble ul,.mdac-bubble ol{margin:4px 0 4px 16px;padding:0;}\
 .mdac-bubble li{margin:2px 0;list-style:disc;}\
 .mdac-bubble ol li{list-style:decimal;}\
+.mdac-cta{display:inline-flex;align-items:center;gap:6px;margin-top:8px;padding:9px 14px;border-radius:10px;background:" + pc + ";color:#fff !important;font-size:13px;font-weight:600;text-decoration:none !important;cursor:pointer;}\
+.mdac-cta:hover{opacity:.9;}\
 .mdac-msg.bot .mdac-msg-avatar{background:#e5e7eb;}\
 .mdac-msg.user .mdac-msg-avatar{background:" + pc + ";color:#fff;font-size:12px;}\
 .mdac-typing{display:flex;gap:4px;padding:10px 14px;}\
