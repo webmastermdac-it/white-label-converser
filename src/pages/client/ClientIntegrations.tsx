@@ -10,12 +10,15 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import {
   Plug, Lock, Loader2, RefreshCw, CheckCircle2, XCircle, Clock,
   Settings2, FileText, CalendarDays, ShoppingBag, Store, ShoppingCart, Sparkles, X, ArrowUpCircle, ArrowLeft,
+  ChevronDown, History,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import ProductCatalogList from "@/components/ecommerce/ProductCatalogList";
+
 
 
 type IntegrationId = Platform | "calendly";
@@ -408,6 +411,49 @@ const ClientIntegrations = ({ embedded = false, clientIdOverride }: { embedded?:
                 </p>
               </div>
             </div>
+
+            <Collapsible>
+              <CollapsibleTrigger className="group flex w-full items-center justify-between rounded-lg px-1 py-2 text-xs font-medium text-muted-foreground hover:text-foreground">
+                <span className="flex items-center gap-2">
+                  <History className="w-3.5 h-3.5" />
+                  {isIt ? "Cronologia sincronizzazioni" : "Sync history"}
+                </span>
+                <ChevronDown className="w-3.5 h-3.5 transition-transform group-data-[state=open]:rotate-180" />
+              </CollapsibleTrigger>
+              <CollapsibleContent className="pt-1 space-y-2">
+                {eco.syncHistory.length === 0 && (
+                  <p className="text-xs text-muted-foreground">
+                    {isIt ? "Nessuna sincronizzazione registrata" : "No sync recorded yet"}
+                  </p>
+                )}
+                {eco.syncHistory.map((log: any, i: number) => (
+                  <div key={i} className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-muted/30 px-3 py-2">
+                    <span className="text-xs text-muted-foreground">
+                      {log.started_at ? new Date(log.started_at).toLocaleString(isIt ? "it-IT" : undefined) : "-"}
+                    </span>
+                    <div className="flex items-center gap-3">
+                      <span className="text-xs text-muted-foreground">
+                        ➕ {log.products_added ?? 0} &nbsp; 🔄 {log.products_updated ?? 0} &nbsp; ➖ {log.products_removed ?? 0}
+                      </span>
+                      <Badge
+                        variant={log.status === "error" ? "destructive" : "secondary"}
+                        className={
+                          log.status === "success"
+                            ? "bg-green-600 text-white hover:bg-green-600"
+                            : log.status === "partial"
+                              ? "bg-yellow-500 text-black hover:bg-yellow-500"
+                              : ""
+                        }
+                      >
+                        {log.status}
+                      </Badge>
+                    </div>
+                  </div>
+                ))}
+              </CollapsibleContent>
+            </Collapsible>
+
+
 
             <Button onClick={eco.sync} disabled={eco.syncing} variant="outline" className="w-full">
               <RefreshCw className={`w-4 h-4 mr-2 ${eco.syncing ? "animate-spin" : ""}`} />

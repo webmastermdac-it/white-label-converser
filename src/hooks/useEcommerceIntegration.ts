@@ -35,7 +35,9 @@ export function useEcommerceIntegration(clientIdOverride?: string | null) {
   const [syncing, setSyncing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [productCount, setProductCount] = useState(0);
+  const [syncHistory, setSyncHistory] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+
 
   const maxProducts = ((planConfig as any)?.max_products ?? -1) as number;
 
@@ -75,8 +77,21 @@ export function useEcommerceIntegration(clientIdOverride?: string | null) {
     setProductCount(count || 0);
   }, [clientId]);
 
+  const loadSyncHistory = useCallback(async () => {
+    if (!clientId) return;
+    const { data } = await supabase
+      .from("sync_logs" as any)
+      .select("started_at, status, products_added, products_updated, products_removed")
+      .eq("client_id", clientId)
+      .order("started_at", { ascending: false })
+      .limit(5);
+    setSyncHistory((data as any[]) || []);
+  }, [clientId]);
+
   useEffect(() => { loadConfig(); }, [loadConfig]);
   useEffect(() => { loadProductCount(); }, [loadProductCount]);
+  useEffect(() => { loadSyncHistory(); }, [loadSyncHistory]);
+
 
   const save = async (overridePlatform?: Platform) => {
     if (!clientId) return;
@@ -132,12 +147,13 @@ export function useEcommerceIntegration(clientIdOverride?: string | null) {
       setLastSyncAt(new Date().toISOString());
       setSyncError(null);
       toast({
-        title: isIt ? "Sincronizzazione completata!" : "Sync completed!",
+        title: isIt ? "Sincronizzazione completata" : "Sync completed",
         description: isIt
-          ? `${data.total} prodotti sincronizzati, ${data.deactivated} disattivati`
-          : `${data.total} products synced, ${data.deactivated} deactivated`,
+          ? `${data.synced} aggiunti, ${data.updated} aggiornati, ${data.removed} rimossi`
+          : `${data.synced} added, ${data.updated} updated, ${data.removed} removed`,
       });
       loadProductCount();
+      loadSyncHistory();
     } catch (e: any) {
       setSyncStatus("error");
       setSyncError(e.message);
@@ -145,7 +161,9 @@ export function useEcommerceIntegration(clientIdOverride?: string | null) {
     } finally {
       setSyncing(false);
       loadConfig();
+      loadSyncHistory();
     }
+
   };
 
   const toggleAutoSync = async (checked: boolean) => {
@@ -177,9 +195,10 @@ export function useEcommerceIntegration(clientIdOverride?: string | null) {
     // state
     loading, saving, syncing, savingAutoSync,
     configId, platform, savedPlatform, storeUrl, apiKey, apiSecret, feedUrl, feedFormat,
-    syncStatus, syncError, lastSyncAt, syncEnabled, productCount, maxProducts,
+    syncStatus, syncError, lastSyncAt, syncEnabled, productCount, maxProducts, syncHistory,
     // setters
     setPlatform, setStoreUrl, setApiKey, setApiSecret, setFeedUrl, setFeedFormat,
+
     // actions
     save, sync, toggleAutoSync, reload: loadConfig,
   };

@@ -724,23 +724,30 @@ serve(async (req) => {
       }
     }
     
-    // Deactivate products not in this sync
-    let deactivated = 0;
+    // Elimina definitivamente i prodotti non più presenti in questa sync
+    let removed = 0;
+    const removedNames: string[] = [];
     if (syncedExternalIds.length > 0) {
-      const { data: toDeactivate } = await supabase
+      const notInList = `(${syncedExternalIds.map(id => `"${id}"`).join(",")})`;
+      const { data: toRemove } = await supabase
         .from("products")
-        .select("id")
+        .select("id, name")
         .eq("client_id", client_id)
-        .eq("is_active", true)
-        .not("external_id", "in", `(${syncedExternalIds.map(id => `"${id}"`).join(",")})`);
-      
-      if (toDeactivate?.length) {
-        for (const d of toDeactivate) {
-          await supabase.from("products").update({ is_active: false }).eq("id", d.id);
-          deactivated++;
+        .not("external_id", "in", notInList);
+
+      if (toRemove?.length) {
+        for (const p of toRemove) {
+          removedNames.push(p.name);
         }
+        await supabase
+          .from("products")
+          .delete()
+          .eq("client_id", client_id)
+          .not("external_id", "in", notInList);
+        removed = toRemove.length;
       }
     }
+
     
     const now = new Date().toISOString();
     
@@ -779,15 +786,19 @@ serve(async (req) => {
       await supabase.from("sync_logs").update({
         ended_at: now,
         products_synced: synced + updated,
+        products_added: synced,
+        products_updated: updated,
+        products_removed: removed,
         errors,
         status: errors.length ? "partial" : "success",
       }).eq("id", syncLog.id);
     }
     
     return new Response(JSON.stringify({
-      synced, updated, deactivated, errors,
-      total: rawProducts.length,
+      synced, updated, removed, removedNames: removedNames.slice(0, 20),
+      errors, total: rawProducts.length,
     }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+
     
   } catch (error: any) {
     console.error("sync-products error:", error);
