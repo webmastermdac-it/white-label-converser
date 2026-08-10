@@ -1,5 +1,6 @@
 import { Outlet } from "react-router-dom";
 import AdminSidebar from "@/components/AdminSidebar";
+import { AdminClientFilterProvider } from "@/contexts/AdminClientFilterContext";
 import MobileNav from "@/components/MobileNav";
 import { useLanguage } from "@/hooks/useLanguage";
 import {
@@ -22,15 +23,17 @@ const AdminLayout = () => {
   ];
 
   return (
-    <div className="flex min-h-screen bg-background">
-      <div className="hidden md:block">
-        <AdminSidebar />
+    <AdminClientFilterProvider>
+      <div className="flex min-h-screen bg-background">
+        <div className="hidden md:block">
+          <AdminSidebar />
+        </div>
+        <MobileNav items={adminNav} subtitle="Admin" />
+        <main className="flex-1 overflow-auto pt-14 md:pt-0">
+          <Outlet />
+        </main>
       </div>
-      <MobileNav items={adminNav} subtitle="Admin" />
-      <main className="flex-1 overflow-auto pt-14 md:pt-0">
-        <Outlet />
-      </main>
-    </div>
+    </AdminClientFilterProvider>
   );
 };
 

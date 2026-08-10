@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/hooks/useLanguage";
+import { useAdminClientFilter } from "@/contexts/AdminClientFilterContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -31,6 +32,7 @@ const statusOptions = ["all", "new", "contacted", "closed"];
 const AdminLeads = () => {
   const { toast } = useToast();
   const { t } = useLanguage();
+  const { selectedClientId } = useAdminClientFilter();
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -38,15 +40,18 @@ const AdminLeads = () => {
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
 
   const fetchLeads = async () => {
-    const { data } = await supabase
+    setLoading(true);
+    let query = supabase
       .from("leads")
       .select("*, clients(name), chatbot_configs(name)")
       .order("created_at", { ascending: false });
+    if (selectedClientId !== "all") query = query.eq("client_id", selectedClientId);
+    const { data } = await query;
     setLeads((data || []).map((l: any) => ({ ...l, transcript: Array.isArray(l.transcript) ? l.transcript : [] })));
     setLoading(false);
   };
 
-  useEffect(() => { fetchLeads(); }, []);
+  useEffect(() => { fetchLeads(); }, [selectedClientId]);
 
   const updateStatus = async (id: string, status: string) => {
     const { error } = await supabase.from("leads").update({ status }).eq("id", id);

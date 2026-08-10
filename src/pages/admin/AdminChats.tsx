@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import { useAdminClientFilter } from "@/contexts/AdminClientFilterContext";
 
 interface ChatSession {
   id: string;
@@ -18,6 +19,7 @@ interface ChatSession {
 }
 
 const AdminChats = () => {
+  const { selectedClientId } = useAdminClientFilter();
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -27,21 +29,23 @@ const AdminChats = () => {
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
   useEffect(() => {
-    supabase
+    setLoading(true);
+    let query = supabase
       .from("chat_sessions")
       .select("*, clients(name)")
-      .order("started_at", { ascending: false })
-      .then(({ data, error }) => {
-        if (error) toast.error(error.message);
-        setSessions(
-          (data || []).map((s: any) => ({
-            ...s,
-            messages: Array.isArray(s.messages) ? s.messages : [],
-          }))
-        );
-        setLoading(false);
-      });
-  }, []);
+      .order("started_at", { ascending: false });
+    if (selectedClientId !== "all") query = query.eq("client_id", selectedClientId);
+    query.then(({ data, error }) => {
+      if (error) toast.error(error.message);
+      setSessions(
+        (data || []).map((s: any) => ({
+          ...s,
+          messages: Array.isArray(s.messages) ? s.messages : [],
+        }))
+      );
+      setLoading(false);
+    });
+  }, [selectedClientId]);
 
   const filtered = sessions.filter((s) =>
     (s.source_url || "").toLowerCase().includes(search.toLowerCase()) ||

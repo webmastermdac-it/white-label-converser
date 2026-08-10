@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/hooks/useLanguage";
 import { usePlanConfig } from "@/hooks/usePlanConfig";
+import { useAdminClientFilter } from "@/contexts/AdminClientFilterContext";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -55,8 +56,7 @@ const AnalyticsPage: React.FC<AnalyticsPageProps> = ({ isAdmin = false }) => {
   const [loading, setLoading] = useState(true);
   const [chats, setChats] = useState<ChatSession[]>([]);
   const [leads, setLeads] = useState<Lead[]>([]);
-  const [clients, setClients] = useState<{ id: string; name: string }[]>([]);
-  const [selectedClient, setSelectedClient] = useState<string>("all");
+  const { selectedClientId: selectedClient } = useAdminClientFilter();
   const [recentEvents, setRecentEvents] = useState<any[]>([]);
 
   const hasAccess = canUseAdvancedAnalytics || role === "super_admin";
@@ -94,18 +94,17 @@ const AnalyticsPage: React.FC<AnalyticsPageProps> = ({ isAdmin = false }) => {
       chatsQuery = chatsQuery.eq("client_id", clientId);
       leadsQuery = leadsQuery.eq("client_id", clientId);
     }
+    if (isAdmin && selectedClient !== "all") {
+      chatsQuery = chatsQuery.eq("client_id", selectedClient);
+      leadsQuery = leadsQuery.eq("client_id", selectedClient);
+    }
 
     const [chatsRes, leadsRes] = await Promise.all([chatsQuery, leadsQuery]);
     setChats((chatsRes.data as any) || []);
     setLeads((leadsRes.data as any) || []);
 
-    if (isAdmin) {
-      const { data: clientsData } = await supabase.from("clients").select("id, name").order("name");
-      setClients(clientsData || []);
-    }
-
     setLoading(false);
-  }, [dateFrom, dateTo, clientId, isAdmin]);
+  }, [dateFrom, dateTo, clientId, isAdmin, selectedClient]);
 
   // Fetch recent events for activity feed
   const fetchRecent = useCallback(async () => {
@@ -116,6 +115,10 @@ const AnalyticsPage: React.FC<AnalyticsPageProps> = ({ isAdmin = false }) => {
       recentChats = recentChats.eq("client_id", clientId);
       recentLeads = recentLeads.eq("client_id", clientId);
     }
+    if (isAdmin && selectedClient !== "all") {
+      recentChats = recentChats.eq("client_id", selectedClient);
+      recentLeads = recentLeads.eq("client_id", selectedClient);
+    }
 
     const [rc, rl] = await Promise.all([recentChats, recentLeads]);
     const events = [
@@ -123,7 +126,7 @@ const AnalyticsPage: React.FC<AnalyticsPageProps> = ({ isAdmin = false }) => {
       ...(rl.data || []).map((l: any) => ({ type: "lead", time: l.created_at, name: l.name, email: l.email, language: l.language })),
     ].sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime()).slice(0, 10);
     setRecentEvents(events);
-  }, [clientId, isAdmin]);
+  }, [clientId, isAdmin, selectedClient]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
   useEffect(() => { fetchRecent(); const iv = setInterval(fetchRecent, 60000); return () => clearInterval(iv); }, [fetchRecent]);
@@ -389,21 +392,8 @@ const AnalyticsPage: React.FC<AnalyticsPageProps> = ({ isAdmin = false }) => {
         </Button>
       </div>
 
-      {/* Admin client filter */}
-      {isAdmin && (
-        <div className="flex items-center gap-3">
-          <label className="text-sm text-muted-foreground">{isIt ? "Filtra per cliente:" : "Filter by client:"}</label>
-          <Select value={selectedClient} onValueChange={setSelectedClient}>
-            <SelectTrigger className="w-60 bg-secondary border-border">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent className="bg-card border-border">
-              <SelectItem value="all">{isIt ? "Tutti i clienti" : "All clients"}</SelectItem>
-              {clients.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
-            </SelectContent>
-          </Select>
-        </div>
-      )}
+
+
 
       {/* Date filter */}
       <div className="flex flex-wrap items-center gap-2">
