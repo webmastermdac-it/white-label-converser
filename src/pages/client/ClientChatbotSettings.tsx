@@ -209,8 +209,14 @@ const ClientChatbotSettings = ({ adminMode = false }: ClientChatbotSettingsProps
 
         {/* Tab 2 — Appearance (reuse ChatbotConfigForm) */}
         <TabsContent value="appearance">
-          {clientId && <ChatbotConfigForm clientId={clientId} chatbotId={botId} sectionFilter={["identity", "appearance", "messages"]} />}
+          {clientId && <ChatbotConfigForm clientId={clientId} chatbotId={botId} sectionFilter={["identity", "appearance"]} />}
         </TabsContent>
+
+        {/* Tab 2b — Messages & fallback */}
+        <TabsContent value="messages">
+          {clientId && <ChatbotConfigForm clientId={clientId} chatbotId={botId} sectionFilter={["messages"]} />}
+        </TabsContent>
+
 
 
         {/* Tab 3 — Knowledge */}
