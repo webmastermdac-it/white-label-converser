@@ -68,7 +68,7 @@ If the user seems undecided or drops the conversation without adding anything to
     await supabaseAdmin.from("chatbot_configs").insert({
       client_id: clientData.id,
       name: `${company_name} Assistant`,
-      welcome_message: `Ciao! Sono l'assistente di ${company_name}. Come posso aiutarti?`,
+      welcome_message: `Ciao! Sono l'assistente virtuale IA di ${company_name}. Come posso aiutarti?`,
       notification_email: email,
       vertical: safeVertical,
       ...(safeVertical === "ecommerce"

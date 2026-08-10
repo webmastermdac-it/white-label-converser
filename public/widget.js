@@ -68,6 +68,7 @@
       thankYou: "Thank you! We'll contact you soon. 🎉",
       errorMsg: "Connection error. Please retry.",
       errorReply: "Error in the response.",
+      aiDisclaimer: "🤖 You're chatting with an AI-based virtual assistant. Responses may contain errors.",
     },
     it: {
       placeholder: "Scrivi un messaggio...",
@@ -83,6 +84,7 @@
       thankYou: "Grazie! Ti contatteremo presto. 🎉",
       errorMsg: "Errore di connessione. Riprova.",
       errorReply: "Errore nella risposta.",
+      aiDisclaimer: "🤖 Stai parlando con un assistente virtuale basato su IA. Le risposte possono contenere errori.",
     },
     fr: {
       placeholder: "Écrivez un message...",
@@ -98,6 +100,7 @@
       thankYou: "Merci! Nous vous contacterons bientôt. 🎉",
       errorMsg: "Erreur de connexion. Réessayez.",
       errorReply: "Erreur dans la réponse.",
+      aiDisclaimer: "🤖 Vous parlez avec un assistant virtuel basé sur l'IA. Les réponses peuvent contenir des erreurs.",
     },
     de: {
       placeholder: "Nachricht schreiben...",
@@ -112,6 +115,7 @@
       thankYou: "Danke! Wir melden uns bald. 🎉",
       errorMsg: "Verbindungsfehler. Bitte erneut versuchen.",
       errorReply: "Fehler in der Antwort.",
+      aiDisclaimer: "🤖 Sie chatten mit einem KI-basierten virtuellen Assistenten. Antworten können Fehler enthalten.",
     },
     es: {
       placeholder: "Escribe un mensaje...",
@@ -126,6 +130,7 @@
       thankYou: "¡Gracias! Le contactaremos pronto. 🎉",
       errorMsg: "Error de conexión. Inténtelo de nuevo.",
       errorReply: "Error en la respuesta.",
+      aiDisclaimer: "🤖 Estás hablando con un asistente virtual basado en IA. Las respuestas pueden contener errores.",
     },
     pt: {
       placeholder: "Escreva uma mensagem...",
@@ -140,6 +145,7 @@
       thankYou: "Obrigado! Entraremos em contato em breve. 🎉",
       errorMsg: "Erro de conexão. Tente novamente.",
       errorReply: "Erro na resposta.",
+      aiDisclaimer: "🤖 Está a falar com um assistente virtual baseado em IA. As respostas podem conter erros.",
     },
   };
 
@@ -260,8 +266,7 @@
 @keyframes mdac-bounce{to{transform:translateY(-6px);opacity:.4;}}\
 .mdac-input-area{display:flex;gap:8px;padding:10px 12px;border-top:1px solid #e5e7eb;background:#fff;}\
 .mdac-footer{text-align:center;padding:4px 0 6px;background:#fff;border-top:1px solid #f3f4f6;}\
-.mdac-footer a{font-size:10px;color:#9ca3af;text-decoration:none;font-weight:500;}\
-.mdac-footer a:hover{color:" + pc + ";text-decoration:underline;}\
+.mdac-footer span{font-size:9.5px;color:#9ca3af;line-height:1.3;padding:0 10px;display:block;}\
 .mdac-input{flex:1;border:1px solid #e5e7eb;border-radius:10px;padding:8px 12px;font-size:13px;outline:none;transition:border .15s;}\
 .mdac-input:focus{border-color:" + pc + ";}\
 .mdac-send{width:36px;height:36px;border-radius:10px;background:" + pc + ";color:#fff;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:opacity .15s;}\
@@ -312,7 +317,7 @@
     // Header
     html += '<div class="mdac-header">';
     html += '<div class="mdac-header-avatar">' + avatarDisplay + '</div>';
-    html += '<div class="mdac-header-info"><div class="mdac-header-name">' + esc(config.name || "Assistente") + '</div><div class="mdac-header-powered">Powered by Genius</div></div>';
+    html += '<div class="mdac-header-info"><div class="mdac-header-name">' + esc(config.name || "Assistente") + '</div></div>';
     html += '<button class="mdac-close" id="mdac-close">&times;</button>';
     html += '</div>';
 
@@ -374,7 +379,7 @@
     html += '</div>';
 
     // Footer
-    html += '<div class="mdac-footer"><a href="https://chatbot.your-genius.com" target="_blank" rel="noopener">Genius Chatbot</a></div>';
+    html += '<div class="mdac-footer"><span>' + esc(t.aiDisclaimer) + '</span></div>';
 
     html += '</div>'; // end panel
 

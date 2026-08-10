@@ -50,7 +50,7 @@ serve(async (req) => {
     await supabaseAdmin.from("chatbot_configs").insert({
       client_id: clientData.id,
       name: `${name} Assistant`,
-      welcome_message: `Ciao! Sono l'assistente di ${name}. Come posso aiutarti?`,
+      welcome_message: `Ciao! Sono l'assistente virtuale IA di ${name}. Come posso aiutarti?`,
       notification_email: email,
     });
 
