@@ -272,11 +272,36 @@ serve(async (req) => {
       }
     }
 
+    // ── Order status marker → verified order lookup ──
+    let orderStatusText = "";
+    const checkOrderMatch = fullMessage.match(/\[CHECK_ORDER:(\{.*?\})\]/);
+    if (checkOrderMatch) {
+      try {
+        const { order_number, email } = JSON.parse(checkOrderMatch[1]);
+        const statusResp = await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/get-order-status`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ embed_token, order_number, email }),
+        });
+        const statusData = await statusResp.json();
+        if (statusData.found) {
+          const dateStr = statusData.order_date ? new Date(statusData.order_date).toLocaleDateString("it-IT") : "";
+          orderStatusText = `\n\n📦 **Stato ordine #${order_number}**: ${statusData.status}${dateStr ? ` (ordinato il ${dateStr})` : ""}`;
+        } else {
+          orderStatusText = `\n\nNon ho trovato nessun ordine con numero "${order_number}" e questa email. Verifica i dati e riprova.`;
+        }
+      } catch (e) {
+        console.error("[chat] check_order error:", e);
+        orderStatusText = "\n\nSi è verificato un errore nel controllo dell'ordine, riprova tra poco.";
+      }
+    }
+
     const cleanMessage =
       fullMessage
         .replace("[TRIGGER_LEAD_FORM]", "")
         .replace(/\[ADD_TO_CART:.*?\]/g, "")
-        .trim() + cartLinkMarkdown;
+        .replace(/\[CHECK_ORDER:.*?\]/g, "")
+        .trim() + cartLinkMarkdown + orderStatusText;
     const triggerLead = fullMessage.indexOf("[TRIGGER_LEAD_FORM]") !== -1;
 
     // Save session in background
