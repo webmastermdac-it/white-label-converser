@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/hooks/useLanguage";
+import { useAdminClientFilter } from "@/contexts/AdminClientFilterContext";
 import { Users, Bot, Inbox, MessageSquare, TrendingUp, ArrowUpRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { format } from "date-fns";
@@ -45,6 +46,7 @@ const StatCard = ({
 
 const AdminOverview = () => {
   const { t } = useLanguage();
+  const { selectedClientId } = useAdminClientFilter();
   const [stats, setStats] = useState({
     totalClients: 0, totalLeads: 0, totalChats: 0, totalBots: 0, leadsToday: 0, chatsThisWeek: 0
   });
@@ -53,22 +55,25 @@ const AdminOverview = () => {
 
   useEffect(() => {
     const fetchStats = async () => {
+      setLoading(true);
       const today = new Date();
       const todayStr = today.toISOString().split("T")[0];
       const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
+      const filterOne = <T extends { eq: (c: string, v: string) => T }>(q: T): T =>
+        selectedClientId !== "all" ? q.eq("client_id", selectedClientId) : q;
 
       const [clients, leads, chats, bots, todayLeads, weekChats, recent] = await Promise.all([
         supabase.from("clients").select("id", { count: "exact", head: true }),
-        supabase.from("leads").select("id", { count: "exact", head: true }),
-        supabase.from("chat_sessions").select("id", { count: "exact", head: true }),
-        supabase.from("chatbot_configs").select("id", { count: "exact", head: true }),
-        supabase.from("leads").select("id", { count: "exact", head: true }).gte("created_at", todayStr),
-        supabase.from("chat_sessions").select("id", { count: "exact", head: true }).gte("started_at", weekAgo),
-        supabase.from("leads").select("id, name, email, status, created_at, clients(name)").order("created_at", { ascending: false }).limit(10),
+        filterOne(supabase.from("leads").select("id", { count: "exact", head: true })),
+        filterOne(supabase.from("chat_sessions").select("id", { count: "exact", head: true })),
+        filterOne(supabase.from("chatbot_configs").select("id", { count: "exact", head: true })),
+        filterOne(supabase.from("leads").select("id", { count: "exact", head: true }).gte("created_at", todayStr)),
+        filterOne(supabase.from("chat_sessions").select("id", { count: "exact", head: true }).gte("started_at", weekAgo)),
+        filterOne(supabase.from("leads").select("id, name, email, status, created_at, clients(name)").order("created_at", { ascending: false }).limit(10)),
       ]);
 
       setStats({
-        totalClients: clients.count || 0,
+        totalClients: selectedClientId !== "all" ? 1 : clients.count || 0,
         totalLeads: leads.count || 0,
         totalChats: chats.count || 0,
         totalBots: bots.count || 0,
@@ -80,7 +85,7 @@ const AdminOverview = () => {
     };
 
     fetchStats();
-  }, []);
+  }, [selectedClientId]);
 
   return (
     <div className="p-4 md:p-6 space-y-4 md:space-y-6 animate-fade-in-up">
