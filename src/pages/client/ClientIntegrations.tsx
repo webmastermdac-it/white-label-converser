@@ -10,12 +10,15 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import {
   Plug, Lock, Loader2, RefreshCw, CheckCircle2, XCircle, Clock,
   Settings2, FileText, CalendarDays, ShoppingBag, Store, ShoppingCart, Sparkles, X, ArrowUpCircle, ArrowLeft,
+  ChevronDown, History,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import ProductCatalogList from "@/components/ecommerce/ProductCatalogList";
+
 
 
 type IntegrationId = Platform | "calendly";
