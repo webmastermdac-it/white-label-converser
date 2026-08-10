@@ -166,6 +166,8 @@ serve(async (req) => {
       ? `\n\nADD TO CART RULE:\nWhen a user wants to add a product to the cart, answer normally and append, on a separate final line, this marker with the exact product ID taken from the catalog (the "id" or "sku" field shown in the catalog):\n[ADD_TO_CART:{"product_id":"<exact external_id>","qty":<quantity>}]\nNever show this marker to the user, it is removed automatically.`
       : "";
 
+    const orderStatusInstruction = `\n\nSe l'utente chiede lo stato di un ordine, chiedigli SEMPRE numero ordine ed email usata per l'acquisto (se non li ha già forniti entrambi in questo messaggio). Solo quando hai entrambi, includi alla fine del messaggio, su una riga a parte:\n[CHECK_ORDER:{"order_number":"<numero esatto>","email":"<email esatta>"}]\nNon mostrare mai questo marker all'utente, verrà rimosso automaticamente.\nSe il controllo non trova l'ordine, suggerisci di verificare i dati o di contattare l'assistenza.`;
+
     const instructions = botConfig.knowledge_base || "You are a helpful assistant.";
     const systemPrompt = `${instructions}${productKnowledge ? "\n\n" + productKnowledge : ""}${ragContext}\n\nIMPORTANT INSTRUCTIONS:\n- Be concise, helpful, and professional${languageInstruction}${fallbackInstruction}${productInstruction}${addToCartInstruction}${formattingInstruction}`;
 
