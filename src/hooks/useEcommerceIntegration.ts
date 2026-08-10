@@ -147,12 +147,13 @@ export function useEcommerceIntegration(clientIdOverride?: string | null) {
       setLastSyncAt(new Date().toISOString());
       setSyncError(null);
       toast({
-        title: isIt ? "Sincronizzazione completata!" : "Sync completed!",
+        title: isIt ? "Sincronizzazione completata" : "Sync completed",
         description: isIt
-          ? `${data.total} prodotti sincronizzati, ${data.deactivated} disattivati`
-          : `${data.total} products synced, ${data.deactivated} deactivated`,
+          ? `${data.synced} aggiunti, ${data.updated} aggiornati, ${data.removed} rimossi`
+          : `${data.synced} added, ${data.updated} updated, ${data.removed} removed`,
       });
       loadProductCount();
+      loadSyncHistory();
     } catch (e: any) {
       setSyncStatus("error");
       setSyncError(e.message);
@@ -160,7 +161,9 @@ export function useEcommerceIntegration(clientIdOverride?: string | null) {
     } finally {
       setSyncing(false);
       loadConfig();
+      loadSyncHistory();
     }
+
   };
 
   const toggleAutoSync = async (checked: boolean) => {
