@@ -162,8 +162,12 @@ serve(async (req) => {
 
     const formattingInstruction = `\n\nFORMATTING RULES:\n- Use **bold** only for product/plan names and prices\n- Use bullet lists only when listing 3+ items\n- Keep responses concise: max 6-8 lines per answer\n- No headers (##) in responses\n- End with ONE short question to keep the conversation going\n- Never use excessive formatting — write naturally`;
 
+    const addToCartInstruction = productKnowledge
+      ? `\n\nADD TO CART RULE:\nWhen a user wants to add a product to the cart, answer normally and append, on a separate final line, this marker with the exact product ID taken from the catalog (the "id" or "sku" field shown in the catalog):\n[ADD_TO_CART:{"product_id":"<exact external_id>","qty":<quantity>}]\nNever show this marker to the user, it is removed automatically.`
+      : "";
+
     const instructions = botConfig.knowledge_base || "You are a helpful assistant.";
-    const systemPrompt = `${instructions}${productKnowledge ? "\n\n" + productKnowledge : ""}${ragContext}\n\nIMPORTANT INSTRUCTIONS:\n- Be concise, helpful, and professional${languageInstruction}${fallbackInstruction}${productInstruction}${formattingInstruction}`;
+    const systemPrompt = `${instructions}${productKnowledge ? "\n\n" + productKnowledge : ""}${ragContext}\n\nIMPORTANT INSTRUCTIONS:\n- Be concise, helpful, and professional${languageInstruction}${fallbackInstruction}${productInstruction}${addToCartInstruction}${formattingInstruction}`;
 
 
     // ── Call AI gateway ──
