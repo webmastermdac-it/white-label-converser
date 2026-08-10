@@ -190,6 +190,8 @@ const ChatbotConfigForm: React.FC<ChatbotConfigFormProps> = ({ clientId, chatbot
     { id: "notifications", label: t("notifications"), icon: Mail },
   ];
   const sections = sectionFilter ? allSections.filter((s) => sectionFilter.includes(s.id)) : allSections;
+  const stacked = !!sectionFilter && sectionFilter.length > 1;
+  const isVisible = (id: string) => (stacked ? sectionFilter!.includes(id) : activeSection === id);
 
   if (loading) {
     return (
@@ -202,7 +204,7 @@ const ChatbotConfigForm: React.FC<ChatbotConfigFormProps> = ({ clientId, chatbot
   return (
     <div className="space-y-6">
       {/* Section Tabs */}
-      {sections.length > 1 && (
+      {sections.length > 1 && !stacked && (
         <div className="flex gap-2 flex-wrap overflow-x-auto -mx-1 px-1 pb-1">
           {sections.map((s) => (
             <button
@@ -223,7 +225,7 @@ const ChatbotConfigForm: React.FC<ChatbotConfigFormProps> = ({ clientId, chatbot
 
 
       {/* Identity */}
-      {activeSection === "identity" && (
+      {isVisible("identity") && (
         <div className="glass rounded-xl p-6 space-y-5 animate-fade-in-up">
           <h3 className="font-semibold text-foreground">{t("identity")}</h3>
 
@@ -372,7 +374,7 @@ const ChatbotConfigForm: React.FC<ChatbotConfigFormProps> = ({ clientId, chatbot
       )}
 
       {/* Appearance */}
-      {activeSection === "appearance" && (
+      {isVisible("appearance") && (
         <div className="glass rounded-xl p-6 space-y-5 animate-fade-in-up">
           <h3 className="font-semibold text-foreground">{t("brandColors")}</h3>
 
@@ -429,7 +431,7 @@ const ChatbotConfigForm: React.FC<ChatbotConfigFormProps> = ({ clientId, chatbot
       )}
 
       {/* Messages */}
-      {activeSection === "messages" && (
+      {isVisible("messages") && (
         <div className="glass rounded-xl p-6 space-y-5 animate-fade-in-up">
           <h3 className="font-semibold text-foreground">{t("chatMessages")}</h3>
 
@@ -491,7 +493,7 @@ const ChatbotConfigForm: React.FC<ChatbotConfigFormProps> = ({ clientId, chatbot
       )}
 
       {/* Notifications */}
-      {activeSection === "notifications" && (
+      {isVisible("notifications") && (
         <div className="glass rounded-xl p-6 space-y-5 animate-fade-in-up">
           <h3 className="font-semibold text-foreground">{t("emailNotifications")}</h3>
 
