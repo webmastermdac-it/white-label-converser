@@ -882,7 +882,10 @@ export type Database = {
           ended_at: string | null
           errors: Json | null
           id: string
+          products_added: number
+          products_removed: number
           products_synced: number | null
+          products_updated: number
           started_at: string
           status: string
         }
@@ -891,7 +894,10 @@ export type Database = {
           ended_at?: string | null
           errors?: Json | null
           id?: string
+          products_added?: number
+          products_removed?: number
           products_synced?: number | null
+          products_updated?: number
           started_at?: string
           status?: string
         }
@@ -900,7 +906,10 @@ export type Database = {
           ended_at?: string | null
           errors?: Json | null
           id?: string
+          products_added?: number
+          products_removed?: number
           products_synced?: number | null
+          products_updated?: number
           started_at?: string
           status?: string
         }
