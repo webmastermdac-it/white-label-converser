@@ -356,11 +356,18 @@ const ChatbotConfigForm: React.FC<ChatbotConfigFormProps> = ({ clientId, chatbot
                       : "bg-secondary text-muted-foreground hover:text-foreground"
                   }`}
                 >
-                  {pos}
+                  {pos === "bottom-left"
+                    ? lang === "it"
+                      ? "In basso a sinistra"
+                      : "Bottom left"
+                    : lang === "it"
+                      ? "In basso a destra"
+                      : "Bottom right"}
                 </button>
               ))}
             </div>
           </div>
+
         </div>
       )}
 
