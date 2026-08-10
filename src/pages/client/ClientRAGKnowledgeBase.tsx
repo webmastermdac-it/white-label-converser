@@ -835,6 +835,7 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
             currentKnowledgeBase={systemPrompt}
             plan={planConfig?.plan_name || "free"}
             vertical={chatbotVertical}
+            maxFaqs={maxFaqs}
             onSave={async (kb: string) => {
               setSystemPrompt(kb);
               try {
@@ -843,6 +844,7 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
                   .update({ knowledge_base: kb } as any)
                   .eq("id", chatbotId);
                 toast({ title: "✅", description: t("Istruzioni salvate!", "Instructions saved!") });
+                fetchData();
               } catch (err: any) {
                 toast({ title: "Errore", description: err.message, variant: "destructive" });
               }

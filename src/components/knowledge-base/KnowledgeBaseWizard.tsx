@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { useLanguage } from "@/hooks/useLanguage";
 import { CheckCircle2, ArrowRight, ArrowLeft, Sparkles, Plus, X } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Props {
   clientId: string;
@@ -15,6 +16,7 @@ interface Props {
   currentKnowledgeBase?: string;
   plan?: string;
   vertical?: string | null;
+  maxFaqs?: number;
   onSave: (systemPrompt: string) => Promise<void>;
 }
 
@@ -33,14 +35,6 @@ function buildPrompt(sections: KBSections, lang: string): string {
 
   if (sections.about_us) lines.push(`## ${l("Chi siamo", "About Us")}\n${sections.about_us}`);
   if (sections.products_services) lines.push(`## ${l("Prodotti e Servizi", "Products & Services")}\n${sections.products_services}`);
-  if (sections.faqs.length > 0) {
-    lines.push(`## FAQ`);
-    sections.faqs.forEach(faq => {
-      if (faq.question.trim() && faq.answer.trim()) {
-        lines.push(`**${l("D", "Q")}:** ${faq.question}\n**${l("R", "A")}:** ${faq.answer}`);
-      }
-    });
-  }
   if (sections.tone_of_voice) lines.push(`## ${l("Tono di voce", "Tone of Voice")}\n${sections.tone_of_voice}`);
   if (sections.forbidden_topics) lines.push(`## ${l("Argomenti vietati", "Forbidden Topics")}\n${sections.forbidden_topics}`);
   if (sections.contacts_hours) lines.push(`## ${l("Contatti e orari", "Contacts & Hours")}\n${sections.contacts_hours}`);
