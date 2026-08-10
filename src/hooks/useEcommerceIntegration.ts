@@ -77,8 +77,21 @@ export function useEcommerceIntegration(clientIdOverride?: string | null) {
     setProductCount(count || 0);
   }, [clientId]);
 
+  const loadSyncHistory = useCallback(async () => {
+    if (!clientId) return;
+    const { data } = await supabase
+      .from("sync_logs" as any)
+      .select("started_at, status, products_added, products_updated, products_removed")
+      .eq("client_id", clientId)
+      .order("started_at", { ascending: false })
+      .limit(5);
+    setSyncHistory((data as any[]) || []);
+  }, [clientId]);
+
   useEffect(() => { loadConfig(); }, [loadConfig]);
   useEffect(() => { loadProductCount(); }, [loadProductCount]);
+  useEffect(() => { loadSyncHistory(); }, [loadSyncHistory]);
+
 
   const save = async (overridePlatform?: Platform) => {
     if (!clientId) return;
