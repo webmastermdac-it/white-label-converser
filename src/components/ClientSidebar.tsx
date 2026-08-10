@@ -99,7 +99,7 @@ const ClientSidebar = () => {
       )}
       style={{ background: "hsl(var(--sidebar-background))" }}
     >
-      <div className="flex items-center gap-3 px-4 py-5 border-b border-sidebar-border">
+      <div className={cn("flex items-center gap-3 py-5 border-b border-sidebar-border", collapsed ? "flex-col gap-2 px-2" : "px-4")}>
         <div className="flex-shrink-0 w-9 h-9 rounded-xl gradient-primary flex items-center justify-center glow-sm">
           <Bot className="w-5 h-5 text-white" />
         </div>
@@ -113,11 +113,16 @@ const ClientSidebar = () => {
         )}
         <button
           onClick={() => setCollapsed(!collapsed)}
-          className="ml-auto flex-shrink-0 text-muted-foreground hover:text-foreground transition-colors"
+          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+          className={cn(
+            "flex-shrink-0 text-muted-foreground hover:text-foreground transition-colors",
+            collapsed ? "p-1 rounded-md hover:bg-sidebar-accent" : "ml-auto"
+          )}
         >
           {collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
         </button>
       </div>
+
 
       <nav className="px-2 py-3 space-y-1 overflow-y-auto">
         <GroupLabel>{isIt ? "Dati" : "Data"}</GroupLabel>

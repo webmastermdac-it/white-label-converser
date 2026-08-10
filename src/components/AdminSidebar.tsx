@@ -90,7 +90,7 @@ const AdminSidebar = () => {
       style={{ background: "hsl(var(--sidebar-background))" }}
     >
       {/* Logo */}
-      <div className="flex items-center gap-3 px-4 py-5 border-b border-sidebar-border">
+      <div className={cn("flex items-center gap-3 py-5 border-b border-sidebar-border", collapsed ? "flex-col gap-2 px-2" : "px-4")}>
         <div className="flex-shrink-0 w-9 h-9 rounded-xl gradient-primary flex items-center justify-center glow-sm">
           <Bot className="w-5 h-5 text-white" />
         </div>
@@ -106,11 +106,16 @@ const AdminSidebar = () => {
         )}
         <button
           onClick={() => setCollapsed(!collapsed)}
-          className="ml-auto flex-shrink-0 text-muted-foreground hover:text-foreground transition-colors"
+          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+          className={cn(
+            "flex-shrink-0 text-muted-foreground hover:text-foreground transition-colors",
+            collapsed ? "p-1 rounded-md hover:bg-sidebar-accent" : "ml-auto"
+          )}
         >
           {collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
         </button>
       </div>
+
 
       {/* Account switcher */}
       <div className={cn("border-b border-sidebar-border", collapsed ? "px-2 py-2" : "px-3 py-3")}>
