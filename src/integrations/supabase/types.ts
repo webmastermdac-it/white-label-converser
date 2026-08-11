@@ -292,6 +292,7 @@ export type Database = {
           last_sync_at: string | null
           platform: string
           store_url: string
+          storefront_access_token: string | null
           sync_enabled: boolean
           sync_error: string | null
           sync_status: string
@@ -308,6 +309,7 @@ export type Database = {
           last_sync_at?: string | null
           platform?: string
           store_url?: string
+          storefront_access_token?: string | null
           sync_enabled?: boolean
           sync_error?: string | null
           sync_status?: string
@@ -324,6 +326,7 @@ export type Database = {
           last_sync_at?: string | null
           platform?: string
           store_url?: string
+          storefront_access_token?: string | null
           sync_enabled?: boolean
           sync_error?: string | null
           sync_status?: string
