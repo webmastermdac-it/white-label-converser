@@ -170,13 +170,15 @@ serve(async (req) => {
 
     // ── Real purchase tools (only for ecommerce chatbots with a configured store) ──
     let ecommerceConfigured = false;
+    let ecommerceStoreUrl = "";
     if (botConfig.business_vertical === "ecommerce") {
       const { data: ecomCfg } = await supabase
         .from("ecommerce_configs")
-        .select("platform")
+        .select("platform, store_url")
         .eq("client_id", botConfig.client_id)
         .maybeSingle();
       ecommerceConfigured = !!ecomCfg && ["woocommerce", "shopify", "prestashop"].includes(ecomCfg.platform);
+      ecommerceStoreUrl = (ecomCfg?.store_url || "").replace(/\/$/, "");
     }
 
     const tools = ecommerceConfigured
@@ -208,8 +210,12 @@ serve(async (req) => {
       ? `\n\nACQUISTO REALE:\nPuoi completare acquisti veri con il tool create_real_checkout.\nPrima di chiamarlo devi avere: prodotto (external_id dal catalogo), quantità, nome, email; chiedi anche telefono e indirizzo di spedizione quando possibile.\nChiama il tool una sola volta per acquisto, poi comunica al visitatore il link di checkout restituito per completare il pagamento sullo store.\nSe il tool restituisce success=false, spiega gentilmente che l'acquisto non è andato a buon fine e proponi di essere ricontattato, aggiungendo il marker [TRIGGER_LEAD_FORM].`
       : "";
 
+    const purchaseRules = ecommerceConfigured
+      ? `REGOLE OBBLIGATORIE SUGLI ACQUISTI (PRIORITÀ MASSIMA, prevalgono su ogni altra istruzione):\n1. Non hai la possibilità di aggiungere prodotti al carrello, avanzare un checkout o confermare pagamenti semplicemente parlandone. Puoi farlo SOLO chiamando il tool create_real_checkout.\n2. Non dire mai "ho aggiunto al carrello", "sto procedendo al checkout", "ordine confermato" o frasi simili se non hai appena ricevuto un risultato success:true dal tool.\n3. Se l'utente vuole comprare, prima raccogli in modo naturale i dati necessari (prodotto, quantità, nome, email, telefono, indirizzo), poi chiama create_real_checkout.\n4. Se il tool ritorna un errore, dillo chiaramente all'utente (es: "non riesco a creare il checkout in questo momento, puoi completare l'acquisto direttamente su ${ecommerceStoreUrl || "il nostro sito"} oppure riprova tra poco") — non inventare mai una soluzione alternativa che non hai verificato.\n5. Quando il tool ha successo, manda all'utente il checkout_url reale ricevuto, spiegando che lì può scegliere il metodo di pagamento che preferisce e completare l'acquisto in sicurezza.\n\n`
+      : "";
+
     const instructions = botConfig.knowledge_base || "You are a helpful assistant.";
-    const systemPrompt = `${instructions}${productKnowledge ? "\n\n" + productKnowledge : ""}${ragContext}\n\nIMPORTANT INSTRUCTIONS:\n- Be concise, helpful, and professional${languageInstruction}${fallbackInstruction}${productInstruction}${addToCartInstruction}${orderStatusInstruction}${purchaseInstruction}${formattingInstruction}`;
+    const systemPrompt = `${purchaseRules}${instructions}${productKnowledge ? "\n\n" + productKnowledge : ""}${ragContext}\n\nIMPORTANT INSTRUCTIONS:\n- Be concise, helpful, and professional${languageInstruction}${fallbackInstruction}${productInstruction}${addToCartInstruction}${orderStatusInstruction}${purchaseInstruction}${formattingInstruction}`;
 
 
     // ── Call AI gateway (with tool-call loop) ──
