@@ -197,10 +197,10 @@ export function useEcommerceIntegration(clientIdOverride?: string | null) {
   return {
     // state
     loading, saving, syncing, savingAutoSync,
-    configId, platform, savedPlatform, storeUrl, apiKey, apiSecret, feedUrl, feedFormat,
+    configId, platform, savedPlatform, storeUrl, apiKey, apiSecret, storefrontToken, feedUrl, feedFormat,
     syncStatus, syncError, lastSyncAt, syncEnabled, productCount, maxProducts, syncHistory,
     // setters
-    setPlatform, setStoreUrl, setApiKey, setApiSecret, setFeedUrl, setFeedFormat,
+    setPlatform, setStoreUrl, setApiKey, setApiSecret, setStorefrontToken, setFeedUrl, setFeedFormat,
 
     // actions
     save, sync, toggleAutoSync, reload: loadConfig,
