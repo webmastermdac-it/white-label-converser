@@ -1,0 +1,1 @@
+ALTER TABLE public.ecommerce_configs ADD COLUMN IF NOT EXISTS storefront_access_token text;

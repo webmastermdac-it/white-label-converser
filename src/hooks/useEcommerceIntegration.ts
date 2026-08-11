@@ -23,6 +23,7 @@ export function useEcommerceIntegration(clientIdOverride?: string | null) {
   const [storeUrl, setStoreUrl] = useState("");
   const [apiKey, setApiKey] = useState("");
   const [apiSecret, setApiSecret] = useState("");
+  const [storefrontToken, setStorefrontToken] = useState("");
   const [feedUrl, setFeedUrl] = useState("");
   const [feedFormat, setFeedFormat] = useState("xml");
   const [configId, setConfigId] = useState<string | null>(null);
@@ -57,6 +58,7 @@ export function useEcommerceIntegration(clientIdOverride?: string | null) {
       setStoreUrl(d.store_url || "");
       setApiKey(d.api_key || "");
       setApiSecret(d.api_secret || "");
+      setStorefrontToken(d.storefront_access_token || "");
       setFeedUrl(d.feed_url || "");
       setFeedFormat(d.feed_format || "xml");
       setSyncStatus(d.sync_status || "idle");
@@ -103,6 +105,7 @@ export function useEcommerceIntegration(clientIdOverride?: string | null) {
         store_url: storeUrl,
         api_key: apiKey,
         api_secret: apiSecret,
+        storefront_access_token: storefrontToken,
         feed_url: feedUrl,
         feed_format: feedFormat,
       };
@@ -194,10 +197,10 @@ export function useEcommerceIntegration(clientIdOverride?: string | null) {
   return {
     // state
     loading, saving, syncing, savingAutoSync,
-    configId, platform, savedPlatform, storeUrl, apiKey, apiSecret, feedUrl, feedFormat,
+    configId, platform, savedPlatform, storeUrl, apiKey, apiSecret, storefrontToken, feedUrl, feedFormat,
     syncStatus, syncError, lastSyncAt, syncEnabled, productCount, maxProducts, syncHistory,
     // setters
-    setPlatform, setStoreUrl, setApiKey, setApiSecret, setFeedUrl, setFeedFormat,
+    setPlatform, setStoreUrl, setApiKey, setApiSecret, setStorefrontToken, setFeedUrl, setFeedFormat,
 
     // actions
     save, sync, toggleAutoSync, reload: loadConfig,
