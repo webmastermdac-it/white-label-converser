@@ -168,57 +168,133 @@ serve(async (req) => {
 
     const orderStatusInstruction = `\n\nSe l'utente chiede lo stato di un ordine, chiedigli SEMPRE numero ordine ed email usata per l'acquisto (se non li ha già forniti entrambi in questo messaggio). Solo quando hai entrambi, includi alla fine del messaggio, su una riga a parte:\n[CHECK_ORDER:{"order_number":"<numero esatto>","email":"<email esatta>"}]\nNon mostrare mai questo marker all'utente, verrà rimosso automaticamente.\nSe il controllo non trova l'ordine, suggerisci di verificare i dati o di contattare l'assistenza.`;
 
+    // ── Real purchase tools (only for ecommerce chatbots with a configured store) ──
+    let ecommerceConfigured = false;
+    if (botConfig.business_vertical === "ecommerce") {
+      const { data: ecomCfg } = await supabase
+        .from("ecommerce_configs")
+        .select("platform")
+        .eq("client_id", botConfig.client_id)
+        .maybeSingle();
+      ecommerceConfigured = !!ecomCfg && ["woocommerce", "shopify", "prestashop"].includes(ecomCfg.platform);
+    }
+
+    const tools = ecommerceConfigured
+      ? [
+          {
+            type: "function",
+            function: {
+              name: "create_real_checkout",
+              description:
+                "Crea un acquisto REALE sullo store del cliente e restituisce il link di checkout/pagamento. Usalo solo quando il visitatore vuole davvero comprare un prodotto del catalogo e hai raccolto almeno nome ed email. Non inventare mai il link.",
+              parameters: {
+                type: "object",
+                properties: {
+                  product_id: { type: "string", description: "external_id esatto del prodotto dal catalogo" },
+                  quantity: { type: "number", description: "Quantità richiesta (default 1)" },
+                  name: { type: "string", description: "Nome e cognome del cliente" },
+                  email: { type: "string", description: "Email del cliente" },
+                  phone: { type: "string", description: "Telefono del cliente, se fornito" },
+                  address: { type: "string", description: "Indirizzo di spedizione, se fornito" },
+                },
+                required: ["product_id", "name", "email"],
+              },
+            },
+          },
+        ]
+      : [];
+
+    const purchaseInstruction = ecommerceConfigured
+      ? `\n\nACQUISTO REALE:\nPuoi completare acquisti veri con il tool create_real_checkout.\nPrima di chiamarlo devi avere: prodotto (external_id dal catalogo), quantità, nome, email; chiedi anche telefono e indirizzo di spedizione quando possibile.\nChiama il tool una sola volta per acquisto, poi comunica al visitatore il link di checkout restituito per completare il pagamento sullo store.\nSe il tool restituisce success=false, spiega gentilmente che l'acquisto non è andato a buon fine e proponi di essere ricontattato, aggiungendo il marker [TRIGGER_LEAD_FORM].`
+      : "";
+
     const instructions = botConfig.knowledge_base || "You are a helpful assistant.";
-    const systemPrompt = `${instructions}${productKnowledge ? "\n\n" + productKnowledge : ""}${ragContext}\n\nIMPORTANT INSTRUCTIONS:\n- Be concise, helpful, and professional${languageInstruction}${fallbackInstruction}${productInstruction}${addToCartInstruction}${orderStatusInstruction}${formattingInstruction}`;
+    const systemPrompt = `${instructions}${productKnowledge ? "\n\n" + productKnowledge : ""}${ragContext}\n\nIMPORTANT INSTRUCTIONS:\n- Be concise, helpful, and professional${languageInstruction}${fallbackInstruction}${productInstruction}${addToCartInstruction}${orderStatusInstruction}${purchaseInstruction}${formattingInstruction}`;
 
 
-    // ── Call AI gateway ──
+    // ── Call AI gateway (with tool-call loop) ──
     const gatewayModel = MODEL_MAP[chatModel] || "openai/gpt-5-mini";
 
-    let aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
+    async function callAi(convo: any[]) {
+      const payload: any = {
         model: gatewayModel,
-        messages: [{ role: "system", content: systemPrompt }, ...messages],
+        messages: [{ role: "system", content: systemPrompt }, ...convo],
         stream: false,
-      }),
-    });
+      };
+      if (tools.length) payload.tools = tools;
 
-    // Keep customer chatbots available if the workspace AI Gateway limit blocks usage
-    // or the AI Gateway credit balance is exhausted.
-    // The OpenAI key is server-side only and is already used by this project for embeddings.
-    if (aiResponse.status === 402 || aiResponse.status === 403) {
-      const openAiKey = Deno.env.get("OPENAI_API_KEY");
-      if (openAiKey) {
-        console.warn(`[chat] AI Gateway returned ${aiResponse.status}; using configured OpenAI fallback`);
-        aiResponse = await fetch("https://api.openai.com/v1/chat/completions", {
+      let res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      // Keep customer chatbots available if the workspace AI Gateway limit blocks usage
+      // or the AI Gateway credit balance is exhausted.
+      if (res.status === 402 || res.status === 403) {
+        const openAiKey = Deno.env.get("OPENAI_API_KEY");
+        if (openAiKey) {
+          console.warn(`[chat] AI Gateway returned ${res.status}; using configured OpenAI fallback`);
+          res = await fetch("https://api.openai.com/v1/chat/completions", {
+            method: "POST",
+            headers: { Authorization: `Bearer ${openAiKey}`, "Content-Type": "application/json" },
+            body: JSON.stringify({ ...payload, model: chatModel === "gpt-4o" ? "gpt-4o" : "gpt-4o-mini" }),
+          });
+        }
+      }
+      return res;
+    }
+
+    async function runCheckoutTool(args: any) {
+      try {
+        const resp = await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/create-real-checkout`, {
           method: "POST",
-          headers: {
-            Authorization: `Bearer ${openAiKey}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            model: chatModel === "gpt-4o" ? "gpt-4o" : "gpt-4o-mini",
-            messages: [{ role: "system", content: systemPrompt }, ...messages],
-            stream: false,
-          }),
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ embed_token, ...args }),
+        });
+        return await resp.json();
+      } catch (e: any) {
+        return { success: false, error: e.message };
+      }
+    }
+
+    const convo: any[] = [...messages];
+    let aiMessage: any = null;
+
+    for (let step = 0; step < 3; step++) {
+      const aiResponse = await callAi(convo);
+      if (!aiResponse.ok) {
+        const status = aiResponse.status;
+        if (status === 429) return jsonResp({ error: "Rate limit exceeded" }, 429);
+        if (status === 402) return jsonResp({ error: "AI credits exhausted" }, 402);
+        throw new Error(`AI gateway error: ${status}`);
+      }
+      const aiData = await aiResponse.json();
+      aiMessage = aiData.choices?.[0]?.message || {};
+      const toolCalls = aiMessage.tool_calls;
+      if (!toolCalls?.length) break;
+
+      convo.push(aiMessage);
+      for (const call of toolCalls) {
+        let args: any = {};
+        try {
+          args = JSON.parse(call.function?.arguments || "{}");
+        } catch { /* ignore malformed args */ }
+        let result: any = { success: false, error: "Tool non disponibile." };
+        if (call.function?.name === "create_real_checkout") {
+          result = await runCheckoutTool(args);
+          console.log(`[chat] tool create_real_checkout → success=${result.success}`);
+        }
+        convo.push({
+          role: "tool",
+          tool_call_id: call.id,
+          content: JSON.stringify(result),
         });
       }
     }
 
-    if (!aiResponse.ok) {
-      const status = aiResponse.status;
-      if (status === 429) return jsonResp({ error: "Rate limit exceeded" }, 429);
-      if (status === 402) return jsonResp({ error: "AI credits exhausted" }, 402);
-      throw new Error(`AI gateway error: ${status}`);
-    }
+    const fullMessage = aiMessage?.content || "";
 
-    const aiData = await aiResponse.json();
-    const fullMessage = aiData.choices?.[0]?.message?.content || "";
 
     // ── Add-to-cart marker → real store cart link ──
     let cartLinkMarkdown = "";
