@@ -406,6 +406,9 @@ export default function LandingPage() {
             {navLinks.map((l) => (
               <button key={l.id} onClick={() => scrollTo(l.id)} className="block text-sm text-white/60 hover:text-white">{l.label}</button>
             ))}
+            <Link to="/login" onClick={() => setMobileMenu(false)} className="block text-sm text-white/60 hover:text-white hover:underline underline-offset-4">
+              {t("Login", "Accedi")}
+            </Link>
             <Link to="/register" onClick={() => setMobileMenu(false)}>
               <Button className="w-full bg-[#F5A623] hover:bg-[#E09800] text-black rounded-full mt-2 font-semibold">
                 {t("Try Free", "Prova Gratis")}
