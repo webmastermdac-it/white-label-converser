@@ -57,7 +57,11 @@ const KnowledgeBaseWizard: React.FC<Props> = ({ clientId, configId, currentKnowl
   const [step, setStep] = useState<Step>(singleTemplate ? "about" : "template");
   const [selected, setSelected] = useState<IndustryTemplate | null>(singleTemplate);
   const [sections, setSections] = useState<KBSections>(
-    singleTemplate ? { ...singleTemplate.sections[langKey] } : { ...defaultSections }
+    singleTemplate
+      ? { ...singleTemplate.sections[langKey] }
+      : currentKnowledgeBase
+        ? { ...defaultSections, about_us: currentKnowledgeBase }
+        : { ...defaultSections }
   );
   const [saving, setSaving] = useState(false);
 
@@ -116,6 +120,15 @@ const KnowledgeBaseWizard: React.FC<Props> = ({ clientId, configId, currentKnowl
     }
 
     const prompt = buildPrompt(sections, lang);
+    if (currentKnowledgeBase && prompt.length < currentKnowledgeBase.length / 2) {
+      const msg = lang === "it"
+        ? "Questo sovrascriverà le istruzioni attuali del bot con un testo più corto. Continuare?"
+        : "This will overwrite the bot's current instructions with shorter text. Continue?";
+      if (!window.confirm(msg)) {
+        setSaving(false);
+        return;
+      }
+    }
     await onSave(prompt);
     setSaving(false);
   };

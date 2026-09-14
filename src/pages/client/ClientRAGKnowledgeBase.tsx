@@ -280,11 +280,15 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
     if (!chatbotId) return;
     setSavingFaqs(true);
     try {
-      await supabase.from("faqs" as any).delete().eq("chatbot_id", chatbotId);
       const validFaqs = faqs.filter(f => f.question.trim() && f.answer.trim());
-      if (validFaqs.length > 0) {
+      const toUpdate = validFaqs.filter(f => f.id);
+      const toInsert = validFaqs.filter(f => !f.id);
+      for (const f of toUpdate) {
+        await supabase.from("faqs" as any).update({ question: f.question, answer: f.answer }).eq("id", f.id);
+      }
+      if (toInsert.length > 0) {
         const { error } = await supabase.from("faqs" as any).insert(
-          validFaqs.map(f => ({ chatbot_id: chatbotId, question: f.question, answer: f.answer }))
+          toInsert.map(f => ({ chatbot_id: chatbotId, question: f.question, answer: f.answer }))
         );
         if (error) throw error;
       }
