@@ -451,6 +451,36 @@ export type Database = {
           },
         ]
       }
+      faqs_history: {
+        Row: {
+          action: string | null
+          answer: string | null
+          changed_at: string
+          chatbot_id: string | null
+          faq_id: string | null
+          id: string
+          question: string | null
+        }
+        Insert: {
+          action?: string | null
+          answer?: string | null
+          changed_at?: string
+          chatbot_id?: string | null
+          faq_id?: string | null
+          id?: string
+          question?: string | null
+        }
+        Update: {
+          action?: string | null
+          answer?: string | null
+          changed_at?: string
+          chatbot_id?: string | null
+          faq_id?: string | null
+          id?: string
+          question?: string | null
+        }
+        Relationships: []
+      }
       instagram_messages: {
         Row: {
           bot_id: string | null
