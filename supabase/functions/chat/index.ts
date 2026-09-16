@@ -423,11 +423,6 @@ serve(async (req) => {
               source_url,
               lang,
             });
-            if (session_token) {
-              await supabase.from("chat_sessions")
-                .update({ lead_captured: true })
-                .eq("session_token", session_token);
-            }
             leadAlreadyCaptured = true;
             console.log("[chat] conversational lead captured");
           }
