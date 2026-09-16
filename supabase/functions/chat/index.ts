@@ -443,7 +443,7 @@ serve(async (req) => {
 
     // Save session in background
     if (session_token) {
-      saveSession(supabase, session_token, botConfig, [...messages, { role: "assistant", content: cleanMessage }], source_url, lang);
+      saveSession(supabase, session_token, botConfig, [...messages, { role: "assistant", content: cleanMessage }], source_url, lang, conversationalLead && leadAlreadyCaptured);
     }
 
     return jsonResp({
@@ -594,7 +594,8 @@ function jsonResp(data: any, status = 200) {
 
 async function saveSession(
   supabase: any, session_token: string, botConfig: any,
-  allMessages: any[], source_url: string | undefined, lang: string
+  allMessages: any[], source_url: string | undefined, lang: string,
+  leadCaptured = false
 ) {
   try {
     const { data: existingSession } = await supabase
@@ -609,6 +610,7 @@ async function saveSession(
         ended_at: null,
         last_message_at: new Date().toISOString(),
         language: lang,
+        ...(leadCaptured ? { lead_captured: true } : {}),
       }).eq("session_token", session_token);
     } else {
       await supabase.from("chat_sessions").insert({
@@ -619,6 +621,7 @@ async function saveSession(
         source_url: source_url || "",
         language: lang,
         last_message_at: new Date().toISOString(),
+        lead_captured: leadCaptured,
       });
     }
   } catch (err) {
