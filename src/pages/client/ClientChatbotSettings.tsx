@@ -17,7 +17,7 @@ import ClientIntegrations from "@/pages/client/ClientIntegrations";
 import {
   Loader2, ArrowLeft, Settings, Palette, Database,
   Copy, Code2, Globe, Save, Inbox, MessageSquare,
-  Eye, RefreshCw, Plug, CheckCircle2
+  Eye, RefreshCw, Plug, CheckCircle2, Power
 } from "lucide-react";
 
 interface ClientChatbotSettingsProps {
@@ -155,6 +155,35 @@ const ClientChatbotSettings = ({ adminMode = false }: ClientChatbotSettingsProps
           <div className="glass rounded-xl p-6 space-y-5">
             <h3 className="font-semibold text-foreground">{tl("Impostazioni Generali", "General Settings")}</h3>
 
+            {/* Bot active — prominent state card at top */}
+            <div
+              className={`flex items-center justify-between gap-3 p-5 rounded-xl border transition-colors ${
+                isActive
+                  ? "bg-green-500/10 border-green-500/30"
+                  : "bg-red-500/5 border-red-500/20"
+              }`}
+            >
+              <div className="flex items-start gap-3">
+                <Power className={`w-5 h-5 mt-0.5 ${isActive ? "text-green-500" : "text-muted-foreground"}`} />
+                <div>
+                  <p className="text-sm font-medium text-foreground flex items-center gap-2 flex-wrap">
+                    {tl("Bot attivo", "Bot active")}
+                    <span
+                      className={`text-xs font-semibold px-2 py-0.5 rounded-full border ${
+                        isActive
+                          ? "text-green-500 border-green-500/30 bg-green-500/10"
+                          : "text-muted-foreground border-border bg-secondary"
+                      }`}
+                    >
+                      {isActive ? tl("🟢 Attivo", "🟢 Active") : tl("⚪ Inattivo", "⚪ Inactive")}
+                    </span>
+                  </p>
+                  <p className="text-xs text-muted-foreground">{tl("Abilita/disabilita il widget", "Enable/disable the widget")}</p>
+                </div>
+              </div>
+              <Switch checked={isActive} onCheckedChange={setIsActive} />
+            </div>
+
             <div className="space-y-2">
               <Label>{tl("Nome del bot", "Bot name")}</Label>
               <Input value={name} onChange={(e) => setName(e.target.value)} className="bg-secondary border-border" />
@@ -165,115 +194,116 @@ const ClientChatbotSettings = ({ adminMode = false }: ClientChatbotSettingsProps
               <Input value={siteUrl} onChange={(e) => setSiteUrl(e.target.value)} placeholder="https://mysite.com" className="bg-secondary border-border" />
             </div>
 
-            <div className="space-y-2">
-              <Label>{tl("Quando una chat è da ritenersi conclusa", "When a chat should be considered ended")}</Label>
-              <p className="text-xs text-muted-foreground">
-                {tl("Dopo quanti minuti di inattività la chat viene chiusa automaticamente", "After how many minutes of inactivity the chat is automatically closed")}
-              </p>
-              <div className="flex gap-2 flex-wrap pt-1">
-                {[30, 60, 90].map((m) => (
-                  <button
-                    key={m}
-                    type="button"
-                    onClick={() => setInactivityTimeout(m)}
-                    className={`flex items-center gap-1.5 px-4 py-2.5 md:py-2 rounded-full text-sm font-medium transition-all min-h-[44px] border ${
-                      inactivityTimeout === m
-                        ? "bg-primary/15 text-primary border-primary/40"
-                        : "bg-secondary text-muted-foreground border-border hover:text-foreground"
-                    }`}
-                  >
-                    {inactivityTimeout === m && <CheckCircle2 className="w-4 h-4" />}
-                    {m} {tl("minuti", "minutes")}
-                  </button>
-                ))}
+            {/* Chat inactivity timeout — own card */}
+            <div className="rounded-xl border border-border bg-secondary/30 p-4 space-y-3">
+              <div className="space-y-2">
+                <Label>{tl("Quando una chat è da ritenersi conclusa", "When a chat should be considered ended")}</Label>
+                <p className="text-xs text-muted-foreground">
+                  {tl("Dopo quanti minuti di inattività la chat viene chiusa automaticamente", "After how many minutes of inactivity the chat is automatically closed")}
+                </p>
+                <div className="flex gap-2 flex-wrap pt-1">
+                  {[30, 60, 90].map((m) => (
+                    <button
+                      key={m}
+                      type="button"
+                      onClick={() => setInactivityTimeout(m)}
+                      className={`flex items-center gap-1.5 px-4 py-2.5 md:py-2 rounded-full text-sm font-medium transition-all min-h-[44px] border ${
+                        inactivityTimeout === m
+                          ? "bg-primary/15 text-primary border-primary/40"
+                          : "bg-secondary text-muted-foreground border-border hover:text-foreground"
+                      }`}
+                    >
+                      {inactivityTimeout === m && <CheckCircle2 className="w-4 h-4" />}
+                      {m} {tl("minuti", "minutes")}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
 
-            {/* Lead form timing */}
-            <div className="space-y-2">
-              <Label>{tl("Quando mostrare il form per lasciare nome e contatti", "When to show the contact form")}</Label>
-              <p className="text-xs text-muted-foreground">
-                {tl("Scegli quando il bot chiede nome ed email al visitatore", "Choose when the bot asks the visitor for name and email")}
-              </p>
-              <div className="flex gap-2 flex-wrap pt-1">
-                <button
-                  type="button"
-                  onClick={() => setLeadFormMode("immediate")}
-                  className={`flex items-center gap-1.5 px-4 py-2.5 md:py-2 rounded-full text-sm font-medium transition-all min-h-[44px] border ${
-                    leadFormMode === "immediate"
-                      ? "bg-primary/15 text-primary border-primary/40"
-                      : "bg-secondary text-muted-foreground border-border hover:text-foreground"
-                  }`}
-                >
-                  {leadFormMode === "immediate" && <CheckCircle2 className="w-4 h-4" />}
-                  {tl("Subito all'inizio della chat", "Right at the start of the chat")}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => { if (leadFormMode === "immediate") setLeadFormMode("smart"); }}
-                  className={`flex items-center gap-1.5 px-4 py-2.5 md:py-2 rounded-full text-sm font-medium transition-all min-h-[44px] border ${
-                    leadFormMode !== "immediate"
-                      ? "bg-primary/15 text-primary border-primary/40"
-                      : "bg-secondary text-muted-foreground border-border hover:text-foreground"
-                  }`}
-                >
-                  {leadFormMode !== "immediate" && <CheckCircle2 className="w-4 h-4" />}
-                  {tl("Durante la conversazione", "During the conversation")}
-                </button>
-              </div>
-
-              {leadFormMode !== "immediate" && (
-                <div className="flex gap-2 flex-wrap items-center pt-2 pl-1 border-l-2 border-border ml-1 pl-4">
+            {/* Lead form timing — own card */}
+            <div className="rounded-xl border border-border bg-secondary/30 p-4 space-y-3">
+              <div className="space-y-2">
+                <Label>{tl("Quando mostrare il form per lasciare nome e contatti", "When to show the contact form")}</Label>
+                <p className="text-xs text-muted-foreground">
+                  {tl("Scegli quando il bot chiede nome ed email al visitatore", "Choose when the bot asks the visitor for name and email")}
+                </p>
+                <div className="flex gap-2 flex-wrap pt-1">
                   <button
                     type="button"
-                    onClick={() => setLeadFormMode("after_messages")}
+                    onClick={() => setLeadFormMode("immediate")}
                     className={`flex items-center gap-1.5 px-4 py-2.5 md:py-2 rounded-full text-sm font-medium transition-all min-h-[44px] border ${
-                      leadFormMode === "after_messages"
+                      leadFormMode === "immediate"
                         ? "bg-primary/15 text-primary border-primary/40"
                         : "bg-secondary text-muted-foreground border-border hover:text-foreground"
                     }`}
                   >
-                    {leadFormMode === "after_messages" && <CheckCircle2 className="w-4 h-4" />}
-                    {tl("Dopo un numero di messaggi", "After a number of messages")}
+                    {leadFormMode === "immediate" && <CheckCircle2 className="w-4 h-4" />}
+                    {tl("Subito all'inizio della chat", "Right at the start of the chat")}
                   </button>
-                  {leadFormMode === "after_messages" && (
-                    <div className="flex items-center gap-2">
-                      <Input
-                        type="number"
-                        min={1}
-                        max={20}
-                        value={leadFormMessageCount}
-                        onChange={(e) => setLeadFormMessageCount(Math.min(20, Math.max(1, Number(e.target.value) || 1)))}
-                        className="bg-secondary border-border w-20"
-                      />
-                      <span className="text-sm text-muted-foreground">{tl("messaggi", "messages")}</span>
-                    </div>
-                  )}
                   <button
                     type="button"
-                    onClick={() => setLeadFormMode("smart")}
+                    onClick={() => { if (leadFormMode === "immediate") setLeadFormMode("smart"); }}
                     className={`flex items-center gap-1.5 px-4 py-2.5 md:py-2 rounded-full text-sm font-medium transition-all min-h-[44px] border ${
-                      leadFormMode === "smart"
+                      leadFormMode !== "immediate"
                         ? "bg-primary/15 text-primary border-primary/40"
                         : "bg-secondary text-muted-foreground border-border hover:text-foreground"
                     }`}
                   >
-                    {leadFormMode === "smart" && <CheckCircle2 className="w-4 h-4" />}
-                    {tl("Solo su richiesta del bot (attuale)", "Only when the bot asks (current)")}
+                    {leadFormMode !== "immediate" && <CheckCircle2 className="w-4 h-4" />}
+                    {tl("Durante la conversazione", "During the conversation")}
                   </button>
                 </div>
-              )}
-            </div>
 
-
-
-            <div className="flex items-center justify-between p-4 bg-secondary rounded-xl">
-              <div>
-                <p className="text-sm font-medium text-foreground">{tl("Bot attivo", "Bot active")}</p>
-                <p className="text-xs text-muted-foreground">{tl("Abilita/disabilita il widget", "Enable/disable the widget")}</p>
+                {leadFormMode !== "immediate" && (
+                  <div className="flex gap-2 flex-wrap items-center pt-2 pl-1 border-l-2 border-border ml-1 pl-4">
+                    <button
+                      type="button"
+                      onClick={() => setLeadFormMode("after_messages")}
+                      className={`flex items-center gap-1.5 px-4 py-2.5 md:py-2 rounded-full text-sm font-medium transition-all min-h-[44px] border ${
+                        leadFormMode === "after_messages"
+                          ? "bg-primary/15 text-primary border-primary/40"
+                          : "bg-secondary text-muted-foreground border-border hover:text-foreground"
+                      }`}
+                    >
+                      {leadFormMode === "after_messages" && <CheckCircle2 className="w-4 h-4" />}
+                      {tl("Dopo un numero di messaggi", "After a number of messages")}
+                    </button>
+                    {leadFormMode === "after_messages" && (
+                      <div className="flex items-center gap-2">
+                        <Input
+                          type="number"
+                          min={1}
+                          max={20}
+                          value={leadFormMessageCount}
+                          onChange={(e) => setLeadFormMessageCount(Math.min(20, Math.max(1, Number(e.target.value) || 1)))}
+                          className="bg-secondary border-border w-20"
+                        />
+                        <span className="text-sm text-muted-foreground">{tl("messaggi", "messages")}</span>
+                      </div>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => setLeadFormMode("smart")}
+                      className={`flex items-center gap-1.5 px-4 py-2.5 md:py-2 rounded-full text-sm font-medium transition-all min-h-[44px] border ${
+                        leadFormMode === "smart"
+                          ? "bg-primary/15 text-primary border-primary/40"
+                          : "bg-secondary text-muted-foreground border-border hover:text-foreground"
+                      }`}
+                    >
+                      {leadFormMode === "smart" && <CheckCircle2 className="w-4 h-4" />}
+                      {tl("Solo su richiesta del bot (attuale)", "Only when the bot asks (current)")}
+                    </button>
+                  </div>
+                )}
               </div>
-              <Switch checked={isActive} onCheckedChange={setIsActive} />
             </div>
+
+
+
+
+
+
 
             {/* Embed token (read-only) */}
             <div className="space-y-2">
