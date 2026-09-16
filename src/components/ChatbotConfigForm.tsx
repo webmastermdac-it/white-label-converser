@@ -508,6 +508,24 @@ const ChatbotConfigForm: React.FC<ChatbotConfigFormProps> = ({ clientId, chatbot
             />
           </div>
 
+          <div className="flex items-center justify-between p-4 bg-secondary rounded-xl">
+            <div className="pr-4">
+              <p className="text-sm font-medium text-foreground">
+                {lang === "it" ? "Invia una mail per ogni nuova chat" : "Send an email for every new chat"}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {lang === "it"
+                  ? "Riceverai un riepilogo (numero di messaggi, durata) quando una chat viene chiusa per inattività"
+                  : "You'll get a recap (message count, duration) when a chat is closed due to inactivity"}
+              </p>
+            </div>
+            <Switch
+              checked={config.notify_new_chat_enabled}
+              onCheckedChange={(v) => set("notify_new_chat_enabled", v)}
+            />
+          </div>
+
+
           <div className="space-y-2">
             <Label>{t("notificationEmail")}</Label>
             <Input
