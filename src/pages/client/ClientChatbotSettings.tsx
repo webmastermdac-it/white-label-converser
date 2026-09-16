@@ -267,7 +267,7 @@ const ClientChatbotSettings = ({ adminMode = false }: ClientChatbotSettingsProps
                   </button>
                 </div>
 
-                {leadFormMode !== "immediate" && (
+                {leadFormMode !== "immediate" && leadFormMode !== "conversational" && (
                   <div className="flex gap-2 flex-wrap items-center pt-2 pl-1 border-l-2 border-border ml-1 pl-4">
                     <button
                       type="button"
