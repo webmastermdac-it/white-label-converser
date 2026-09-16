@@ -155,6 +155,35 @@ const ClientChatbotSettings = ({ adminMode = false }: ClientChatbotSettingsProps
           <div className="glass rounded-xl p-6 space-y-5">
             <h3 className="font-semibold text-foreground">{tl("Impostazioni Generali", "General Settings")}</h3>
 
+            {/* Bot active — prominent state card at top */}
+            <div
+              className={`flex items-center justify-between gap-3 p-5 rounded-xl border transition-colors ${
+                isActive
+                  ? "bg-green-500/10 border-green-500/30"
+                  : "bg-red-500/5 border-red-500/20"
+              }`}
+            >
+              <div className="flex items-start gap-3">
+                <Power className={`w-5 h-5 mt-0.5 ${isActive ? "text-green-500" : "text-muted-foreground"}`} />
+                <div>
+                  <p className="text-sm font-medium text-foreground flex items-center gap-2 flex-wrap">
+                    {tl("Bot attivo", "Bot active")}
+                    <span
+                      className={`text-xs font-semibold px-2 py-0.5 rounded-full border ${
+                        isActive
+                          ? "text-green-500 border-green-500/30 bg-green-500/10"
+                          : "text-muted-foreground border-border bg-secondary"
+                      }`}
+                    >
+                      {isActive ? tl("🟢 Attivo", "🟢 Active") : tl("⚪ Inattivo", "⚪ Inactive")}
+                    </span>
+                  </p>
+                  <p className="text-xs text-muted-foreground">{tl("Abilita/disabilita il widget", "Enable/disable the widget")}</p>
+                </div>
+              </div>
+              <Switch checked={isActive} onCheckedChange={setIsActive} />
+            </div>
+
             <div className="space-y-2">
               <Label>{tl("Nome del bot", "Bot name")}</Label>
               <Input value={name} onChange={(e) => setName(e.target.value)} className="bg-secondary border-border" />
@@ -165,27 +194,30 @@ const ClientChatbotSettings = ({ adminMode = false }: ClientChatbotSettingsProps
               <Input value={siteUrl} onChange={(e) => setSiteUrl(e.target.value)} placeholder="https://mysite.com" className="bg-secondary border-border" />
             </div>
 
-            <div className="space-y-2">
-              <Label>{tl("Quando una chat è da ritenersi conclusa", "When a chat should be considered ended")}</Label>
-              <p className="text-xs text-muted-foreground">
-                {tl("Dopo quanti minuti di inattività la chat viene chiusa automaticamente", "After how many minutes of inactivity the chat is automatically closed")}
-              </p>
-              <div className="flex gap-2 flex-wrap pt-1">
-                {[30, 60, 90].map((m) => (
-                  <button
-                    key={m}
-                    type="button"
-                    onClick={() => setInactivityTimeout(m)}
-                    className={`flex items-center gap-1.5 px-4 py-2.5 md:py-2 rounded-full text-sm font-medium transition-all min-h-[44px] border ${
-                      inactivityTimeout === m
-                        ? "bg-primary/15 text-primary border-primary/40"
-                        : "bg-secondary text-muted-foreground border-border hover:text-foreground"
-                    }`}
-                  >
-                    {inactivityTimeout === m && <CheckCircle2 className="w-4 h-4" />}
-                    {m} {tl("minuti", "minutes")}
-                  </button>
-                ))}
+            {/* Chat inactivity timeout — own card */}
+            <div className="rounded-xl border border-border bg-secondary/30 p-4 space-y-3">
+              <div className="space-y-2">
+                <Label>{tl("Quando una chat è da ritenersi conclusa", "When a chat should be considered ended")}</Label>
+                <p className="text-xs text-muted-foreground">
+                  {tl("Dopo quanti minuti di inattività la chat viene chiusa automaticamente", "After how many minutes of inactivity the chat is automatically closed")}
+                </p>
+                <div className="flex gap-2 flex-wrap pt-1">
+                  {[30, 60, 90].map((m) => (
+                    <button
+                      key={m}
+                      type="button"
+                      onClick={() => setInactivityTimeout(m)}
+                      className={`flex items-center gap-1.5 px-4 py-2.5 md:py-2 rounded-full text-sm font-medium transition-all min-h-[44px] border ${
+                        inactivityTimeout === m
+                          ? "bg-primary/15 text-primary border-primary/40"
+                          : "bg-secondary text-muted-foreground border-border hover:text-foreground"
+                      }`}
+                    >
+                      {inactivityTimeout === m && <CheckCircle2 className="w-4 h-4" />}
+                      {m} {tl("minuti", "minutes")}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
 
