@@ -13,12 +13,11 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import KnowledgeBaseWizard from "@/components/knowledge-base/KnowledgeBaseWizard";
 import {
   Loader2, Upload, Globe, HelpCircle, FileText, Trash2,
   RefreshCw, CheckCircle2, XCircle, Clock, Plus, Database,
   Search, Map, Send, AlertTriangle, GripVertical, X, Lock,
-  Save, Star, Info, Wand2, Store, ExternalLink,
+  Save, Star, Info, Store, ExternalLink,
 } from "lucide-react";
 
 // ── Types ──
@@ -128,6 +127,26 @@ const EcommerceKBStatus: React.FC<{ clientId: string }> = ({ clientId }) => {
   );
 };
 
+const LockedProFeature = ({ title, description, onUpgrade }: {
+  title: string;
+  description: string;
+  onUpgrade: () => void;
+}) => (
+  <div className="flex items-center gap-3 rounded-lg border border-border bg-muted/30 p-3">
+    <Lock className="h-4 w-4 shrink-0 text-muted-foreground" />
+    <div className="min-w-0 flex-1">
+      <div className="flex flex-wrap items-center gap-2">
+        <p className="text-sm font-medium text-foreground">{title}</p>
+        <Badge variant="secondary" className="h-5 px-1.5 text-[10px]">Pro</Badge>
+      </div>
+      <p className="mt-0.5 text-xs text-muted-foreground">{description}</p>
+    </div>
+    <Button variant="outline" size="sm" onClick={onUpgrade} className="shrink-0">
+      Upgrade
+    </Button>
+  </div>
+);
+
 const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }: { overrideClientId?: string; overrideChatbotId?: string; section?: "faq" | "knowledge" | "instructions" } = {}) => {
   const { clientId: authClientId, role } = useAuth();
   const clientId = overrideClientId || authClientId;
@@ -137,6 +156,7 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
   const maxDocuments = (planConfig as any)?.max_documents ?? -1;
   const [upgradeOpen, setUpgradeOpen] = useState(false);
   const [upgradeRequiredPlan, setUpgradeRequiredPlan] = useState<"starter" | "pro">("starter");
+  const [upgradeBannerDismissed, setUpgradeBannerDismissed] = useState(false);
 
   // State
   const [chatbotId, setChatbotId] = useState<string | null>(null);
@@ -177,7 +197,6 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
   const t = (it: string, en: string) => lang === "it" ? it : en;
   const isFree = planConfig?.plan_name === "free";
   const isAdmin = role === "super_admin";
-  const isPro = planConfig?.plan_name === "pro" || isAdmin;
 
   const showUpgrade = (plan: "starter" | "pro" = "starter") => {
     setUpgradeRequiredPlan(plan);
@@ -733,6 +752,30 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
         </div>
       )}
 
+      {isFree && !isAdmin && !upgradeBannerDismissed && (
+        <div className="flex items-center gap-3 rounded-lg border border-primary/25 bg-primary/5 px-3 py-2.5">
+          <Lock className="h-4 w-4 shrink-0 text-primary" />
+          <p className="min-w-0 flex-1 text-xs font-medium text-foreground">
+            {t(
+              "3 funzionalità avanzate disponibili con Pro — Documenti, Ricerca Avanzata, Ecommerce",
+              "3 advanced features available with Pro — Documents, Advanced Search, Ecommerce"
+            )}
+          </p>
+          <Button variant="outline" size="sm" onClick={() => showUpgrade("pro")} className="h-7 shrink-0 text-xs">
+            {t("Passa a Pro", "Upgrade to Pro")}
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7 shrink-0"
+            onClick={() => setUpgradeBannerDismissed(true)}
+            aria-label={t("Chiudi", "Dismiss")}
+          >
+            <X className="h-3.5 w-3.5" />
+          </Button>
+        </div>
+      )}
+
       {/* Processing banner */}
       {showKnowledge && processingSources > 0 && (
         <div className="glass rounded-lg px-3 py-2.5 border-warning/30 flex items-center gap-2.5">
@@ -813,52 +856,6 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
       )}
 
       {/* ══════════════════════════════════════════════════ */}
-      {/* WIZARD — Available on ALL plans                    */}
-      {/* ══════════════════════════════════════════════════ */}
-      {showInstructions && (
-      <div className="glass rounded-xl p-5">
-        <div className="flex items-center gap-2 mb-1">
-          <Wand2 className="w-5 h-5 text-primary" />
-          <h2 className="text-sm font-semibold text-foreground">
-            {t("🧙 Wizard Guidato", "🧙 Guided Wizard")}
-          </h2>
-          <Badge variant="secondary" className="text-xs ml-auto">
-            {t("Gratuito", "Free")}
-          </Badge>
-        </div>
-        <p className="text-xs text-muted-foreground mb-4">
-          {t(
-            "Configura le istruzioni del bot con il wizard passo-passo.",
-            "Set up bot instructions with the step-by-step wizard."
-          )}
-        </p>
-        {chatbotId && (
-          <KnowledgeBaseWizard
-            clientId={clientId!}
-            configId={chatbotId}
-            currentKnowledgeBase={systemPrompt}
-            plan={planConfig?.plan_name || "free"}
-            vertical={chatbotVertical}
-            maxFaqs={maxFaqs}
-            onSave={async (kb: string) => {
-              setSystemPrompt(kb);
-              try {
-                await supabase
-                  .from("chatbot_configs")
-                  .update({ knowledge_base: kb } as any)
-                  .eq("id", chatbotId);
-                toast({ title: "✅", description: t("Istruzioni salvate!", "Instructions saved!") });
-                fetchData();
-              } catch (err: any) {
-                toast({ title: "Errore", description: err.message, variant: "destructive" });
-              }
-            }}
-          />
-        )}
-      </div>
-      )}
-
-      {/* ══════════════════════════════════════════════════ */}
       {/* SECTION 2 — Knowledge Base (Priority: MEDIUM ★★)  */}
       {/* ══════════════════════════════════════════════════ */}
       {showKnowledge && (
@@ -876,17 +873,24 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
         />
 
         {isFree || !canUploadDocs ? (
-          <div className="flex items-center gap-3 p-4 rounded-xl border border-border bg-muted/30">
-            <Lock className="w-5 h-5 text-muted-foreground shrink-0" />
-            <div className="flex-1">
-              <p className="text-sm font-medium text-foreground">
-                {t("🔒 Disponibile dal piano Starter", "🔒 Available on Starter plan")}
-              </p>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                {t("Carica PDF, Word, analizza il sito web e usa la ricerca semantica.", "Upload PDF, Word, analyze your website and use semantic search.")}
-              </p>
-            </div>
-            <Button variant="outline" size="sm" onClick={() => showUpgrade("starter")} className="shrink-0">Upgrade</Button>
+          <div className="space-y-2">
+            <LockedProFeature
+              title={t("Caricamento documenti e PDF", "Document and PDF upload")}
+              description={t("Disponibile con il piano Pro", "Available on Pro plan")}
+              onUpgrade={() => showUpgrade("pro")}
+            />
+            <LockedProFeature
+              title={t("Fonti RAG e Ricerca Avanzata", "RAG sources and Advanced Search")}
+              description={t("Disponibile con il piano Pro", "Available on Pro plan")}
+              onUpgrade={() => showUpgrade("pro")}
+            />
+            {chatbotVertical === "ecommerce" && (
+              <LockedProFeature
+                title={t("Integrazione Ecommerce", "Ecommerce integration")}
+                description={t("Disponibile con il piano Pro", "Available on Pro plan")}
+                onUpgrade={() => showUpgrade("pro")}
+              />
+            )}
           </div>
         ) : (
           <div className="space-y-3">
@@ -1189,6 +1193,20 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
                 </div>
               </TabsContent>
             </Tabs>
+
+            {chatbotVertical === "ecommerce" && (
+              <div className="border-t border-border pt-3">
+                {canUseEcommerce ? (
+                  clientId ? <EcommerceKBStatus clientId={clientId} /> : null
+                ) : (
+                  <LockedProFeature
+                    title={t("Integrazione Ecommerce", "Ecommerce integration")}
+                    description={t("Disponibile con il piano Pro", "Available on Pro plan")}
+                    onUpgrade={() => showUpgrade("pro")}
+                  />
+                )}
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -1218,8 +1236,8 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
             value={systemPrompt}
             onChange={(e) => setSystemPrompt(e.target.value)}
             placeholder={t(
-              "Es: Sei l'assistente di [nome azienda]. Rispondi in modo cordiale...",
-              "E.g.: You are the assistant of [company name]. Reply in a friendly tone..."
+              "Descrivi qui: chi sei, i tuoi prodotti/servizi, il tono di voce, gli argomenti vietati, i contatti e gli orari.",
+              "Describe here: who you are, your products/services, tone of voice, forbidden topics, contact info and hours."
             )}
             rows={10}
             className="bg-secondary border-border resize-none font-mono text-sm"
@@ -1232,8 +1250,10 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
 
         <p className="text-[11px] text-muted-foreground mt-3 flex items-center gap-1">
           <Info className="w-3 h-3 shrink-0" />
-          {t("Le istruzioni vengono usate solo quando nessuna FAQ e nessun documento sono rilevanti.",
-            "Instructions are only used when no FAQ and no document are relevant.")}
+          {t(
+            "Scrivi qui le informazioni principali della tua attività: chi sei, prodotti e servizi, tono di voce, argomenti vietati, contatti e orari. Questo testo viene usato come ultima risorsa, dopo FAQ e Knowledge Base.",
+            "Describe here: who you are, your products/services, tone of voice, forbidden topics, contact info and hours. This text is used as a last-resort source, after FAQ and Knowledge Base."
+          )}
         </p>
       </div>
       )}
