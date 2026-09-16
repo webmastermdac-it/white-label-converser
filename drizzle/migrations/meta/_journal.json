@@ -8,6 +8,13 @@
       "when": 1789554452765,
       "tag": "0000_create_faqs_history_backup",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1789570125038,
+      "tag": "0001_add_page_url_to_knowledge_base",
+      "breakpoints": true
     }
   ]
 }

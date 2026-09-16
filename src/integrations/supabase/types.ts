@@ -524,6 +524,7 @@ export type Database = {
           file_path: string | null
           id: string
           name: string
+          page_url: string | null
           priority: number
           source_url: string | null
           status: string
@@ -539,6 +540,7 @@ export type Database = {
           file_path?: string | null
           id?: string
           name: string
+          page_url?: string | null
           priority?: number
           source_url?: string | null
           status?: string
@@ -554,6 +556,7 @@ export type Database = {
           file_path?: string | null
           id?: string
           name?: string
+          page_url?: string | null
           priority?: number
           source_url?: string | null
           status?: string

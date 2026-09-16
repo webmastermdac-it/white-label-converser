@@ -1,0 +1,1 @@
+ALTER TABLE public.knowledge_base ADD COLUMN page_url text;
