@@ -29,6 +29,13 @@
       "when": 1789575406140,
       "tag": "0003_add_lead_form_timing",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1789587698917,
+      "tag": "0004_add_chat_sessions_lead_captured",
+      "breakpoints": true
     }
   ]
 }

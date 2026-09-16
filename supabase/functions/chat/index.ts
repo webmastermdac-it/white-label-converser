@@ -1,5 +1,9 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import {
+  fetchBrandSettings, newLeadEmail, newLeadSubject, fetchCustomTemplate,
+  renderCustomTemplate, replaceSubjectVars, resolveClientOwnerLocale,
+} from "../_shared/email-template.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -31,7 +35,7 @@ serve(async (req) => {
     // ── Step 0: Fetch bot config ──
     const { data: botConfig, error: configError } = await supabase
       .from("chatbot_configs")
-      .select("id, client_id, name, business_vertical, knowledge_base, fallback_message, fallback_msg_en, fallback_msg_it, welcome_msg_it, welcome_msg_en, knowledge_base_products")
+      .select("id, client_id, name, business_vertical, knowledge_base, fallback_message, fallback_msg_en, fallback_msg_it, welcome_msg_it, welcome_msg_en, knowledge_base_products, lead_form_mode, notification_email, email_notifications_enabled")
       .eq("embed_token", embed_token)
       .single();
 
@@ -57,6 +61,18 @@ serve(async (req) => {
     const maxConv = planConfig?.max_conversations_month ?? 50;
     const chatModel = planConfig?.chat_model || "gpt-4o-mini";
     const ragAllowed = plan !== "free";
+
+    // ── Conversational lead capture: has this session already produced a lead? ──
+    const conversationalLead = (botConfig as any).lead_form_mode === "conversational";
+    let leadAlreadyCaptured = false;
+    if (conversationalLead && session_token) {
+      const { data: sessionRow } = await supabase
+        .from("chat_sessions")
+        .select("lead_captured")
+        .eq("session_token", session_token)
+        .maybeSingle();
+      leadAlreadyCaptured = !!sessionRow?.lead_captured;
+    }
 
     // Check conversation limit
     if (maxConv !== -1 && (sessionCountRes.count || 0) >= maxConv) {
@@ -159,7 +175,16 @@ serve(async (req) => {
 
     const languageInstruction = `\n\nIMPORTANT LANGUAGE RULE:\nThe visitor is using language code: ${lang}\nYou MUST always respond in the same language the visitor is writing in, regardless of the language of the knowledge base.\nAdapt naturally to any language the visitor uses.\nThe only exception: if the visitor explicitly asks you to switch to a different language, do so.`;
 
-    const fallbackInstruction = `\n\nFALLBACK RULE:\nWhen you don't know the answer or are uncertain, you must:\n1. Write a fallback message in the SAME language the visitor is using.\n2. The concept to convey is: "${fallbackConcept}" — translate and adapt this naturally.\n3. After saying the fallback message, include the special marker: [TRIGGER_LEAD_FORM]\n4. Never make up information not provided in your knowledge base.\n5. Do NOT use the fallback when the product catalog contains relevant or similar products — answer with those instead.`;
+    const fallbackInstruction = conversationalLead
+      ? `\n\nFALLBACK RULE:\nWhen you don't know the answer or are uncertain, you must:\n1. Write a fallback message in the SAME language the visitor is using.\n2. The concept to convey is: "${fallbackConcept}" — translate and adapt this naturally.\n3. Never make up information not provided in your knowledge base.\n4. Do NOT use the fallback when the product catalog contains relevant or similar products — answer with those instead.\n5. Never use any [TRIGGER_LEAD_FORM] marker.`
+      : `\n\nFALLBACK RULE:\nWhen you don't know the answer or are uncertain, you must:\n1. Write a fallback message in the SAME language the visitor is using.\n2. The concept to convey is: "${fallbackConcept}" — translate and adapt this naturally.\n3. After saying the fallback message, include the special marker: [TRIGGER_LEAD_FORM]\n4. Never make up information not provided in your knowledge base.\n5. Do NOT use the fallback when the product catalog contains relevant or similar products — answer with those instead.`;
+
+    // ── Conversational lead-capture instructions (only for lead_form_mode = "conversational") ──
+    const conversationalLeadInstruction = !conversationalLead
+      ? ""
+      : leadAlreadyCaptured
+      ? `\n\nCONTACT DATA RULE:\nYou already collected this visitor's contact details in this conversation. Do NOT ask for their name, email or phone again. Never output [LEAD_DATA:...] or [TRIGGER_LEAD_FORM] again in this session. Just keep helping them naturally.`
+      : `\n\nCONVERSATIONAL CONTACT COLLECTION (MANDATORY, HIGHEST PRIORITY):\nWhile helping the visitor, collect their contact details naturally inside the conversation — never show or describe a form, and never list several fields at once.\n1. First ask only for their name (one short question, woven naturally into your reply).\n2. Once you know their name, ask for ONE contact: their email (or phone if they prefer). One question at a time.\n3. Never invent contact information the visitor did not actually give you.\n4. CHECK BEFORE EVERY REPLY: if the visitor has already provided a name AND at least one of email or phone anywhere in this conversation, you MUST append the hidden marker below as the very last line of that reply. This is not optional — omitting it is an error.\n[LEAD_DATA:{"name":"...","email":"...","phone":"...","message":"short summary of what they want"}]\nRules for the marker: valid JSON on its own final line, empty string for email or phone if not provided, emitted exactly once in the whole conversation. Keep the visible part of the reply completely natural (e.g. "Grazie Marco! Ti ricontatteremo a marco@email.it a breve.") with no form and no mention of the marker — it is stripped automatically and the visitor never sees it.`;
 
     const formattingInstruction = `\n\nFORMATTING RULES:\n- Use **bold** only for product/plan names and prices\n- Use bullet lists only when listing 3+ items\n- Keep responses concise: max 6-8 lines per answer\n- No headers (##) in responses\n- End with ONE short question to keep the conversation going\n- Never use excessive formatting — write naturally`;
 
@@ -208,7 +233,7 @@ serve(async (req) => {
       : [];
 
     const purchaseInstruction = ecommerceConfigured
-      ? `\n\nACQUISTO REALE:\nPuoi completare acquisti veri con il tool create_real_checkout.\nPrima di chiamarlo devi avere: prodotto (external_id dal catalogo), quantità, nome, email; chiedi anche telefono e indirizzo di spedizione quando possibile.\nChiama il tool una sola volta per acquisto, poi comunica al visitatore il link di checkout restituito per completare il pagamento sullo store.\nSe il tool restituisce success=false, spiega gentilmente che l'acquisto non è andato a buon fine e proponi di essere ricontattato, aggiungendo il marker [TRIGGER_LEAD_FORM].`
+      ? `\n\nACQUISTO REALE:\nPuoi completare acquisti veri con il tool create_real_checkout.\nPrima di chiamarlo devi avere: prodotto (external_id dal catalogo), quantità, nome, email; chiedi anche telefono e indirizzo di spedizione quando possibile.\nChiama il tool una sola volta per acquisto, poi comunica al visitatore il link di checkout restituito per completare il pagamento sullo store.\nSe il tool restituisce success=false, spiega gentilmente che l'acquisto non è andato a buon fine e proponi di essere ricontattato${conversationalLead ? "." : ", aggiungendo il marker [TRIGGER_LEAD_FORM]."}`
       : "";
 
     const purchaseRules = ecommerceConfigured
@@ -216,7 +241,7 @@ serve(async (req) => {
       : "";
 
     const instructions = botConfig.knowledge_base || "You are a helpful assistant.";
-    const systemPrompt = `${purchaseRules}${instructions}${productKnowledge ? "\n\n" + productKnowledge : ""}${ragContext}\n\nIMPORTANT INSTRUCTIONS:\n- Be concise, helpful, and professional${languageInstruction}${fallbackInstruction}${productInstruction}${addToCartInstruction}${orderStatusInstruction}${purchaseInstruction}${formattingInstruction}`;
+    const systemPrompt = `${purchaseRules}${instructions}${productKnowledge ? "\n\n" + productKnowledge : ""}${ragContext}\n\nIMPORTANT INSTRUCTIONS:\n- Be concise, helpful, and professional${languageInstruction}${fallbackInstruction}${conversationalLeadInstruction}${productInstruction}${addToCartInstruction}${orderStatusInstruction}${purchaseInstruction}${formattingInstruction}`;
 
 
     // ── Call AI gateway (with tool-call loop) ──
@@ -379,17 +404,46 @@ serve(async (req) => {
       }
     }
 
+    // ── Conversational lead marker → create the lead automatically ──
+    if (conversationalLead && !leadAlreadyCaptured) {
+      const leadDataMatch = fullMessage.match(/\[LEAD_DATA:(\{.*?\})\]/);
+      if (leadDataMatch) {
+        try {
+          const parsed = JSON.parse(leadDataMatch[1]);
+          const lName = String(parsed.name || "").trim();
+          const lEmail = String(parsed.email || "").trim();
+          const lPhone = String(parsed.phone || "").trim();
+          if (lName && (lEmail || lPhone)) {
+            await createConversationalLead(supabase, botConfig, {
+              name: lName,
+              email: lEmail,
+              phone: lPhone,
+              message: String(parsed.message || "").trim(),
+              transcript: messages,
+              source_url,
+              lang,
+            });
+            leadAlreadyCaptured = true;
+            console.log("[chat] conversational lead captured");
+          }
+        } catch (e) {
+          console.error("[chat] LEAD_DATA parse error:", e);
+        }
+      }
+    }
+
     const cleanMessage =
       fullMessage
         .replace("[TRIGGER_LEAD_FORM]", "")
+        .replace(/\[LEAD_DATA:\{[\s\S]*?\}\]/g, "")
         .replace(/\[ADD_TO_CART:.*?\]/g, "")
         .replace(/\[CHECK_ORDER:.*?\]/g, "")
         .trim() + cartLinkMarkdown + orderStatusText;
-    const triggerLead = fullMessage.indexOf("[TRIGGER_LEAD_FORM]") !== -1;
+    const triggerLead = !conversationalLead && fullMessage.indexOf("[TRIGGER_LEAD_FORM]") !== -1;
 
     // Save session in background
     if (session_token) {
-      saveSession(supabase, session_token, botConfig, [...messages, { role: "assistant", content: cleanMessage }], source_url, lang);
+      saveSession(supabase, session_token, botConfig, [...messages, { role: "assistant", content: cleanMessage }], source_url, lang, conversationalLead && leadAlreadyCaptured);
     }
 
     return jsonResp({
@@ -540,7 +594,8 @@ function jsonResp(data: any, status = 200) {
 
 async function saveSession(
   supabase: any, session_token: string, botConfig: any,
-  allMessages: any[], source_url: string | undefined, lang: string
+  allMessages: any[], source_url: string | undefined, lang: string,
+  leadCaptured = false
 ) {
   try {
     const { data: existingSession } = await supabase
@@ -555,6 +610,7 @@ async function saveSession(
         ended_at: null,
         last_message_at: new Date().toISOString(),
         language: lang,
+        ...(leadCaptured ? { lead_captured: true } : {}),
       }).eq("session_token", session_token);
     } else {
       await supabase.from("chat_sessions").insert({
@@ -565,9 +621,103 @@ async function saveSession(
         source_url: source_url || "",
         language: lang,
         last_message_at: new Date().toISOString(),
+        lead_captured: leadCaptured,
       });
     }
   } catch (err) {
     console.error("Session save error (non-blocking):", err);
+  }
+}
+
+// ══════════════════════════════════════════════════════
+// CONVERSATIONAL LEAD — same logic as capture-lead/index.ts
+// ══════════════════════════════════════════════════════
+async function createConversationalLead(
+  supabase: any,
+  botConfig: any,
+  lead: {
+    name: string; email: string; phone: string; message: string;
+    transcript: any[]; source_url?: string; lang: string;
+  }
+) {
+  const { data: clientData } = await supabase
+    .from("clients").select("plan").eq("id", botConfig.client_id).single();
+  const clientPlan = clientData?.plan || "free";
+
+  const { data: planConfig } = await supabase
+    .from("plan_configs").select("max_leads_month").eq("plan_name", clientPlan).single();
+  const maxLeads = planConfig?.max_leads_month ?? 10;
+
+  let leadLimitReached = false;
+  if (maxLeads !== -1) {
+    const monthStart = new Date();
+    monthStart.setDate(1);
+    monthStart.setHours(0, 0, 0, 0);
+    const { count } = await supabase
+      .from("leads").select("id", { count: "exact", head: true })
+      .eq("client_id", botConfig.client_id)
+      .gte("created_at", monthStart.toISOString());
+    if ((count || 0) >= maxLeads) leadLimitReached = true;
+  }
+
+  const { error: leadError } = await supabase.from("leads").insert({
+    client_id: botConfig.client_id,
+    bot_id: botConfig.id,
+    name: lead.name,
+    email: lead.email,
+    phone: lead.phone,
+    message: lead.message,
+    transcript: lead.transcript,
+    source_url: lead.source_url || "",
+    status: "new",
+    language: lead.lang,
+  });
+  if (leadError) throw leadError;
+
+  if (!botConfig.email_notifications_enabled || !botConfig.notification_email || leadLimitReached) return;
+
+  const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
+  if (!RESEND_API_KEY) return;
+
+  try {
+    const brand = await fetchBrandSettings(supabase);
+    const ownerLocale = await resolveClientOwnerLocale(supabase, botConfig.client_id);
+    const dashboardUrl = "https://white-label-converser.lovable.app/dashboard/leads";
+    const customTpl = await fetchCustomTemplate(supabase, "chatbot_notification", ownerLocale);
+
+    let emailHtml: string;
+    let emailSubject: string;
+
+    if (customTpl) {
+      const vars = {
+        "{{nome}}": lead.name, "{{email}}": lead.email,
+        "{{messaggio}}": (lead.message || "").substring(0, 150),
+        "{{data}}": new Date().toLocaleString(ownerLocale === "en" ? "en-GB" : "it-IT", { timeZone: "Europe/Rome" }),
+        "{{link}}": dashboardUrl, "{{app_name}}": brand.app_name,
+        "{{logo_url}}": brand.logo_url || "", "{{bot_name}}": botConfig.name,
+      };
+      emailHtml = renderCustomTemplate(brand, customTpl, vars);
+      emailSubject = replaceSubjectVars(customTpl.subject, vars);
+    } else {
+      emailHtml = newLeadEmail(brand, {
+        botName: botConfig.name, visitorName: lead.name, visitorEmail: lead.email,
+        phone: lead.phone, message: lead.message, sourceUrl: lead.source_url,
+        language: lead.lang, transcript: lead.transcript, dashboardUrl,
+      }, ownerLocale);
+      emailSubject = newLeadSubject(lead.name, botConfig.name, ownerLocale);
+    }
+
+    await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        from: `${brand.app_name} <noreply@chatbot.your-genius.com>`,
+        to: [botConfig.notification_email],
+        subject: emailSubject,
+        html: emailHtml,
+      }),
+    });
+  } catch (emailErr) {
+    console.error("[chat] conversational lead email error:", emailErr);
   }
 }

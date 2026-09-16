@@ -467,7 +467,7 @@
         function read() {
           reader.read().then(function(result) {
             if (result.done) {
-              var clean = fullText.replace("[TRIGGER_LEAD_FORM]", "").trim();
+              var clean = fullText.replace("[TRIGGER_LEAD_FORM]", "").replace(/\[LEAD_DATA:\{[\s\S]*?\}\]/g, "").trim();
               messages[botIdx] = { role: "assistant", content: clean || t.errorReply };
               if (fullText.indexOf("[TRIGGER_LEAD_FORM]") !== -1) showLeadForm = true;
               saveMessages(messages);
@@ -485,14 +485,14 @@
                 var delta = (parsed.choices && parsed.choices[0] && parsed.choices[0].delta && parsed.choices[0].delta.content) || "";
                 if (delta) {
                   fullText += delta;
-                  messages[botIdx] = { role: "assistant", content: fullText.replace("[TRIGGER_LEAD_FORM]", "").trim() };
+                  messages[botIdx] = { role: "assistant", content: fullText.replace("[TRIGGER_LEAD_FORM]", "").replace(/\[LEAD_DATA:\{[\s\S]*?\}\]/g, "").trim() };
                   render();
                 }
               } catch(e) {}
             }
             read();
           }).catch(function() {
-            messages[botIdx] = { role: "assistant", content: fullText.replace("[TRIGGER_LEAD_FORM]", "").trim() || t.errorMsg };
+            messages[botIdx] = { role: "assistant", content: fullText.replace("[TRIGGER_LEAD_FORM]", "").replace(/\[LEAD_DATA:\{[\s\S]*?\}\]/g, "").trim() || t.errorMsg };
             saveMessages(messages);
             isLoading = false;
             render();
