@@ -73,6 +73,7 @@ export type Database = {
           id: string
           language: string | null
           last_message_at: string
+          lead_captured: boolean
           messages: Json | null
           session_token: string
           source_url: string | null
@@ -85,6 +86,7 @@ export type Database = {
           id?: string
           language?: string | null
           last_message_at?: string
+          lead_captured?: boolean
           messages?: Json | null
           session_token?: string
           source_url?: string | null
@@ -97,6 +99,7 @@ export type Database = {
           id?: string
           language?: string | null
           last_message_at?: string
+          lead_captured?: boolean
           messages?: Json | null
           session_token?: string
           source_url?: string | null
