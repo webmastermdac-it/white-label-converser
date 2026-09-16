@@ -126,7 +126,7 @@ function extractMainContent(html: string): string {
     .replace(/<noscript[\s\S]*?<\/noscript>/gi, "");
 
   // Before stripping tags, add space around inline elements to prevent word merging
-  text = text.replace(/<\/(span|a|strong|em|b|i|label|button|td|th|li)>/gi, " $0");
+  text = text.replace(/<\/(span|a|strong|em|b|i|label|button|td|th|li)>/gi, " $&");
   text = text.replace(/<(br|hr)[^>]*>/gi, "\n");
   // Then strip all remaining tags
   text = text.replace(/<[^>]+>/g, "");
