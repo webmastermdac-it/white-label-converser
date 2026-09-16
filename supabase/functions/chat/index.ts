@@ -400,13 +400,47 @@ serve(async (req) => {
       }
     }
 
+    // ── Conversational lead marker → create the lead automatically ──
+    if (conversationalLead && !leadAlreadyCaptured) {
+      const leadDataMatch = fullMessage.match(/\[LEAD_DATA:(\{.*?\})\]/);
+      if (leadDataMatch) {
+        try {
+          const parsed = JSON.parse(leadDataMatch[1]);
+          const lName = String(parsed.name || "").trim();
+          const lEmail = String(parsed.email || "").trim();
+          const lPhone = String(parsed.phone || "").trim();
+          if (lName && (lEmail || lPhone)) {
+            await createConversationalLead(supabase, botConfig, {
+              name: lName,
+              email: lEmail,
+              phone: lPhone,
+              message: String(parsed.message || "").trim(),
+              transcript: messages,
+              source_url,
+              lang,
+            });
+            if (session_token) {
+              await supabase.from("chat_sessions")
+                .update({ lead_captured: true })
+                .eq("session_token", session_token);
+            }
+            leadAlreadyCaptured = true;
+            console.log("[chat] conversational lead captured");
+          }
+        } catch (e) {
+          console.error("[chat] LEAD_DATA parse error:", e);
+        }
+      }
+    }
+
     const cleanMessage =
       fullMessage
         .replace("[TRIGGER_LEAD_FORM]", "")
+        .replace(/\[LEAD_DATA:\{[\s\S]*?\}\]/g, "")
         .replace(/\[ADD_TO_CART:.*?\]/g, "")
         .replace(/\[CHECK_ORDER:.*?\]/g, "")
         .trim() + cartLinkMarkdown + orderStatusText;
-    const triggerLead = fullMessage.indexOf("[TRIGGER_LEAD_FORM]") !== -1;
+    const triggerLead = !conversationalLead && fullMessage.indexOf("[TRIGGER_LEAD_FORM]") !== -1;
 
     // Save session in background
     if (session_token) {
