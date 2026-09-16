@@ -148,6 +148,8 @@ export type Database = {
           knowledge_base_scraped: string | null
           knowledge_base_sections: Json | null
           launcher_position: string | null
+          lead_form_message_count: number
+          lead_form_mode: string
           name: string
           notification_email: string | null
           notify_new_chat_enabled: boolean
@@ -188,6 +190,8 @@ export type Database = {
           knowledge_base_scraped?: string | null
           knowledge_base_sections?: Json | null
           launcher_position?: string | null
+          lead_form_message_count?: number
+          lead_form_mode?: string
           name?: string
           notification_email?: string | null
           notify_new_chat_enabled?: boolean
@@ -228,6 +232,8 @@ export type Database = {
           knowledge_base_scraped?: string | null
           knowledge_base_sections?: Json | null
           launcher_position?: string | null
+          lead_form_message_count?: number
+          lead_form_mode?: string
           name?: string
           notification_email?: string | null
           notify_new_chat_enabled?: boolean
@@ -1001,6 +1007,8 @@ export type Database = {
           circle_color: string
           id: string
           launcher_position: string
+          lead_form_message_count: number
+          lead_form_mode: string
           name: string
           primary_color: string
           text_color: string
