@@ -604,6 +604,13 @@
       var saved = loadMessages();
       if (saved && saved.length && !welcomeChanged) {
         messages = saved;
+        for (var mi = 0; mi < messages.length; mi++) {
+          if (messages[mi] && messages[mi].role === "user") userMessageCount++;
+        }
+        if (config.lead_form_mode === "after_messages" && !leadSent &&
+            userMessageCount >= (config.lead_form_message_count || 3)) {
+          showLeadForm = true;
+        }
       } else {
         messages = [{ role: "assistant", content: welcomeMsg }];
         saveMessages(messages);
@@ -613,6 +620,7 @@
           sessionToken = getSessionToken();
         }
       }
+
       // Store current welcome message for future change detection
       try { sessionStorage.setItem(WELCOME_KEY, welcomeMsg); } catch(e) {}
 
