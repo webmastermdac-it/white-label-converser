@@ -447,6 +447,12 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
       toast({ title: t("URL aggiunto", "URL added") });
       fetchData();
       setKbTab("sources");
+    } catch (err: any) {
+      toast({ title: err.message, variant: "destructive" });
+    } finally { setUploading(false); }
+  };
+
+  const handleAddSitemap = async () => {
     if (!sitemapInput.trim() || !chatbotId) return;
     if (isFree) { showUpgrade("starter"); return; }
     setUploading(true);
