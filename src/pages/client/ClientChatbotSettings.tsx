@@ -16,7 +16,7 @@ import ClientRAGKnowledgeBase from "@/pages/client/ClientRAGKnowledgeBase";
 import ClientIntegrations from "@/pages/client/ClientIntegrations";
 import {
   Loader2, ArrowLeft, Settings, Palette, Database,
-  FileText, Copy, Code2, Globe, Save, Inbox, MessageSquare,
+  Copy, Code2, Globe, Save, Inbox, MessageSquare,
   Eye, RefreshCw, Plug
 } from "lucide-react";
 
@@ -137,13 +137,8 @@ const ClientChatbotSettings = ({ adminMode = false }: ClientChatbotSettingsProps
         <TabsList className="bg-secondary border border-border flex-wrap h-auto gap-1 p-1">
           <TabsTrigger value="general" className="gap-1.5 text-xs"><Settings className="w-3.5 h-3.5" /> {tl("Generale", "General")}</TabsTrigger>
           <TabsTrigger value="appearance" className="gap-1.5 text-xs"><Palette className="w-3.5 h-3.5" /> {tl("Aspetto", "Appearance")}</TabsTrigger>
-          <TabsTrigger value="faq" className="gap-1.5 text-xs"><FileText className="w-3.5 h-3.5" /> FAQ</TabsTrigger>
           <TabsTrigger value="messages" className="gap-1.5 text-xs"><MessageSquare className="w-3.5 h-3.5" /> {tl("Messaggi e fallback", "Messages & fallback")}</TabsTrigger>
-
-
-          
-          <TabsTrigger value="knowledge" className="gap-1.5 text-xs"><Database className="w-3.5 h-3.5" /> {tl("Conoscenza", "Knowledge")}</TabsTrigger>
-          <TabsTrigger value="instructions" className="gap-1.5 text-xs"><FileText className="w-3.5 h-3.5" /> {tl("Istruzioni", "Instructions")}</TabsTrigger>
+          <TabsTrigger value="knowledge" className="gap-1.5 text-xs"><Database className="w-3.5 h-3.5" /> Conoscenza</TabsTrigger>
           <TabsTrigger value="integrations" className="gap-1.5 text-xs"><Plug className="w-3.5 h-3.5" /> {tl("Integrazioni", "Integrations")}</TabsTrigger>
           <TabsTrigger value="preview" className="gap-1.5 text-xs"><Eye className="w-3.5 h-3.5" /> Preview</TabsTrigger>
         </TabsList>
@@ -221,20 +216,9 @@ const ClientChatbotSettings = ({ adminMode = false }: ClientChatbotSettingsProps
 
 
 
-        {/* Tab FAQ */}
-        <TabsContent value="faq">
-          <ClientRAGKnowledgeBase overrideChatbotId={botId} section="faq" />
-        </TabsContent>
-
-        {/* Tab 3 — Knowledge */}
+        {/* Knowledge hub (FAQ / Documenti / Istruzioni) */}
         <TabsContent value="knowledge">
-
-          <ClientRAGKnowledgeBase overrideChatbotId={botId} section="knowledge" />
-        </TabsContent>
-
-        {/* Tab 5 — Instructions */}
-        <TabsContent value="instructions">
-          <ClientRAGKnowledgeBase overrideChatbotId={botId} section="instructions" />
+          <ClientRAGKnowledgeBase overrideChatbotId={botId} />
         </TabsContent>
 
         {/* Integrations */}
