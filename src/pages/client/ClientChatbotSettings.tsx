@@ -189,6 +189,84 @@ const ClientChatbotSettings = ({ adminMode = false }: ClientChatbotSettingsProps
               </div>
             </div>
 
+            {/* Lead form timing */}
+            <div className="space-y-2">
+              <Label>{tl("Quando mostrare il form per lasciare nome e contatti", "When to show the contact form")}</Label>
+              <p className="text-xs text-muted-foreground">
+                {tl("Scegli quando il bot chiede nome ed email al visitatore", "Choose when the bot asks the visitor for name and email")}
+              </p>
+              <div className="flex gap-2 flex-wrap pt-1">
+                <button
+                  type="button"
+                  onClick={() => setLeadFormMode("immediate")}
+                  className={`flex items-center gap-1.5 px-4 py-2.5 md:py-2 rounded-full text-sm font-medium transition-all min-h-[44px] border ${
+                    leadFormMode === "immediate"
+                      ? "bg-primary/15 text-primary border-primary/40"
+                      : "bg-secondary text-muted-foreground border-border hover:text-foreground"
+                  }`}
+                >
+                  {leadFormMode === "immediate" && <CheckCircle2 className="w-4 h-4" />}
+                  {tl("Subito all'inizio della chat", "Right at the start of the chat")}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { if (leadFormMode === "immediate") setLeadFormMode("smart"); }}
+                  className={`flex items-center gap-1.5 px-4 py-2.5 md:py-2 rounded-full text-sm font-medium transition-all min-h-[44px] border ${
+                    leadFormMode !== "immediate"
+                      ? "bg-primary/15 text-primary border-primary/40"
+                      : "bg-secondary text-muted-foreground border-border hover:text-foreground"
+                  }`}
+                >
+                  {leadFormMode !== "immediate" && <CheckCircle2 className="w-4 h-4" />}
+                  {tl("Durante la conversazione", "During the conversation")}
+                </button>
+              </div>
+
+              {leadFormMode !== "immediate" && (
+                <div className="flex gap-2 flex-wrap items-center pt-2 pl-1 border-l-2 border-border ml-1 pl-4">
+                  <button
+                    type="button"
+                    onClick={() => setLeadFormMode("after_messages")}
+                    className={`flex items-center gap-1.5 px-4 py-2.5 md:py-2 rounded-full text-sm font-medium transition-all min-h-[44px] border ${
+                      leadFormMode === "after_messages"
+                        ? "bg-primary/15 text-primary border-primary/40"
+                        : "bg-secondary text-muted-foreground border-border hover:text-foreground"
+                    }`}
+                  >
+                    {leadFormMode === "after_messages" && <CheckCircle2 className="w-4 h-4" />}
+                    {tl("Dopo un numero di messaggi", "After a number of messages")}
+                  </button>
+                  {leadFormMode === "after_messages" && (
+                    <div className="flex items-center gap-2">
+                      <Input
+                        type="number"
+                        min={1}
+                        max={20}
+                        value={leadFormMessageCount}
+                        onChange={(e) => setLeadFormMessageCount(Math.min(20, Math.max(1, Number(e.target.value) || 1)))}
+                        className="bg-secondary border-border w-20"
+                      />
+                      <span className="text-sm text-muted-foreground">{tl("messaggi", "messages")}</span>
+                    </div>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => setLeadFormMode("smart")}
+                    className={`flex items-center gap-1.5 px-4 py-2.5 md:py-2 rounded-full text-sm font-medium transition-all min-h-[44px] border ${
+                      leadFormMode === "smart"
+                        ? "bg-primary/15 text-primary border-primary/40"
+                        : "bg-secondary text-muted-foreground border-border hover:text-foreground"
+                    }`}
+                  >
+                    {leadFormMode === "smart" && <CheckCircle2 className="w-4 h-4" />}
+                    {tl("Solo su richiesta del bot (attuale)", "Only when the bot asks (current)")}
+                  </button>
+                </div>
+              )}
+            </div>
+
+
+
             <div className="flex items-center justify-between p-4 bg-secondary rounded-xl">
               <div>
                 <p className="text-sm font-medium text-foreground">{tl("Bot attivo", "Bot active")}</p>
