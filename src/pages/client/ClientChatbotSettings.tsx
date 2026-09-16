@@ -17,7 +17,7 @@ import ClientIntegrations from "@/pages/client/ClientIntegrations";
 import {
   Loader2, ArrowLeft, Settings, Palette, Database,
   Copy, Code2, Globe, Save, Inbox, MessageSquare,
-  Eye, RefreshCw, Plug
+  Eye, RefreshCw, Plug, CheckCircle2
 } from "lucide-react";
 
 interface ClientChatbotSettingsProps {
@@ -43,6 +43,7 @@ const ClientChatbotSettings = ({ adminMode = false }: ClientChatbotSettingsProps
   const [name, setName] = useState("");
   const [siteUrl, setSiteUrl] = useState("");
   const [isActive, setIsActive] = useState(true);
+  const [inactivityTimeout, setInactivityTimeout] = useState(30);
 
   const tl = (it: string, en: string) => lang === "it" ? it : en;
 
@@ -58,6 +59,7 @@ const ClientChatbotSettings = ({ adminMode = false }: ClientChatbotSettingsProps
       setName(data.name);
       setSiteUrl((data as any).site_url || "");
       setIsActive(data.is_active ?? true);
+      setInactivityTimeout((data as any).inactivity_timeout_minutes ?? 30);
     }
     setLoading(false);
   }, [botId]);
@@ -70,7 +72,7 @@ const ClientChatbotSettings = ({ adminMode = false }: ClientChatbotSettingsProps
     try {
       const { error } = await supabase
         .from("chatbot_configs")
-        .update({ name, site_url: siteUrl, is_active: isActive } as any)
+        .update({ name, site_url: siteUrl, is_active: isActive, inactivity_timeout_minutes: inactivityTimeout } as any)
         .eq("id", botId);
       if (error) throw error;
       toast({ title: "✅", description: tl("Impostazioni salvate!", "Settings saved!") });
@@ -159,6 +161,30 @@ const ClientChatbotSettings = ({ adminMode = false }: ClientChatbotSettingsProps
               <Input value={siteUrl} onChange={(e) => setSiteUrl(e.target.value)} placeholder="https://mysite.com" className="bg-secondary border-border" />
             </div>
 
+            <div className="space-y-2">
+              <Label>{tl("Quando una chat è da ritenersi conclusa", "When a chat should be considered ended")}</Label>
+              <p className="text-xs text-muted-foreground">
+                {tl("Dopo quanti minuti di inattività la chat viene chiusa automaticamente", "After how many minutes of inactivity the chat is automatically closed")}
+              </p>
+              <div className="flex gap-2 flex-wrap pt-1">
+                {[30, 60, 90].map((m) => (
+                  <button
+                    key={m}
+                    type="button"
+                    onClick={() => setInactivityTimeout(m)}
+                    className={`flex items-center gap-1.5 px-4 py-2.5 md:py-2 rounded-full text-sm font-medium transition-all min-h-[44px] border ${
+                      inactivityTimeout === m
+                        ? "bg-primary/15 text-primary border-primary/40"
+                        : "bg-secondary text-muted-foreground border-border hover:text-foreground"
+                    }`}
+                  >
+                    {inactivityTimeout === m && <CheckCircle2 className="w-4 h-4" />}
+                    {m} {tl("minuti", "minutes")}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             <div className="flex items-center justify-between p-4 bg-secondary rounded-xl">
               <div>
                 <p className="text-sm font-medium text-foreground">{tl("Bot attivo", "Bot active")}</p>
@@ -196,13 +222,6 @@ const ClientChatbotSettings = ({ adminMode = false }: ClientChatbotSettingsProps
             </Button>
           </div>
 
-          {/* Identity (Generale) — includes inactivity timeout pills */}
-          {clientId && (
-            <div className="mt-6">
-              <ChatbotConfigForm clientId={clientId} chatbotId={botId} sectionFilter={["identity"]} />
-            </div>
-          )}
-
           {/* Notifications (moved here from Appearance) */}
           {clientId && (
             <div className="mt-6">
@@ -211,9 +230,9 @@ const ClientChatbotSettings = ({ adminMode = false }: ClientChatbotSettingsProps
           )}
         </TabsContent>
 
-        {/* Tab 2 — Appearance (reuse ChatbotConfigForm, identity now lives in Generale) */}
+        {/* Tab 2 — Appearance (reuse ChatbotConfigForm, identity as first internal tab) */}
         <TabsContent value="appearance">
-          {clientId && <ChatbotConfigForm clientId={clientId} chatbotId={botId} sectionFilter={["appearance"]} />}
+          {clientId && <ChatbotConfigForm clientId={clientId} chatbotId={botId} sectionFilter={["identity", "appearance"]} />}
         </TabsContent>
 
         {/* Tab 2b — Messages & fallback */}
