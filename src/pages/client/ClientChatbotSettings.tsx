@@ -137,7 +137,9 @@ const ClientChatbotSettings = ({ adminMode = false }: ClientChatbotSettingsProps
         <TabsList className="bg-secondary border border-border flex-wrap h-auto gap-1 p-1">
           <TabsTrigger value="general" className="gap-1.5 text-xs"><Settings className="w-3.5 h-3.5" /> {tl("Generale", "General")}</TabsTrigger>
           <TabsTrigger value="appearance" className="gap-1.5 text-xs"><Palette className="w-3.5 h-3.5" /> {tl("Aspetto", "Appearance")}</TabsTrigger>
+          <TabsTrigger value="faq" className="gap-1.5 text-xs"><FileText className="w-3.5 h-3.5" /> FAQ</TabsTrigger>
           <TabsTrigger value="messages" className="gap-1.5 text-xs"><MessageSquare className="w-3.5 h-3.5" /> {tl("Messaggi e fallback", "Messages & fallback")}</TabsTrigger>
+
 
           
           <TabsTrigger value="knowledge" className="gap-1.5 text-xs"><Database className="w-3.5 h-3.5" /> {tl("Conoscenza", "Knowledge")}</TabsTrigger>
@@ -219,9 +221,14 @@ const ClientChatbotSettings = ({ adminMode = false }: ClientChatbotSettingsProps
 
 
 
-        {/* Tab 3 — Knowledge */}
+        {/* Tab FAQ */}
+        <TabsContent value="faq">
+          <ClientRAGKnowledgeBase overrideChatbotId={botId} section="faq" />
+        </TabsContent>
 
+        {/* Tab 3 — Knowledge */}
         <TabsContent value="knowledge">
+
           <ClientRAGKnowledgeBase overrideChatbotId={botId} section="knowledge" />
         </TabsContent>
 
