@@ -16,7 +16,7 @@ import ClientRAGKnowledgeBase from "@/pages/client/ClientRAGKnowledgeBase";
 import ClientIntegrations from "@/pages/client/ClientIntegrations";
 import {
   Loader2, ArrowLeft, Settings, Palette, Database,
-  FileText, Copy, Code2, Globe, Save, Inbox, MessageSquare,
+  Copy, Code2, Globe, Save, Inbox, MessageSquare,
   Eye, RefreshCw, Plug
 } from "lucide-react";
 
