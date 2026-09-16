@@ -580,6 +580,12 @@
       if (!data || !data.length) { console.error("[Genius Widget] Invalid embed token"); return; }
       config = data[0];
 
+      // Lead form timing: show immediately if configured
+      if (config.lead_form_mode === "immediate" && !leadSent) {
+        showLeadForm = true;
+      }
+
+
       // Determine the correct welcome message based on language
       var welcomeMsg;
       if (baseLang === "en") {
