@@ -34,3 +34,6 @@ verify_jwt = false
 verify_jwt = false
 [functions.create-real-checkout]
 verify_jwt = false
+
+[functions.close-inactive-chats]
+verify_jwt = false

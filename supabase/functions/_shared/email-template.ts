@@ -243,6 +243,38 @@ export function testEmail(brand: BrandSettings, toEmail: string, botName: string
   return emailShell(brand, body);
 }
 
+// Chat ended recap email (inactivity auto-close)
+export function chatEndedRecapEmail(
+  brand: BrandSettings,
+  opts: { botName: string; messageCount: number; durationMinutes: number; sourceUrl: string; dashboardUrl: string },
+  locale: Locale = "it"
+): string {
+  const isEn = locale === "en";
+  const rows = [
+    [isEn ? "Messages" : "Messaggi", String(opts.messageCount)],
+    [isEn ? "Duration" : "Durata", `${opts.durationMinutes} ${isEn ? "min" : "min"}`],
+    [isEn ? "Page" : "Pagina", opts.sourceUrl || "—"],
+  ].map(([k, v]) => `<tr><td style="padding:10px 0;color:#888888;font-size:13px;width:110px;vertical-align:top;">${escHtml(k)}</td><td style="padding:10px 0;font-size:14px;color:#1A1A1A;font-weight:600;">${escHtml(v)}</td></tr>`).join("");
+
+  const body = `
+    <h1 style="margin:0 0 4px;font-size:24px;font-weight:700;color:#1A1A1A;">${isEn ? "A chat has just ended 💬" : "Una chat si è appena conclusa 💬"}</h1>
+    <p style="margin:0 0 20px;font-size:14px;color:#888888;">${escHtml(opts.botName)}</p>
+    <p style="margin:0 0 16px;">${isEn
+      ? "The conversation was automatically closed after a period of inactivity. Here is a short recap."
+      : "La conversazione è stata chiusa automaticamente dopo un periodo di inattività. Ecco un breve riepilogo."}</p>
+    <table style="width:100%;border-collapse:collapse;margin-bottom:8px;">${rows}</table>
+    ${ctaButton(isEn ? "View full conversation" : "Vedi la conversazione completa", opts.dashboardUrl, brand.primary_color)}
+  `;
+  return emailShell(brand, body);
+}
+
+export function chatEndedRecapSubject(messageCount: number, botName: string, locale: Locale = "it"): string {
+  return locale === "en"
+    ? `💬 Chat ended: ${messageCount} messages - ${botName}`
+    : `💬 Chat conclusa: ${messageCount} messaggi - ${botName}`;
+}
+
+
 // Weekly summary email
 export function weeklySummaryEmail(
   brand: BrandSettings,

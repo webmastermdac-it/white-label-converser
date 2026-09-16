@@ -553,6 +553,7 @@ async function saveSession(
       await supabase.from("chat_sessions").update({
         messages: allMessages,
         ended_at: null,
+        last_message_at: new Date().toISOString(),
         language: lang,
       }).eq("session_token", session_token);
     } else {
@@ -563,6 +564,7 @@ async function saveSession(
         session_token,
         source_url: source_url || "",
         language: lang,
+        last_message_at: new Date().toISOString(),
       });
     }
   } catch (err) {
