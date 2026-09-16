@@ -943,21 +943,36 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
               />
             )}
 
-            <Tabs defaultValue="upload" className="space-y-3">
-              <TabsList className="h-9 w-auto inline-flex bg-muted/50">
-                <TabsTrigger value="upload" className="gap-1.5 text-xs px-3 h-7">
-                  <Upload className="w-3.5 h-3.5" /> {t("Carica", "Upload")}
-                </TabsTrigger>
-                <TabsTrigger value="web" className="gap-1.5 text-xs px-3 h-7">
-                  <Globe className="w-3.5 h-3.5" /> {t("Sito Web", "Website")}
-                </TabsTrigger>
-                <TabsTrigger value="text" className="gap-1.5 text-xs px-3 h-7">
-                  <FileText className="w-3.5 h-3.5" /> {t("Testo", "Text")}
-                </TabsTrigger>
-                <TabsTrigger value="sources" className="gap-1.5 text-xs px-3 h-7">
-                  <Database className="w-3.5 h-3.5" /> {t("Fonti", "Sources")}
-                </TabsTrigger>
-              </TabsList>
+            <Tabs value={kbTab} onValueChange={(v) => setKbTab(v as any)} className="space-y-3">
+              <div className="flex items-center justify-between">
+                {kbTab === "sources" ? (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button size="sm" className="gap-1.5">
+                        <Plus className="w-3.5 h-3.5" /> {t("Aggiungi contenuto", "Add content")}
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="start">
+                      <DropdownMenuItem onClick={() => setKbTab("upload")}>📄 {t("Carica file", "Upload file")}</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => setKbTab("web")}>🌐 {t("Sito Web", "Website")}</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => setKbTab("text")}>✏️ {t("Testo", "Text")}</DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <Button variant="ghost" size="sm" onClick={() => setKbTab("sources")} className="gap-1.5">
+                      ← {t("Torna alle fonti", "Back to sources")}
+                    </Button>
+                    <span className="text-xs text-muted-foreground">
+                      {kbTab === "upload"
+                        ? t("Carica file", "Upload file")
+                        : kbTab === "web"
+                        ? t("Sito Web", "Website")
+                        : t("Testo", "Text")}
+                    </span>
+                  </div>
+                )}
+              </div>
 
               {/* UPLOAD TAB */}
               <TabsContent value="upload">
