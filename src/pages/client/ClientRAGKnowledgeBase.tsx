@@ -511,6 +511,7 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
           : undefined,
       });
       fetchData();
+      setKbTab("sources");
     } catch (err: any) {
       toast({ title: err.message, variant: "destructive" });
     } finally { setUploading(false); }
@@ -583,6 +584,7 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
     setCrawlImporting(false);
     setCrawledPages([]);
     fetchData();
+    setKbTab("sources");
   };
 
   const handleAddFreeText = async () => {
@@ -599,6 +601,7 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
       processSource((source as any).id);
       toast({ title: t("Testo aggiunto", "Text added") });
       fetchData();
+      setKbTab("sources");
     } catch (err: any) {
       toast({ title: err.message, variant: "destructive" });
     } finally { setUploading(false); }
