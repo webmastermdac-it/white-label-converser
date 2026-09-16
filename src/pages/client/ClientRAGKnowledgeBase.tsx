@@ -828,10 +828,13 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
         ))}
 
         {maxFaqs !== -1 && faqs.length >= maxFaqs ? (
-          <p className="text-xs text-amber-500 flex items-center gap-1 mb-3">
-            <AlertTriangle className="w-3.5 h-3.5" />
-            {t(`Limite piano: ${maxFaqs} FAQ. Fai upgrade per aggiungerne di più.`, `Plan limit: ${maxFaqs} FAQs. Upgrade for more.`)}
-          </p>
+          <div className="mb-3">
+            <LockedProFeature
+              title={t(`Limite di ${maxFaqs} FAQ raggiunto`, `${maxFaqs} FAQ limit reached`)}
+              description={t("Più FAQ disponibili con il piano Pro", "More FAQs available on Pro plan")}
+              onUpgrade={() => showUpgrade("pro")}
+            />
+          </div>
         ) : null}
 
         <div className="flex gap-2 items-center">
@@ -910,14 +913,11 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
             </div>
 
             {docLimitReached && (
-              <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-amber-500/10 border border-amber-500/20">
-                <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0" />
-                <p className="text-xs text-foreground">
-                  {t(`Limite di ${maxDocuments} documenti raggiunto. Fai upgrade per aggiungerne altri.`,
-                    `Limit of ${maxDocuments} documents reached. Upgrade for more.`)}
-                </p>
-                <Button variant="outline" size="sm" onClick={() => showUpgrade("pro")} className="shrink-0 ml-auto">Upgrade</Button>
-              </div>
+              <LockedProFeature
+                title={t(`Limite di ${maxDocuments} documenti raggiunto`, `${maxDocuments} document limit reached`)}
+                description={t("Più documenti disponibili con il piano Pro", "More documents available on Pro plan")}
+                onUpgrade={() => showUpgrade("pro")}
+              />
             )}
 
             <Tabs defaultValue="upload" className="space-y-3">
