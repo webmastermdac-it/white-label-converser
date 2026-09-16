@@ -429,9 +429,15 @@
     if (!text || isLoading) return;
 
     messages.push({ role: "user", content: text });
+    userMessageCount++;
+    if (config && config.lead_form_mode === "after_messages" && !leadSent &&
+        userMessageCount >= (config.lead_form_message_count || 3)) {
+      showLeadForm = true;
+    }
     saveMessages(messages);
     isLoading = true;
     render();
+
 
     fetch(SUPABASE_URL + "/functions/v1/chat", {
       method: "POST",
