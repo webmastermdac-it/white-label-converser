@@ -123,6 +123,8 @@ const ChatbotConfigForm: React.FC<ChatbotConfigFormProps> = ({ clientId, chatbot
           calendly_url: data.calendly_url || "",
           notification_email: data.notification_email || "",
           email_notifications_enabled: data.email_notifications_enabled ?? true,
+          notify_new_chat_enabled: (data as any).notify_new_chat_enabled ?? false,
+          inactivity_timeout_minutes: (data as any).inactivity_timeout_minutes ?? 30,
           launcher_position: data.launcher_position || "bottom-right",
           circle_color: (data as any).circle_color || "#F5A623",
           embed_token: data.embed_token,
@@ -157,6 +159,8 @@ const ChatbotConfigForm: React.FC<ChatbotConfigFormProps> = ({ clientId, chatbot
             calendly_url: config.calendly_url,
             notification_email: config.notification_email,
             email_notifications_enabled: config.email_notifications_enabled,
+            notify_new_chat_enabled: config.notify_new_chat_enabled,
+            inactivity_timeout_minutes: config.inactivity_timeout_minutes,
             launcher_position: config.launcher_position,
             circle_color: config.circle_color,
           } as any)
