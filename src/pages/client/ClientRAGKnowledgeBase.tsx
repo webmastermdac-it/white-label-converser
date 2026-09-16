@@ -11,7 +11,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -190,6 +191,7 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
   const [freeTextName, setFreeTextName] = useState("");
   const [updatingPriorityId, setUpdatingPriorityId] = useState<string | null>(null);
   const [previewSource, setPreviewSource] = useState<KBSource | null>(null);
+  const [kbTab, setKbTab] = useState<"sources" | "upload" | "web" | "text">("sources");
   const [previewChunks, setPreviewChunks] = useState<{content: string; chunk_index: number; token_count: number}[]>([]);
   const [loadingPreview, setLoadingPreview] = useState(false);
 
@@ -376,6 +378,7 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
     }
     toast({ title: t(`${valid.length} file caricati`, `${valid.length} files uploaded`) });
     setUploading(false);
+    setKbTab("sources");
     fetchData();
   };
 
@@ -443,6 +446,7 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
       processSource((source as any).id);
       toast({ title: t("URL aggiunto", "URL added") });
       fetchData();
+      setKbTab("sources");
     } catch (err: any) {
       toast({ title: err.message, variant: "destructive" });
     } finally { setUploading(false); }
@@ -507,6 +511,7 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
           : undefined,
       });
       fetchData();
+      setKbTab("sources");
     } catch (err: any) {
       toast({ title: err.message, variant: "destructive" });
     } finally { setUploading(false); }
@@ -579,6 +584,7 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
     setCrawlImporting(false);
     setCrawledPages([]);
     fetchData();
+    setKbTab("sources");
   };
 
   const handleAddFreeText = async () => {
@@ -595,6 +601,7 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
       processSource((source as any).id);
       toast({ title: t("Testo aggiunto", "Text added") });
       fetchData();
+      setKbTab("sources");
     } catch (err: any) {
       toast({ title: err.message, variant: "destructive" });
     } finally { setUploading(false); }
@@ -936,21 +943,36 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
               />
             )}
 
-            <Tabs defaultValue="upload" className="space-y-3">
-              <TabsList className="h-9 w-auto inline-flex bg-muted/50">
-                <TabsTrigger value="upload" className="gap-1.5 text-xs px-3 h-7">
-                  <Upload className="w-3.5 h-3.5" /> {t("Carica", "Upload")}
-                </TabsTrigger>
-                <TabsTrigger value="web" className="gap-1.5 text-xs px-3 h-7">
-                  <Globe className="w-3.5 h-3.5" /> {t("Sito Web", "Website")}
-                </TabsTrigger>
-                <TabsTrigger value="text" className="gap-1.5 text-xs px-3 h-7">
-                  <FileText className="w-3.5 h-3.5" /> {t("Testo", "Text")}
-                </TabsTrigger>
-                <TabsTrigger value="sources" className="gap-1.5 text-xs px-3 h-7">
-                  <Database className="w-3.5 h-3.5" /> {t("Fonti", "Sources")}
-                </TabsTrigger>
-              </TabsList>
+            <Tabs value={kbTab} onValueChange={(v) => setKbTab(v as any)} className="space-y-3">
+              <div className="flex items-center justify-between">
+                {kbTab === "sources" ? (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button size="sm" className="gap-1.5">
+                        <Plus className="w-3.5 h-3.5" /> {t("Aggiungi contenuto", "Add content")}
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="start">
+                      <DropdownMenuItem onClick={() => setKbTab("upload")}>📄 {t("Carica file", "Upload file")}</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => setKbTab("web")}>🌐 {t("Sito Web", "Website")}</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => setKbTab("text")}>✏️ {t("Testo", "Text")}</DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <Button variant="ghost" size="sm" onClick={() => setKbTab("sources")} className="gap-1.5">
+                      ← {t("Torna alle fonti", "Back to sources")}
+                    </Button>
+                    <span className="text-xs text-muted-foreground">
+                      {kbTab === "upload"
+                        ? t("Carica file", "Upload file")
+                        : kbTab === "web"
+                        ? t("Sito Web", "Website")
+                        : t("Testo", "Text")}
+                    </span>
+                  </div>
+                )}
+              </div>
 
               {/* UPLOAD TAB */}
               <TabsContent value="upload">
