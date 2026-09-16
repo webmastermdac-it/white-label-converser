@@ -73,7 +73,7 @@ serve(async (req) => {
     const chunks = chunkText(rawText, 800, 150, {
       source_name: source.name,
       source_type: source.type,
-      url: source.source_url || undefined,
+      url: source.page_url || (source.type === "url" ? source.source_url : undefined),
     });
 
     const embeddings = await generateEmbeddings(chunks.map(c => c.content), OPENAI_KEY);
