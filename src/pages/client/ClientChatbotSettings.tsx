@@ -76,7 +76,7 @@ const ClientChatbotSettings = ({ adminMode = false }: ClientChatbotSettingsProps
     try {
       const { error } = await supabase
         .from("chatbot_configs")
-        .update({ name, site_url: siteUrl, is_active: isActive, inactivity_timeout_minutes: inactivityTimeout } as any)
+        .update({ name, site_url: siteUrl, is_active: isActive, inactivity_timeout_minutes: inactivityTimeout, lead_form_mode: leadFormMode, lead_form_message_count: leadFormMessageCount } as any)
         .eq("id", botId);
       if (error) throw error;
       toast({ title: "✅", description: tl("Impostazioni salvate!", "Settings saved!") });
