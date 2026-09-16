@@ -229,7 +229,7 @@ serve(async (req) => {
       : [];
 
     const purchaseInstruction = ecommerceConfigured
-      ? `\n\nACQUISTO REALE:\nPuoi completare acquisti veri con il tool create_real_checkout.\nPrima di chiamarlo devi avere: prodotto (external_id dal catalogo), quantità, nome, email; chiedi anche telefono e indirizzo di spedizione quando possibile.\nChiama il tool una sola volta per acquisto, poi comunica al visitatore il link di checkout restituito per completare il pagamento sullo store.\nSe il tool restituisce success=false, spiega gentilmente che l'acquisto non è andato a buon fine e proponi di essere ricontattato, aggiungendo il marker [TRIGGER_LEAD_FORM].`
+      ? `\n\nACQUISTO REALE:\nPuoi completare acquisti veri con il tool create_real_checkout.\nPrima di chiamarlo devi avere: prodotto (external_id dal catalogo), quantità, nome, email; chiedi anche telefono e indirizzo di spedizione quando possibile.\nChiama il tool una sola volta per acquisto, poi comunica al visitatore il link di checkout restituito per completare il pagamento sullo store.\nSe il tool restituisce success=false, spiega gentilmente che l'acquisto non è andato a buon fine e proponi di essere ricontattato${conversationalLead ? "." : ", aggiungendo il marker [TRIGGER_LEAD_FORM]."}`
       : "";
 
     const purchaseRules = ecommerceConfigured
