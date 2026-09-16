@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Save, Bot, Palette, MessageSquare, Zap, Mail, SendHorizonal } from "lucide-react";
+import { Loader2, Save, Bot, Palette, MessageSquare, Zap, Mail, SendHorizonal, CheckCircle2 } from "lucide-react";
 import { useLanguage } from "@/hooks/useLanguage";
 
 interface Config {
@@ -27,6 +27,8 @@ interface Config {
   calendly_url: string;
   notification_email: string;
   email_notifications_enabled: boolean;
+  notify_new_chat_enabled: boolean;
+  inactivity_timeout_minutes: number;
   launcher_position: string;
   circle_color: string;
   embed_token?: string;
@@ -67,6 +69,8 @@ const defaultConfig: Config = {
   calendly_url: "",
   notification_email: "",
   email_notifications_enabled: true,
+  notify_new_chat_enabled: false,
+  inactivity_timeout_minutes: 30,
   launcher_position: "bottom-right",
   circle_color: "#F5A623",
 };
