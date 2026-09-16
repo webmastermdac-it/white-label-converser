@@ -438,7 +438,7 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
       }
       const { data: source, error } = await supabase
         .from("knowledge_base" as any)
-        .insert({ chatbot_id: chatbotId, name: new URL(normalized).hostname + new URL(normalized).pathname, type: "txt", source_url: normalized, status: "processing" } as any)
+        .insert({ chatbot_id: chatbotId, name: new URL(normalized).hostname + new URL(normalized).pathname, type: "txt", source_url: normalized, page_url: urlInput.trim() ? normalized : null, status: "processing" } as any)
         .select().single();
       if (error) throw error;
       await supabase.from("knowledge_base" as any).update({ source_url: scrapeData.content } as any).eq("id", (source as any).id);
@@ -498,7 +498,7 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
           if (!content) continue;
           const { data: source, error } = await supabase
             .from("knowledge_base" as any)
-            .insert({ chatbot_id: chatbotId, name: new URL(url).pathname || url, type: "txt", source_url: content, status: "processing" } as any)
+            .insert({ chatbot_id: chatbotId, name: new URL(url).pathname || url, type: "txt", source_url: content, page_url: url, status: "processing" } as any)
             .select().single();
           if (!error && source) { processSource((source as any).id); addedCount++; }
         } catch { continue; }
@@ -570,7 +570,7 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
         if (!content) { skippedCount++; continue; }
         const { data: source, error } = await supabase
           .from("knowledge_base" as any)
-          .insert({ chatbot_id: chatbotId, name: new URL(normalized).pathname || selected[i].url, type: "txt", source_url: content, status: "processing" } as any)
+          .insert({ chatbot_id: chatbotId, name: new URL(normalized).pathname || selected[i].url, type: "txt", source_url: content, page_url: normalized, status: "processing" } as any)
           .select().single();
         if (!error && source) { processSource((source as any).id); addedCount++; existingUrls.add(normalized); }
       } catch { continue; }

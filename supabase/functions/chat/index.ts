@@ -116,10 +116,11 @@ serve(async (req) => {
           const ragData = await ragResponse.json();
           if (ragData.chunks?.length > 0) {
             ragContext = "\n\n--- RELEVANT KNOWLEDGE BASE CONTEXT ---\n" +
-              ragData.chunks.map((c: any, i: number) =>
-                `[Source ${i + 1} (relevance: ${(c.similarity * 100).toFixed(0)}%)]\n${c.content}`
-              ).join("\n\n") +
-              "\n--- END CONTEXT ---\n\nIMPORTANT: Use the above context to answer the user's question accurately. If the context contains the answer, use it. If not, use your general knowledge base instructions.";
+              ragData.chunks.map((c: any, i: number) => {
+                const urlLine = c.metadata?.url ? `\nPage link: ${c.metadata.url}` : "";
+                return `[Source ${i + 1} (relevance: ${(c.similarity * 100).toFixed(0)}%)]${urlLine}\n${c.content}`;
+              }).join("\n\n") +
+              "\n--- END CONTEXT ---\n\nIMPORTANT: Use the above context to answer the user's question accurately. If the context contains the answer, use it. If not, use your general knowledge base instructions. If a Source you used to answer has a 'Page link', include that link at the end of your answer as a reference (e.g. 'Per saperne di più: <link>'). Never invent or guess a link that wasn't provided in the context. If no Source used has a link, don't mention any link.";
             responseSource = "KNOWLEDGE";
             console.log(`[chat] source: KNOWLEDGE | ${ragData.chunks.length} chunks found`);
           }
