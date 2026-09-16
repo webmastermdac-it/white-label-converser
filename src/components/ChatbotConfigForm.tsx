@@ -343,6 +343,33 @@ const ChatbotConfigForm: React.FC<ChatbotConfigFormProps> = ({ clientId, chatbot
             </div>
           </div>
 
+          <div className="space-y-2">
+            <Label>{lang === "it" ? "Quando una chat è da ritenersi conclusa" : "When a chat should be considered ended"}</Label>
+            <p className="text-xs text-muted-foreground">
+              {lang === "it"
+                ? "Dopo quanti minuti di inattività la chat viene chiusa automaticamente"
+                : "After how many minutes of inactivity the chat is automatically closed"}
+            </p>
+            <div className="flex gap-2 flex-wrap pt-1">
+              {[15, 30, 60].map((m) => (
+                <button
+                  key={m}
+                  type="button"
+                  onClick={() => set("inactivity_timeout_minutes", m)}
+                  className={`flex items-center gap-1.5 px-4 py-2.5 md:py-2 rounded-full text-sm font-medium transition-all min-h-[44px] border ${
+                    config.inactivity_timeout_minutes === m
+                      ? "bg-primary/15 text-primary border-primary/40"
+                      : "bg-secondary text-muted-foreground border-border hover:text-foreground"
+                  }`}
+                >
+                  {config.inactivity_timeout_minutes === m && <CheckCircle2 className="w-4 h-4" />}
+                  {m} {lang === "it" ? "minuti" : "minutes"}
+                </button>
+              ))}
+            </div>
+          </div>
+
+
         </div>
       )}
 
