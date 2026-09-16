@@ -243,14 +243,26 @@ const ClientChatbotSettings = ({ adminMode = false }: ClientChatbotSettingsProps
                   </button>
                   <button
                     type="button"
-                    onClick={() => { if (leadFormMode === "immediate") setLeadFormMode("smart"); }}
+                    onClick={() => setLeadFormMode("conversational")}
                     className={`flex items-center gap-1.5 px-4 py-2.5 md:py-2 rounded-full text-sm font-medium transition-all min-h-[44px] border ${
-                      leadFormMode !== "immediate"
+                      leadFormMode === "conversational"
                         ? "bg-primary/15 text-primary border-primary/40"
                         : "bg-secondary text-muted-foreground border-border hover:text-foreground"
                     }`}
                   >
-                    {leadFormMode !== "immediate" && <CheckCircle2 className="w-4 h-4" />}
+                    {leadFormMode === "conversational" && <CheckCircle2 className="w-4 h-4" />}
+                    {tl("Conversazionale (il bot chiede nome ed email in chat)", "Conversational (bot asks for name and email in chat)")}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { if (leadFormMode === "immediate" || leadFormMode === "conversational") setLeadFormMode("smart"); }}
+                    className={`flex items-center gap-1.5 px-4 py-2.5 md:py-2 rounded-full text-sm font-medium transition-all min-h-[44px] border ${
+                      leadFormMode !== "immediate" && leadFormMode !== "conversational"
+                        ? "bg-primary/15 text-primary border-primary/40"
+                        : "bg-secondary text-muted-foreground border-border hover:text-foreground"
+                    }`}
+                  >
+                    {leadFormMode !== "immediate" && leadFormMode !== "conversational" && <CheckCircle2 className="w-4 h-4" />}
                     {tl("Durante la conversazione", "During the conversation")}
                   </button>
                 </div>
