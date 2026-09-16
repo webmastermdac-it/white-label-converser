@@ -92,7 +92,7 @@ const ChatbotConfigForm: React.FC<ChatbotConfigFormProps> = ({ clientId, chatbot
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [sendingTest, setSendingTest] = useState(false);
-  const [activeSection, setActiveSection] = useState(sectionFilter?.[0] || "identity");
+  const [activeSection, setActiveSection] = useState(sectionFilter?.[0] || "appearance");
 
 
   useEffect(() => {
@@ -192,8 +192,8 @@ const ChatbotConfigForm: React.FC<ChatbotConfigFormProps> = ({ clientId, chatbot
   const set = (key: keyof Config, value: any) => setConfig((prev) => ({ ...prev, [key]: value }));
 
   const allSections = [
-    { id: "identity", label: t("identity"), icon: Bot },
     { id: "appearance", label: t("appearance"), icon: Palette },
+    { id: "identity", label: t("identity"), icon: Bot },
     { id: "messages", label: t("Messages & fallback", "Messaggi e fallback"), icon: MessageSquare },
     { id: "notifications", label: t("notifications"), icon: Mail },
   ];
