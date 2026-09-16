@@ -62,6 +62,8 @@ const ClientChatbotSettings = ({ adminMode = false }: ClientChatbotSettingsProps
       setSiteUrl((data as any).site_url || "");
       setIsActive(data.is_active ?? true);
       setInactivityTimeout((data as any).inactivity_timeout_minutes ?? 30);
+      setLeadFormMode(((data as any).lead_form_mode as any) || "smart");
+      setLeadFormMessageCount((data as any).lead_form_message_count ?? 3);
     }
     setLoading(false);
   }, [botId]);
