@@ -196,6 +196,13 @@ const ClientChatbotSettings = ({ adminMode = false }: ClientChatbotSettingsProps
             </Button>
           </div>
 
+          {/* Identity (Generale) — includes inactivity timeout pills */}
+          {clientId && (
+            <div className="mt-6">
+              <ChatbotConfigForm clientId={clientId} chatbotId={botId} sectionFilter={["identity"]} />
+            </div>
+          )}
+
           {/* Notifications (moved here from Appearance) */}
           {clientId && (
             <div className="mt-6">
@@ -204,9 +211,9 @@ const ClientChatbotSettings = ({ adminMode = false }: ClientChatbotSettingsProps
           )}
         </TabsContent>
 
-        {/* Tab 2 — Appearance (reuse ChatbotConfigForm) */}
+        {/* Tab 2 — Appearance (reuse ChatbotConfigForm, identity now lives in Generale) */}
         <TabsContent value="appearance">
-          {clientId && <ChatbotConfigForm clientId={clientId} chatbotId={botId} sectionFilter={["identity", "appearance"]} />}
+          {clientId && <ChatbotConfigForm clientId={clientId} chatbotId={botId} sectionFilter={["appearance"]} />}
         </TabsContent>
 
         {/* Tab 2b — Messages & fallback */}

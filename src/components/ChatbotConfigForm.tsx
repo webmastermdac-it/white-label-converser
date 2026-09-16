@@ -351,7 +351,7 @@ const ChatbotConfigForm: React.FC<ChatbotConfigFormProps> = ({ clientId, chatbot
                 : "After how many minutes of inactivity the chat is automatically closed"}
             </p>
             <div className="flex gap-2 flex-wrap pt-1">
-              {[15, 30, 60].map((m) => (
+              {[30, 60, 90].map((m) => (
                 <button
                   key={m}
                   type="button"
