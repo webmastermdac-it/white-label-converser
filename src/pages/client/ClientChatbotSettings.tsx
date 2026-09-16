@@ -17,7 +17,7 @@ import ClientIntegrations from "@/pages/client/ClientIntegrations";
 import {
   Loader2, ArrowLeft, Settings, Palette, Database,
   Copy, Code2, Globe, Save, Inbox, MessageSquare,
-  Eye, RefreshCw, Plug, CheckCircle2
+  Eye, RefreshCw, Plug, CheckCircle2, Power
 } from "lucide-react";
 
 interface ClientChatbotSettingsProps {
