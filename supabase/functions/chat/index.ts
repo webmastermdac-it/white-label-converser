@@ -630,3 +630,96 @@ async function saveSession(
     console.error("Session save error (non-blocking):", err);
   }
 }
+
+// ══════════════════════════════════════════════════════
+// CONVERSATIONAL LEAD — same logic as capture-lead/index.ts
+// ══════════════════════════════════════════════════════
+async function createConversationalLead(
+  supabase: any,
+  botConfig: any,
+  lead: {
+    name: string; email: string; phone: string; message: string;
+    transcript: any[]; source_url?: string; lang: string;
+  }
+) {
+  const { data: clientData } = await supabase
+    .from("clients").select("plan").eq("id", botConfig.client_id).single();
+  const clientPlan = clientData?.plan || "free";
+
+  const { data: planConfig } = await supabase
+    .from("plan_configs").select("max_leads_month").eq("plan_name", clientPlan).single();
+  const maxLeads = planConfig?.max_leads_month ?? 10;
+
+  let leadLimitReached = false;
+  if (maxLeads !== -1) {
+    const monthStart = new Date();
+    monthStart.setDate(1);
+    monthStart.setHours(0, 0, 0, 0);
+    const { count } = await supabase
+      .from("leads").select("id", { count: "exact", head: true })
+      .eq("client_id", botConfig.client_id)
+      .gte("created_at", monthStart.toISOString());
+    if ((count || 0) >= maxLeads) leadLimitReached = true;
+  }
+
+  const { error: leadError } = await supabase.from("leads").insert({
+    client_id: botConfig.client_id,
+    bot_id: botConfig.id,
+    name: lead.name,
+    email: lead.email,
+    phone: lead.phone,
+    message: lead.message,
+    transcript: lead.transcript,
+    source_url: lead.source_url || "",
+    status: "new",
+    language: lead.lang,
+  });
+  if (leadError) throw leadError;
+
+  if (!botConfig.email_notifications_enabled || !botConfig.notification_email || leadLimitReached) return;
+
+  const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
+  if (!RESEND_API_KEY) return;
+
+  try {
+    const brand = await fetchBrandSettings(supabase);
+    const ownerLocale = await resolveClientOwnerLocale(supabase, botConfig.client_id);
+    const dashboardUrl = "https://white-label-converser.lovable.app/dashboard/leads";
+    const customTpl = await fetchCustomTemplate(supabase, "chatbot_notification", ownerLocale);
+
+    let emailHtml: string;
+    let emailSubject: string;
+
+    if (customTpl) {
+      const vars = {
+        "{{nome}}": lead.name, "{{email}}": lead.email,
+        "{{messaggio}}": (lead.message || "").substring(0, 150),
+        "{{data}}": new Date().toLocaleString(ownerLocale === "en" ? "en-GB" : "it-IT", { timeZone: "Europe/Rome" }),
+        "{{link}}": dashboardUrl, "{{app_name}}": brand.app_name,
+        "{{logo_url}}": brand.logo_url || "", "{{bot_name}}": botConfig.name,
+      };
+      emailHtml = renderCustomTemplate(brand, customTpl, vars);
+      emailSubject = replaceSubjectVars(customTpl.subject, vars);
+    } else {
+      emailHtml = newLeadEmail(brand, {
+        botName: botConfig.name, visitorName: lead.name, visitorEmail: lead.email,
+        phone: lead.phone, message: lead.message, sourceUrl: lead.source_url,
+        language: lead.lang, transcript: lead.transcript, dashboardUrl,
+      }, ownerLocale);
+      emailSubject = newLeadSubject(lead.name, botConfig.name, ownerLocale);
+    }
+
+    await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        from: `${brand.app_name} <noreply@chatbot.your-genius.com>`,
+        to: [botConfig.notification_email],
+        subject: emailSubject,
+        html: emailHtml,
+      }),
+    });
+  } catch (emailErr) {
+    console.error("[chat] conversational lead email error:", emailErr);
+  }
+}
