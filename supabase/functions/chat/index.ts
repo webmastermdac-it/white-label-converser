@@ -108,7 +108,7 @@ serve(async (req) => {
               query: lastUserMessage,
               chatbot_id: botConfig.id,
               match_count: 5,
-              match_threshold: 0.75,
+              match_threshold: 0.6,
             }),
           }
         );
