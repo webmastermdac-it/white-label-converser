@@ -198,6 +198,7 @@
   var isLoading = false;
   var showLeadForm = false;
   var leadSent = false;
+  var userMessageCount = 0;
 
   // ── Create Shadow DOM ───────────────────────────────────
   var host = document.createElement("div");
@@ -428,9 +429,15 @@
     if (!text || isLoading) return;
 
     messages.push({ role: "user", content: text });
+    userMessageCount++;
+    if (config && config.lead_form_mode === "after_messages" && !leadSent &&
+        userMessageCount >= (config.lead_form_message_count || 3)) {
+      showLeadForm = true;
+    }
     saveMessages(messages);
     isLoading = true;
     render();
+
 
     fetch(SUPABASE_URL + "/functions/v1/chat", {
       method: "POST",
@@ -573,6 +580,12 @@
       if (!data || !data.length) { console.error("[Genius Widget] Invalid embed token"); return; }
       config = data[0];
 
+      // Lead form timing: show immediately if configured
+      if (config.lead_form_mode === "immediate" && !leadSent) {
+        showLeadForm = true;
+      }
+
+
       // Determine the correct welcome message based on language
       var welcomeMsg;
       if (baseLang === "en") {
@@ -591,6 +604,13 @@
       var saved = loadMessages();
       if (saved && saved.length && !welcomeChanged) {
         messages = saved;
+        for (var mi = 0; mi < messages.length; mi++) {
+          if (messages[mi] && messages[mi].role === "user") userMessageCount++;
+        }
+        if (config.lead_form_mode === "after_messages" && !leadSent &&
+            userMessageCount >= (config.lead_form_message_count || 3)) {
+          showLeadForm = true;
+        }
       } else {
         messages = [{ role: "assistant", content: welcomeMsg }];
         saveMessages(messages);
@@ -600,6 +620,7 @@
           sessionToken = getSessionToken();
         }
       }
+
       // Store current welcome message for future change detection
       try { sessionStorage.setItem(WELCOME_KEY, welcomeMsg); } catch(e) {}
 
