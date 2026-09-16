@@ -58,6 +58,18 @@ serve(async (req) => {
     const chatModel = planConfig?.chat_model || "gpt-4o-mini";
     const ragAllowed = plan !== "free";
 
+    // ── Conversational lead capture: has this session already produced a lead? ──
+    const conversationalLead = (botConfig as any).lead_form_mode === "conversational";
+    let leadAlreadyCaptured = false;
+    if (conversationalLead && session_token) {
+      const { data: sessionRow } = await supabase
+        .from("chat_sessions")
+        .select("lead_captured")
+        .eq("session_token", session_token)
+        .maybeSingle();
+      leadAlreadyCaptured = !!sessionRow?.lead_captured;
+    }
+
     // Check conversation limit
     if (maxConv !== -1 && (sessionCountRes.count || 0) >= maxConv) {
       return jsonResp({
