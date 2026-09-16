@@ -302,21 +302,8 @@ const ClientChatbotSettings = ({ adminMode = false }: ClientChatbotSettingsProps
 
 
 
-            <div className="flex items-center justify-between p-4 bg-secondary rounded-xl">
-              <div>
-                <p className="text-sm font-medium text-foreground">{tl("Bot attivo", "Bot active")}</p>
-                <p className="text-xs text-muted-foreground">{tl("Abilita/disabilita il widget", "Enable/disable the widget")}</p>
-              </div>
-              <Switch checked={isActive} onCheckedChange={setIsActive} />
-            </div>
 
-            <div className="flex items-center justify-between p-4 bg-secondary rounded-xl">
-              <div>
-                <p className="text-sm font-medium text-foreground">{tl("Bot attivo", "Bot active")}</p>
-                <p className="text-xs text-muted-foreground">{tl("Abilita/disabilita il widget", "Enable/disable the widget")}</p>
-              </div>
-              <Switch checked={isActive} onCheckedChange={setIsActive} />
-            </div>
+
 
             {/* Embed token (read-only) */}
             <div className="space-y-2">
