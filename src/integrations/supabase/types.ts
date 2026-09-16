@@ -72,6 +72,7 @@ export type Database = {
           ended_at: string | null
           id: string
           language: string | null
+          last_message_at: string
           messages: Json | null
           session_token: string
           source_url: string | null
@@ -83,6 +84,7 @@ export type Database = {
           ended_at?: string | null
           id?: string
           language?: string | null
+          last_message_at?: string
           messages?: Json | null
           session_token?: string
           source_url?: string | null
@@ -94,6 +96,7 @@ export type Database = {
           ended_at?: string | null
           id?: string
           language?: string | null
+          last_message_at?: string
           messages?: Json | null
           session_token?: string
           source_url?: string | null
@@ -131,6 +134,7 @@ export type Database = {
           fallback_msg_en: string | null
           fallback_msg_it: string | null
           id: string
+          inactivity_timeout_minutes: number
           instagram_access_token: string | null
           instagram_connected: boolean
           instagram_connected_at: string | null
@@ -146,6 +150,7 @@ export type Database = {
           launcher_position: string | null
           name: string
           notification_email: string | null
+          notify_new_chat_enabled: boolean
           primary_color: string | null
           site_url: string | null
           text_color: string | null
@@ -169,6 +174,7 @@ export type Database = {
           fallback_msg_en?: string | null
           fallback_msg_it?: string | null
           id?: string
+          inactivity_timeout_minutes?: number
           instagram_access_token?: string | null
           instagram_connected?: boolean
           instagram_connected_at?: string | null
@@ -184,6 +190,7 @@ export type Database = {
           launcher_position?: string | null
           name?: string
           notification_email?: string | null
+          notify_new_chat_enabled?: boolean
           primary_color?: string | null
           site_url?: string | null
           text_color?: string | null
@@ -207,6 +214,7 @@ export type Database = {
           fallback_msg_en?: string | null
           fallback_msg_it?: string | null
           id?: string
+          inactivity_timeout_minutes?: number
           instagram_access_token?: string | null
           instagram_connected?: boolean
           instagram_connected_at?: string | null
@@ -222,6 +230,7 @@ export type Database = {
           launcher_position?: string | null
           name?: string
           notification_email?: string | null
+          notify_new_chat_enabled?: boolean
           primary_color?: string | null
           site_url?: string | null
           text_color?: string | null

@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Save, Bot, Palette, MessageSquare, Zap, Mail, SendHorizonal } from "lucide-react";
+import { Loader2, Save, Bot, Palette, MessageSquare, Zap, Mail, SendHorizonal, CheckCircle2 } from "lucide-react";
 import { useLanguage } from "@/hooks/useLanguage";
 
 interface Config {
@@ -27,6 +27,8 @@ interface Config {
   calendly_url: string;
   notification_email: string;
   email_notifications_enabled: boolean;
+  notify_new_chat_enabled: boolean;
+  inactivity_timeout_minutes: number;
   launcher_position: string;
   circle_color: string;
   embed_token?: string;
@@ -67,6 +69,8 @@ const defaultConfig: Config = {
   calendly_url: "",
   notification_email: "",
   email_notifications_enabled: true,
+  notify_new_chat_enabled: false,
+  inactivity_timeout_minutes: 30,
   launcher_position: "bottom-right",
   circle_color: "#F5A623",
 };
@@ -119,6 +123,8 @@ const ChatbotConfigForm: React.FC<ChatbotConfigFormProps> = ({ clientId, chatbot
           calendly_url: data.calendly_url || "",
           notification_email: data.notification_email || "",
           email_notifications_enabled: data.email_notifications_enabled ?? true,
+          notify_new_chat_enabled: (data as any).notify_new_chat_enabled ?? false,
+          inactivity_timeout_minutes: (data as any).inactivity_timeout_minutes ?? 30,
           launcher_position: data.launcher_position || "bottom-right",
           circle_color: (data as any).circle_color || "#F5A623",
           embed_token: data.embed_token,
@@ -153,6 +159,8 @@ const ChatbotConfigForm: React.FC<ChatbotConfigFormProps> = ({ clientId, chatbot
             calendly_url: config.calendly_url,
             notification_email: config.notification_email,
             email_notifications_enabled: config.email_notifications_enabled,
+            notify_new_chat_enabled: config.notify_new_chat_enabled,
+            inactivity_timeout_minutes: config.inactivity_timeout_minutes,
             launcher_position: config.launcher_position,
             circle_color: config.circle_color,
           } as any)
@@ -335,6 +343,33 @@ const ChatbotConfigForm: React.FC<ChatbotConfigFormProps> = ({ clientId, chatbot
             </div>
           </div>
 
+          <div className="space-y-2">
+            <Label>{lang === "it" ? "Quando una chat è da ritenersi conclusa" : "When a chat should be considered ended"}</Label>
+            <p className="text-xs text-muted-foreground">
+              {lang === "it"
+                ? "Dopo quanti minuti di inattività la chat viene chiusa automaticamente"
+                : "After how many minutes of inactivity the chat is automatically closed"}
+            </p>
+            <div className="flex gap-2 flex-wrap pt-1">
+              {[15, 30, 60].map((m) => (
+                <button
+                  key={m}
+                  type="button"
+                  onClick={() => set("inactivity_timeout_minutes", m)}
+                  className={`flex items-center gap-1.5 px-4 py-2.5 md:py-2 rounded-full text-sm font-medium transition-all min-h-[44px] border ${
+                    config.inactivity_timeout_minutes === m
+                      ? "bg-primary/15 text-primary border-primary/40"
+                      : "bg-secondary text-muted-foreground border-border hover:text-foreground"
+                  }`}
+                >
+                  {config.inactivity_timeout_minutes === m && <CheckCircle2 className="w-4 h-4" />}
+                  {m} {lang === "it" ? "minuti" : "minutes"}
+                </button>
+              ))}
+            </div>
+          </div>
+
+
         </div>
       )}
 
@@ -472,6 +507,24 @@ const ChatbotConfigForm: React.FC<ChatbotConfigFormProps> = ({ clientId, chatbot
               onCheckedChange={(v) => set("email_notifications_enabled", v)}
             />
           </div>
+
+          <div className="flex items-center justify-between p-4 bg-secondary rounded-xl">
+            <div className="pr-4">
+              <p className="text-sm font-medium text-foreground">
+                {lang === "it" ? "Invia una mail per ogni nuova chat" : "Send an email for every new chat"}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {lang === "it"
+                  ? "Riceverai un riepilogo (numero di messaggi, durata) quando una chat viene chiusa per inattività"
+                  : "You'll get a recap (message count, duration) when a chat is closed due to inactivity"}
+              </p>
+            </div>
+            <Switch
+              checked={config.notify_new_chat_enabled}
+              onCheckedChange={(v) => set("notify_new_chat_enabled", v)}
+            />
+          </div>
+
 
           <div className="space-y-2">
             <Label>{t("notificationEmail")}</Label>

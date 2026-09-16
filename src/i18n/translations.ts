@@ -569,8 +569,8 @@ export const translations = {
     it: "Abilita Notifiche Email",
   },
   sendEmailOnLead: {
-    en: "Send email on every new lead",
-    it: "Invia email per ogni nuovo lead",
+    en: "Send an email for every new lead",
+    it: "Invia una mail per ogni nuovo lead",
   },
   notificationEmail: {
     en: "Notification Email",

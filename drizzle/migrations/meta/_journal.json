@@ -15,6 +15,13 @@
       "when": 1789570125038,
       "tag": "0001_add_page_url_to_knowledge_base",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1789573040773,
+      "tag": "0002_add_inactivity_close_fields",
+      "breakpoints": true
     }
   ]
 }
