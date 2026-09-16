@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import {
   Loader2, Upload, Globe, HelpCircle, FileText, Trash2,
@@ -188,6 +189,9 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
   const [freeText, setFreeText] = useState("");
   const [freeTextName, setFreeTextName] = useState("");
   const [updatingPriorityId, setUpdatingPriorityId] = useState<string | null>(null);
+  const [previewSource, setPreviewSource] = useState<KBSource | null>(null);
+  const [previewChunks, setPreviewChunks] = useState<{content: string; chunk_index: number; token_count: number}[]>([]);
+  const [loadingPreview, setLoadingPreview] = useState(false);
 
   // Instructions state
   const [systemPrompt, setSystemPrompt] = useState("");
@@ -611,6 +615,18 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
     await supabase.from("knowledge_base" as any).update({ status: "processing", updated_at: new Date().toISOString() } as any).eq("id", source.id);
     fetchData();
     processSource(source.id);
+  };
+
+  const openPreview = async (source: KBSource) => {
+    setPreviewSource(source);
+    setLoadingPreview(true);
+    const { data } = await supabase
+      .from("knowledge_chunks" as any)
+      .select("content, chunk_index, token_count")
+      .eq("knowledge_base_id", source.id)
+      .order("chunk_index", { ascending: true });
+    setPreviewChunks((data as any) || []);
+    setLoadingPreview(false);
   };
 
   const handleBulkDelete = async () => {
@@ -1110,7 +1126,10 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
                             <div className="w-9 h-9 rounded-lg bg-muted flex items-center justify-center shrink-0">
                               <TypeIcon className="w-4 h-4 text-muted-foreground" />
                             </div>
-                            <div className="flex-1 min-w-0">
+                            <div
+                              className="flex-1 min-w-0 cursor-pointer rounded-md -mx-1 px-1 py-0.5 transition-colors hover:bg-muted/40"
+                              onClick={() => openPreview(source)}
+                            >
                               <p className="text-sm font-medium text-foreground truncate">{source.name}</p>
                               <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
                                 <Badge variant="outline" className="text-[10px] uppercase px-1.5 py-0">{source.type}</Badge>
@@ -1130,7 +1149,7 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
                               {[1, 2, 3].map((star) => (
                                 <button
                                   key={star}
-                                  onClick={() => handleSetPriority(source.id, star)}
+                                  onClick={(e) => { e.stopPropagation(); handleSetPriority(source.id, star); }}
                                   disabled={updatingPriorityId === source.id}
                                   className="transition-colors"
                                 >
@@ -1146,11 +1165,11 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
                             </div>
                             <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
                               {["error", "ready", "outdated"].includes(source.status) && (
-                                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleReprocess(source)}>
+                                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); handleReprocess(source); }}>
                                   <RefreshCw className="w-3.5 h-3.5" />
                                 </Button>
                               )}
-                              <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => handleDelete(source)}>
+                              <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={(e) => { e.stopPropagation(); handleDelete(source); }}>
                                 <Trash2 className="w-3.5 h-3.5" />
                               </Button>
                             </div>
@@ -1159,6 +1178,57 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
                       })}
                     </>
                   )}
+
+                  {/* Source preview dialog */}
+                  <Dialog open={!!previewSource} onOpenChange={(o) => !o && setPreviewSource(null)}>
+                    <DialogContent className="max-w-2xl max-h-[85vh] flex flex-col">
+                      <DialogHeader>
+                        <DialogTitle className="truncate pr-6">{previewSource?.name}</DialogTitle>
+                      </DialogHeader>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <Badge variant="outline" className="text-[10px] uppercase px-1.5 py-0">{previewSource?.type}</Badge>
+                        <Badge variant="outline" className={`text-[10px] px-1.5 py-0 ${previewSource ? (statusConfig[previewSource.status] || statusConfig.error).cls : ""}`}>
+                          {previewSource ? (statusConfig[previewSource.status] || statusConfig.error).label : ""}
+                        </Badge>
+                        <Badge variant="outline" className="text-[10px] px-1.5 py-0">{previewSource?.chunk_count ?? 0} chunks</Badge>
+                        <span className="text-[10px] text-muted-foreground">
+                          {previewSource ? new Date(previewSource.created_at).toLocaleDateString() : ""}
+                        </span>
+                      </div>
+                      {previewSource?.status === "error" ? (
+                        <div className="space-y-3">
+                          <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive whitespace-pre-wrap">
+                            {previewSource.error_message || t("Errore sconosciuto", "Unknown error")}
+                          </div>
+                          <Button
+                            onClick={() => { if (previewSource) { handleReprocess(previewSource); setPreviewSource(null); } }}
+                            className="gap-1.5"
+                          >
+                            <RefreshCw className="w-4 h-4" /> {t("Riprova", "Retry")}
+                          </Button>
+                        </div>
+                      ) : loadingPreview ? (
+                        <div className="flex items-center justify-center py-12">
+                          <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                        </div>
+                      ) : previewChunks.length === 0 ? (
+                        <p className="text-sm text-muted-foreground py-8 text-center">
+                          {t("Nessun contenuto indicizzato ancora.", "No indexed content yet.")}
+                        </p>
+                      ) : (
+                        <div className="space-y-2 overflow-y-auto pr-1" style={{ maxHeight: "60vh" }}>
+                          {previewChunks.map((chunk) => (
+                            <div key={chunk.chunk_index} className="rounded-lg border border-border bg-secondary/40 p-3">
+                              <p className="text-[10px] text-muted-foreground uppercase font-medium mb-1.5">
+                                {t("Chunk", "Chunk")} #{chunk.chunk_index}
+                              </p>
+                              <p className="text-sm text-foreground/80 whitespace-pre-wrap">{chunk.content}</p>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </DialogContent>
+                  </Dialog>
 
                   {/* Search test */}
                   <div className="border-t border-border pt-4 space-y-3">
