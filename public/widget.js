@@ -198,6 +198,7 @@
   var isLoading = false;
   var showLeadForm = false;
   var leadSent = false;
+  var userMessageCount = 0;
 
   // ── Create Shadow DOM ───────────────────────────────────
   var host = document.createElement("div");
