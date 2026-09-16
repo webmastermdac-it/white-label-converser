@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -190,6 +191,7 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
   const [freeTextName, setFreeTextName] = useState("");
   const [updatingPriorityId, setUpdatingPriorityId] = useState<string | null>(null);
   const [previewSource, setPreviewSource] = useState<KBSource | null>(null);
+  const [kbTab, setKbTab] = useState<"sources" | "upload" | "web" | "text">("sources");
   const [previewChunks, setPreviewChunks] = useState<{content: string; chunk_index: number; token_count: number}[]>([]);
   const [loadingPreview, setLoadingPreview] = useState(false);
 
@@ -376,6 +378,7 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
     }
     toast({ title: t(`${valid.length} file caricati`, `${valid.length} files uploaded`) });
     setUploading(false);
+    setKbTab("sources");
     fetchData();
   };
 
@@ -443,12 +446,7 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
       processSource((source as any).id);
       toast({ title: t("URL aggiunto", "URL added") });
       fetchData();
-    } catch (err: any) {
-      toast({ title: err.message, variant: "destructive" });
-    } finally { setUploading(false); }
-  };
-
-  const handleAddSitemap = async () => {
+      setKbTab("sources");
     if (!sitemapInput.trim() || !chatbotId) return;
     if (isFree) { showUpgrade("starter"); return; }
     setUploading(true);
