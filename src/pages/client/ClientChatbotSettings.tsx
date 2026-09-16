@@ -44,7 +44,7 @@ const ClientChatbotSettings = ({ adminMode = false }: ClientChatbotSettingsProps
   const [siteUrl, setSiteUrl] = useState("");
   const [isActive, setIsActive] = useState(true);
   const [inactivityTimeout, setInactivityTimeout] = useState(30);
-  const [leadFormMode, setLeadFormMode] = useState<"immediate" | "after_messages" | "smart">("smart");
+  const [leadFormMode, setLeadFormMode] = useState<"immediate" | "conversational" | "after_messages" | "smart">("smart");
   const [leadFormMessageCount, setLeadFormMessageCount] = useState(3);
 
   const tl = (it: string, en: string) => lang === "it" ? it : en;
