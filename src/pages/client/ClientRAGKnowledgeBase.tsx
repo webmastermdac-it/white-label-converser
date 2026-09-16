@@ -19,7 +19,7 @@ import {
   Loader2, Upload, Globe, HelpCircle, FileText, Trash2,
   RefreshCw, CheckCircle2, XCircle, Clock, Plus, Database,
   Search, Map, Send, AlertTriangle, GripVertical, X, Lock,
-  Save, Star, Info, Store, ExternalLink,
+  Save, Star, Info, Store, ExternalLink, BookOpen,
 } from "lucide-react";
 
 // ── Types ──
@@ -199,6 +199,7 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
   const [systemPrompt, setSystemPrompt] = useState("");
   const [chatbotVertical, setChatbotVertical] = useState<string | null>(null);
   const [savingPrompt, setSavingPrompt] = useState(false);
+  const [activeArea, setActiveArea] = useState<"hub" | "faq" | "knowledge" | "instructions">("hub");
 
   const t = (it: string, en: string) => lang === "it" ? it : en;
   const isFree = planConfig?.plan_name === "free";
@@ -754,9 +755,36 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
   // RENDER
   // ══════════════════════════════════════════════════════
   const showAll = !section;
-  const showFaq = showAll || section === "faq";
-  const showKnowledge = showAll || section === "knowledge";
-  const showInstructions = showAll || section === "instructions";
+  const showFaq = showAll ? activeArea === "faq" : section === "faq";
+  const showKnowledge = showAll ? activeArea === "knowledge" : section === "knowledge";
+  const showInstructions = showAll ? activeArea === "instructions" : section === "instructions";
+
+  const kbHubCards = [
+    {
+      key: "faq" as const,
+      icon: HelpCircle,
+      color: "#F59E0B",
+      stars: 3,
+      title: "FAQ",
+      subtitle: t("Risposte esatte a domande specifiche", "Exact answers to specific questions"),
+    },
+    {
+      key: "knowledge" as const,
+      icon: BookOpen,
+      color: "#3B82F6",
+      stars: 2,
+      title: t("Documenti", "Documents"),
+      subtitle: t("Documenti che il bot cerca quando nessuna FAQ corrisponde", "Documents the bot searches when no FAQ matches"),
+    },
+    {
+      key: "instructions" as const,
+      icon: FileText,
+      color: "#A855F7",
+      stars: 1,
+      title: t("Istruzioni", "Instructions"),
+      subtitle: t("Testo libero usato come ultima risorsa", "Free text used as a last resort"),
+    },
+  ];
 
   return (
     <div className={section ? "space-y-5" : "p-4 md:p-6 space-y-5 animate-fade-in-up"}>
@@ -807,6 +835,44 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
             {t(`${processingSources} fonte/i in elaborazione...`, `${processingSources} source(s) processing...`)}
           </p>
         </div>
+      )}
+
+      {/* Hub — area selection when rendered without a section */}
+      {showAll && activeArea === "hub" && (
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          {kbHubCards.map((card) => (
+            <button
+              key={card.key}
+              onClick={() => setActiveArea(card.key)}
+              className="flex flex-col items-center justify-center gap-3 p-6 rounded-xl border border-border bg-card hover:border-primary/50 transition-all text-center"
+            >
+              <div
+                className="w-14 h-14 rounded-full flex items-center justify-center"
+                style={{ backgroundColor: `${card.color}22` }}
+              >
+                <card.icon className="w-7 h-7" style={{ color: card.color }} />
+              </div>
+              <span className="text-base font-semibold text-foreground">{card.title}</span>
+              <div className="flex items-center gap-1">
+                {Array.from({ length: card.stars }).map((_, i) => (
+                  <Star key={i} className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
+                ))}
+              </div>
+              <p className="text-xs text-muted-foreground">{card.subtitle}</p>
+            </button>
+          ))}
+        </div>
+      )}
+
+      {showAll && activeArea !== "hub" && (
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setActiveArea("hub")}
+          className="gap-2 self-start text-muted-foreground hover:text-foreground"
+        >
+          ← {t("Torna alla Conoscenza", "Back to Knowledge")}
+        </Button>
       )}
 
       {/* ══════════════════════════════════════════════════ */}
@@ -889,7 +955,7 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
         <PriorityHeader
           num={2}
           icon="📚"
-          title="Knowledge Base"
+          title={t("Documenti", "Documents")}
           subtitle={t(
             "Documenti che il bot cerca quando nessuna FAQ corrisponde",
             "Documents the bot searches when no FAQ matches"
