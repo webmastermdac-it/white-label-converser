@@ -32,8 +32,8 @@ export function UpgradeModal({ open, onClose, requiredPlan = "starter", variant 
 
   const description = isRag
     ? (isIt
-        ? "La Ricerca Avanzata (RAG) e il caricamento documenti sono disponibili dal piano Starter a €49/mese. Fai upgrade per addestrare il tuo chatbot sui tuoi documenti aziendali."
-        : "Advanced Search (RAG) and document upload are available on the Starter plan at €49/month. Upgrade to train your chatbot on your business documents.")
+        ? `La Ricerca Avanzata (RAG) e il caricamento documenti sono disponibili con il piano ${planLabel}. Passa a ${planLabel} per addestrare il tuo chatbot sui tuoi documenti aziendali.`
+        : `Advanced Search (RAG) and document upload are available on the ${planLabel} plan. Upgrade to ${planLabel} to train your chatbot on your business documents.`)
     : (isIt
         ? `Questa funzione è disponibile dal piano ${planLabel}. Fai upgrade per sbloccarla.`
         : `This feature is available on the ${planLabel} plan. Upgrade to unlock it.`);
@@ -60,7 +60,7 @@ export function UpgradeModal({ open, onClose, requiredPlan = "starter", variant 
               navigate("/dashboard/upgrade");
             }}
           >
-            {isIt ? "Fai Upgrade a Starter →" : "Upgrade to Starter →"}
+            {isIt ? `Passa a ${planLabel} →` : `Upgrade to ${planLabel} →`}
           </Button>
           <Button
             variant="outline"
