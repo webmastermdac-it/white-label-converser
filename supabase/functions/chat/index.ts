@@ -150,6 +150,38 @@ serve(async (req) => {
       console.log("[chat] source: INSTRUCTIONS | using system prompt fallback");
     }
 
+    // ── Available pages index: always fetched, independent of RAG matching ──
+    let pagesIndex = "";
+    try {
+      const { count: totalPages } = await supabase
+        .from("knowledge_base")
+        .select("id", { count: "exact", head: true })
+        .eq("chatbot_id", botConfig.id)
+        .eq("status", "ready")
+        .not("page_url", "is", null);
+      const { data: pages } = await supabase
+        .from("knowledge_base")
+        .select("name, page_url")
+        .eq("chatbot_id", botConfig.id)
+        .eq("status", "ready")
+        .not("page_url", "is", null)
+        .order("name", { ascending: true })
+        .limit(60);
+      if (pages && pages.length > 0) {
+        const lines = pages.map((p: any) => `- ${p.name}: ${p.page_url}`);
+        if ((totalPages || pages.length) > pages.length) {
+          lines.push(`...and ${(totalPages || pages.length) - pages.length} more pages`);
+        }
+        pagesIndex = "\n\n--- AVAILABLE PAGES INDEX ---\n" + lines.join("\n") + "\n--- END INDEX ---";
+      }
+    } catch (idxErr) {
+      console.error("[chat] pages index fetch error (non-blocking):", idxErr);
+    }
+
+    const pagesIndexInstruction = pagesIndex
+      ? `\n\nUse the AVAILABLE PAGES INDEX above ONLY when the user explicitly asks for a full list/overview/index of everything available (e.g. "what courses do you have", "list everything", "show me all your pages") — in that case, list the relevant entries with their links. For specific content questions, keep using the RAG context block, not this index. Never invent entries not present in this index.`
+      : "";
+
     // ══════════════════════════════════════════════════════
     // STEP 3 — INSTRUCTIONS FALLBACK (lowest priority)
     // Build system prompt and call AI
