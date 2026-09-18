@@ -572,6 +572,107 @@ serve(async (req) => {
 });
 
 // ══════════════════════════════════════════════════════
+// PLAN CONFIGS — short-lived in-memory cache (warm starts only, 5 min TTL)
+// Only plan configuration is cached; never client/bot specific data.
+// ══════════════════════════════════════════════════════
+const PLAN_CONFIG_TTL_MS = 5 * 60 * 1000;
+let planConfigsCache: { data: any[] | null; at: number } | null = null;
+
+async function getPlanConfigs(supabase: any): Promise<{ data: any[] | null }> {
+  const now = Date.now();
+  if (planConfigsCache && now - planConfigsCache.at < PLAN_CONFIG_TTL_MS) {
+    console.log("[chat] plan_configs served from warm cache");
+    return { data: planConfigsCache.data };
+  }
+  const { data } = await supabase
+    .from("plan_configs")
+    .select("plan_name, max_conversations_month, chat_model, knowledge_base_wizard");
+  planConfigsCache = { data: data || null, at: now };
+  return { data: data || null };
+}
+
+// ══════════════════════════════════════════════════════
+// RAG — inline vector search (same query/params as the rag-search function,
+// without the extra HTTP hop)
+// ══════════════════════════════════════════════════════
+async function searchKnowledgeChunks(
+  supabase: any,
+  chatbotId: string,
+  query: string,
+  matchCount = 5,
+  matchThreshold = 0.6,
+): Promise<any[]> {
+  if (!query) return [];
+
+  const { count } = await supabase
+    .from("knowledge_chunks")
+    .select("id", { count: "exact", head: true })
+    .eq("chatbot_id", chatbotId);
+  if (!count) return [];
+
+  const openaiKey = Deno.env.get("OPENAI_API_KEY");
+  if (!openaiKey) {
+    console.error("[chat] OPENAI_API_KEY not configured for embeddings");
+    return [];
+  }
+
+  const res = await fetch("https://api.openai.com/v1/embeddings", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${openaiKey}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ model: "text-embedding-3-small", input: query }),
+  });
+  if (!res.ok) {
+    console.error("[chat] embedding error:", res.status, await res.text());
+    return [];
+  }
+  const embedding = (await res.json()).data[0].embedding as number[];
+
+  const { data: chunks, error } = await supabase.rpc("match_chunks", {
+    _chatbot_id: chatbotId,
+    _query_embedding: `[${embedding.join(",")}]`,
+    _match_count: matchCount,
+    _match_threshold: matchThreshold,
+  });
+  if (error) {
+    console.error("[chat] match_chunks error:", error.message);
+    return [];
+  }
+
+  // Priority boost: priority 3 = +0.08, priority 1 = -0.05 (same as rag-search)
+  const boosted = (chunks || []).map((chunk: any) => {
+    const priority = chunk.priority ?? 2;
+    const boost = priority === 3 ? 0.08 : priority === 1 ? -0.05 : 0;
+    return { ...chunk, similarity: Math.min(1.0, (chunk.similarity || 0) + boost) };
+  });
+  boosted.sort((a: any, b: any) => b.similarity - a.similarity);
+  return boosted;
+}
+
+// ══════════════════════════════════════════════════════
+// PAGES INDEX — compact list of ready sources with a page link
+// ══════════════════════════════════════════════════════
+async function buildPagesIndex(supabase: any, chatbotId: string): Promise<string> {
+  try {
+    const [{ count: totalPages }, { data: pages }] = await Promise.all([
+      supabase.from("knowledge_base").select("id", { count: "exact", head: true })
+        .eq("chatbot_id", chatbotId).eq("status", "ready").not("page_url", "is", null),
+      supabase.from("knowledge_base").select("name, page_url")
+        .eq("chatbot_id", chatbotId).eq("status", "ready").not("page_url", "is", null)
+        .order("name", { ascending: true }).limit(60),
+    ]);
+    if (!pages || pages.length === 0) return "";
+    const lines = pages.map((p: any) => `- ${p.name}: ${p.page_url}`);
+    if ((totalPages || pages.length) > pages.length) {
+      lines.push(`...and ${(totalPages || pages.length) - pages.length} more pages`);
+    }
+    return "\n\n--- AVAILABLE PAGES INDEX ---\n" + lines.join("\n") + "\n--- END INDEX ---";
+  } catch (idxErr) {
+    console.error("[chat] pages index fetch error (non-blocking):", idxErr);
+    return "";
+  }
+}
+
+// ══════════════════════════════════════════════════════
 // FAQ CONTEXT
 // <= 40 FAQs  → inject them all (FAQ_DIRECT), no matching at all
 //  > 40 FAQs  → embedding pre-filter (FAQ_SEMANTIC), top 5 over ~0.80 cosine
