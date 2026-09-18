@@ -15,7 +15,7 @@ const MODEL_MAP: Record<string, string> = {
   "gpt-4o": "openai/gpt-5",
 };
 
-type ResponseSource = "FAQ" | "KNOWLEDGE" | "INSTRUCTIONS";
+type ResponseSource = "FAQ_DIRECT" | "FAQ_SEMANTIC" | "KNOWLEDGE" | "INSTRUCTIONS";
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -86,23 +86,12 @@ serve(async (req) => {
     const lastUserMessage = messages[messages.length - 1]?.content || "";
 
     // ══════════════════════════════════════════════════════
-    // STEP 1 — FAQ LOOKUP (highest priority)
+    // STEP 1 — FAQ CONTEXT (highest priority, injected in the system prompt)
     // ══════════════════════════════════════════════════════
-    const faqResult = await lookupFaq(supabase, botConfig.id, lastUserMessage);
-    if (faqResult) {
-      console.log(`[chat] source: FAQ | question matched: "${faqResult.question}"`);
-      const cleanAnswer = faqResult.answer;
-
-      if (session_token) {
-        saveSession(supabase, session_token, botConfig, [...messages, { role: "assistant", content: cleanAnswer }], source_url, lang);
-      }
-
-      return jsonResp({
-        message: cleanAnswer,
-        source: "FAQ" as ResponseSource,
-        trigger_lead_form: false,
-      });
-    }
+    const faqContextResult = await buildFaqContext(supabase, botConfig.id, lastUserMessage);
+    const faqContext = faqContextResult?.block || "";
+    const faqSource = faqContextResult?.source || null;
+    if (faqSource) console.log(`[chat] FAQ context injected | mode: ${faqSource}`);
 
     // ══════════════════════════════════════════════════════
     // STEP 2 — KNOWLEDGE LOOKUP (RAG, medium priority)
@@ -273,7 +262,7 @@ serve(async (req) => {
       : "";
 
     const instructions = botConfig.knowledge_base || "You are a helpful assistant.";
-    const systemPrompt = `${purchaseRules}${instructions}${productKnowledge ? "\n\n" + productKnowledge : ""}${ragContext}${pagesIndex}\n\nIMPORTANT INSTRUCTIONS:\n- Be concise, helpful, and professional${languageInstruction}${fallbackInstruction}${conversationalLeadInstruction}${productInstruction}${addToCartInstruction}${orderStatusInstruction}${purchaseInstruction}${formattingInstruction}${pagesIndexInstruction}`;
+    const systemPrompt = `${faqContext}${purchaseRules}${instructions}${productKnowledge ? "\n\n" + productKnowledge : ""}${ragContext}${pagesIndex}\n\nIMPORTANT INSTRUCTIONS:\n- Be concise, helpful, and professional${languageInstruction}${fallbackInstruction}${conversationalLeadInstruction}${productInstruction}${addToCartInstruction}${orderStatusInstruction}${purchaseInstruction}${formattingInstruction}${pagesIndexInstruction}`;
 
 
     // ── Call AI gateway (with tool-call loop) ──
@@ -480,7 +469,7 @@ serve(async (req) => {
 
     return jsonResp({
       message: cleanMessage,
-      source: responseSource,
+      source: (faqSource || responseSource) as ResponseSource,
       trigger_lead_form: triggerLead,
     });
 
@@ -492,13 +481,19 @@ serve(async (req) => {
 });
 
 // ══════════════════════════════════════════════════════
-// FAQ LOOKUP — exact match then fuzzy (similarity > 0.85)
+// FAQ CONTEXT
+// <= 40 FAQs  → inject them all (FAQ_DIRECT), no matching at all
+//  > 40 FAQs  → embedding pre-filter (FAQ_SEMANTIC), top 5 over ~0.80 cosine
 // ══════════════════════════════════════════════════════
-async function lookupFaq(
+const FAQ_DIRECT_LIMIT = 40;
+const FAQ_SEMANTIC_THRESHOLD = 0.6;
+const FAQ_SEMANTIC_TOP_K = 5;
+
+async function buildFaqContext(
   supabase: any,
   chatbotId: string,
-  userMessage: string
-): Promise<{ question: string; answer: string } | null> {
+  userMessage: string,
+): Promise<{ block: string; source: "FAQ_DIRECT" | "FAQ_SEMANTIC" } | null> {
   const { data: faqs, error } = await supabase
     .from("faqs")
     .select("question, answer")
@@ -506,42 +501,61 @@ async function lookupFaq(
 
   if (error || !faqs?.length) return null;
 
-  const normalizedQuery = userMessage.toLowerCase().trim();
+  const header =
+    "--- VERIFIED FAQ (HIGHEST PRIORITY KNOWLEDGE) ---\n" +
+    "Le seguenti sono FAQ verificate. Se la domanda dell'utente corrisponde anche solo nel significato a una di queste, usa ESATTAMENTE questa risposta, riformulandola in modo naturale ma senza cambiarne il contenuto. Non contraddire mai una FAQ e non inventare risposte alternative quando una FAQ copre l'argomento.\n\n";
+  const render = (list: any[]) =>
+    header +
+    list.map((f: any, i: number) => `${i + 1}. Domanda: ${f.question}\n   Risposta: ${f.answer}`).join("\n\n") +
+    "\n--- END FAQ ---\n\n";
 
-  // Pass 1: Exact match (case-insensitive)
-  for (const faq of faqs) {
-    if (faq.question.toLowerCase().trim() === normalizedQuery) {
-      return faq;
-    }
+  if (faqs.length <= FAQ_DIRECT_LIMIT) {
+    return { block: render(faqs), source: "FAQ_DIRECT" };
   }
 
-  // Pass 2: Fuzzy match using word overlap similarity
-  let bestMatch: { question: string; answer: string } | null = null;
-  let bestScore = 0;
+  // Large FAQ sets: semantic pre-filter via embeddings (same infra as rag-search)
+  try {
+    const openaiKey = Deno.env.get("OPENAI_API_KEY");
+    if (!openaiKey) throw new Error("OPENAI_API_KEY not configured for FAQ embeddings");
 
-  for (const faq of faqs) {
-    const score = wordSimilarity(normalizedQuery, faq.question.toLowerCase().trim());
-    if (score > 0.85 && score > bestScore) {
-      bestScore = score;
-      bestMatch = faq;
-    }
+    const inputs = [userMessage, ...faqs.map((f: any) => f.question)];
+    const res = await fetch("https://api.openai.com/v1/embeddings", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${openaiKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ model: "text-embedding-3-small", input: inputs }),
+    });
+    if (!res.ok) throw new Error(`embedding error ${res.status}`);
+    const data = await res.json();
+    const vectors: number[][] = data.data
+      .slice()
+      .sort((a: any, b: any) => a.index - b.index)
+      .map((d: any) => d.embedding);
+
+    const queryVec = vectors[0];
+    const ranked = faqs
+      .map((f: any, i: number) => ({ faq: f, score: cosineSimilarity(queryVec, vectors[i + 1]) }))
+      .sort((a: any, b: any) => b.score - a.score);
+    console.log(`[chat] FAQ_SEMANTIC scores top3: ${ranked.slice(0, 3).map((s: any) => s.score.toFixed(3)).join(", ")}`);
+
+    const scored = ranked.filter((s: any) => s.score >= FAQ_SEMANTIC_THRESHOLD).slice(0, FAQ_SEMANTIC_TOP_K);
+
+    if (!scored.length) return null;
+    console.log(`[chat] FAQ_SEMANTIC | ${scored.length} matches, best=${scored[0].score.toFixed(3)}`);
+    return { block: render(scored.map((s: any) => s.faq)), source: "FAQ_SEMANTIC" };
+  } catch (e) {
+    console.error("[chat] FAQ semantic search error (non-blocking):", e);
+    return null;
   }
-
-  return bestMatch;
 }
 
-function wordSimilarity(a: string, b: string): number {
-  const wordsA = new Set(a.split(/\s+/).filter(w => w.length > 2));
-  const wordsB = new Set(b.split(/\s+/).filter(w => w.length > 2));
-  if (wordsA.size === 0 && wordsB.size === 0) return 1;
-  if (wordsA.size === 0 || wordsB.size === 0) return 0;
-
-  let intersection = 0;
-  for (const w of wordsA) {
-    if (wordsB.has(w)) intersection++;
+function cosineSimilarity(a: number[], b: number[]): number {
+  let dot = 0, na = 0, nb = 0;
+  for (let i = 0; i < a.length; i++) {
+    dot += a[i] * b[i];
+    na += a[i] * a[i];
+    nb += b[i] * b[i];
   }
-  const union = new Set([...wordsA, ...wordsB]).size;
-  return union > 0 ? intersection / union : 0;
+  return na && nb ? dot / (Math.sqrt(na) * Math.sqrt(nb)) : 0;
 }
 
 // ══════════════════════════════════════════════════════
