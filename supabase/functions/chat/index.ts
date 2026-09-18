@@ -245,11 +245,17 @@ serve(async (req) => {
     // ── Call AI gateway (with tool-call loop) ──
     const gatewayModel = MODEL_MAP[chatModel] || "openai/gpt-5-mini";
 
-    async function callAi(convo: any[]) {
+    // Streaming is used when the caller can consume SSE (the widget can) and no tools
+    // are configured — tool calls still need the full non-streamed message.
+    const clientWantsStream =
+      stream !== false && !String(source_url || "").startsWith("instagram://");
+    const useStream = clientWantsStream && tools.length === 0;
+
+    async function callAi(convo: any[], streaming: boolean) {
       const payload: any = {
         model: gatewayModel,
         messages: [{ role: "system", content: systemPrompt }, ...convo],
-        stream: false,
+        stream: streaming,
       };
       if (tools.length) payload.tools = tools;
 
@@ -288,11 +294,235 @@ serve(async (req) => {
       }
     }
 
+    // ── Markers post-processing (identical for streaming and non-streaming) ──
+    const stripMarkers = (text: string) =>
+      text
+        .replace("[TRIGGER_LEAD_FORM]", "")
+        .replace(/\[LEAD_DATA:\{[\s\S]*?\}\]/g, "")
+        .replace(/\[ADD_TO_CART:.*?\]/g, "")
+        .replace(/\[CHECK_ORDER:.*?\]/g, "");
+
+    async function postProcess(fullMessage: string) {
+      // ── Add-to-cart marker → real store cart link ──
+      let cartLinkMarkdown = "";
+      const addToCartMatch = fullMessage.match(/\[ADD_TO_CART:(\{.*?\})\]/);
+      if (addToCartMatch) {
+        try {
+          const { product_id, qty } = JSON.parse(addToCartMatch[1]);
+          const quantity = qty || 1;
+
+          const { data: ecommerceConfig } = await supabase
+            .from("ecommerce_configs")
+            .select("platform, store_url")
+            .eq("client_id", botConfig.client_id)
+            .maybeSingle();
+
+          const { data: product } = await supabase
+            .from("products")
+            .select("external_id, product_url, variants")
+            .eq("client_id", botConfig.client_id)
+            .eq("external_id", String(product_id))
+            .maybeSingle();
+
+          if (ecommerceConfig && product) {
+            const storeUrl = (ecommerceConfig.store_url || "").replace(/\/$/, "");
+            let cartUrl = "";
+
+            if (ecommerceConfig.platform === "woocommerce") {
+              cartUrl = `${storeUrl}/?add-to-cart=${encodeURIComponent(product.external_id)}&quantity=${quantity}`;
+            } else if (ecommerceConfig.platform === "shopify") {
+              const variantId = (product.variants as any[])?.[0]?.id;
+              if (variantId) {
+                cartUrl = `${storeUrl}/cart/${variantId}:${quantity}`;
+              } else if (product.product_url) {
+                cartUrl = product.product_url;
+              }
+            } else if (product.product_url) {
+              // PrestaShop / feed / custom API: no reliable auto add-to-cart, link the product page
+              cartUrl = product.product_url;
+            }
+
+            if (cartUrl) {
+              const label =
+                ecommerceConfig.platform === "woocommerce" || ecommerceConfig.platform === "shopify"
+                  ? "Aggiungi al carrello"
+                  : "Vai al prodotto";
+              cartLinkMarkdown = `\n\n[🛒 ${label}](${cartUrl})`;
+            }
+          }
+        } catch (e) {
+          console.error("[chat] add_to_cart error:", e);
+        }
+      }
+
+      // ── Order status marker → verified order lookup ──
+      let orderStatusText = "";
+      const checkOrderMatch = fullMessage.match(/\[CHECK_ORDER:(\{.*?\})\]/);
+      if (checkOrderMatch) {
+        try {
+          const { order_number, email } = JSON.parse(checkOrderMatch[1]);
+          const statusResp = await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/get-order-status`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ embed_token, order_number, email }),
+          });
+          const statusData = await statusResp.json();
+          if (statusData.found) {
+            const dateStr = statusData.order_date ? new Date(statusData.order_date).toLocaleDateString("it-IT") : "";
+            orderStatusText = `\n\n📦 **Stato ordine #${order_number}**: ${statusData.status}${dateStr ? ` (ordinato il ${dateStr})` : ""}`;
+          } else {
+            orderStatusText = `\n\nNon ho trovato nessun ordine con numero "${order_number}" e questa email. Verifica i dati e riprova.`;
+          }
+        } catch (e) {
+          console.error("[chat] check_order error:", e);
+          orderStatusText = "\n\nSi è verificato un errore nel controllo dell'ordine, riprova tra poco.";
+        }
+      }
+
+      // ── Conversational lead marker → create the lead automatically ──
+      if (conversationalLead && !leadAlreadyCaptured) {
+        const leadDataMatch = fullMessage.match(/\[LEAD_DATA:(\{.*?\})\]/);
+        if (leadDataMatch) {
+          try {
+            const parsed = JSON.parse(leadDataMatch[1]);
+            const lName = String(parsed.name || "").trim();
+            const lEmail = String(parsed.email || "").trim();
+            const lPhone = String(parsed.phone || "").trim();
+            if (lName && (lEmail || lPhone)) {
+              await createConversationalLead(supabase, botConfig, {
+                name: lName,
+                email: lEmail,
+                phone: lPhone,
+                message: String(parsed.message || "").trim(),
+                transcript: messages,
+                source_url,
+                lang,
+              });
+              leadAlreadyCaptured = true;
+              console.log("[chat] conversational lead captured");
+            }
+          } catch (e) {
+            console.error("[chat] LEAD_DATA parse error:", e);
+          }
+        }
+      }
+
+      const cleanMessage = stripMarkers(fullMessage).trim() + cartLinkMarkdown + orderStatusText;
+      const triggerLead = !conversationalLead && fullMessage.indexOf("[TRIGGER_LEAD_FORM]") !== -1;
+
+      // Save session in background
+      if (session_token) {
+        saveSession(supabase, session_token, botConfig, [...messages, { role: "assistant", content: cleanMessage }], source_url, lang, conversationalLead && leadAlreadyCaptured);
+      }
+
+      return { cleanMessage, triggerLead };
+    }
+
+    // ══════════════════════════════════════════════════════
+    // STREAMING PATH (Server-Sent Events, OpenAI delta format)
+    // ══════════════════════════════════════════════════════
+    if (useStream) {
+      const tAi = Date.now();
+      const aiResponse = await callAi([...messages], true);
+      console.log(`[chat] ⏱ AI call (first byte, streaming): ${Date.now() - tAi}ms`);
+
+      if (!aiResponse.ok || !aiResponse.body) {
+        const status = aiResponse.status;
+        if (status === 429) return jsonResp({ error: "Rate limit exceeded" }, 429);
+        if (status === 402) return jsonResp({ error: "AI credits exhausted" }, 402);
+        throw new Error(`AI gateway error: ${status}`);
+      }
+
+      const encoder = new TextEncoder();
+      const decoder = new TextDecoder();
+      const upstream = aiResponse.body.getReader();
+
+      const sseChunk = (text: string) =>
+        encoder.encode(`data: ${JSON.stringify({ choices: [{ delta: { content: text } }] })}\n\n`);
+
+      const body = new ReadableStream({
+        async start(controller) {
+          let acc = "";       // raw accumulated model output
+          let sent = "";      // text already forwarded to the client
+          let buf = "";
+
+          const flush = () => {
+            // Never forward a partially written marker: hold back from the last "["
+            const clean = stripMarkers(acc).replace(/^\s+/, "");
+            const openIdx = clean.lastIndexOf("[");
+            const safe = openIdx !== -1 && clean.indexOf("]", openIdx) === -1
+              ? clean.slice(0, openIdx)
+              : clean;
+            if (safe.length > sent.length && safe.startsWith(sent)) {
+              const delta = safe.slice(sent.length);
+              sent = safe;
+              controller.enqueue(sseChunk(delta));
+            }
+          };
+
+          try {
+            while (true) {
+              const { done, value } = await upstream.read();
+              if (done) break;
+              buf += decoder.decode(value, { stream: true });
+              const parts = buf.split("\n");
+              buf = parts.pop() || "";
+              for (const raw of parts) {
+                const line = raw.trim();
+                if (!line.startsWith("data: ") || line === "data: [DONE]") continue;
+                try {
+                  const parsed = JSON.parse(line.slice(6));
+                  const delta = parsed.choices?.[0]?.delta?.content || "";
+                  if (delta) {
+                    acc += delta;
+                    flush();
+                  }
+                } catch { /* ignore keep-alive / partial frames */ }
+              }
+            }
+
+            console.log(`[chat] ⏱ AI call (stream complete): ${Date.now() - tAi}ms`);
+
+            const { cleanMessage } = await postProcess(acc);
+            if (cleanMessage.startsWith(sent)) {
+              const tail = cleanMessage.slice(sent.length);
+              if (tail) controller.enqueue(sseChunk(tail));
+            } else {
+              controller.enqueue(sseChunk(cleanMessage.slice(stripMarkers(acc).trim().length)));
+            }
+            // Preserve the lead-form trigger: the widget detects this marker in the stream
+            if (!conversationalLead && acc.indexOf("[TRIGGER_LEAD_FORM]") !== -1) {
+              controller.enqueue(sseChunk("[TRIGGER_LEAD_FORM]"));
+            }
+            controller.enqueue(encoder.encode("data: [DONE]\n\n"));
+            console.log(`[chat] ⏱ total request: ${Date.now() - tStart}ms`);
+          } catch (streamErr) {
+            console.error("[chat] streaming error:", streamErr);
+          } finally {
+            controller.close();
+          }
+        },
+      });
+
+      return new Response(body, {
+        headers: {
+          ...corsHeaders,
+          "Content-Type": "text/event-stream",
+          "Cache-Control": "no-cache",
+          Connection: "keep-alive",
+        },
+      });
+    }
+
+    // ══════════════════════════════════════════════════════
+    // NON-STREAMING PATH (tool calls, Instagram, explicit stream:false)
+    // ══════════════════════════════════════════════════════
     const convo: any[] = [...messages];
     let aiMessage: any = null;
+    const tAi = Date.now();
 
     for (let step = 0; step < 3; step++) {
-      const aiResponse = await callAi(convo);
+      const aiResponse = await callAi(convo, false);
       if (!aiResponse.ok) {
         const status = aiResponse.status;
         if (status === 429) return jsonResp({ error: "Rate limit exceeded" }, 429);
@@ -322,127 +552,11 @@ serve(async (req) => {
         });
       }
     }
+    console.log(`[chat] ⏱ AI call (non-streaming, incl. tools): ${Date.now() - tAi}ms`);
 
     const fullMessage = aiMessage?.content || "";
-
-
-    // ── Add-to-cart marker → real store cart link ──
-    let cartLinkMarkdown = "";
-    const addToCartMatch = fullMessage.match(/\[ADD_TO_CART:(\{.*?\})\]/);
-    if (addToCartMatch) {
-      try {
-        const { product_id, qty } = JSON.parse(addToCartMatch[1]);
-        const quantity = qty || 1;
-
-        const { data: ecommerceConfig } = await supabase
-          .from("ecommerce_configs")
-          .select("platform, store_url")
-          .eq("client_id", botConfig.client_id)
-          .maybeSingle();
-
-        const { data: product } = await supabase
-          .from("products")
-          .select("external_id, product_url, variants")
-          .eq("client_id", botConfig.client_id)
-          .eq("external_id", String(product_id))
-          .maybeSingle();
-
-        if (ecommerceConfig && product) {
-          const storeUrl = (ecommerceConfig.store_url || "").replace(/\/$/, "");
-          let cartUrl = "";
-
-          if (ecommerceConfig.platform === "woocommerce") {
-            cartUrl = `${storeUrl}/?add-to-cart=${encodeURIComponent(product.external_id)}&quantity=${quantity}`;
-          } else if (ecommerceConfig.platform === "shopify") {
-            const variantId = (product.variants as any[])?.[0]?.id;
-            if (variantId) {
-              cartUrl = `${storeUrl}/cart/${variantId}:${quantity}`;
-            } else if (product.product_url) {
-              cartUrl = product.product_url;
-            }
-          } else if (product.product_url) {
-            // PrestaShop / feed / custom API: no reliable auto add-to-cart, link the product page
-            cartUrl = product.product_url;
-          }
-
-          if (cartUrl) {
-            const label =
-              ecommerceConfig.platform === "woocommerce" || ecommerceConfig.platform === "shopify"
-                ? "Aggiungi al carrello"
-                : "Vai al prodotto";
-            cartLinkMarkdown = `\n\n[🛒 ${label}](${cartUrl})`;
-          }
-        }
-      } catch (e) {
-        console.error("[chat] add_to_cart error:", e);
-      }
-    }
-
-    // ── Order status marker → verified order lookup ──
-    let orderStatusText = "";
-    const checkOrderMatch = fullMessage.match(/\[CHECK_ORDER:(\{.*?\})\]/);
-    if (checkOrderMatch) {
-      try {
-        const { order_number, email } = JSON.parse(checkOrderMatch[1]);
-        const statusResp = await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/get-order-status`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ embed_token, order_number, email }),
-        });
-        const statusData = await statusResp.json();
-        if (statusData.found) {
-          const dateStr = statusData.order_date ? new Date(statusData.order_date).toLocaleDateString("it-IT") : "";
-          orderStatusText = `\n\n📦 **Stato ordine #${order_number}**: ${statusData.status}${dateStr ? ` (ordinato il ${dateStr})` : ""}`;
-        } else {
-          orderStatusText = `\n\nNon ho trovato nessun ordine con numero "${order_number}" e questa email. Verifica i dati e riprova.`;
-        }
-      } catch (e) {
-        console.error("[chat] check_order error:", e);
-        orderStatusText = "\n\nSi è verificato un errore nel controllo dell'ordine, riprova tra poco.";
-      }
-    }
-
-    // ── Conversational lead marker → create the lead automatically ──
-    if (conversationalLead && !leadAlreadyCaptured) {
-      const leadDataMatch = fullMessage.match(/\[LEAD_DATA:(\{.*?\})\]/);
-      if (leadDataMatch) {
-        try {
-          const parsed = JSON.parse(leadDataMatch[1]);
-          const lName = String(parsed.name || "").trim();
-          const lEmail = String(parsed.email || "").trim();
-          const lPhone = String(parsed.phone || "").trim();
-          if (lName && (lEmail || lPhone)) {
-            await createConversationalLead(supabase, botConfig, {
-              name: lName,
-              email: lEmail,
-              phone: lPhone,
-              message: String(parsed.message || "").trim(),
-              transcript: messages,
-              source_url,
-              lang,
-            });
-            leadAlreadyCaptured = true;
-            console.log("[chat] conversational lead captured");
-          }
-        } catch (e) {
-          console.error("[chat] LEAD_DATA parse error:", e);
-        }
-      }
-    }
-
-    const cleanMessage =
-      fullMessage
-        .replace("[TRIGGER_LEAD_FORM]", "")
-        .replace(/\[LEAD_DATA:\{[\s\S]*?\}\]/g, "")
-        .replace(/\[ADD_TO_CART:.*?\]/g, "")
-        .replace(/\[CHECK_ORDER:.*?\]/g, "")
-        .trim() + cartLinkMarkdown + orderStatusText;
-    const triggerLead = !conversationalLead && fullMessage.indexOf("[TRIGGER_LEAD_FORM]") !== -1;
-
-    // Save session in background
-    if (session_token) {
-      saveSession(supabase, session_token, botConfig, [...messages, { role: "assistant", content: cleanMessage }], source_url, lang, conversationalLead && leadAlreadyCaptured);
-    }
+    const { cleanMessage, triggerLead } = await postProcess(fullMessage);
+    console.log(`[chat] ⏱ total request: ${Date.now() - tStart}ms`);
 
     return jsonResp({
       message: cleanMessage,
