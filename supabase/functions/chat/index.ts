@@ -314,13 +314,13 @@ serve(async (req) => {
           const { data: ecommerceConfig } = await supabase
             .from("ecommerce_configs")
             .select("platform, store_url")
-            .eq("client_id", botConfig.client_id)
+            .eq("client_id", (botConfig as any).client_id)
             .maybeSingle();
 
           const { data: product } = await supabase
             .from("products")
             .select("external_id, product_url, variants")
-            .eq("client_id", botConfig.client_id)
+            .eq("client_id", (botConfig as any).client_id)
             .eq("external_id", String(product_id))
             .maybeSingle();
 
