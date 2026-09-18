@@ -20,8 +20,10 @@ type ResponseSource = "FAQ_DIRECT" | "FAQ_SEMANTIC" | "KNOWLEDGE" | "INSTRUCTION
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
+  const tStart = Date.now();
+
   try {
-    const { messages, embed_token, session_token, source_url, language } = await req.json();
+    const { messages, embed_token, session_token, source_url, language, stream } = await req.json();
     const lang = language || "en";
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
