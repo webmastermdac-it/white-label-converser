@@ -43,18 +43,30 @@ serve(async (req) => {
       return jsonResp({ error: "Invalid embed token" }, 401);
     }
 
-    // ── Parallel: client plan, session count, plan config ──
+    console.log(`[chat] ⏱ fetch config: ${Date.now() - tStart}ms`);
+
+    // ── Parallel: FAQ lookup, client plan, session count, plan config ──
+    // NOTE: FAQ is only EXECUTED earlier here; its PRIORITY in the answer is unchanged.
     const monthStart = new Date();
     monthStart.setDate(1);
     monthStart.setHours(0, 0, 0, 0);
 
-    const [clientRes, sessionCountRes, planConfigRes] = await Promise.all([
+    const lastUserMessage = messages[messages.length - 1]?.content || "";
+    const tParallel = Date.now();
+
+    const [faqContextResult, clientRes, sessionCountRes, planConfigRes] = await Promise.all([
+      (async () => {
+        const s = Date.now();
+        const r = await buildFaqContext(supabase, botConfig.id, lastUserMessage);
+        console.log(`[chat] ⏱ FAQ lookup: ${Date.now() - s}ms`);
+        return r;
+      })(),
       supabase.from("clients").select("plan").eq("id", botConfig.client_id).single(),
       supabase.from("chat_sessions").select("id", { count: "exact", head: true })
         .eq("client_id", botConfig.client_id).gte("started_at", monthStart.toISOString()),
-      supabase.from("plan_configs")
-        .select("plan_name, max_conversations_month, chat_model, knowledge_base_wizard"),
+      getPlanConfigs(supabase),
     ]);
+    console.log(`[chat] ⏱ parallel block (FAQ + client + sessions + plan_configs): ${Date.now() - tParallel}ms`);
 
     const plan = clientRes.data?.plan || "free";
     const planConfig = planConfigRes.data?.find((p: any) => p.plan_name === plan);
@@ -83,88 +95,58 @@ serve(async (req) => {
       }, 429);
     }
 
-    const lastUserMessage = messages[messages.length - 1]?.content || "";
-
     // ══════════════════════════════════════════════════════
     // STEP 1 — FAQ CONTEXT (highest priority, injected in the system prompt)
     // ══════════════════════════════════════════════════════
-    const faqContextResult = await buildFaqContext(supabase, botConfig.id, lastUserMessage);
     const faqContext = faqContextResult?.block || "";
     const faqSource = faqContextResult?.source || null;
     if (faqSource) console.log(`[chat] FAQ context injected | mode: ${faqSource}`);
 
     // ══════════════════════════════════════════════════════
-    // STEP 2 — KNOWLEDGE LOOKUP (RAG, medium priority)
+    // STEP 2 — KNOWLEDGE LOOKUP (RAG, medium priority) + pages index + products
+    // RAG now runs INLINE (no HTTP hop to the rag-search function)
     // ══════════════════════════════════════════════════════
     let ragContext = "";
     let responseSource: ResponseSource = "INSTRUCTIONS";
 
-    if (ragAllowed) {
-      try {
-        const ragResponse = await fetch(
-          `${Deno.env.get("SUPABASE_URL")}/functions/v1/rag-search`,
-          {
-            method: "POST",
-            headers: {
-              "Authorization": `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              query: lastUserMessage,
-              chatbot_id: botConfig.id,
-              match_count: 5,
-              match_threshold: 0.6,
-            }),
-          }
-        );
-        if (ragResponse.ok) {
-          const ragData = await ragResponse.json();
-          if (ragData.chunks?.length > 0) {
-            ragContext = "\n\n--- RELEVANT KNOWLEDGE BASE CONTEXT ---\n" +
-              ragData.chunks.map((c: any, i: number) => {
-                const urlLine = c.metadata?.url ? `\nPage link: ${c.metadata.url}` : "";
-                return `[Source ${i + 1} (relevance: ${(c.similarity * 100).toFixed(0)}%)]${urlLine}\n${c.content}`;
-              }).join("\n\n") +
-              "\n--- END CONTEXT ---\n\nIMPORTANT: Use the above context to answer the user's question accurately. If the context contains the answer, use it. If not, use your general knowledge base instructions. If a Source you used to answer has a 'Page link', include that link at the end of your answer as a reference (e.g. 'Per saperne di più: <link>'). Never invent or guess a link that wasn't provided in the context. If no Source used has a link, don't mention any link.";
-            responseSource = "KNOWLEDGE";
-            console.log(`[chat] source: KNOWLEDGE | ${ragData.chunks.length} chunks found`);
-          }
+    const tLookups = Date.now();
+    const [ragChunks, pagesIndex, matchedProducts] = await Promise.all([
+      (async () => {
+        if (!ragAllowed) return [] as any[];
+        const s = Date.now();
+        try {
+          const chunks = await searchKnowledgeChunks(supabase, botConfig.id, lastUserMessage);
+          console.log(`[chat] ⏱ RAG (inline): ${Date.now() - s}ms | ${chunks.length} chunks`);
+          return chunks;
+        } catch (ragErr) {
+          console.error("[chat] RAG search error (non-blocking):", ragErr);
+          console.log(`[chat] ⏱ RAG (inline, failed): ${Date.now() - s}ms`);
+          return [] as any[];
         }
-      } catch (ragErr) {
-        console.error("[chat] RAG search error (non-blocking):", ragErr);
-      }
-    }
+      })(),
+      buildPagesIndex(supabase, botConfig.id),
+      (async () => {
+        try {
+          return await searchProducts(supabase, botConfig.client_id, lastUserMessage);
+        } catch (pErr) {
+          console.error("[chat] product search error (non-blocking):", pErr);
+          return "";
+        }
+      })(),
+    ]);
+    console.log(`[chat] ⏱ lookups (RAG + pages index + products): ${Date.now() - tLookups}ms`);
 
-    if (responseSource === "INSTRUCTIONS") {
+    if (ragChunks.length > 0) {
+      ragContext = "\n\n--- RELEVANT KNOWLEDGE BASE CONTEXT ---\n" +
+        ragChunks.map((c: any, i: number) => {
+          const urlLine = c.metadata?.url ? `\nPage link: ${c.metadata.url}` : "";
+          return `[Source ${i + 1} (relevance: ${(c.similarity * 100).toFixed(0)}%)]${urlLine}\n${c.content}`;
+        }).join("\n\n") +
+        "\n--- END CONTEXT ---\n\nIMPORTANT: Use the above context to answer the user's question accurately. If the context contains the answer, use it. If not, use your general knowledge base instructions. If a Source you used to answer has a 'Page link', include that link at the end of your answer as a reference (e.g. 'Per saperne di più: <link>'). Never invent or guess a link that wasn't provided in the context. If no Source used has a link, don't mention any link.";
+      responseSource = "KNOWLEDGE";
+      console.log(`[chat] source: KNOWLEDGE | ${ragChunks.length} chunks found`);
+    } else {
       console.log("[chat] source: INSTRUCTIONS | using system prompt fallback");
-    }
-
-    // ── Available pages index: always fetched, independent of RAG matching ──
-    let pagesIndex = "";
-    try {
-      const { count: totalPages } = await supabase
-        .from("knowledge_base")
-        .select("id", { count: "exact", head: true })
-        .eq("chatbot_id", botConfig.id)
-        .eq("status", "ready")
-        .not("page_url", "is", null);
-      const { data: pages } = await supabase
-        .from("knowledge_base")
-        .select("name, page_url")
-        .eq("chatbot_id", botConfig.id)
-        .eq("status", "ready")
-        .not("page_url", "is", null)
-        .order("name", { ascending: true })
-        .limit(60);
-      if (pages && pages.length > 0) {
-        const lines = pages.map((p: any) => `- ${p.name}: ${p.page_url}`);
-        if ((totalPages || pages.length) > pages.length) {
-          lines.push(`...and ${(totalPages || pages.length) - pages.length} more pages`);
-        }
-        pagesIndex = "\n\n--- AVAILABLE PAGES INDEX ---\n" + lines.join("\n") + "\n--- END INDEX ---";
-      }
-    } catch (idxErr) {
-      console.error("[chat] pages index fetch error (non-blocking):", idxErr);
     }
 
     const pagesIndexInstruction = pagesIndex
@@ -178,13 +160,6 @@ serve(async (req) => {
     const fallbackConcept = botConfig.fallback_msg_en || botConfig.fallback_message || "I don't have this information, but I can connect you with one of our consultants!";
     let productKnowledge = botConfig.knowledge_base_products || "";
 
-    // ── Product search: retrieve the most relevant catalog items for this query ──
-    let matchedProducts = "";
-    try {
-      matchedProducts = await searchProducts(supabase, botConfig.client_id, lastUserMessage);
-    } catch (pErr) {
-      console.error("[chat] product search error (non-blocking):", pErr);
-    }
     if (matchedProducts) {
       console.log("[chat] product search: matches injected");
       productKnowledge = matchedProducts + (productKnowledge ? "\n\n" + productKnowledge : "");
