@@ -20,8 +20,10 @@ type ResponseSource = "FAQ_DIRECT" | "FAQ_SEMANTIC" | "KNOWLEDGE" | "INSTRUCTION
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
+  const tStart = Date.now();
+
   try {
-    const { messages, embed_token, session_token, source_url, language } = await req.json();
+    const { messages, embed_token, session_token, source_url, language, stream } = await req.json();
     const lang = language || "en";
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
@@ -43,18 +45,30 @@ serve(async (req) => {
       return jsonResp({ error: "Invalid embed token" }, 401);
     }
 
-    // ── Parallel: client plan, session count, plan config ──
+    console.log(`[chat] ⏱ fetch config: ${Date.now() - tStart}ms`);
+
+    // ── Parallel: FAQ lookup, client plan, session count, plan config ──
+    // NOTE: FAQ is only EXECUTED earlier here; its PRIORITY in the answer is unchanged.
     const monthStart = new Date();
     monthStart.setDate(1);
     monthStart.setHours(0, 0, 0, 0);
 
-    const [clientRes, sessionCountRes, planConfigRes] = await Promise.all([
+    const lastUserMessage = messages[messages.length - 1]?.content || "";
+    const tParallel = Date.now();
+
+    const [faqContextResult, clientRes, sessionCountRes, planConfigRes] = await Promise.all([
+      (async () => {
+        const s = Date.now();
+        const r = await buildFaqContext(supabase, botConfig.id, lastUserMessage);
+        console.log(`[chat] ⏱ FAQ lookup: ${Date.now() - s}ms`);
+        return r;
+      })(),
       supabase.from("clients").select("plan").eq("id", botConfig.client_id).single(),
       supabase.from("chat_sessions").select("id", { count: "exact", head: true })
         .eq("client_id", botConfig.client_id).gte("started_at", monthStart.toISOString()),
-      supabase.from("plan_configs")
-        .select("plan_name, max_conversations_month, chat_model, knowledge_base_wizard"),
+      getPlanConfigs(supabase),
     ]);
+    console.log(`[chat] ⏱ parallel block (FAQ + client + sessions + plan_configs): ${Date.now() - tParallel}ms`);
 
     const plan = clientRes.data?.plan || "free";
     const planConfig = planConfigRes.data?.find((p: any) => p.plan_name === plan);
@@ -83,88 +97,58 @@ serve(async (req) => {
       }, 429);
     }
 
-    const lastUserMessage = messages[messages.length - 1]?.content || "";
-
     // ══════════════════════════════════════════════════════
     // STEP 1 — FAQ CONTEXT (highest priority, injected in the system prompt)
     // ══════════════════════════════════════════════════════
-    const faqContextResult = await buildFaqContext(supabase, botConfig.id, lastUserMessage);
     const faqContext = faqContextResult?.block || "";
     const faqSource = faqContextResult?.source || null;
     if (faqSource) console.log(`[chat] FAQ context injected | mode: ${faqSource}`);
 
     // ══════════════════════════════════════════════════════
-    // STEP 2 — KNOWLEDGE LOOKUP (RAG, medium priority)
+    // STEP 2 — KNOWLEDGE LOOKUP (RAG, medium priority) + pages index + products
+    // RAG now runs INLINE (no HTTP hop to the rag-search function)
     // ══════════════════════════════════════════════════════
     let ragContext = "";
     let responseSource: ResponseSource = "INSTRUCTIONS";
 
-    if (ragAllowed) {
-      try {
-        const ragResponse = await fetch(
-          `${Deno.env.get("SUPABASE_URL")}/functions/v1/rag-search`,
-          {
-            method: "POST",
-            headers: {
-              "Authorization": `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              query: lastUserMessage,
-              chatbot_id: botConfig.id,
-              match_count: 5,
-              match_threshold: 0.6,
-            }),
-          }
-        );
-        if (ragResponse.ok) {
-          const ragData = await ragResponse.json();
-          if (ragData.chunks?.length > 0) {
-            ragContext = "\n\n--- RELEVANT KNOWLEDGE BASE CONTEXT ---\n" +
-              ragData.chunks.map((c: any, i: number) => {
-                const urlLine = c.metadata?.url ? `\nPage link: ${c.metadata.url}` : "";
-                return `[Source ${i + 1} (relevance: ${(c.similarity * 100).toFixed(0)}%)]${urlLine}\n${c.content}`;
-              }).join("\n\n") +
-              "\n--- END CONTEXT ---\n\nIMPORTANT: Use the above context to answer the user's question accurately. If the context contains the answer, use it. If not, use your general knowledge base instructions. If a Source you used to answer has a 'Page link', include that link at the end of your answer as a reference (e.g. 'Per saperne di più: <link>'). Never invent or guess a link that wasn't provided in the context. If no Source used has a link, don't mention any link.";
-            responseSource = "KNOWLEDGE";
-            console.log(`[chat] source: KNOWLEDGE | ${ragData.chunks.length} chunks found`);
-          }
+    const tLookups = Date.now();
+    const [ragChunks, pagesIndex, matchedProducts] = await Promise.all([
+      (async () => {
+        if (!ragAllowed) return [] as any[];
+        const s = Date.now();
+        try {
+          const chunks = await searchKnowledgeChunks(supabase, botConfig.id, lastUserMessage);
+          console.log(`[chat] ⏱ RAG (inline): ${Date.now() - s}ms | ${chunks.length} chunks`);
+          return chunks;
+        } catch (ragErr) {
+          console.error("[chat] RAG search error (non-blocking):", ragErr);
+          console.log(`[chat] ⏱ RAG (inline, failed): ${Date.now() - s}ms`);
+          return [] as any[];
         }
-      } catch (ragErr) {
-        console.error("[chat] RAG search error (non-blocking):", ragErr);
-      }
-    }
+      })(),
+      buildPagesIndex(supabase, botConfig.id),
+      (async () => {
+        try {
+          return await searchProducts(supabase, botConfig.client_id, lastUserMessage);
+        } catch (pErr) {
+          console.error("[chat] product search error (non-blocking):", pErr);
+          return "";
+        }
+      })(),
+    ]);
+    console.log(`[chat] ⏱ lookups (RAG + pages index + products): ${Date.now() - tLookups}ms`);
 
-    if (responseSource === "INSTRUCTIONS") {
+    if (ragChunks.length > 0) {
+      ragContext = "\n\n--- RELEVANT KNOWLEDGE BASE CONTEXT ---\n" +
+        ragChunks.map((c: any, i: number) => {
+          const urlLine = c.metadata?.url ? `\nPage link: ${c.metadata.url}` : "";
+          return `[Source ${i + 1} (relevance: ${(c.similarity * 100).toFixed(0)}%)]${urlLine}\n${c.content}`;
+        }).join("\n\n") +
+        "\n--- END CONTEXT ---\n\nIMPORTANT: Use the above context to answer the user's question accurately. If the context contains the answer, use it. If not, use your general knowledge base instructions. If a Source you used to answer has a 'Page link', include that link at the end of your answer as a reference (e.g. 'Per saperne di più: <link>'). Never invent or guess a link that wasn't provided in the context. If no Source used has a link, don't mention any link.";
+      responseSource = "KNOWLEDGE";
+      console.log(`[chat] source: KNOWLEDGE | ${ragChunks.length} chunks found`);
+    } else {
       console.log("[chat] source: INSTRUCTIONS | using system prompt fallback");
-    }
-
-    // ── Available pages index: always fetched, independent of RAG matching ──
-    let pagesIndex = "";
-    try {
-      const { count: totalPages } = await supabase
-        .from("knowledge_base")
-        .select("id", { count: "exact", head: true })
-        .eq("chatbot_id", botConfig.id)
-        .eq("status", "ready")
-        .not("page_url", "is", null);
-      const { data: pages } = await supabase
-        .from("knowledge_base")
-        .select("name, page_url")
-        .eq("chatbot_id", botConfig.id)
-        .eq("status", "ready")
-        .not("page_url", "is", null)
-        .order("name", { ascending: true })
-        .limit(60);
-      if (pages && pages.length > 0) {
-        const lines = pages.map((p: any) => `- ${p.name}: ${p.page_url}`);
-        if ((totalPages || pages.length) > pages.length) {
-          lines.push(`...and ${(totalPages || pages.length) - pages.length} more pages`);
-        }
-        pagesIndex = "\n\n--- AVAILABLE PAGES INDEX ---\n" + lines.join("\n") + "\n--- END INDEX ---";
-      }
-    } catch (idxErr) {
-      console.error("[chat] pages index fetch error (non-blocking):", idxErr);
     }
 
     const pagesIndexInstruction = pagesIndex
@@ -178,13 +162,6 @@ serve(async (req) => {
     const fallbackConcept = botConfig.fallback_msg_en || botConfig.fallback_message || "I don't have this information, but I can connect you with one of our consultants!";
     let productKnowledge = botConfig.knowledge_base_products || "";
 
-    // ── Product search: retrieve the most relevant catalog items for this query ──
-    let matchedProducts = "";
-    try {
-      matchedProducts = await searchProducts(supabase, botConfig.client_id, lastUserMessage);
-    } catch (pErr) {
-      console.error("[chat] product search error (non-blocking):", pErr);
-    }
     if (matchedProducts) {
       console.log("[chat] product search: matches injected");
       productKnowledge = matchedProducts + (productKnowledge ? "\n\n" + productKnowledge : "");
@@ -268,11 +245,17 @@ serve(async (req) => {
     // ── Call AI gateway (with tool-call loop) ──
     const gatewayModel = MODEL_MAP[chatModel] || "openai/gpt-5-mini";
 
-    async function callAi(convo: any[]) {
+    // Streaming is used when the caller can consume SSE (the widget can) and no tools
+    // are configured — tool calls still need the full non-streamed message.
+    const clientWantsStream =
+      stream !== false && !String(source_url || "").startsWith("instagram://");
+    const useStream = clientWantsStream && tools.length === 0;
+
+    async function callAi(convo: any[], streaming: boolean) {
       const payload: any = {
         model: gatewayModel,
         messages: [{ role: "system", content: systemPrompt }, ...convo],
-        stream: false,
+        stream: streaming,
       };
       if (tools.length) payload.tools = tools;
 
@@ -311,11 +294,235 @@ serve(async (req) => {
       }
     }
 
+    // ── Markers post-processing (identical for streaming and non-streaming) ──
+    const stripMarkers = (text: string) =>
+      text
+        .replace("[TRIGGER_LEAD_FORM]", "")
+        .replace(/\[LEAD_DATA:\{[\s\S]*?\}\]/g, "")
+        .replace(/\[ADD_TO_CART:.*?\]/g, "")
+        .replace(/\[CHECK_ORDER:.*?\]/g, "");
+
+    async function postProcess(fullMessage: string) {
+      // ── Add-to-cart marker → real store cart link ──
+      let cartLinkMarkdown = "";
+      const addToCartMatch = fullMessage.match(/\[ADD_TO_CART:(\{.*?\})\]/);
+      if (addToCartMatch) {
+        try {
+          const { product_id, qty } = JSON.parse(addToCartMatch[1]);
+          const quantity = qty || 1;
+
+          const { data: ecommerceConfig } = await supabase
+            .from("ecommerce_configs")
+            .select("platform, store_url")
+            .eq("client_id", (botConfig as any).client_id)
+            .maybeSingle();
+
+          const { data: product } = await supabase
+            .from("products")
+            .select("external_id, product_url, variants")
+            .eq("client_id", (botConfig as any).client_id)
+            .eq("external_id", String(product_id))
+            .maybeSingle();
+
+          if (ecommerceConfig && product) {
+            const storeUrl = (ecommerceConfig.store_url || "").replace(/\/$/, "");
+            let cartUrl = "";
+
+            if (ecommerceConfig.platform === "woocommerce") {
+              cartUrl = `${storeUrl}/?add-to-cart=${encodeURIComponent(product.external_id)}&quantity=${quantity}`;
+            } else if (ecommerceConfig.platform === "shopify") {
+              const variantId = (product.variants as any[])?.[0]?.id;
+              if (variantId) {
+                cartUrl = `${storeUrl}/cart/${variantId}:${quantity}`;
+              } else if (product.product_url) {
+                cartUrl = product.product_url;
+              }
+            } else if (product.product_url) {
+              // PrestaShop / feed / custom API: no reliable auto add-to-cart, link the product page
+              cartUrl = product.product_url;
+            }
+
+            if (cartUrl) {
+              const label =
+                ecommerceConfig.platform === "woocommerce" || ecommerceConfig.platform === "shopify"
+                  ? "Aggiungi al carrello"
+                  : "Vai al prodotto";
+              cartLinkMarkdown = `\n\n[🛒 ${label}](${cartUrl})`;
+            }
+          }
+        } catch (e) {
+          console.error("[chat] add_to_cart error:", e);
+        }
+      }
+
+      // ── Order status marker → verified order lookup ──
+      let orderStatusText = "";
+      const checkOrderMatch = fullMessage.match(/\[CHECK_ORDER:(\{.*?\})\]/);
+      if (checkOrderMatch) {
+        try {
+          const { order_number, email } = JSON.parse(checkOrderMatch[1]);
+          const statusResp = await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/get-order-status`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ embed_token, order_number, email }),
+          });
+          const statusData = await statusResp.json();
+          if (statusData.found) {
+            const dateStr = statusData.order_date ? new Date(statusData.order_date).toLocaleDateString("it-IT") : "";
+            orderStatusText = `\n\n📦 **Stato ordine #${order_number}**: ${statusData.status}${dateStr ? ` (ordinato il ${dateStr})` : ""}`;
+          } else {
+            orderStatusText = `\n\nNon ho trovato nessun ordine con numero "${order_number}" e questa email. Verifica i dati e riprova.`;
+          }
+        } catch (e) {
+          console.error("[chat] check_order error:", e);
+          orderStatusText = "\n\nSi è verificato un errore nel controllo dell'ordine, riprova tra poco.";
+        }
+      }
+
+      // ── Conversational lead marker → create the lead automatically ──
+      if (conversationalLead && !leadAlreadyCaptured) {
+        const leadDataMatch = fullMessage.match(/\[LEAD_DATA:(\{.*?\})\]/);
+        if (leadDataMatch) {
+          try {
+            const parsed = JSON.parse(leadDataMatch[1]);
+            const lName = String(parsed.name || "").trim();
+            const lEmail = String(parsed.email || "").trim();
+            const lPhone = String(parsed.phone || "").trim();
+            if (lName && (lEmail || lPhone)) {
+              await createConversationalLead(supabase, botConfig, {
+                name: lName,
+                email: lEmail,
+                phone: lPhone,
+                message: String(parsed.message || "").trim(),
+                transcript: messages,
+                source_url,
+                lang,
+              });
+              leadAlreadyCaptured = true;
+              console.log("[chat] conversational lead captured");
+            }
+          } catch (e) {
+            console.error("[chat] LEAD_DATA parse error:", e);
+          }
+        }
+      }
+
+      const cleanMessage = stripMarkers(fullMessage).trim() + cartLinkMarkdown + orderStatusText;
+      const triggerLead = !conversationalLead && fullMessage.indexOf("[TRIGGER_LEAD_FORM]") !== -1;
+
+      // Save session in background
+      if (session_token) {
+        saveSession(supabase, session_token, botConfig, [...messages, { role: "assistant", content: cleanMessage }], source_url, lang, conversationalLead && leadAlreadyCaptured);
+      }
+
+      return { cleanMessage, triggerLead };
+    }
+
+    // ══════════════════════════════════════════════════════
+    // STREAMING PATH (Server-Sent Events, OpenAI delta format)
+    // ══════════════════════════════════════════════════════
+    if (useStream) {
+      const tAi = Date.now();
+      const aiResponse = await callAi([...messages], true);
+      console.log(`[chat] ⏱ AI call (first byte, streaming): ${Date.now() - tAi}ms`);
+
+      if (!aiResponse.ok || !aiResponse.body) {
+        const status = aiResponse.status;
+        if (status === 429) return jsonResp({ error: "Rate limit exceeded" }, 429);
+        if (status === 402) return jsonResp({ error: "AI credits exhausted" }, 402);
+        throw new Error(`AI gateway error: ${status}`);
+      }
+
+      const encoder = new TextEncoder();
+      const decoder = new TextDecoder();
+      const upstream = aiResponse.body.getReader();
+
+      const sseChunk = (text: string) =>
+        encoder.encode(`data: ${JSON.stringify({ choices: [{ delta: { content: text } }] })}\n\n`);
+
+      const body = new ReadableStream({
+        async start(controller) {
+          let acc = "";       // raw accumulated model output
+          let sent = "";      // text already forwarded to the client
+          let buf = "";
+
+          const flush = () => {
+            // Never forward a partially written marker: hold back from the last "["
+            const clean = stripMarkers(acc).replace(/^\s+/, "");
+            const openIdx = clean.lastIndexOf("[");
+            const safe = openIdx !== -1 && clean.indexOf("]", openIdx) === -1
+              ? clean.slice(0, openIdx)
+              : clean;
+            if (safe.length > sent.length && safe.startsWith(sent)) {
+              const delta = safe.slice(sent.length);
+              sent = safe;
+              controller.enqueue(sseChunk(delta));
+            }
+          };
+
+          try {
+            while (true) {
+              const { done, value } = await upstream.read();
+              if (done) break;
+              buf += decoder.decode(value, { stream: true });
+              const parts = buf.split("\n");
+              buf = parts.pop() || "";
+              for (const raw of parts) {
+                const line = raw.trim();
+                if (!line.startsWith("data: ") || line === "data: [DONE]") continue;
+                try {
+                  const parsed = JSON.parse(line.slice(6));
+                  const delta = parsed.choices?.[0]?.delta?.content || "";
+                  if (delta) {
+                    acc += delta;
+                    flush();
+                  }
+                } catch { /* ignore keep-alive / partial frames */ }
+              }
+            }
+
+            console.log(`[chat] ⏱ AI call (stream complete): ${Date.now() - tAi}ms`);
+
+            const { cleanMessage } = await postProcess(acc);
+            if (cleanMessage.startsWith(sent)) {
+              const tail = cleanMessage.slice(sent.length);
+              if (tail) controller.enqueue(sseChunk(tail));
+            } else {
+              controller.enqueue(sseChunk(cleanMessage.slice(stripMarkers(acc).trim().length)));
+            }
+            // Preserve the lead-form trigger: the widget detects this marker in the stream
+            if (!conversationalLead && acc.indexOf("[TRIGGER_LEAD_FORM]") !== -1) {
+              controller.enqueue(sseChunk("[TRIGGER_LEAD_FORM]"));
+            }
+            controller.enqueue(encoder.encode("data: [DONE]\n\n"));
+            console.log(`[chat] ⏱ total request: ${Date.now() - tStart}ms`);
+          } catch (streamErr) {
+            console.error("[chat] streaming error:", streamErr);
+          } finally {
+            controller.close();
+          }
+        },
+      });
+
+      return new Response(body, {
+        headers: {
+          ...corsHeaders,
+          "Content-Type": "text/event-stream",
+          "Cache-Control": "no-cache",
+          Connection: "keep-alive",
+        },
+      });
+    }
+
+    // ══════════════════════════════════════════════════════
+    // NON-STREAMING PATH (tool calls, Instagram, explicit stream:false)
+    // ══════════════════════════════════════════════════════
     const convo: any[] = [...messages];
     let aiMessage: any = null;
+    const tAi = Date.now();
 
     for (let step = 0; step < 3; step++) {
-      const aiResponse = await callAi(convo);
+      const aiResponse = await callAi(convo, false);
       if (!aiResponse.ok) {
         const status = aiResponse.status;
         if (status === 429) return jsonResp({ error: "Rate limit exceeded" }, 429);
@@ -345,127 +552,11 @@ serve(async (req) => {
         });
       }
     }
+    console.log(`[chat] ⏱ AI call (non-streaming, incl. tools): ${Date.now() - tAi}ms`);
 
     const fullMessage = aiMessage?.content || "";
-
-
-    // ── Add-to-cart marker → real store cart link ──
-    let cartLinkMarkdown = "";
-    const addToCartMatch = fullMessage.match(/\[ADD_TO_CART:(\{.*?\})\]/);
-    if (addToCartMatch) {
-      try {
-        const { product_id, qty } = JSON.parse(addToCartMatch[1]);
-        const quantity = qty || 1;
-
-        const { data: ecommerceConfig } = await supabase
-          .from("ecommerce_configs")
-          .select("platform, store_url")
-          .eq("client_id", botConfig.client_id)
-          .maybeSingle();
-
-        const { data: product } = await supabase
-          .from("products")
-          .select("external_id, product_url, variants")
-          .eq("client_id", botConfig.client_id)
-          .eq("external_id", String(product_id))
-          .maybeSingle();
-
-        if (ecommerceConfig && product) {
-          const storeUrl = (ecommerceConfig.store_url || "").replace(/\/$/, "");
-          let cartUrl = "";
-
-          if (ecommerceConfig.platform === "woocommerce") {
-            cartUrl = `${storeUrl}/?add-to-cart=${encodeURIComponent(product.external_id)}&quantity=${quantity}`;
-          } else if (ecommerceConfig.platform === "shopify") {
-            const variantId = (product.variants as any[])?.[0]?.id;
-            if (variantId) {
-              cartUrl = `${storeUrl}/cart/${variantId}:${quantity}`;
-            } else if (product.product_url) {
-              cartUrl = product.product_url;
-            }
-          } else if (product.product_url) {
-            // PrestaShop / feed / custom API: no reliable auto add-to-cart, link the product page
-            cartUrl = product.product_url;
-          }
-
-          if (cartUrl) {
-            const label =
-              ecommerceConfig.platform === "woocommerce" || ecommerceConfig.platform === "shopify"
-                ? "Aggiungi al carrello"
-                : "Vai al prodotto";
-            cartLinkMarkdown = `\n\n[🛒 ${label}](${cartUrl})`;
-          }
-        }
-      } catch (e) {
-        console.error("[chat] add_to_cart error:", e);
-      }
-    }
-
-    // ── Order status marker → verified order lookup ──
-    let orderStatusText = "";
-    const checkOrderMatch = fullMessage.match(/\[CHECK_ORDER:(\{.*?\})\]/);
-    if (checkOrderMatch) {
-      try {
-        const { order_number, email } = JSON.parse(checkOrderMatch[1]);
-        const statusResp = await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/get-order-status`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ embed_token, order_number, email }),
-        });
-        const statusData = await statusResp.json();
-        if (statusData.found) {
-          const dateStr = statusData.order_date ? new Date(statusData.order_date).toLocaleDateString("it-IT") : "";
-          orderStatusText = `\n\n📦 **Stato ordine #${order_number}**: ${statusData.status}${dateStr ? ` (ordinato il ${dateStr})` : ""}`;
-        } else {
-          orderStatusText = `\n\nNon ho trovato nessun ordine con numero "${order_number}" e questa email. Verifica i dati e riprova.`;
-        }
-      } catch (e) {
-        console.error("[chat] check_order error:", e);
-        orderStatusText = "\n\nSi è verificato un errore nel controllo dell'ordine, riprova tra poco.";
-      }
-    }
-
-    // ── Conversational lead marker → create the lead automatically ──
-    if (conversationalLead && !leadAlreadyCaptured) {
-      const leadDataMatch = fullMessage.match(/\[LEAD_DATA:(\{.*?\})\]/);
-      if (leadDataMatch) {
-        try {
-          const parsed = JSON.parse(leadDataMatch[1]);
-          const lName = String(parsed.name || "").trim();
-          const lEmail = String(parsed.email || "").trim();
-          const lPhone = String(parsed.phone || "").trim();
-          if (lName && (lEmail || lPhone)) {
-            await createConversationalLead(supabase, botConfig, {
-              name: lName,
-              email: lEmail,
-              phone: lPhone,
-              message: String(parsed.message || "").trim(),
-              transcript: messages,
-              source_url,
-              lang,
-            });
-            leadAlreadyCaptured = true;
-            console.log("[chat] conversational lead captured");
-          }
-        } catch (e) {
-          console.error("[chat] LEAD_DATA parse error:", e);
-        }
-      }
-    }
-
-    const cleanMessage =
-      fullMessage
-        .replace("[TRIGGER_LEAD_FORM]", "")
-        .replace(/\[LEAD_DATA:\{[\s\S]*?\}\]/g, "")
-        .replace(/\[ADD_TO_CART:.*?\]/g, "")
-        .replace(/\[CHECK_ORDER:.*?\]/g, "")
-        .trim() + cartLinkMarkdown + orderStatusText;
-    const triggerLead = !conversationalLead && fullMessage.indexOf("[TRIGGER_LEAD_FORM]") !== -1;
-
-    // Save session in background
-    if (session_token) {
-      saveSession(supabase, session_token, botConfig, [...messages, { role: "assistant", content: cleanMessage }], source_url, lang, conversationalLead && leadAlreadyCaptured);
-    }
+    const { cleanMessage, triggerLead } = await postProcess(fullMessage);
+    console.log(`[chat] ⏱ total request: ${Date.now() - tStart}ms`);
 
     return jsonResp({
       message: cleanMessage,
@@ -479,6 +570,107 @@ serve(async (req) => {
     return jsonResp({ error: error.message }, 500);
   }
 });
+
+// ══════════════════════════════════════════════════════
+// PLAN CONFIGS — short-lived in-memory cache (warm starts only, 5 min TTL)
+// Only plan configuration is cached; never client/bot specific data.
+// ══════════════════════════════════════════════════════
+const PLAN_CONFIG_TTL_MS = 5 * 60 * 1000;
+let planConfigsCache: { data: any[] | null; at: number } | null = null;
+
+async function getPlanConfigs(supabase: any): Promise<{ data: any[] | null }> {
+  const now = Date.now();
+  if (planConfigsCache && now - planConfigsCache.at < PLAN_CONFIG_TTL_MS) {
+    console.log("[chat] plan_configs served from warm cache");
+    return { data: planConfigsCache.data };
+  }
+  const { data } = await supabase
+    .from("plan_configs")
+    .select("plan_name, max_conversations_month, chat_model, knowledge_base_wizard");
+  planConfigsCache = { data: data || null, at: now };
+  return { data: data || null };
+}
+
+// ══════════════════════════════════════════════════════
+// RAG — inline vector search (same query/params as the rag-search function,
+// without the extra HTTP hop)
+// ══════════════════════════════════════════════════════
+async function searchKnowledgeChunks(
+  supabase: any,
+  chatbotId: string,
+  query: string,
+  matchCount = 5,
+  matchThreshold = 0.6,
+): Promise<any[]> {
+  if (!query) return [];
+
+  const { count } = await supabase
+    .from("knowledge_chunks")
+    .select("id", { count: "exact", head: true })
+    .eq("chatbot_id", chatbotId);
+  if (!count) return [];
+
+  const openaiKey = Deno.env.get("OPENAI_API_KEY");
+  if (!openaiKey) {
+    console.error("[chat] OPENAI_API_KEY not configured for embeddings");
+    return [];
+  }
+
+  const res = await fetch("https://api.openai.com/v1/embeddings", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${openaiKey}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ model: "text-embedding-3-small", input: query }),
+  });
+  if (!res.ok) {
+    console.error("[chat] embedding error:", res.status, await res.text());
+    return [];
+  }
+  const embedding = (await res.json()).data[0].embedding as number[];
+
+  const { data: chunks, error } = await supabase.rpc("match_chunks", {
+    _chatbot_id: chatbotId,
+    _query_embedding: `[${embedding.join(",")}]`,
+    _match_count: matchCount,
+    _match_threshold: matchThreshold,
+  });
+  if (error) {
+    console.error("[chat] match_chunks error:", error.message);
+    return [];
+  }
+
+  // Priority boost: priority 3 = +0.08, priority 1 = -0.05 (same as rag-search)
+  const boosted = (chunks || []).map((chunk: any) => {
+    const priority = chunk.priority ?? 2;
+    const boost = priority === 3 ? 0.08 : priority === 1 ? -0.05 : 0;
+    return { ...chunk, similarity: Math.min(1.0, (chunk.similarity || 0) + boost) };
+  });
+  boosted.sort((a: any, b: any) => b.similarity - a.similarity);
+  return boosted;
+}
+
+// ══════════════════════════════════════════════════════
+// PAGES INDEX — compact list of ready sources with a page link
+// ══════════════════════════════════════════════════════
+async function buildPagesIndex(supabase: any, chatbotId: string): Promise<string> {
+  try {
+    const [{ count: totalPages }, { data: pages }] = await Promise.all([
+      supabase.from("knowledge_base").select("id", { count: "exact", head: true })
+        .eq("chatbot_id", chatbotId).eq("status", "ready").not("page_url", "is", null),
+      supabase.from("knowledge_base").select("name, page_url")
+        .eq("chatbot_id", chatbotId).eq("status", "ready").not("page_url", "is", null)
+        .order("name", { ascending: true }).limit(60),
+    ]);
+    if (!pages || pages.length === 0) return "";
+    const lines = pages.map((p: any) => `- ${p.name}: ${p.page_url}`);
+    if ((totalPages || pages.length) > pages.length) {
+      lines.push(`...and ${(totalPages || pages.length) - pages.length} more pages`);
+    }
+    return "\n\n--- AVAILABLE PAGES INDEX ---\n" + lines.join("\n") + "\n--- END INDEX ---";
+  } catch (idxErr) {
+    console.error("[chat] pages index fetch error (non-blocking):", idxErr);
+    return "";
+  }
+}
 
 // ══════════════════════════════════════════════════════
 // FAQ CONTEXT
