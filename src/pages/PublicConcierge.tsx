@@ -26,22 +26,15 @@ const PublicConcierge = () => {
 
   useEffect(() => {
     if (!config || !embed_token) return;
-    let script: HTMLScriptElement | null = null;
-    const launchTimer = window.setTimeout(() => {
-      document.querySelectorAll("#genius-chat-widget").forEach((node) => node.remove());
-      document.querySelectorAll("script[data-public-concierge]").forEach((node) => node.remove());
-      script = document.createElement("script");
-      script.src = "/widget.js";
-      script.dataset.token = embed_token;
-      script.dataset.fullscreen = "true";
-      if (room) script.dataset.room = room;
-      script.dataset.publicConcierge = "true";
-      document.body.appendChild(script);
-    }, 0);
+    const script = document.createElement("script");
+    script.src = "/widget.js";
+    script.dataset.token = embed_token;
+    script.dataset.fullscreen = "true";
+    if (room) script.dataset.room = room;
+    document.body.appendChild(script);
     return () => {
-      window.clearTimeout(launchTimer);
-      script?.remove();
-      document.querySelectorAll("#genius-chat-widget").forEach((node) => node.remove());
+      script.remove();
+      document.getElementById("genius-chat-widget")?.remove();
     };
   }, [config, embed_token, room]);
 
