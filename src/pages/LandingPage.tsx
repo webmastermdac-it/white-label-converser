@@ -2,9 +2,8 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { useLanguage } from "@/hooks/useLanguage";
 import { Button } from "@/components/ui/button";
-import { Play, Star, Menu, X, Check, Loader2, ArrowRight, Users, GraduationCap, BookOpen, Bot, ClipboardList, CalendarCheck, Palette, Globe, BarChart3, ShoppingCart, Lock } from "lucide-react";
+import { Play, Star, Menu, X, Check, Loader2, ArrowRight, Users, BookOpen, Bot, ClipboardList, CalendarCheck, Palette, Globe, BarChart3, ShoppingCart, Lock, Hotel, ChevronDown } from "lucide-react";
 import geniusLogo from "@/assets/genius.png";
-import genieHero from "@/assets/genie-mascot-new.png";
 import { supabase } from "@/integrations/supabase/client";
 import logoSpedali from "@/assets/logos/spedali-civili.png";
 import logoUnimi from "@/assets/logos/unimi.png";
@@ -27,6 +26,8 @@ import screenshotChatHistory from "@/assets/screenshots/chat-history.png";
 import screenshotCharts from "@/assets/screenshots/analytics-charts.png";
 import screenshotEcommerce from "@/assets/screenshots/ecommerce.png";
 import CookieBanner from "@/components/CookieBanner";
+import VerticalDemoChat from "@/components/landing/VerticalDemoChat";
+import { verticals, type VerticalId } from "@/content/verticals";
 
 /* ─── Scroll fade-in observer ─── */
 function useFadeIn() {
@@ -113,7 +114,7 @@ function FeatureGrid({ t }: { t: (en: string, it: string) => string }) {
 
 // RAGTooltip removed — replaced with inline description
 
-function PricingGrid({ yearly, t }: { yearly: boolean; t: (en: string, it: string) => string }) {
+export function PricingGrid({ yearly, t, verticalId }: { yearly: boolean; t: (en: string, it: string) => string; verticalId?: VerticalId }) {
   const gridRef = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(false);
 
@@ -150,7 +151,7 @@ function PricingGrid({ yearly, t }: { yearly: boolean; t: (en: string, it: strin
             <span className="text-white/40 text-sm">/{t("month", "mese")}</span>
           </div>
         </div>
-        <Link to="/register" className="block">
+        <Link to={verticalId ? `/register?vertical=${verticalId}` : "/register"} className="block">
           <Button variant="outline" className="w-full border-white/20 text-[#1a1a1a] bg-white hover:bg-white/90 rounded-full h-11 font-semibold">
             {t("Start Free", "Inizia Gratis")}
           </Button>
@@ -204,7 +205,7 @@ function PricingGrid({ yearly, t }: { yearly: boolean; t: (en: string, it: strin
             <span className="text-white/40 text-sm">/{yearly ? t("year", "anno") : t("month", "mese")}</span>
           </div>
         </div>
-        <Link to="/register" className="block">
+        <Link to={verticalId ? `/register?vertical=${verticalId}` : "/register"} className="block">
           <Button variant="outline" className="w-full border-white/20 text-[#1a1a1a] bg-white hover:bg-white/90 rounded-full h-11 font-semibold">
             {t("Try Free, Then Upgrade", "Prova Gratis, poi Upgrade")}
           </Button>
@@ -260,7 +261,7 @@ function PricingGrid({ yearly, t }: { yearly: boolean; t: (en: string, it: strin
             <span className="text-white/40 text-sm">/{yearly ? t("year", "anno") : t("month", "mese")}</span>
           </div>
         </div>
-        <Link to="/register" className="block">
+        <Link to={verticalId ? `/register?vertical=${verticalId}` : "/register"} className="block">
           <Button className="w-full bg-[#F5A623] hover:bg-[#E09800] text-black rounded-full h-11 font-semibold">
             {t("Try Free, Then Upgrade", "Prova Gratis, poi Upgrade")}
           </Button>
@@ -311,6 +312,7 @@ export default function LandingPage() {
   const [scrolled, setScrolled] = useState(false);
   const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<string>("dashboard");
+  const [activeVertical, setActiveVertical] = useState<VerticalId>("ecommerce");
 
   const handleCheckout = async (plan: "starter" | "pro") => {
     const interval = yearly ? "year" : "month";
@@ -352,6 +354,8 @@ export default function LandingPage() {
     { label: t("Pricing", "Prezzi"), id: "pricing" },
     { label: t("References", "Referenze"), id: "references" },
   ];
+  const selectedVertical = verticals.find((item) => item.id === activeVertical) ?? verticals[0];
+  const verticalIcon = (id: VerticalId) => id === "ecommerce" ? ShoppingCart : id === "booking" ? CalendarCheck : Hotel;
 
   const screenshotTabs = [
     { key: "dashboard", label: "Dashboard", img: screenshotDashboard, desc: t("Monitor all conversations, leads, and performance in real time.", "Monitora tutte le conversazioni, i lead e le performance in tempo reale.") },
@@ -375,6 +379,20 @@ export default function LandingPage() {
           </div>
 
           <div className="hidden lg:flex items-center gap-7">
+            <div className="group relative">
+              <button className="flex items-center gap-1 text-sm text-white/60 transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F5A623] rounded-sm" aria-haspopup="true">
+                {t("Solutions", "Soluzioni")} <ChevronDown className="h-4 w-4" />
+              </button>
+              <div className="invisible absolute left-1/2 top-full z-50 w-64 -translate-x-1/2 pt-4 opacity-0 transition-all group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100">
+                <div className="rounded-xl border border-white/10 bg-[#151B22] p-2 shadow-2xl shadow-black/40">
+                  {verticals.map((vertical) => (
+                    <Link key={vertical.id} to={vertical.path} className="block rounded-lg px-3 py-2.5 text-sm text-white/70 transition-colors hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F5A623]">
+                      {vertical.name[lang]}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            </div>
             {navLinks.map((l) => (
               <button key={l.id} onClick={() => scrollTo(l.id)} className="text-sm text-white/60 hover:text-white transition-colors">{l.label}</button>
             ))}
@@ -403,6 +421,12 @@ export default function LandingPage() {
 
         {mobileMenu && (
           <div className="lg:hidden bg-[#0F1419]/95 backdrop-blur-lg border-t border-white/10 px-6 pb-6 pt-4 space-y-4">
+            <p className="text-xs font-semibold uppercase text-[#F5A623]">{t("Solutions", "Soluzioni")}</p>
+            {verticals.map((vertical) => (
+              <Link key={vertical.id} to={vertical.path} onClick={() => setMobileMenu(false)} className="block pl-2 text-sm text-white/70 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F5A623]">
+                {vertical.name[lang]}
+              </Link>
+            ))}
             {navLinks.map((l) => (
               <button key={l.id} onClick={() => scrollTo(l.id)} className="block text-sm text-white/60 hover:text-white">{l.label}</button>
             ))}
@@ -419,114 +443,56 @@ export default function LandingPage() {
       </nav>
 
       {/* ─── HERO ─── */}
-      <header className="relative pt-28 pb-20 md:pt-36 md:pb-28 overflow-hidden">
+      <header className="relative pt-28 pb-16 md:pt-36 md:pb-24 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-[#0F1419] via-[#1A1F2E] to-[#0F1419]" />
-        <div className="absolute top-1/3 left-1/3 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-[#F5A623]/8 rounded-full blur-[120px]" />
-
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          {[...Array(15)].map((_, i) => (
-            <div key={i} className="absolute w-1 h-1 bg-[#F5A623]/20 rounded-full" style={{
-              left: `${Math.random() * 100}%`, top: `${Math.random() * 100}%`,
-              animation: `floatParticle ${4 + Math.random() * 6}s ease-in-out infinite ${Math.random() * 3}s`
-            }} />
-          ))}
-        </div>
-
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 flex flex-col md:flex-row items-center gap-12">
-          <div className="flex-1 text-center md:text-left space-y-6">
-            {/* Badge */}
-            <div className="inline-flex items-center gap-2 bg-white/5 border border-white/10 rounded-full px-4 py-1.5 text-sm text-white/70">
-              <span className="w-2 h-2 bg-[#F5A623] rounded-full animate-pulse" />
-              Powered by AI • {t("Active 24/7", "Attivo 24/7")}
-            </div>
-
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold leading-tight" style={{ fontFamily: "'Syne', sans-serif" }}>
-              {lang === "en" ? <>The AI Chatbot That <span className="text-[#F5A623]">Captures Leads</span> While You Sleep</> : <>Il Chatbot AI che <span className="text-[#F5A623]">Cattura Lead</span> Mentre Dormi</>}
+        <div className="relative mx-auto max-w-7xl px-4 sm:px-6">
+          <div className="mx-auto max-w-4xl text-center">
+            <h1 className="text-4xl font-extrabold leading-tight sm:text-5xl lg:text-6xl" style={{ fontFamily: "'Syne', sans-serif" }}>
+              {t("An AI assistant for every business. Choose yours.", "Un assistente AI per ogni attività. Scegli il tuo.")}
             </h1>
-            <p className="text-white/50 text-lg sm:text-xl max-w-xl mx-auto md:mx-0 leading-relaxed">
-              {t(
-                "Deploy a smart chatbot on your website in 5 minutes. Answer questions 24/7, capture leads automatically, and book consultations — all on autopilot.",
-                "Installa un chatbot intelligente sul tuo sito in 5 minuti. Rispondi alle domande 24/7, cattura lead automaticamente e prenota consulenze — tutto in autopilota."
-              )}
+            <p className="mx-auto mt-6 max-w-3xl text-lg leading-relaxed text-white/55 sm:text-xl">
+              {t("It sells, books appointments and welcomes guests. Installs in 5 minutes, speaks your customers' language and delivers ready-to-contact leads.", "Vende, fissa appuntamenti, accoglie gli ospiti. Si installa in 5 minuti, parla la lingua dei tuoi clienti e ti consegna contatti pronti.")}
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
-              <Link to="/register">
-                <Button className="bg-[#F5A623] hover:bg-[#E09800] text-black text-base h-12 px-8 rounded-full shadow-lg shadow-[#F5A623]/20 font-semibold gap-2">
-                  {t("Start Free", "Inizia Gratis")} <ArrowRight className="w-4 h-4" />
-                </Button>
-              </Link>
-              <Button variant="outline" onClick={() => { scrollTo("how-it-works"); }} className="border-white/20 bg-white text-gray-900 hover:bg-white/90 h-12 px-8 rounded-full gap-2">
-                <Play className="w-4 h-4" />
-                {t("Watch Demo", "Guarda la Demo")}
-              </Button>
-            </div>
-
-            {/* Social proof mini */}
-            <div className="flex items-center gap-3 justify-center md:justify-start pt-2">
-              <div className="flex -space-x-2">
-                <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face" alt="" className="w-8 h-8 rounded-full border-2 border-[#0F1419]" />
-                <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop&crop=face" alt="" className="w-8 h-8 rounded-full border-2 border-[#0F1419]" />
-                <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face" alt="" className="w-8 h-8 rounded-full border-2 border-[#0F1419]" />
-              </div>
-              <div>
-                <div className="flex gap-0.5">
-                  {[...Array(5)].map((_, i) => <Star key={i} className="w-3.5 h-3.5 fill-[#F5A623] text-[#F5A623]" />)}
-                </div>
-                <p className="text-white/40 text-xs">{t("Trusted by", "Scelto da")} <span className="text-white/70 font-semibold">250+</span> {t("businesses", "aziende")}</p>
-              </div>
-            </div>
           </div>
 
-          {/* Mascot */}
-          <div className="flex-1 flex justify-center md:justify-end max-w-md w-full relative">
-            {/* Particles */}
-            {[...Array(20)].map((_, i) => (
-              <span
-                key={i}
-                className="absolute rounded-full pointer-events-none"
-                style={{
-                  width: `${3 + (i % 4) * 2.5}px`,
-                  height: `${3 + (i % 4) * 2.5}px`,
-                  background: `radial-gradient(circle, rgba(245,166,35,${0.7 + (i % 3) * 0.1}) 0%, transparent 70%)`,
-                  boxShadow: `0 0 ${8 + (i % 5) * 3}px rgba(245,166,35,0.5)`,
-                  top: `${5 + (i * 4.7) % 85}%`,
-                  left: `${10 + (i * 4.3) % 80}%`,
-                  animation: `sparkle${i % 3} ${2.5 + (i % 5) * 0.8}s ease-in-out ${i * 0.3}s infinite`,
-                  opacity: 0,
-                }}
-              />
-            ))}
-            {/* Mystic aura */}
-            <div
-              className="absolute rounded-full pointer-events-none"
-              style={{
-                width: "320px",
-                height: "320px",
-                top: "50%",
-                left: "50%",
-                transform: "translate(-50%, -50%)",
-                background: "radial-gradient(circle, rgba(245,166,35,0.18) 0%, rgba(245,166,35,0.06) 50%, transparent 70%)",
-                animation: "auraPulse 3.5s ease-in-out infinite",
-                zIndex: 0,
-              }}
-            />
-            <div
-              style={{
-                animation: "genieReveal 2.4s cubic-bezier(0.16, 1, 0.3, 1) forwards, floatMascot 4s ease-in-out 2.4s infinite",
-                opacity: 0,
-                position: "relative",
-                zIndex: 1,
-              }}
-            >
-              <img
-                src={genieHero}
-                alt="Genius Chatbot Genie"
-                className="w-72 sm:w-96"
-                style={{
-                  filter: "drop-shadow(0 0 50px rgba(245,166,35,0.35)) drop-shadow(0 0 100px rgba(245,166,35,0.15))",
-                }}
-              />
+          <div className="mt-10 flex gap-2 overflow-x-auto pb-2 lg:hidden" role="tablist" aria-label={t("Choose a solution", "Scegli una soluzione")}>
+            {verticals.map((vertical) => {
+              const Icon = verticalIcon(vertical.id);
+              return <button key={vertical.id} role="tab" aria-selected={activeVertical === vertical.id} onClick={() => setActiveVertical(vertical.id)} className={`flex shrink-0 items-center gap-2 rounded-full border px-4 py-2.5 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F5A623] ${activeVertical === vertical.id ? "border-[#F5A623] bg-[#F5A623] text-black" : "border-white/15 bg-white/5 text-white/70"}`}><Icon className="h-4 w-4" />{vertical.name[lang]}</button>;
+            })}
+          </div>
+
+          <div className="mt-6 grid items-stretch gap-8 lg:mt-12 lg:grid-cols-[minmax(0,1fr)_400px]">
+            <div className="hidden grid-cols-3 gap-4 lg:grid">
+              {verticals.map((vertical) => {
+                const Icon = verticalIcon(vertical.id);
+                const active = activeVertical === vertical.id;
+                return (
+                  <article key={vertical.id} onMouseEnter={() => setActiveVertical(vertical.id)} className={`flex flex-col rounded-2xl border p-5 transition-all ${active ? "border-[#F5A623]/70 bg-[#F5A623]/10 shadow-lg shadow-[#F5A623]/10" : "border-white/10 bg-white/[0.03] hover:border-white/25"}`}>
+                    <button onClick={() => setActiveVertical(vertical.id)} className="text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F5A623] rounded-lg" aria-pressed={active}>
+                      <Icon className="mb-4 h-7 w-7 text-[#F5A623]" />
+                      <h2 className="text-lg font-bold" style={{ fontFamily: "'Syne', sans-serif" }}>{vertical.name[lang]}</h2>
+                      <p className="mt-2 text-sm font-medium text-white/80">{vertical.promise[lang]}</p>
+                    </button>
+                    <ul className="mt-5 space-y-2.5 text-sm text-white/55">{vertical.bullets.map((bullet) => <li key={bullet.it} className="flex gap-2"><Check className="mt-0.5 h-4 w-4 shrink-0 text-[#F5A623]" />{bullet[lang]}</li>)}</ul>
+                    <div className="mt-5 flex flex-wrap gap-1.5">{vertical.badges.map((badge) => <span key={badge} className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] text-white/55">{badge}</span>)}</div>
+                    <div className="mt-auto grid grid-cols-2 gap-2 pt-6">
+                      <Link to={vertical.path}><Button variant="outline" className="w-full rounded-full border-white/20 bg-white text-gray-900 hover:bg-white/90">{t("Discover", "Scopri")}</Button></Link>
+                      <Link to={`/register?vertical=${vertical.id}`}><Button className="w-full rounded-full bg-[#F5A623] text-black hover:bg-[#E09800]">{t("Try free", "Prova gratis")}</Button></Link>
+                    </div>
+                  </article>
+                );
+              })}
             </div>
+            <div className="lg:hidden">
+              <article className="mb-6 rounded-2xl border border-[#F5A623]/50 bg-[#F5A623]/10 p-5">
+                <h2 className="text-xl font-bold" style={{ fontFamily: "'Syne', sans-serif" }}>{selectedVertical.name[lang]}</h2>
+                <p className="mt-2 text-sm font-medium text-white/80">{selectedVertical.promise[lang]}</p>
+                <ul className="mt-4 space-y-2 text-sm text-white/60">{selectedVertical.bullets.map((bullet) => <li key={bullet.it} className="flex gap-2"><Check className="mt-0.5 h-4 w-4 shrink-0 text-[#F5A623]" />{bullet[lang]}</li>)}</ul>
+                <div className="mt-5 grid grid-cols-2 gap-2"><Link to={selectedVertical.path}><Button variant="outline" className="w-full rounded-full bg-white text-gray-900">{t("Discover", "Scopri")}</Button></Link><Link to={`/register?vertical=${selectedVertical.id}`}><Button className="w-full rounded-full bg-[#F5A623] text-black">{t("Try free", "Prova gratis")}</Button></Link></div>
+              </article>
+            </div>
+            <div className="flex items-center justify-center"><VerticalDemoChat key={selectedVertical.id} vertical={selectedVertical} /></div>
           </div>
         </div>
       </header>
@@ -681,40 +647,6 @@ export default function LandingPage() {
                     <p className="text-white/40 text-xs">{review.company}</p>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </Section>
-
-      {/* ─── PRICING ─── */}
-      {/* ─── VERTICALS ─── */}
-      <Section id="verticals" className="py-20 md:py-28">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <h2 className="text-3xl sm:text-4xl font-bold text-center mb-4" style={{ fontFamily: "'Syne', sans-serif" }}>
-            {t("Choose the chatbot for your business", "Scegli il chatbot per il tuo settore")}
-          </h2>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-12">
-            {[
-              { Icon: CalendarCheck, color: "200 90% 55%", vertical: "booking", title: t("Bookings & Appointments", "Prenotazioni & Appuntamenti"), desc: t("For dentists, physiotherapists, beauty centers, nutritionists, psychologists, clinics and medical practices. Calendly integrated.", "Per dentisti, fisioterapisti, centri estetici, nutrizionisti, psicologi, poliambulatori, studi medici. Calendly integrato.") },
-              { Icon: ShoppingCart, color: "35 91% 55%", vertical: "ecommerce", title: t("Ecommerce", "Ecommerce"), desc: t("For online stores: WooCommerce, Shopify, PrestaShop or API for niche platforms.", "Per negozi online: WooCommerce, Shopify, PrestaShop o API per piattaforme di nicchia.") },
-              { Icon: BookOpen, color: "150 70% 45%", vertical: "hospitality", title: t("Restaurants & Hotels", "Ristorazione & Hotel"), desc: t("Reads menus, documents or your website and saves every request as a lead.", "Legge menu, documenti o il tuo sito e salva ogni richiesta come lead.") },
-            ].map((c, i) => (
-              <div
-                key={i}
-                className="group relative bg-white/[0.03] border border-white/10 rounded-2xl p-6 transition-all duration-500 hover:border-white/25 overflow-hidden flex flex-col"
-                style={{ ["--card-accent" as string]: c.color }}
-              >
-                <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-4" style={{ background: `hsl(${c.color} / 0.15)` }}>
-                  <c.Icon className="w-6 h-6" style={{ color: `hsl(${c.color})` }} />
-                </div>
-                <h3 className="text-lg font-semibold mb-2" style={{ fontFamily: "'Syne', sans-serif" }}>{c.title}</h3>
-                <p className="text-sm text-white/50 leading-relaxed mb-6">{c.desc}</p>
-                <Link to={`/register?vertical=${c.vertical}`} className="mt-auto">
-                  <Button className="w-full bg-[#F5A623] hover:bg-[#E09800] text-black rounded-full h-11 font-semibold">
-                    {t("Choose this", "Scegli questo")}
-                  </Button>
-                </Link>
               </div>
             ))}
           </div>
