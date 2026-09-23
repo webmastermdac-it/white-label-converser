@@ -151,6 +151,26 @@
 
   var t = formLabels[baseLang] || formLabels["en"];
 
+  // ── Hotel module labels (used only when business_vertical === "hotel") ──
+  var hotelLabels = {
+    en: { arrival: "Arrival", departure: "Departure", adults: "Adults", children: "Children", room: "Preferred room", anyRoom: "No preference", dateError: "Check the dates: arrival from today, departure after arrival.", bookBtn: "Check availability and book" },
+    it: { arrival: "Arrivo", departure: "Partenza", adults: "Adulti", children: "Bambini", room: "Camera preferita", anyRoom: "Nessuna preferenza", dateError: "Controlla le date: arrivo da oggi, partenza dopo l'arrivo.", bookBtn: "Verifica disponibilità e prenota" },
+  };
+  var th = hotelLabels[baseLang] || hotelLabels["en"];
+  var hotelBookingUrl = "";
+  function isHotel() { return !!(config && config.business_vertical === "hotel" && config.hotel); }
+  function todayIso() { var d = new Date(); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); }
+  function fmtHotelDate(iso, f) { var p = iso.split("-"); return f === "DD/MM/YYYY" ? p[2] + "/" + p[1] + "/" + p[0] : iso; }
+  function buildHotelUrl(b) {
+    var tpl = (config.hotel && config.hotel.engine_url_template) || "";
+    if (!tpl) return "";
+    var f = config.hotel.date_format;
+    return tpl.replace(/\{checkin\}/g, encodeURIComponent(fmtHotelDate(b.check_in, f)))
+      .replace(/\{checkout\}/g, encodeURIComponent(fmtHotelDate(b.check_out, f)))
+      .replace(/\{adults\}/g, String(b.adults))
+      .replace(/\{children\}/g, String(b.children));
+  }
+
   // ── Detect script tag & token ───────────────────────────
   var scriptTag = document.currentScript || (function () {
     var scripts = document.getElementsByTagName("script");
@@ -353,6 +373,20 @@
     if (showLeadForm && !leadSent) {
       html += '<div class="mdac-lead-form" id="mdac-lead-form">';
       html += '<label>' + t.leadLabel + '</label>';
+      if (isHotel()) {
+        var tdy = todayIso();
+        html += '<div style="display:flex;gap:6px;"><div style="flex:1;display:flex;flex-direction:column;gap:2px;"><label>' + th.arrival + ' *</label><input type="date" id="mdac-h-in" min="' + tdy + '" /></div>';
+        html += '<div style="flex:1;display:flex;flex-direction:column;gap:2px;"><label>' + th.departure + ' *</label><input type="date" id="mdac-h-out" min="' + tdy + '" /></div></div>';
+        html += '<div style="display:flex;gap:6px;"><div style="flex:1;display:flex;flex-direction:column;gap:2px;"><label>' + th.adults + '</label><input type="number" id="mdac-h-ad" min="1" max="30" value="2" /></div>';
+        html += '<div style="flex:1;display:flex;flex-direction:column;gap:2px;"><label>' + th.children + '</label><input type="number" id="mdac-h-ch" min="0" max="30" value="0" /></div></div>';
+        var hr = config.hotel.rooms || [];
+        if (hr.length) {
+          html += '<label>' + th.room + '</label><select id="mdac-h-room" style="border:1px solid #e5e7eb;border-radius:8px;padding:7px 10px;font-size:13px;font-family:inherit;background:#fff;"><option value="">' + th.anyRoom + '</option>';
+          for (var ri = 0; ri < hr.length; ri++) html += '<option value="' + esc(hr[ri].id) + '">' + esc(hr[ri].name) + '</option>';
+          html += '</select>';
+        }
+        html += '<div id="mdac-h-err" style="display:none;font-size:11px;color:#dc2626;">' + th.dateError + '</div>';
+      }
       html += '<input type="text" id="mdac-lead-name" placeholder="' + t.namePlaceholder + '" />';
       html += '<input type="email" id="mdac-lead-email" placeholder="' + t.emailPlaceholder + '" />';
       html += '<input type="tel" id="mdac-lead-phone" placeholder="' + t.phonePlaceholder + '" />';
@@ -369,6 +403,9 @@
 
     if (leadSent) {
       html += '<div class="mdac-success">' + t.successMsg + '</div>';
+      if (isHotel() && hotelBookingUrl) {
+        html += '<div style="text-align:center;margin-top:-6px;"><a class="mdac-cta" href="' + esc(hotelBookingUrl) + '" target="_blank" rel="noopener noreferrer">' + th.bookBtn + '</a></div>';
+      }
     }
 
     html += '</div>'; // end messages
@@ -535,6 +572,25 @@
     if (!name) return;
     if (!email && !phone) return;
 
+    var booking = null;
+    if (isHotel()) {
+      var inEl = shadow.getElementById("mdac-h-in"), outEl = shadow.getElementById("mdac-h-out");
+      var ci = inEl ? inEl.value : "", co = outEl ? outEl.value : "";
+      var errEl = shadow.getElementById("mdac-h-err");
+      if (!ci || !co || ci < todayIso() || co <= ci) { if (errEl) errEl.style.display = "block"; return; }
+      var roomEl = shadow.getElementById("mdac-h-room");
+      var adEl = shadow.getElementById("mdac-h-ad"), chEl = shadow.getElementById("mdac-h-ch");
+      var roomId = roomEl ? roomEl.value : "";
+      var roomName = "";
+      if (roomId) { for (var rj = 0; rj < config.hotel.rooms.length; rj++) if (config.hotel.rooms[rj].id === roomId) roomName = config.hotel.rooms[rj].name; }
+      booking = {
+        check_in: ci, check_out: co,
+        adults: Math.max(1, parseInt(adEl && adEl.value, 10) || 2),
+        children: Math.max(0, parseInt(chEl && chEl.value, 10) || 0),
+        room_id: roomId || null, room_name: roomName || null,
+      };
+    }
+
     var lead = {
       name: name,
       email: email,
@@ -545,16 +601,17 @@
     fetch(SUPABASE_URL + "/functions/v1/capture-lead", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
+      body: JSON.stringify(Object.assign({
         embed_token: EMBED_TOKEN,
         session_token: sessionToken,
         lead: lead,
         source_url: window.location.href,
         transcript: messages,
         language: widgetLang,
-      }),
+      }, booking ? { booking: booking } : {})),
     })
       .then(function () {
+        if (booking) hotelBookingUrl = buildHotelUrl(booking);
         leadSent = true;
         showLeadForm = false;
         messages.push({ role: "assistant", content: t.thankYou });
