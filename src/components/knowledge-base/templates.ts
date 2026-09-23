@@ -5,14 +5,14 @@ export interface IndustryTemplate {
   icon: string;
   name: { it: string; en: string };
   description: { it: string; en: string };
-  vertical: "booking" | "ecommerce" | "hospitality" | null;
+  vertical: "booking" | "ecommerce" | "hotel" | null;
   sections: { it: KBSections; en: KBSections };
 }
 
 export const industryTemplates: IndustryTemplate[] = [
   {
     id: "restaurant",
-    vertical: "hospitality",
+    vertical: "hotel",
     icon: "🍕",
     name: { it: "Ristorante / Pizzeria", en: "Restaurant / Pizzeria" },
     description: { it: "Menu, orari, prenotazioni, consegne, allergeni", en: "Menu, hours, reservations, delivery, allergens" },

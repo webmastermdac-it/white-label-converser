@@ -14,6 +14,8 @@ import { useToast } from "@/hooks/use-toast";
 import ChatbotConfigForm from "@/components/ChatbotConfigForm";
 import ClientRAGKnowledgeBase from "@/pages/client/ClientRAGKnowledgeBase";
 import ClientIntegrations from "@/pages/client/ClientIntegrations";
+import ActivationChecklist from "@/components/ActivationChecklist";
+import { MODULE_CHANGED_EVENT } from "@/hooks/useActiveModule";
 import {
   Loader2, ArrowLeft, Settings, Palette, Database,
   Copy, Code2, Globe, Save, Inbox, MessageSquare,
@@ -67,6 +69,12 @@ const ClientChatbotSettings = ({ adminMode = false }: ClientChatbotSettingsProps
     }
     setLoading(false);
   }, [botId]);
+
+  useEffect(() => {
+    const h = () => { fetchBot(); };
+    window.addEventListener(MODULE_CHANGED_EVENT, h);
+    return () => window.removeEventListener(MODULE_CHANGED_EVENT, h);
+  }, [fetchBot]);
 
   useEffect(() => { fetchBot(); }, [fetchBot]);
 
@@ -137,6 +145,16 @@ const ClientChatbotSettings = ({ adminMode = false }: ClientChatbotSettingsProps
         </h1>
         {siteUrl && <p className="text-sm text-muted-foreground flex items-center gap-1 mt-0.5"><Globe className="w-3.5 h-3.5" /> {siteUrl}</p>}
       </div>
+
+      {clientId && botId && (
+        <ActivationChecklist
+          key={`${botId}-${botConfig.business_vertical}`}
+          botId={botId}
+          clientId={clientId}
+          vertical={botConfig.business_vertical}
+          calendlyUrl={botConfig.calendly_url}
+        />
+      )}
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>

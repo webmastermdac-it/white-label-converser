@@ -26,12 +26,13 @@ const Register = () => {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [searchParams] = useSearchParams();
   const verticalParam = searchParams.get("vertical");
-  const initialVertical = (["booking", "ecommerce", "hospitality"] as const).includes(
-    verticalParam as "booking" | "ecommerce" | "hospitality"
+  const normalizedParam = verticalParam === "hospitality" ? "hotel" : verticalParam;
+  const initialVertical = (["booking", "ecommerce", "hotel"] as const).includes(
+    normalizedParam as "booking" | "ecommerce" | "hotel"
   )
-    ? (verticalParam as "booking" | "ecommerce" | "hospitality")
+    ? (normalizedParam as "booking" | "ecommerce" | "hotel")
     : null;
-  const [vertical, setVertical] = useState<"booking" | "ecommerce" | "hospitality" | null>(initialVertical);
+  const [vertical, setVertical] = useState<"booking" | "ecommerce" | "hotel" | null>(initialVertical);
 
   if (!loading && user) {
     return <Navigate to={role === "super_admin" ? "/admin" : "/dashboard"} replace />;
@@ -134,7 +135,7 @@ const Register = () => {
                   subtitle: t("Online store with product catalog integration", "Store online con integrazione del catalogo prodotti"),
                 },
                 {
-                  key: "hospitality" as const,
+                  key: "hotel" as const,
                   Icon: UtensilsCrossed,
                   title: t("Restaurants & Hotels", "Ristorazione & Hotel"),
                   subtitle: t("Menus, rooms and info from your documents or website", "Menù, camere e info dai tuoi documenti o dal sito"),

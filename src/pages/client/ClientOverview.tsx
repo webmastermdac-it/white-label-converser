@@ -34,7 +34,7 @@ const ClientOverview = () => {
   const [loading, setLoading] = useState(true);
   const [monthlyChats, setMonthlyChats] = useState(0);
   const [monthlyLeads, setMonthlyLeads] = useState(0);
-  const [vertical, setVertical] = useState<"ecommerce" | "booking" | "general">("general");
+  const [vertical, setVertical] = useState<"ecommerce" | "booking" | "hotel" | "general">("general");
   const [calendlyConnected, setCalendlyConnected] = useState(false);
   const [syncedProducts, setSyncedProducts] = useState(0);
 
@@ -105,7 +105,7 @@ const ClientOverview = () => {
       setRecentLeads((recent.data as any) || []);
       setEmbedToken(botConfig.data?.embed_token || "");
       const bc = botConfig.data as any;
-      const bv = (bc?.business_vertical || "general") as "ecommerce" | "booking" | "general";
+      const bv = (bc?.business_vertical || "general") as "ecommerce" | "booking" | "hotel" | "general";
       setVertical(bv);
       setCalendlyConnected(!!bc?.calendly_url);
       if (bv === "ecommerce") {
