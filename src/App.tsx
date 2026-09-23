@@ -7,6 +7,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { LanguageProvider } from "@/hooks/useLanguage";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import HotelPlaceholder from "@/pages/client/hotel/HotelPlaceholder";
+import HotelProfile from "@/pages/client/hotel/HotelProfile";
 import AdminLayout from "@/layouts/AdminLayout";
 import ClientLayout from "@/layouts/ClientLayout";
 
@@ -116,7 +117,7 @@ const App = () => (
 
               <Route path="knowledge-base" element={<ClientRAGKnowledgeBase />} />
               <Route path="instagram" element={<ClientInstagram />} />
-              <Route path="hotel/profile" element={<HotelPlaceholder kind="profile" />} />
+              <Route path="hotel/profile" element={<HotelProfile />} />
               <Route path="hotel/requests" element={<HotelPlaceholder kind="requests" />} />
             </Route>
 
