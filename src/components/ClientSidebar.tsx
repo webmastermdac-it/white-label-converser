@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import ThemeSelector from "@/components/ThemeSelector";
+import { useOpenServiceRequests } from "@/hooks/useOpenServiceRequests";
 
 const ClientSidebar = () => {
   const [collapsed, setCollapsed] = useState(false);
@@ -19,6 +20,7 @@ const ClientSidebar = () => {
   const { lang, setLang, t } = useLanguage();
   const { canUseEcommerce, canUseCalendly, config: planConfig } = usePlanConfig();
   const { botId, module: activeModule } = useActiveModule();
+  const openRequests = useOpenServiceRequests();
   const isFree = planConfig?.plan_name === "free";
   const navigate = useNavigate();
   const tl = (it: string, en: string) => lang === "it" ? it : en;
@@ -39,7 +41,7 @@ const ClientSidebar = () => {
     { label: t("chatHistory"), href: "/dashboard/chats", icon: MessageSquare },
     { label: "Analytics", href: "/dashboard/analytics", icon: BarChart3 },
     // Module-specific entries (only the active bot's module; others are hidden)
-    ...activeModule.menu.map((m) => ({ label: m.label[lang], href: m.href, icon: m.icon })),
+    ...activeModule.menu.map((m) => ({ label: m.label[lang], href: m.href, icon: m.icon, badge: m.key === "hotel-requests" ? openRequests : 0 })),
   ];
 
   const configNav = [
@@ -54,7 +56,7 @@ const ClientSidebar = () => {
     navigate("/login");
   };
 
-  const renderItem = (item: { label: string; href: string; icon: React.ElementType; end?: boolean }) => {
+  const renderItem = (item: { label: string; href: string; icon: React.ElementType; end?: boolean; badge?: number }) => {
     const link = (
       <NavLink
         to={item.href}
@@ -71,6 +73,7 @@ const ClientSidebar = () => {
       >
         <item.icon className="w-4.5 h-4.5 flex-shrink-0" />
         {!collapsed && <span>{item.label}</span>}
+        {!!item.badge && <span className={cn("ml-auto min-w-5 h-5 px-1 rounded-full bg-primary text-primary-foreground text-[11px] grid place-items-center", collapsed && "absolute translate-x-3 -translate-y-3")}>{item.badge > 99 ? "99+" : item.badge}</span>}
       </NavLink>
     );
 

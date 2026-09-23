@@ -20,6 +20,7 @@ export interface PlanConfig {
   priority_support: boolean;
   knowledge_base_wizard: boolean;
   ecommerce_integration: boolean;
+  concierge_requests: boolean;
   updated_at: string;
 }
 
@@ -40,6 +41,7 @@ const DEFAULTS: PlanConfig = {
   priority_support: false,
   knowledge_base_wizard: false,
   ecommerce_integration: false,
+  concierge_requests: false,
   updated_at: new Date().toISOString(),
 };
 
@@ -89,5 +91,6 @@ export function usePlanConfig() {
     hasPrioritySupport: isAdmin || config.priority_support,
     canUseKBWizard: isAdmin || config.knowledge_base_wizard,
     canUseEcommerce: isAdmin || config.ecommerce_integration,
+    canUseConciergeRequests: isAdmin || config.concierge_requests,
   };
 }

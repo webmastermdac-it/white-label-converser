@@ -11,6 +11,7 @@ interface NavItem {
   href: string;
   icon: React.ElementType;
   end?: boolean;
+  badge?: number;
 }
 
 interface MobileNavProps {
@@ -89,6 +90,7 @@ const MobileNav: React.FC<MobileNavProps> = ({ items, subtitle }) => {
                 >
                   <item.icon className="w-5 h-5 flex-shrink-0" />
                   <span>{item.label}</span>
+                  {!!item.badge && <span className="ml-auto min-w-5 h-5 px-1 rounded-full bg-primary text-primary-foreground text-[11px] grid place-items-center">{item.badge > 99 ? "99+" : item.badge}</span>}
                 </NavLink>
               ))}
             </nav>

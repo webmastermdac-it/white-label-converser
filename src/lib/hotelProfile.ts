@@ -19,6 +19,8 @@ export interface HotelProfile {
   local_guide: HotelGuideItem[];
   booking: { engine_url_template: string; date_format: "YYYY-MM-DD" | "DD/MM/YYYY"; phone_booking: string; email_booking: string };
   reviews: { google_url: string; booking_url: string; tripadvisor_url: string };
+  in_stay_quick_replies: string[];
+  qr_downloaded_at: string;
 }
 
 export const uid = () => (crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2));
@@ -66,6 +68,8 @@ export function normalizeHotelProfile(raw: any): HotelProfile {
       phone_booking: s(b.phone_booking), email_booking: s(b.email_booking),
     },
     reviews: { google_url: s(rv.google_url), booking_url: s(rv.booking_url), tripadvisor_url: s(rv.tripadvisor_url) },
+    in_stay_quick_replies: arr(r.in_stay_quick_replies),
+    qr_downloaded_at: s(r.qr_downloaded_at),
   };
 }
 
@@ -76,6 +80,7 @@ export function hotelChecklistStatus(raw: any) {
     profile: !!h.property.name.trim() && !!h.property.checkin_from.trim(),
     rooms: h.rooms.length > 0,
     booking_engine: !!h.booking.engine_url_template.trim(),
+    qr: !!h.qr_downloaded_at,
   };
 }
 

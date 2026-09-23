@@ -28,6 +28,7 @@ interface PlanRow {
   priority_support: boolean;
   knowledge_base_wizard: boolean;
   ecommerce_integration: boolean;
+  concierge_requests: boolean;
   updated_at: string;
 }
 
@@ -52,6 +53,7 @@ const FEATURE_KEYS: { key: keyof PlanRow; label: string }[] = [
   { key: "priority_support", label: "Supporto prioritario" },
   { key: "knowledge_base_wizard", label: "Wizard knowledge base" },
   { key: "ecommerce_integration", label: "Integrazione Ecommerce" },
+  { key: "concierge_requests", label: "Concierge in soggiorno" },
 ];
 
 // Features that have enforcement in the app
@@ -62,6 +64,7 @@ const ENFORCED_FEATURES = new Set([
   "calendly_integration",
   "knowledge_base_wizard",
   "ecommerce_integration",
+  "concierge_requests",
   "max_chatbots",
   "max_conversations_month",
   "max_leads_month",
@@ -129,6 +132,7 @@ const AdminPlans = () => {
         priority_support: current.priority_support,
         knowledge_base_wizard: current.knowledge_base_wizard,
         ecommerce_integration: current.ecommerce_integration,
+        concierge_requests: current.concierge_requests,
       } as any)
       .eq("id", plan.id);
 

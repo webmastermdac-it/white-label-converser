@@ -6,8 +6,9 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { LanguageProvider } from "@/hooks/useLanguage";
 import ProtectedRoute from "@/components/ProtectedRoute";
-import HotelPlaceholder from "@/pages/client/hotel/HotelPlaceholder";
 import HotelProfile from "@/pages/client/hotel/HotelProfile";
+import HotelRequests from "@/pages/client/hotel/HotelRequests";
+import PublicConcierge from "@/pages/PublicConcierge";
 import AdminLayout from "@/layouts/AdminLayout";
 import ClientLayout from "@/layouts/ClientLayout";
 
@@ -70,6 +71,7 @@ const App = () => (
             <Route path="/chatbot-ecommerce" element={<VerticalLanding verticalId="ecommerce" />} />
             <Route path="/chatbot-appuntamenti" element={<VerticalLanding verticalId="booking" />} />
             <Route path="/concierge-hotel" element={<VerticalLanding verticalId="hotel" />} />
+            <Route path="/c/:embed_token" element={<PublicConcierge />} />
 
             {/* Admin Routes */}
             <Route
@@ -122,7 +124,7 @@ const App = () => (
               <Route path="knowledge-base" element={<ClientRAGKnowledgeBase />} />
               <Route path="instagram" element={<ClientInstagram />} />
               <Route path="hotel/profile" element={<HotelProfile />} />
-              <Route path="hotel/requests" element={<HotelPlaceholder kind="requests" />} />
+              <Route path="hotel/requests" element={<HotelRequests />} />
             </Route>
 
             <Route path="*" element={<NotFound />} />

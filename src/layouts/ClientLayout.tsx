@@ -6,10 +6,12 @@ import { useActiveModule } from "@/hooks/useActiveModule";
 import {
   LayoutDashboard, Inbox, MessageSquare, Bot, ArrowUpCircle, BarChart3, Store
 } from "lucide-react";
+import { useOpenServiceRequests } from "@/hooks/useOpenServiceRequests";
 
 const ClientLayout = () => {
   const { t, lang } = useLanguage();
   const { module: activeModule } = useActiveModule();
+  const openRequests = useOpenServiceRequests();
 
   const clientNav = [
     { label: t("overview"), href: "/dashboard", icon: LayoutDashboard, end: true },
@@ -17,7 +19,7 @@ const ClientLayout = () => {
     { label: t("leads"), href: "/dashboard/leads", icon: Inbox },
     { label: t("chatHistory"), href: "/dashboard/chats", icon: MessageSquare },
     { label: "Analytics", href: "/dashboard/analytics", icon: BarChart3 },
-    ...activeModule.menu.map((m) => ({ label: m.label[lang], href: m.href, icon: m.icon })),
+    ...activeModule.menu.map((m) => ({ label: m.label[lang], href: m.href, icon: m.icon, badge: m.key === "hotel-requests" ? openRequests : 0 })),
     { label: "Ecommerce", href: "/dashboard/ecommerce", icon: Store },
     { label: "Upgrade", href: "/dashboard/upgrade", icon: ArrowUpCircle },
   ];
