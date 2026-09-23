@@ -485,7 +485,7 @@ export default function LandingPage() {
       </header>
 
       {/* ─── SOLUTIONS ─── */}
-      <section id="solutions" className="bg-[#0F1419] py-16 md:py-24">
+      <section id="solutions" className="scroll-mt-16 bg-[#0F1419] py-16 md:scroll-mt-20 md:py-24">
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
           <h2 className="text-center text-3xl font-bold sm:text-4xl" style={{ fontFamily: "'Syne', sans-serif" }}>{t("Choose your assistant", "Scegli il tuo assistente")}</h2>
           <div className="mt-10 flex gap-2 overflow-x-auto pb-2 lg:hidden" role="tablist" aria-label={t("Choose a solution", "Scegli una soluzione")}>
