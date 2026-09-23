@@ -36,10 +36,10 @@ export default function VerticalLanding({ verticalId }: { verticalId: VerticalId
     ogTitle?.setAttribute("content", vertical.seo.title[lang]);
     ogDescription?.setAttribute("content", vertical.seo.description[lang]);
     return () => {
-      document.title = "Genius Chatbot Builder";
-      description?.setAttribute("content", "Genius Chatbot Builder — Crea e gestisci chatbot AI per il tuo business");
-      ogTitle?.setAttribute("content", "Genius Chatbot Builder");
-      ogDescription?.setAttribute("content", "Genius Chatbot Builder — Crea e gestisci chatbot AI per il tuo business");
+      document.title = "Genius Chatbot | Assistenti AI per Ecommerce, Appuntamenti e Hotel";
+      description?.setAttribute("content", "Scegli l'assistente AI per la tua attività: vende online, fissa appuntamenti o accoglie gli ospiti. Provalo gratis in 5 minuti.");
+      ogTitle?.setAttribute("content", "Genius Chatbot | Un assistente AI per ogni attività");
+      ogDescription?.setAttribute("content", "Assistenti AI per ecommerce, appuntamenti e hotel. Si installano in 5 minuti e trasformano le conversazioni in contatti pronti.");
     };
   }, [lang, vertical]);
 
