@@ -4,6 +4,7 @@ import { useLanguage } from "@/hooks/useLanguage";
 import { Button } from "@/components/ui/button";
 import { Play, Star, Menu, X, Check, Loader2, ArrowRight, Users, BookOpen, Bot, ClipboardList, CalendarCheck, Palette, Globe, BarChart3, ShoppingCart, Lock, Hotel, ChevronDown } from "lucide-react";
 import geniusLogo from "@/assets/genius.png";
+import genieHero from "@/assets/genie-mascot-new.png";
 import { supabase } from "@/integrations/supabase/client";
 import logoSpedali from "@/assets/logos/spedali-civili.png";
 import logoUnimi from "@/assets/logos/unimi.png";
@@ -493,7 +494,52 @@ export default function LandingPage() {
                 <div className="mt-5 grid grid-cols-2 gap-2"><Link to={selectedVertical.path}><Button variant="outline" className="w-full rounded-full bg-white text-gray-900">{t("Discover", "Scopri")}</Button></Link><Link to={`/register?vertical=${selectedVertical.id}`}><Button className="w-full rounded-full bg-[#F5A623] text-black">{t("Try free", "Prova gratis")}</Button></Link></div>
               </article>
             </div>
-            <div className="flex items-center justify-center"><VerticalDemoChat key={selectedVertical.id} vertical={selectedVertical} /></div>
+            <div className="relative flex flex-col items-center justify-center">
+              <div className="pointer-events-none relative z-10 flex w-40 justify-center sm:w-44 lg:-mb-20 lg:-ml-10 lg:self-start lg:w-56">
+                {[...Array(20)].map((_, i) => (
+                  <span
+                    key={i}
+                    className="mascot-particle pointer-events-none absolute rounded-full"
+                    style={{
+                      width: `${3 + (i % 4) * 2.5}px`,
+                      height: `${3 + (i % 4) * 2.5}px`,
+                      background: `radial-gradient(circle, rgba(245,166,35,${0.7 + (i % 3) * 0.1}) 0%, transparent 70%)`,
+                      boxShadow: `0 0 ${8 + (i % 5) * 3}px rgba(245,166,35,0.5)`,
+                      top: `${5 + (i * 4.7) % 85}%`,
+                      left: `${10 + (i * 4.3) % 80}%`,
+                      animation: `sparkle${i % 3} ${2.5 + (i % 5) * 0.8}s ease-in-out ${i * 0.3}s infinite`,
+                      opacity: 0,
+                    }}
+                  />
+                ))}
+                <div
+                  className="mascot-aura pointer-events-none absolute left-1/2 top-1/2 h-52 w-52 rounded-full lg:h-72 lg:w-72"
+                  style={{
+                    transform: "translate(-50%, -50%)",
+                    background: "radial-gradient(circle, rgba(245,166,35,0.18) 0%, rgba(245,166,35,0.06) 50%, transparent 70%)",
+                    animation: "auraPulse 3.5s ease-in-out infinite",
+                    zIndex: 0,
+                  }}
+                />
+                <div
+                  className="mascot-motion relative z-[1]"
+                  style={{
+                    animation: "genieReveal 2.4s cubic-bezier(0.16, 1, 0.3, 1) forwards, floatMascot 4s ease-in-out 2.4s infinite",
+                    opacity: 0,
+                  }}
+                >
+                  <img
+                    src={genieHero}
+                    alt="Genius Chatbot Genie"
+                    className="w-28 sm:w-32 lg:w-48 xl:w-56"
+                    style={{
+                      filter: "drop-shadow(0 0 50px rgba(245,166,35,0.35)) drop-shadow(0 0 100px rgba(245,166,35,0.15))",
+                    }}
+                  />
+                </div>
+              </div>
+              <VerticalDemoChat key={selectedVertical.id} vertical={selectedVertical} />
+            </div>
           </div>
         </div>
       </header>
@@ -820,6 +866,11 @@ export default function LandingPage() {
         @keyframes auraPulse {
           0%, 100% { opacity: 0.5; transform: translate(-50%, -50%) scale(1); }
           50% { opacity: 1; transform: translate(-50%, -50%) scale(1.15); }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .mascot-motion { animation: none !important; opacity: 1 !important; }
+          .mascot-aura { animation: none !important; }
+          .mascot-particle { display: none; }
         }
       `}</style>
 
