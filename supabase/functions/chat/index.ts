@@ -23,7 +23,7 @@ serve(async (req) => {
   const tStart = Date.now();
 
   try {
-    const { messages, embed_token, session_token, source_url, language, stream } = await req.json();
+    const { messages, embed_token, session_token, source_url, language, stream, room } = await req.json();
     const lang = language || "en";
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
@@ -239,8 +239,9 @@ serve(async (req) => {
       : "";
 
     // ── Hotel concierge (only for business_vertical = "hotel") ──
+    const safeRoom = typeof room === "string" ? room.trim().slice(0, 40) : "";
     const hotelContext = botConfig.business_vertical === "hotel"
-      ? buildHotelContext((botConfig as any).hotel_profile, conversationalLead)
+      ? buildHotelContext((botConfig as any).hotel_profile, conversationalLead, safeRoom)
       : "";
 
     const instructions = botConfig.knowledge_base || "You are a helpful assistant.";
@@ -967,7 +968,7 @@ async function createConversationalLead(
 
 
 // ── Hotel profile → structured prompt block (empty sections skipped) ──
-function buildHotelContext(raw: any, conversationalLead: boolean): string {
+function buildHotelContext(raw: any, conversationalLead: boolean, room = ""): string {
   const hp = raw && typeof raw === "object" ? raw : {};
   const v = (x: unknown) => (x === null || x === undefined ? "" : String(x).trim());
   const line = (label: string, val: unknown) => (v(val) ? `- ${label}: ${v(val)}\n` : "");
@@ -1026,7 +1027,9 @@ function buildHotelContext(raw: any, conversationalLead: boolean): string {
 
   if (!sections.length) return "";
 
-  const quoteRule = conversationalLead
+  const quoteRule = room
+    ? `The guest is already staying at the property${room ? `, in room ${room}` : ""}. IN-STAY MODE: do not offer quotes, booking links or availability checks. Help with property services, opening hours, local recommendations and guest requests. Never emit [TRIGGER_LEAD_FORM] for a stay request.`
+    : conversationalLead
     ? "If the guest asks about availability or a quote, first collect naturally the arrival and departure dates and the number of adults and children, one question at a time."
     : "If the guest asks about availability or a quote, first ask naturally (if not already given) for arrival and departure dates and the number of adults and children, then append the marker [TRIGGER_LEAD_FORM] on its own final line so they can send the stay request.";
 

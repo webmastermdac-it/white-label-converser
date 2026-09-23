@@ -8,7 +8,7 @@ const corsHeaders = {
 
 // Only the fields actually read by public/widget.js
 const FIELDS =
-  "name, avatar, primary_color, welcome_message, welcome_msg_it, welcome_msg_en, calendly_url, lead_form_mode, lead_form_message_count, business_vertical, hotel_profile";
+  "name, avatar, primary_color, background_color, text_color, circle_color, launcher_position, welcome_message, welcome_msg_it, welcome_msg_en, calendly_url, lead_form_mode, lead_form_message_count, business_vertical, hotel_profile, client_id";
 
 function json(body: unknown, status = 200, cache = false) {
   return new Response(JSON.stringify(body), {
@@ -46,6 +46,8 @@ Deno.serve(async (req) => {
   // Extra fields ONLY for hotel bots — other modules get exactly the previous payload
   if (business_vertical === "hotel") {
     const hp = hotel_profile || {};
+    const { data: client } = await admin.from("clients").select("plan").eq("id", (data as any).client_id).single();
+    const { data: plan } = await admin.from("plan_configs").select("concierge_requests").eq("plan_name", client?.plan || "free").single();
     const rooms = (Array.isArray(hp.rooms) ? hp.rooms : [])
       .filter((r: any) => r && r.id && r.name)
       .map((r: any) => ({ id: String(r.id), name: String(r.name) }));
@@ -53,11 +55,17 @@ Deno.serve(async (req) => {
       ...base,
       business_vertical: "hotel",
       hotel: {
+        property_name: hp.property?.name || base.name,
         rooms,
         engine_url_template: hp.booking?.engine_url_template || "",
         date_format: hp.booking?.date_format === "DD/MM/YYYY" ? "DD/MM/YYYY" : "YYYY-MM-DD",
+        concierge_requests: !!plan?.concierge_requests,
+        in_stay_quick_replies: plan?.concierge_requests && Array.isArray(hp.in_stay_quick_replies)
+          ? hp.in_stay_quick_replies.map((x: unknown) => String(x).trim()).filter(Boolean).slice(0, 12)
+          : [],
       },
     }, 200, true);
   }
-  return json(base, 200, true);
+  const { client_id: _clientId, ...safeBase } = base as any;
+  return json(safeBase, 200, true);
 });

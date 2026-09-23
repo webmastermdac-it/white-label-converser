@@ -43,3 +43,6 @@ verify_jwt = false
 
 [functions.hotel-profile-import]
 verify_jwt = false
+
+[functions.create-service-request]
+verify_jwt = false
