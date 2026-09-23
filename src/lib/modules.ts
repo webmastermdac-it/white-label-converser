@@ -122,9 +122,9 @@ export const MODULES: Record<ModuleId, ModuleDef> = {
       { key: "booking_clicks", label: { it: "Clic su prenota", en: "Booking clicks" } },
     ],
     checklist: [
-      { key: "profile", kind: "manual", href: "/dashboard/hotel/profile", label: { it: "Completa il profilo struttura", en: "Complete the property profile" } },
-      { key: "rooms", kind: "manual", href: "/dashboard/hotel/profile", label: { it: "Aggiungi le camere", en: "Add your rooms" } },
-      { key: "booking_engine", kind: "manual", href: "/dashboard/hotel/profile", label: { it: "Inserisci il link del booking engine", en: "Add the booking engine link" } },
+      { key: "profile", kind: "auto", href: "/dashboard/hotel/profile", label: { it: "Completa il profilo struttura", en: "Complete the property profile" } },
+      { key: "rooms", kind: "auto", href: "/dashboard/hotel/profile", label: { it: "Aggiungi le camere", en: "Add your rooms" } },
+      { key: "booking_engine", kind: "auto", href: "/dashboard/hotel/profile", label: { it: "Inserisci il link del booking engine", en: "Add the booking engine link" } },
       widgetStep,
       { key: "qr", kind: "manual", href: "/dashboard/embed", label: { it: "Stampa il QR code", en: "Print the QR code" } },
     ],
