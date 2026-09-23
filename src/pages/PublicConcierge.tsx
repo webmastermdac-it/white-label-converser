@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
 
 interface PublicConfig {
@@ -14,6 +14,8 @@ const PublicConcierge = () => {
   const { embed_token } = useParams();
   const [params] = useSearchParams();
   const [config, setConfig] = useState<PublicConfig | null>(null);
+  const launched = useRef(false);
+  const cleanupTimer = useRef<number>();
   const room = (params.get("room") || "").slice(0, 40);
 
   useEffect(() => {
@@ -26,6 +28,9 @@ const PublicConcierge = () => {
 
   useEffect(() => {
     if (!config || !embed_token) return;
+    window.clearTimeout(cleanupTimer.current);
+    if (launched.current) return;
+    launched.current = true;
     document.querySelectorAll("#genius-chat-widget").forEach((node) => node.remove());
     document.querySelectorAll("script[data-public-concierge]").forEach((node) => node.remove());
     const script = document.createElement("script");
@@ -36,8 +41,11 @@ const PublicConcierge = () => {
     script.dataset.publicConcierge = "true";
     document.body.appendChild(script);
     return () => {
-      script.remove();
-      document.querySelectorAll("#genius-chat-widget").forEach((node) => node.remove());
+      cleanupTimer.current = window.setTimeout(() => {
+        script.remove();
+        document.querySelectorAll("#genius-chat-widget").forEach((node) => node.remove());
+        launched.current = false;
+      }, 0);
     };
   }, [config, embed_token, room]);
 
