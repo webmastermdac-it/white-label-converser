@@ -445,104 +445,61 @@ export default function LandingPage() {
       </nav>
 
       {/* ─── HERO ─── */}
-      <header className="relative pt-28 pb-16 md:pt-36 md:pb-24 overflow-hidden">
+      <header className="relative overflow-hidden pb-20 pt-28 md:pb-28 md:pt-36">
         <div className="absolute inset-0 bg-gradient-to-br from-[#0F1419] via-[#1A1F2E] to-[#0F1419]" />
-        <div className="relative mx-auto max-w-7xl px-4 sm:px-6">
-          <div className="mx-auto max-w-4xl text-center">
+        <div className="absolute left-1/3 top-1/3 h-[500px] w-[500px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#F5A623]/8 blur-[120px]" />
+        <div className="pointer-events-none absolute inset-0 overflow-hidden">
+          {[...Array(15)].map((_, i) => (
+            <div key={i} className="absolute h-1 w-1 rounded-full bg-[#F5A623]/20" style={{ left: `${(i * 37) % 100}%`, top: `${(i * 53) % 100}%`, animation: `floatParticle ${4 + (i % 6)}s ease-in-out infinite ${(i % 4) * 0.7}s` }} />
+          ))}
+        </div>
+
+        <div className="relative mx-auto flex max-w-7xl flex-col items-center gap-12 px-4 sm:px-6 md:flex-row">
+          <div className="flex-1 space-y-6 text-center md:text-left">
+            <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-sm text-white/70">
+              <span className="h-2 w-2 animate-pulse rounded-full bg-[#F5A623]" />
+              Powered by AI • {t("Active 24/7", "Attivo 24/7")}
+            </div>
             <h1 className="text-4xl font-extrabold leading-tight sm:text-5xl lg:text-6xl" style={{ fontFamily: "'Syne', sans-serif" }}>
-              {t("An AI assistant for every business. Choose yours.", "Un assistente AI per ogni attività. Scegli il tuo.")}
+              {lang === "en" ? <>An AI assistant for every business. <span className="text-[#F5A623]">Choose yours.</span></> : <>Un assistente AI per ogni attività. <span className="text-[#F5A623]">Scegli il tuo.</span></>}
             </h1>
-            <p className="mx-auto mt-6 max-w-3xl text-lg leading-relaxed text-white/55 sm:text-xl">
+            <p className="mx-auto max-w-xl text-lg leading-relaxed text-white/55 sm:text-xl md:mx-0">
               {t("It sells, books appointments and welcomes guests. Installs in 5 minutes, speaks your customers' language and delivers ready-to-contact leads.", "Vende, fissa appuntamenti, accoglie gli ospiti. Si installa in 5 minuti, parla la lingua dei tuoi clienti e ti consegna contatti pronti.")}
             </p>
+            <div className="flex flex-col justify-center gap-4 sm:flex-row md:justify-start">
+              <Link to="/register"><Button className="h-12 rounded-full bg-[#F5A623] px-8 text-base font-semibold text-black shadow-lg shadow-[#F5A623]/20 hover:bg-[#E09800]">{t("Try free", "Prova gratis")}</Button></Link>
+              <Button variant="outline" onClick={() => scrollTo("solutions")} className="h-12 rounded-full border-white/20 bg-white px-8 text-gray-900 hover:bg-white/90">{t("Choose your assistant", "Scegli il tuo assistente")}</Button>
+            </div>
           </div>
 
-          <div className="mt-10 flex gap-2 overflow-x-auto pb-2 lg:hidden" role="tablist" aria-label={t("Choose a solution", "Scegli una soluzione")}>
-            {verticals.map((vertical) => {
-              const Icon = verticalIcon(vertical.id);
-              return <button key={vertical.id} role="tab" aria-selected={activeVertical === vertical.id} onClick={() => setActiveVertical(vertical.id)} className={`flex shrink-0 items-center gap-2 rounded-full border px-4 py-2.5 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F5A623] ${activeVertical === vertical.id ? "border-[#F5A623] bg-[#F5A623] text-black" : "border-white/15 bg-white/5 text-white/70"}`}><Icon className="h-4 w-4" />{localized(vertical.name)}</button>;
-            })}
-          </div>
-
-          <div className="mt-6 grid items-stretch gap-8 lg:mt-12 lg:grid-cols-[minmax(0,1fr)_400px]">
-            <div className="hidden grid-cols-3 gap-4 lg:grid">
-              {verticals.map((vertical) => {
-                const Icon = verticalIcon(vertical.id);
-                const active = activeVertical === vertical.id;
-                return (
-                  <article key={vertical.id} onMouseEnter={() => setActiveVertical(vertical.id)} className={`flex flex-col rounded-2xl border p-5 transition-all ${active ? "border-[#F5A623]/70 bg-[#F5A623]/10 shadow-lg shadow-[#F5A623]/10" : "border-white/10 bg-white/[0.03] hover:border-white/25"}`}>
-                    <button onClick={() => setActiveVertical(vertical.id)} className="text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F5A623] rounded-lg" aria-pressed={active}>
-                      <Icon className="mb-4 h-7 w-7 text-[#F5A623]" />
-                      <h2 className="text-lg font-bold" style={{ fontFamily: "'Syne', sans-serif" }}>{localized(vertical.name)}</h2>
-                      <p className="mt-2 text-sm font-medium text-white/80">{localized(vertical.promise)}</p>
-                    </button>
-                    <ul className="mt-5 space-y-2.5 text-sm text-white/55">{vertical.bullets.map((bullet) => <li key={bullet.it} className="flex gap-2"><Check className="mt-0.5 h-4 w-4 shrink-0 text-[#F5A623]" />{localized(bullet)}</li>)}</ul>
-                    <div className="mt-5 flex flex-wrap gap-1.5">{vertical.badges.map((badge) => <span key={badge} className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] text-white/55">{badge}</span>)}</div>
-                    <div className="mt-auto grid grid-cols-2 gap-2 pt-6">
-                      <Link to={vertical.path}><Button variant="outline" className="w-full rounded-full border-white/20 bg-white text-gray-900 hover:bg-white/90">{t("Discover", "Scopri")}</Button></Link>
-                      <Link to={`/register?vertical=${vertical.id}`}><Button className="w-full rounded-full bg-[#F5A623] text-black hover:bg-[#E09800]">{t("Try free", "Prova gratis")}</Button></Link>
-                    </div>
-                  </article>
-                );
-              })}
-            </div>
-            <div className="lg:hidden">
-              <article className="mb-6 rounded-2xl border border-[#F5A623]/50 bg-[#F5A623]/10 p-5">
-                <h2 className="text-xl font-bold" style={{ fontFamily: "'Syne', sans-serif" }}>{localized(selectedVertical.name)}</h2>
-                <p className="mt-2 text-sm font-medium text-white/80">{localized(selectedVertical.promise)}</p>
-                <ul className="mt-4 space-y-2 text-sm text-white/60">{selectedVertical.bullets.map((bullet) => <li key={bullet.it} className="flex gap-2"><Check className="mt-0.5 h-4 w-4 shrink-0 text-[#F5A623]" />{localized(bullet)}</li>)}</ul>
-                <div className="mt-5 grid grid-cols-2 gap-2"><Link to={selectedVertical.path}><Button variant="outline" className="w-full rounded-full bg-white text-gray-900">{t("Discover", "Scopri")}</Button></Link><Link to={`/register?vertical=${selectedVertical.id}`}><Button className="w-full rounded-full bg-[#F5A623] text-black">{t("Try free", "Prova gratis")}</Button></Link></div>
-              </article>
-            </div>
-            <div className="relative flex flex-col items-center justify-center">
-              <div className="pointer-events-none relative z-10 flex w-40 justify-center sm:w-44 lg:-mb-20 lg:-ml-10 lg:self-start lg:w-56">
-                {[...Array(20)].map((_, i) => (
-                  <span
-                    key={i}
-                    className="mascot-particle pointer-events-none absolute rounded-full"
-                    style={{
-                      width: `${3 + (i % 4) * 2.5}px`,
-                      height: `${3 + (i % 4) * 2.5}px`,
-                      background: `radial-gradient(circle, rgba(245,166,35,${0.7 + (i % 3) * 0.1}) 0%, transparent 70%)`,
-                      boxShadow: `0 0 ${8 + (i % 5) * 3}px rgba(245,166,35,0.5)`,
-                      top: `${5 + (i * 4.7) % 85}%`,
-                      left: `${10 + (i * 4.3) % 80}%`,
-                      animation: `sparkle${i % 3} ${2.5 + (i % 5) * 0.8}s ease-in-out ${i * 0.3}s infinite`,
-                      opacity: 0,
-                    }}
-                  />
-                ))}
-                <div
-                  className="mascot-aura pointer-events-none absolute left-1/2 top-1/2 h-52 w-52 rounded-full lg:h-72 lg:w-72"
-                  style={{
-                    transform: "translate(-50%, -50%)",
-                    background: "radial-gradient(circle, rgba(245,166,35,0.18) 0%, rgba(245,166,35,0.06) 50%, transparent 70%)",
-                    animation: "auraPulse 3.5s ease-in-out infinite",
-                    zIndex: 0,
-                  }}
-                />
-                <div
-                  className="mascot-motion relative z-[1]"
-                  style={{
-                    animation: "genieReveal 2.4s cubic-bezier(0.16, 1, 0.3, 1) forwards, floatMascot 4s ease-in-out 2.4s infinite",
-                    opacity: 0,
-                  }}
-                >
-                  <img
-                    src={genieHero}
-                    alt="Genius Chatbot Genie"
-                    className="w-28 sm:w-32 lg:w-48 xl:w-56"
-                    style={{
-                      filter: "drop-shadow(0 0 50px rgba(245,166,35,0.35)) drop-shadow(0 0 100px rgba(245,166,35,0.15))",
-                    }}
-                  />
-                </div>
-              </div>
-              <VerticalDemoChat key={selectedVertical.id} vertical={selectedVertical} />
+          <div className="relative flex w-full max-w-md flex-1 justify-center md:justify-end">
+            {[...Array(20)].map((_, i) => (
+              <span key={i} className="mascot-particle pointer-events-none absolute rounded-full" style={{ width: `${3 + (i % 4) * 2.5}px`, height: `${3 + (i % 4) * 2.5}px`, background: `radial-gradient(circle, rgba(245,166,35,${0.7 + (i % 3) * 0.1}) 0%, transparent 70%)`, boxShadow: `0 0 ${8 + (i % 5) * 3}px rgba(245,166,35,0.5)`, top: `${5 + (i * 4.7) % 85}%`, left: `${10 + (i * 4.3) % 80}%`, animation: `sparkle${i % 3} ${2.5 + (i % 5) * 0.8}s ease-in-out ${i * 0.3}s infinite`, opacity: 0 }} />
+            ))}
+            <div className="mascot-aura pointer-events-none absolute left-1/2 top-1/2 h-80 w-80 rounded-full" style={{ transform: "translate(-50%, -50%)", background: "radial-gradient(circle, rgba(245,166,35,0.18) 0%, rgba(245,166,35,0.06) 50%, transparent 70%)", animation: "auraPulse 3.5s ease-in-out infinite", zIndex: 0 }} />
+            <div className="mascot-motion relative z-[1]" style={{ animation: "genieReveal 2.4s cubic-bezier(0.16, 1, 0.3, 1) forwards, floatMascot 4s ease-in-out 2.4s infinite", opacity: 0 }}>
+              <img src={genieHero} alt="Genius Chatbot Genie" className="w-72 sm:w-96" style={{ filter: "drop-shadow(0 0 50px rgba(245,166,35,0.35)) drop-shadow(0 0 100px rgba(245,166,35,0.15))" }} />
             </div>
           </div>
         </div>
       </header>
+
+      {/* ─── SOLUTIONS ─── */}
+      <section id="solutions" className="scroll-mt-16 bg-[#0F1419] py-16 md:scroll-mt-20 md:py-24">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6">
+          <h2 className="text-center text-3xl font-bold sm:text-4xl" style={{ fontFamily: "'Syne', sans-serif" }}>{t("Choose your assistant", "Scegli il tuo assistente")}</h2>
+          <div className="mt-10 flex gap-2 overflow-x-auto pb-2 lg:hidden" role="tablist" aria-label={t("Choose a solution", "Scegli una soluzione")}>
+            {verticals.map((vertical) => { const Icon = verticalIcon(vertical.id); return <button key={vertical.id} role="tab" aria-selected={activeVertical === vertical.id} onClick={() => setActiveVertical(vertical.id)} className={`flex shrink-0 items-center gap-2 rounded-full border px-4 py-2.5 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F5A623] ${activeVertical === vertical.id ? "border-[#F5A623] bg-[#F5A623] text-black" : "border-white/15 bg-white/5 text-white/70"}`}><Icon className="h-4 w-4" />{localized(vertical.name)}</button>; })}
+          </div>
+          <div className="mt-6 grid items-stretch gap-8 lg:mt-12 lg:grid-cols-[minmax(0,1fr)_400px]">
+            <div className="hidden grid-cols-3 gap-4 lg:grid">
+              {verticals.map((vertical) => { const Icon = verticalIcon(vertical.id); const active = activeVertical === vertical.id; return <article key={vertical.id} onMouseEnter={() => setActiveVertical(vertical.id)} className={`flex flex-col rounded-2xl border p-5 transition-all ${active ? "border-[#F5A623]/70 bg-[#F5A623]/10 shadow-lg shadow-[#F5A623]/10" : "border-white/10 bg-white/[0.03] hover:border-white/25"}`}><button onClick={() => setActiveVertical(vertical.id)} className="rounded-lg text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F5A623]" aria-pressed={active}><Icon className="mb-4 h-7 w-7 text-[#F5A623]" /><h3 className="text-lg font-bold" style={{ fontFamily: "'Syne', sans-serif" }}>{localized(vertical.name)}</h3><p className="mt-2 text-sm font-medium text-white/80">{localized(vertical.promise)}</p></button><ul className="mt-5 space-y-2.5 text-sm text-white/55">{vertical.bullets.map((bullet) => <li key={bullet.it} className="flex gap-2"><Check className="mt-0.5 h-4 w-4 shrink-0 text-[#F5A623]" />{localized(bullet)}</li>)}</ul><div className="mt-5 flex flex-wrap gap-1.5">{vertical.badges.map((badge) => <span key={badge} className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] text-white/55">{badge}</span>)}</div><div className="mt-auto grid grid-cols-2 gap-2 pt-6"><Link to={vertical.path}><Button variant="outline" className="w-full rounded-full border-white/20 bg-white text-gray-900 hover:bg-white/90">{t("Discover", "Scopri")}</Button></Link><Link to={`/register?vertical=${vertical.id}`}><Button className="w-full rounded-full bg-[#F5A623] text-black hover:bg-[#E09800]">{t("Try free", "Prova gratis")}</Button></Link></div></article>; })}
+            </div>
+            <div className="lg:hidden"><article className="mb-6 rounded-2xl border border-[#F5A623]/50 bg-[#F5A623]/10 p-5"><h3 className="text-xl font-bold" style={{ fontFamily: "'Syne', sans-serif" }}>{localized(selectedVertical.name)}</h3><p className="mt-2 text-sm font-medium text-white/80">{localized(selectedVertical.promise)}</p><ul className="mt-4 space-y-2 text-sm text-white/60">{selectedVertical.bullets.map((bullet) => <li key={bullet.it} className="flex gap-2"><Check className="mt-0.5 h-4 w-4 shrink-0 text-[#F5A623]" />{localized(bullet)}</li>)}</ul><div className="mt-5 grid grid-cols-2 gap-2"><Link to={selectedVertical.path}><Button variant="outline" className="w-full rounded-full bg-white text-gray-900">{t("Discover", "Scopri")}</Button></Link><Link to={`/register?vertical=${selectedVertical.id}`}><Button className="w-full rounded-full bg-[#F5A623] text-black">{t("Try free", "Prova gratis")}</Button></Link></div></article></div>
+            <div className="flex items-center justify-center"><VerticalDemoChat key={selectedVertical.id} vertical={selectedVertical} /></div>
+          </div>
+        </div>
+      </section>
 
       {/* ─── FEATURES ─── */}
       <Section id="features" className="py-20 md:py-28">
