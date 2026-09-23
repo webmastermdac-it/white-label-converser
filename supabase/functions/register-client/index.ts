@@ -17,8 +17,9 @@ serve(async (req) => {
     );
 
     const { full_name, company_name, email, password, locale: reqLocale, vertical } = await req.json();
-    const allowedVerticals = ["booking", "ecommerce", "hospitality"];
-    const safeVertical = allowedVerticals.includes(vertical) ? vertical : null;
+    const normalizedVertical = vertical === "hospitality" ? "hotel" : vertical;
+    const allowedVerticals = ["booking", "ecommerce", "hotel", "general"];
+    const safeVertical = allowedVerticals.includes(normalizedVertical) ? normalizedVertical : "general";
 
     if (!full_name || !company_name || !email || !password) {
       return new Response(JSON.stringify({ error: "Missing required fields" }), {
@@ -70,7 +71,7 @@ If the user seems undecided or drops the conversation without adding anything to
       name: `${company_name} Assistant`,
       welcome_message: `Ciao! Sono l'assistente virtuale IA di ${company_name}. Come posso aiutarti?`,
       notification_email: email,
-      vertical: safeVertical,
+      business_vertical: safeVertical,
       ...(safeVertical === "ecommerce"
         ? { knowledge_base: locale === "it" ? ECOMMERCE_KB_IT : ECOMMERCE_KB_EN }
         : {}),

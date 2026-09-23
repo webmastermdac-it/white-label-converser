@@ -18,7 +18,7 @@ export function useCalendlyIntegration(clientIdOverride?: string | null) {
   const [botName, setBotName] = useState("");
   const [calendlyUrl, setCalendlyUrl] = useState("");
   const [primaryColor, setPrimaryColor] = useState("#F59E0B");
-  const [vertical, setVertical] = useState<"ecommerce" | "booking" | "general">("general");
+  const [vertical, setVertical] = useState<"ecommerce" | "booking" | "hotel" | "general">("general");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 

@@ -220,13 +220,13 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
     if (overrideChatbotId) {
       const { data: config } = await supabase
         .from("chatbot_configs")
-        .select("id, knowledge_base, vertical")
+        .select("id, knowledge_base, business_vertical")
         .eq("id", overrideChatbotId)
         .single();
       if (!config) { setLoading(false); return; }
       configId = config.id;
       promptValue = config.knowledge_base || "";
-      setChatbotVertical((config as any).vertical ?? null);
+      setChatbotVertical((config as any).business_vertical ?? null);
     } else {
       const { data: config } = await supabase
         .from("chatbot_configs")
@@ -237,7 +237,7 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
       if (!config) { setLoading(false); return; }
       configId = config.id;
       promptValue = config.knowledge_base || "";
-      setChatbotVertical((config as any).vertical ?? null);
+      setChatbotVertical((config as any).business_vertical ?? null);
     }
     
     setChatbotId(configId!);

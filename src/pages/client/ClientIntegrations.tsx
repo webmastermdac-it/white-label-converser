@@ -1,3 +1,4 @@
+import { getModule } from "@/lib/modules";
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useLanguage } from "@/hooks/useLanguage";
@@ -77,9 +78,7 @@ const ClientIntegrations = ({ embedded = false, clientIdOverride }: { embedded?:
   };
 
   const recommended = (id: IntegrationId) => {
-    if (vertical === "ecommerce") return ["woocommerce", "shopify", "prestashop"].includes(id);
-    if (vertical === "booking") return id === "calendly";
-    return false;
+    return getModule(vertical).integrations.includes(id);
   };
 
   const categories = useMemo(() => {

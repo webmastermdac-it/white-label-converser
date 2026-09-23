@@ -3,7 +3,7 @@ import { NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/hooks/useLanguage";
 import { usePlanConfig } from "@/hooks/usePlanConfig";
-import { useCalendlyIntegration } from "@/hooks/useCalendlyIntegration";
+import { useActiveModule } from "@/hooks/useActiveModule";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import {
@@ -18,7 +18,7 @@ const ClientSidebar = () => {
   const { user, signOut, role } = useAuth();
   const { lang, setLang, t } = useLanguage();
   const { canUseEcommerce, canUseCalendly, config: planConfig } = usePlanConfig();
-  const { botId } = useCalendlyIntegration();
+  const { botId, module: activeModule } = useActiveModule();
   const isFree = planConfig?.plan_name === "free";
   const navigate = useNavigate();
   const tl = (it: string, en: string) => lang === "it" ? it : en;
@@ -38,6 +38,8 @@ const ClientSidebar = () => {
     { label: t("leads"), href: "/dashboard/leads", icon: Inbox },
     { label: t("chatHistory"), href: "/dashboard/chats", icon: MessageSquare },
     { label: "Analytics", href: "/dashboard/analytics", icon: BarChart3 },
+    // Module-specific entries (only the active bot's module; others are hidden)
+    ...activeModule.menu.map((m) => ({ label: m.label[lang], href: m.href, icon: m.icon })),
   ];
 
   const configNav = [
