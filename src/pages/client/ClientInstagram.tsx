@@ -89,14 +89,13 @@ const ClientInstagram = () => {
       return;
     }
     setConnecting(true);
-    const { data, error } = await supabase.functions.invoke("instagram-connect", {
+    const { data, error } = await supabase.functions.invoke("save-channel-secret", {
       body: {
         bot_id: selectedBotId,
-        manual: {
-          access_token: manualToken,
-          page_id: manualPageId,
-          username: manualUsername || "instagram_user",
-        },
+        channel: "instagram",
+        access_token: manualToken,
+        page_id: manualPageId,
+        username: manualUsername || "instagram_user",
       },
     });
     setConnecting(false);
