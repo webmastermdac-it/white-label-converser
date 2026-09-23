@@ -126,7 +126,7 @@ export const MODULES: Record<ModuleId, ModuleDef> = {
       { key: "rooms", kind: "auto", href: "/dashboard/hotel/profile", label: { it: "Aggiungi le camere", en: "Add your rooms" } },
       { key: "booking_engine", kind: "auto", href: "/dashboard/hotel/profile", label: { it: "Inserisci il link del booking engine", en: "Add the booking engine link" } },
       widgetStep,
-      { key: "qr", kind: "manual", href: "/dashboard/embed", label: { it: "Stampa il QR code", en: "Print the QR code" } },
+      { key: "qr", kind: "auto", href: "/dashboard/hotel/profile?tab=qr", label: { it: "Stampa il QR code", en: "Print the QR code" } },
     ],
   },
   general: {

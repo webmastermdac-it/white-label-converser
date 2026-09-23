@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { FunctionsHttpError } from "@supabase/supabase-js";
 import { useAuth } from "@/contexts/AuthContext";
@@ -9,6 +10,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
+import HotelQrTab from "@/components/hotel/HotelQrTab";
+import { usePlanConfig } from "@/hooks/usePlanConfig";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -26,7 +29,11 @@ const HotelProfile = () => {
   const tl = (it: string, en: string) => (lang === "it" ? it : en);
   const { clientId } = useAuth();
   const { botId } = useActiveModule();
+  const { canUseConciergeRequests } = usePlanConfig();
+  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [hp, setHp] = useState<HP | null>(null);
+  const [embedToken, setEmbedToken] = useState("");
   const [siteUrl, setSiteUrl] = useState("");
   const [status, setStatus] = useState<Status>("idle");
   const timer = useRef<number>();
@@ -35,9 +42,10 @@ const HotelProfile = () => {
   useEffect(() => {
     if (!botId || loadedFor.current === botId) return;
     loadedFor.current = botId;
-    supabase.from("chatbot_configs").select("hotel_profile, site_url").eq("id", botId).maybeSingle().then(({ data }) => {
+    supabase.from("chatbot_configs").select("hotel_profile, site_url, embed_token").eq("id", botId).maybeSingle().then(({ data }) => {
       setHp(normalizeHotelProfile((data as any)?.hotel_profile));
       setSiteUrl((data as any)?.site_url || "");
+      setEmbedToken((data as any)?.embed_token || "");
     });
   }, [botId]);
 
@@ -106,7 +114,7 @@ const HotelProfile = () => {
   const tabs = [
     ["property", tl("Struttura", "Property")], ["rooms", tl("Camere", "Rooms")], ["services", tl("Servizi", "Services")],
     ["policies", "Policy"], ["guide", tl("Guida locale", "Local guide")], ["booking", tl("Prenotazioni", "Bookings")],
-    ["reviews", tl("Recensioni", "Reviews")],
+    ["reviews", tl("Recensioni", "Reviews")], ["qr", "QR"],
   ];
 
   return (
@@ -119,7 +127,7 @@ const HotelProfile = () => {
         <SaveBadge status={status} tl={tl} />
       </div>
 
-      <Tabs defaultValue="property">
+      <Tabs value={searchParams.get("tab") || "property"} onValueChange={(tab) => setSearchParams(tab === "property" ? {} : { tab })}>
         <div className="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0">
           <TabsList className="w-max">
             {tabs.map(([v, l]) => <TabsTrigger key={v} value={v}>{l}</TabsTrigger>)}
@@ -264,6 +272,17 @@ const HotelProfile = () => {
             </Grid>
             {hint}
           </Section>
+        </TabsContent>
+
+        <TabsContent value="qr" className="space-y-4">
+          <HotelQrTab
+            profile={hp}
+            embedToken={embedToken}
+            enabled={canUseConciergeRequests}
+            onChange={(next) => update(() => next)}
+            onDownloaded={() => update((d) => ({ ...d, qr_downloaded_at: d.qr_downloaded_at || new Date().toISOString() }))}
+            onUpgrade={() => navigate("/dashboard/upgrade")}
+          />
         </TabsContent>
       </Tabs>
 

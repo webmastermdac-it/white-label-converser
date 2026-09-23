@@ -178,6 +178,8 @@
   })();
   var EMBED_TOKEN = scriptTag.getAttribute("data-token");
   if (!EMBED_TOKEN) { console.error("[Genius Widget] Missing data-token"); return; }
+  var FULLSCREEN = scriptTag.getAttribute("data-fullscreen") === "true";
+  var ROOM = (scriptTag.getAttribute("data-room") || "").trim().slice(0, 40);
 
   // ── Supabase URL ──
   var SUPABASE_URL = (function () {
@@ -214,11 +216,13 @@
   // ── State ───────────────────────────────────────────────
   var config = null;
   var messages = [];
-  var isOpen = false;
+  var isOpen = FULLSCREEN;
   var isLoading = false;
   var showLeadForm = false;
   var leadSent = false;
   var userMessageCount = 0;
+  var serviceCategory = "";
+  var serviceSending = false;
 
   // ── Create Shadow DOM ───────────────────────────────────
   var host = document.createElement("div");
@@ -244,6 +248,7 @@
     var cc = cfg.circle_color || "#F5A623";
     var ccRgb = hexToRgb(cc);
     var pos = cfg.launcher_position === "bottom-left" ? "left:20px;" : "right:20px;";
+    var full = FULLSCREEN ? "position:fixed;inset:0;width:100%;height:100%;bottom:auto;left:0;right:0;border-radius:0;opacity:1;transform:none;pointer-events:auto;box-shadow:none;" : "";
 
     return "\
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;}\
@@ -255,6 +260,7 @@
 .mdac-launcher.mdac-genie-full img{width:83%;height:83%;object-fit:contain;position:relative;z-index:1;filter:drop-shadow(0 2px 6px rgba(0,0,0,.35));}\
 @keyframes mdac-glow{0%,100%{opacity:0;transform:scale(.85);}50%{opacity:1;transform:scale(1.12);}}\
 .mdac-panel{position:fixed;bottom:90px;" + pos + "width:370px;height:520px;border-radius:16px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 12px 48px rgba(0,0,0,.3);opacity:0;transform:translateY(20px) scale(.95);pointer-events:none;transition:opacity .25s ease,transform .25s ease;z-index:2;background:#fff;}\
+.mdac-panel.mdac-fullscreen{" + full + "}\
 .mdac-panel.open{opacity:1;transform:translateY(0) scale(1);pointer-events:auto;}\
 .mdac-header{background:" + bg + ";padding:14px 16px;display:flex;align-items:center;gap:10px;}\
 .mdac-header-avatar{width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}\
@@ -286,6 +292,14 @@
 .mdac-dot:nth-child(3){animation-delay:.3s;}\
 @keyframes mdac-bounce{to{transform:translateY(-6px);opacity:.4;}}\
 .mdac-input-area{display:flex;gap:8px;padding:10px 12px;border-top:1px solid #e5e7eb;background:#fff;}\
+.mdac-quick-replies{display:flex;gap:7px;overflow-x:auto;padding:8px 12px;background:#fff;border-top:1px solid #f3f4f6;scrollbar-width:none;}\
+.mdac-quick-replies::-webkit-scrollbar{display:none;}\
+.mdac-quick{flex:0 0 auto;border:1px solid " + pc + ";background:#fff;color:" + pc + ";border-radius:999px;padding:7px 10px;font-size:12px;font-weight:600;cursor:pointer;}\
+.mdac-service-form{margin:0 12px 8px;padding:12px;border:1px solid #e5e7eb;border-radius:10px;background:#fff;display:flex;flex-direction:column;gap:8px;}\
+.mdac-service-form input,.mdac-service-form textarea{border:1px solid #e5e7eb;border-radius:8px;padding:8px 10px;font-size:13px;font-family:inherit;}\
+.mdac-service-actions{display:flex;gap:8px;}\
+.mdac-service-actions button{flex:1;border-radius:8px;padding:9px;border:1px solid #e5e7eb;background:#fff;cursor:pointer;font-weight:600;}\
+.mdac-service-actions .primary{background:" + pc + ";border-color:" + pc + ";color:#fff;}\
 .mdac-footer{text-align:center;padding:4px 10px 6px;background:#fff;border-top:1px solid #f3f4f6;display:flex;flex-direction:column;gap:2px;}\
 .mdac-footer span{font-size:9.5px;color:#9ca3af;line-height:1.3;}\
 .mdac-footer a{font-size:10px;color:#9ca3af;text-decoration:none;font-weight:500;}\
@@ -306,7 +320,7 @@
 .mdac-calendly:hover{background:" + pc + ";color:#fff;}\
 .mdac-success{text-align:center;padding:16px;font-size:13px;color:#16a34a;font-weight:500;}\
 @media(max-width:768px){\
-.mdac-panel{width:100%;height:70vh;bottom:0;left:0;right:0;border-radius:16px 16px 0 0;}\
+.mdac-panel{width:100%;height:" + (FULLSCREEN ? "100%" : "70vh") + ";bottom:0;left:0;right:0;border-radius:" + (FULLSCREEN ? "0" : "16px 16px 0 0") + ";}\
 .mdac-launcher{bottom:16px;" + (cfg.launcher_position === "bottom-left" ? "left:16px;" : "right:16px;") + "width:54px;height:54px;font-size:24px;}\
 }\
 ";
@@ -331,17 +345,17 @@
     var html = '<style>' + buildStyles(config) + '</style>';
 
     // Launcher
-    html += '<button class="mdac-launcher' + (isGenieFull ? ' mdac-genie-full' : '') + '" id="mdac-toggle">' + (isGenieFull ? genieFullTag : avatarDisplay) + '</button>';
+    if (!FULLSCREEN) html += '<button class="mdac-launcher' + (isGenieFull ? ' mdac-genie-full' : '') + '" id="mdac-toggle">' + (isGenieFull ? genieFullTag : avatarDisplay) + '</button>';
 
 
     // Panel
-    html += '<div class="mdac-panel' + (isOpen ? ' open' : '') + '" id="mdac-panel">';
+    html += '<div class="mdac-panel' + (isOpen ? ' open' : '') + (FULLSCREEN ? ' mdac-fullscreen' : '') + '" id="mdac-panel">';
 
     // Header
     html += '<div class="mdac-header">';
     html += '<div class="mdac-header-avatar">' + avatarDisplay + '</div>';
     html += '<div class="mdac-header-info"><div class="mdac-header-name">' + esc(config.name || "Assistente") + '</div></div>';
-    html += '<button class="mdac-close" id="mdac-close">&times;</button>';
+    if (!FULLSCREEN) html += '<button class="mdac-close" id="mdac-close">&times;</button>';
     html += '</div>';
 
     // Messages
@@ -410,6 +424,19 @@
 
     html += '</div>'; // end messages
 
+    var quickReplies = (FULLSCREEN && isHotel() && config.hotel.concierge_requests) ? (config.hotel.in_stay_quick_replies || []) : [];
+    if (quickReplies.length && !serviceCategory) {
+      html += '<div class="mdac-quick-replies">';
+      for (var qi = 0; qi < quickReplies.length; qi++) html += '<button class="mdac-quick" data-category="' + esc(quickReplies[qi]) + '">' + esc(quickReplies[qi]) + '</button>';
+      html += '</div>';
+    }
+    if (serviceCategory) {
+      html += '<div class="mdac-service-form"><strong style="font-size:13px;color:#1a1a2e;">' + esc(serviceCategory) + '</strong>';
+      html += '<textarea id="mdac-service-message" rows="2" placeholder="' + (baseLang === "it" ? "Messaggio facoltativo" : "Optional message") + '"></textarea>';
+      html += '<input id="mdac-service-name" placeholder="' + (baseLang === "it" ? "Nome facoltativo" : "Optional name") + '" />';
+      html += '<div class="mdac-service-actions"><button id="mdac-service-cancel">' + (baseLang === "it" ? "Annulla" : "Cancel") + '</button><button class="primary" id="mdac-service-send"' + (serviceSending ? ' disabled' : '') + '>' + (baseLang === "it" ? "Invia richiesta" : "Send request") + '</button></div></div>';
+    }
+
     // Input area + footer
     html += '<div class="mdac-input-area">';
     html += '<input class="mdac-input" id="mdac-input" placeholder="' + t.placeholder + '" ' + (isLoading ? 'disabled' : '') + ' />';
@@ -433,6 +460,9 @@
     var messagesEl = shadow.getElementById("mdac-messages");
     var leadSubmitBtn = shadow.getElementById("mdac-lead-submit");
     var calendlyBtn = shadow.getElementById("mdac-calendly");
+    var quickBtns = shadow.querySelectorAll(".mdac-quick");
+    var serviceCancel = shadow.getElementById("mdac-service-cancel");
+    var serviceSend = shadow.getElementById("mdac-service-send");
 
     if (toggleBtn) toggleBtn.onclick = function () { isOpen = !isOpen; render(); };
     if (closeBtn) closeBtn.onclick = function () { isOpen = false; render(); };
@@ -443,6 +473,9 @@
     }
     if (leadSubmitBtn) leadSubmitBtn.onclick = submitLead;
     if (calendlyBtn) calendlyBtn.onclick = function () { window.open(config.calendly_url, "_blank"); };
+    for (var qb = 0; qb < quickBtns.length; qb++) quickBtns[qb].onclick = function () { serviceCategory = this.getAttribute("data-category") || ""; render(); };
+    if (serviceCancel) serviceCancel.onclick = function () { serviceCategory = ""; render(); };
+    if (serviceSend) serviceSend.onclick = submitServiceRequest;
 
     // Scroll to bottom
     if (messagesEl) messagesEl.scrollTop = messagesEl.scrollHeight;
@@ -467,7 +500,7 @@
 
     messages.push({ role: "user", content: text });
     userMessageCount++;
-    if (config && config.lead_form_mode === "after_messages" && !leadSent &&
+    if (!ROOM && config && config.lead_form_mode === "after_messages" && !leadSent &&
         userMessageCount >= (config.lead_form_message_count || 3)) {
       showLeadForm = true;
     }
@@ -485,6 +518,7 @@
         session_token: sessionToken,
         source_url: window.location.href,
         language: widgetLang,
+        room: FULLSCREEN ? ROOM : "",
       }),
     })
     .then(function(response) {
@@ -506,7 +540,7 @@
             if (result.done) {
               var clean = fullText.replace("[TRIGGER_LEAD_FORM]", "").replace(/\[LEAD_DATA:\{[\s\S]*?\}\]/g, "").trim();
               messages[botIdx] = { role: "assistant", content: clean || t.errorReply };
-              if (fullText.indexOf("[TRIGGER_LEAD_FORM]") !== -1) showLeadForm = true;
+               if (!ROOM && fullText.indexOf("[TRIGGER_LEAD_FORM]") !== -1) showLeadForm = true;
               saveMessages(messages);
               render();
               return;
@@ -542,19 +576,43 @@
       return response.json().then(function(data) {
         var botMsg = data.message || t.errorReply;
         messages.push({ role: "assistant", content: botMsg });
-        if (data.trigger_lead_form) showLeadForm = true;
+         if (!ROOM && data.trigger_lead_form) showLeadForm = true;
         saveMessages(messages);
         isLoading = false;
         render();
       });
     })
     .catch(function(err) {
-      if (err && err.error === "plan_limit") {
+       if (!ROOM && err && err.error === "plan_limit") {
         showLeadForm = true;
       }
       messages.push({ role: "assistant", content: t.errorMsg });
       saveMessages(messages);
       isLoading = false;
+      render();
+    });
+  }
+
+  function submitServiceRequest() {
+    if (!serviceCategory || serviceSending) return;
+    var msg = shadow.getElementById("mdac-service-message");
+    var name = shadow.getElementById("mdac-service-name");
+    serviceSending = true;
+    render();
+    fetch(SUPABASE_URL + "/functions/v1/create-service-request", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ embed_token: EMBED_TOKEN, room: ROOM, category: serviceCategory, message: msg ? msg.value.trim() : "", guest_name: name ? name.value.trim() : "" }),
+    }).then(function (response) {
+      if (!response.ok) throw new Error("request_failed");
+      messages.push({ role: "assistant", content: baseLang === "it" ? "Richiesta inviata alla reception." : "Request sent to reception." });
+      serviceCategory = "";
+      serviceSending = false;
+      saveMessages(messages);
+      render();
+    }).catch(function () {
+      serviceSending = false;
+      messages.push({ role: "assistant", content: t.errorMsg });
       render();
     });
   }
@@ -631,7 +689,7 @@
       config = data;
 
       // Lead form timing: show immediately if configured
-      if (config.lead_form_mode === "immediate" && !leadSent) {
+       if (!ROOM && config.lead_form_mode === "immediate" && !leadSent) {
         showLeadForm = true;
       }
 
@@ -657,7 +715,7 @@
         for (var mi = 0; mi < messages.length; mi++) {
           if (messages[mi] && messages[mi].role === "user") userMessageCount++;
         }
-        if (config.lead_form_mode === "after_messages" && !leadSent &&
+         if (!ROOM && config.lead_form_mode === "after_messages" && !leadSent &&
             userMessageCount >= (config.lead_form_message_count || 3)) {
           showLeadForm = true;
         }

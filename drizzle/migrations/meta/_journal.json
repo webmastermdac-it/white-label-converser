@@ -64,6 +64,13 @@
       "when": 1790183059316,
       "tag": "0008_add_leads_booking",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1790184512424,
+      "tag": "0009_add_hotel_concierge_requests",
+      "breakpoints": true
     }
   ]
 }

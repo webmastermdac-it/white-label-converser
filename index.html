@@ -24,10 +24,14 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
-    <!-- Genius Assistant -->
-    <script
-      src="https://chatbot.your-genius.com/widget.js"
-      data-token="afdb33968ca484b687024a9796f2693b7315a758a03a2a179eee97c10f7be232"
-    ></script>
+    <!-- Genius Assistant: the public concierge route mounts its dedicated fullscreen instance. -->
+    <script>
+      if (!window.location.pathname.startsWith("/c/")) {
+        const widget = document.createElement("script");
+        widget.src = "https://chatbot.your-genius.com/widget.js";
+        widget.dataset.token = "afdb33968ca484b687024a9796f2693b7315a758a03a2a179eee97c10f7be232";
+        document.body.appendChild(widget);
+      }
+    </script>
   </body>
 </html>
