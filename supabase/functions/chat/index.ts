@@ -37,7 +37,7 @@ serve(async (req) => {
     // ── Step 0: Fetch bot config ──
     const { data: botConfig, error: configError } = await supabase
       .from("chatbot_configs")
-      .select("id, client_id, name, business_vertical, knowledge_base, fallback_message, fallback_msg_en, fallback_msg_it, welcome_msg_it, welcome_msg_en, knowledge_base_products, lead_form_mode, notification_email, email_notifications_enabled")
+      .select("id, client_id, name, business_vertical, knowledge_base, fallback_message, fallback_msg_en, fallback_msg_it, welcome_msg_it, welcome_msg_en, knowledge_base_products, lead_form_mode, notification_email, email_notifications_enabled, hotel_profile")
       .eq("embed_token", embed_token)
       .single();
 
@@ -238,8 +238,13 @@ serve(async (req) => {
       ? `REGOLE OBBLIGATORIE SUGLI ACQUISTI (PRIORITÀ MASSIMA, prevalgono su ogni altra istruzione):\n1. Non hai la possibilità di aggiungere prodotti al carrello, avanzare un checkout o confermare pagamenti semplicemente parlandone. Puoi farlo SOLO chiamando il tool create_real_checkout.\n2. Non dire mai "ho aggiunto al carrello", "sto procedendo al checkout", "ordine confermato" o frasi simili se non hai appena ricevuto un risultato success:true dal tool.\n3. Se l'utente vuole comprare, prima raccogli in modo naturale i dati necessari (prodotto, quantità, nome, email, telefono, indirizzo), poi chiama create_real_checkout.\n4. Se il tool ritorna un errore, dillo chiaramente all'utente (es: "non riesco a creare il checkout in questo momento, puoi completare l'acquisto direttamente su ${ecommerceStoreUrl || "il nostro sito"} oppure riprova tra poco") — non inventare mai una soluzione alternativa che non hai verificato.\n5. Quando il tool ha successo, manda all'utente il checkout_url reale ricevuto, spiegando che lì può scegliere il metodo di pagamento che preferisce e completare l'acquisto in sicurezza.\n\n`
       : "";
 
+    // ── Hotel concierge (only for business_vertical = "hotel") ──
+    const hotelContext = botConfig.business_vertical === "hotel"
+      ? buildHotelContext((botConfig as any).hotel_profile, conversationalLead)
+      : "";
+
     const instructions = botConfig.knowledge_base || "You are a helpful assistant.";
-    const systemPrompt = `${faqContext}${purchaseRules}${instructions}${productKnowledge ? "\n\n" + productKnowledge : ""}${ragContext}${pagesIndex}\n\nIMPORTANT INSTRUCTIONS:\n- Be concise, helpful, and professional${languageInstruction}${fallbackInstruction}${conversationalLeadInstruction}${productInstruction}${addToCartInstruction}${orderStatusInstruction}${purchaseInstruction}${formattingInstruction}${pagesIndexInstruction}`;
+    const systemPrompt = `${faqContext}${purchaseRules}${instructions}${hotelContext}${productKnowledge ? "\n\n" + productKnowledge : ""}${ragContext}${pagesIndex}\n\nIMPORTANT INSTRUCTIONS:\n- Be concise, helpful, and professional${languageInstruction}${fallbackInstruction}${conversationalLeadInstruction}${productInstruction}${addToCartInstruction}${orderStatusInstruction}${purchaseInstruction}${formattingInstruction}${pagesIndexInstruction}`;
 
 
     // ── Call AI gateway (with tool-call loop) ──
@@ -958,4 +963,72 @@ async function createConversationalLead(
   } catch (emailErr) {
     console.error("[chat] conversational lead email error:", emailErr);
   }
+}
+
+
+// ── Hotel profile → structured prompt block (empty sections skipped) ──
+function buildHotelContext(raw: any, conversationalLead: boolean): string {
+  const hp = raw && typeof raw === "object" ? raw : {};
+  const v = (x: unknown) => (x === null || x === undefined ? "" : String(x).trim());
+  const line = (label: string, val: unknown) => (v(val) ? `- ${label}: ${v(val)}\n` : "");
+  const sections: string[] = [];
+
+  const p = hp.property || {};
+  let s = line("Name", p.name) + line("Type", p.type) + line("Stars", p.stars) + line("Address", p.address) +
+    line("Phone", p.phone) + line("Email", p.email) +
+    line("Check-in", [v(p.checkin_from), v(p.checkin_to)].filter(Boolean).join(" – ")) +
+    line("Check-out by", p.checkout_until) + line("Reception hours", p.reception_hours) +
+    line("Languages spoken", Array.isArray(p.languages) ? p.languages.join(", ") : "");
+  if (s) sections.push(`PROPERTY\n${s}`);
+
+  const rooms = (Array.isArray(hp.rooms) ? hp.rooms : []).filter((r: any) => v(r?.name));
+  if (rooms.length) {
+    sections.push("ROOMS\n" + rooms.map((r: any) => {
+      const cap = [r.max_adults ? `${r.max_adults} adults` : "", r.max_children ? `${r.max_children} children` : ""].filter(Boolean).join(" + ");
+      const bits = [
+        cap && `max ${cap}`, v(r.beds) && `beds: ${v(r.beds)}`, r.size_m2 ? `${r.size_m2} m²` : "",
+        r.price_from ? `price from €${r.price_from}/night` : "",
+        Array.isArray(r.amenities) && r.amenities.length ? `amenities: ${r.amenities.join(", ")}` : "",
+      ].filter(Boolean).join("; ");
+      return `- ${v(r.name)}${bits ? ` (${bits})` : ""}${v(r.description) ? `: ${v(r.description)}` : ""}`;
+    }).join("\n") + "\n");
+  }
+
+  const services = (Array.isArray(hp.services) ? hp.services : []).filter((x: any) => v(x?.name));
+  if (services.length) {
+    sections.push("SERVICES\n" + services.map((x: any) => {
+      const bits = [v(x.hours) && `hours: ${v(x.hours)}`, x.included ? "included" : v(x.price) && `price: ${v(x.price)}`].filter(Boolean).join("; ");
+      return `- ${v(x.name)}${bits ? ` (${bits})` : ""}${v(x.description) ? `: ${v(x.description)}` : ""}`;
+    }).join("\n") + "\n");
+  }
+
+  const po = hp.policies || {};
+  s = line("Cancellation", po.cancellation) + line("Children", po.children) + line("Pets", po.pets) +
+    line("Late check-out", po.late_checkout) + line("Early check-in", po.early_checkin) + line("City tax", po.city_tax) +
+    line("Payment methods", po.payment_methods) + line("Parking", po.parking);
+  if (s) sections.push(`POLICIES\n${s}`);
+
+  const guide = (Array.isArray(hp.local_guide) ? hp.local_guide : []).filter((x: any) => v(x?.name));
+  if (guide.length) {
+    sections.push("LOCAL GUIDE\n" + guide.map((x: any) =>
+      `- [${v(x.category) || "altro"}] ${v(x.name)}${v(x.distance) ? ` (${v(x.distance)})` : ""}${v(x.description) ? `: ${v(x.description)}` : ""}${v(x.link) ? ` — ${v(x.link)}` : ""}`
+    ).join("\n") + "\n");
+  }
+
+  const b = hp.booking || {};
+  s = line("Booking phone", b.phone_booking) + line("Booking email", b.email_booking) +
+    (v(b.engine_url_template) ? "- Online booking engine: available (the guest gets the link after sending the request form)\n" : "");
+  if (s) sections.push(`BOOKING\n${s}`);
+
+  const rv = hp.reviews || {};
+  s = line("Google reviews", rv.google_url) + line("Booking.com reviews", rv.booking_url) + line("Tripadvisor", rv.tripadvisor_url);
+  if (s) sections.push(`REVIEWS\n${s}`);
+
+  if (!sections.length) return "";
+
+  const quoteRule = conversationalLead
+    ? "If the guest asks about availability or a quote, first collect naturally the arrival and departure dates and the number of adults and children, one question at a time."
+    : "If the guest asks about availability or a quote, first ask naturally (if not already given) for arrival and departure dates and the number of adults and children, then append the marker [TRIGGER_LEAD_FORM] on its own final line so they can send the stay request.";
+
+  return `\n\n--- HOTEL PROFILE ---\n${sections.join("\n")}--- END HOTEL PROFILE ---\n\nHOTEL CONCIERGE RULES:\n- Always reply in the guest's language.\n- Only mention topics present in the HOTEL PROFILE; if a section is missing, don't talk about it.\n- Never invent availability or final prices. Present price_from values as "starting from" and invite the guest to verify availability and the exact price for their dates.\n- Suggest the room that fits the number of guests (respect max adults/children).\n- For local recommendations suggest at most 3 relevant places.\n- ${quoteRule}`;
 }
