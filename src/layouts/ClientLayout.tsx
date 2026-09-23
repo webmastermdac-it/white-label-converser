@@ -2,12 +2,14 @@ import { Outlet } from "react-router-dom";
 import ClientSidebar from "@/components/ClientSidebar";
 import MobileNav from "@/components/MobileNav";
 import { useLanguage } from "@/hooks/useLanguage";
+import { useActiveModule } from "@/hooks/useActiveModule";
 import {
   LayoutDashboard, Inbox, MessageSquare, Bot, ArrowUpCircle, BarChart3, Store
 } from "lucide-react";
 
 const ClientLayout = () => {
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
+  const { module: activeModule } = useActiveModule();
 
   const clientNav = [
     { label: t("overview"), href: "/dashboard", icon: LayoutDashboard, end: true },
@@ -15,6 +17,7 @@ const ClientLayout = () => {
     { label: t("leads"), href: "/dashboard/leads", icon: Inbox },
     { label: t("chatHistory"), href: "/dashboard/chats", icon: MessageSquare },
     { label: "Analytics", href: "/dashboard/analytics", icon: BarChart3 },
+    ...activeModule.menu.map((m) => ({ label: m.label[lang], href: m.href, icon: m.icon })),
     { label: "Ecommerce", href: "/dashboard/ecommerce", icon: Store },
     { label: "Upgrade", href: "/dashboard/upgrade", icon: ArrowUpCircle },
   ];
