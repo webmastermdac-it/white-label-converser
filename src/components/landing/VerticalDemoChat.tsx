@@ -5,8 +5,8 @@ import { useLanguage } from "@/hooks/useLanguage";
 
 export default function VerticalDemoChat({ vertical }: { vertical: VerticalContent }) {
   const { lang, t } = useLanguage();
-  const userMessage = vertical.demo.user[lang];
-  const assistantMessage = vertical.demo.assistant[lang];
+  const userMessage = t(vertical.demo.user.en, vertical.demo.user.it);
+  const assistantMessage = t(vertical.demo.assistant.en, vertical.demo.assistant.it);
   const [phase, setPhase] = useState<"user" | "thinking" | "assistant">("user");
   const [typed, setTyped] = useState("");
   const [cycle, setCycle] = useState(0);

@@ -356,6 +356,7 @@ export default function LandingPage() {
   ];
   const selectedVertical = verticals.find((item) => item.id === activeVertical) ?? verticals[0];
   const verticalIcon = (id: VerticalId) => id === "ecommerce" ? ShoppingCart : id === "booking" ? CalendarCheck : Hotel;
+  const localized = (text: { en: string; it: string }) => t(text.en, text.it);
 
   const screenshotTabs = [
     { key: "dashboard", label: "Dashboard", img: screenshotDashboard, desc: t("Monitor all conversations, leads, and performance in real time.", "Monitora tutte le conversazioni, i lead e le performance in tempo reale.") },
@@ -387,7 +388,7 @@ export default function LandingPage() {
                 <div className="rounded-xl border border-white/10 bg-[#151B22] p-2 shadow-2xl shadow-black/40">
                   {verticals.map((vertical) => (
                     <Link key={vertical.id} to={vertical.path} className="block rounded-lg px-3 py-2.5 text-sm text-white/70 transition-colors hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F5A623]">
-                      {vertical.name[lang]}
+                      {localized(vertical.name)}
                     </Link>
                   ))}
                 </div>
@@ -424,7 +425,7 @@ export default function LandingPage() {
             <p className="text-xs font-semibold uppercase text-[#F5A623]">{t("Solutions", "Soluzioni")}</p>
             {verticals.map((vertical) => (
               <Link key={vertical.id} to={vertical.path} onClick={() => setMobileMenu(false)} className="block pl-2 text-sm text-white/70 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F5A623]">
-                {vertical.name[lang]}
+                {localized(vertical.name)}
               </Link>
             ))}
             {navLinks.map((l) => (
@@ -458,7 +459,7 @@ export default function LandingPage() {
           <div className="mt-10 flex gap-2 overflow-x-auto pb-2 lg:hidden" role="tablist" aria-label={t("Choose a solution", "Scegli una soluzione")}>
             {verticals.map((vertical) => {
               const Icon = verticalIcon(vertical.id);
-              return <button key={vertical.id} role="tab" aria-selected={activeVertical === vertical.id} onClick={() => setActiveVertical(vertical.id)} className={`flex shrink-0 items-center gap-2 rounded-full border px-4 py-2.5 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F5A623] ${activeVertical === vertical.id ? "border-[#F5A623] bg-[#F5A623] text-black" : "border-white/15 bg-white/5 text-white/70"}`}><Icon className="h-4 w-4" />{vertical.name[lang]}</button>;
+              return <button key={vertical.id} role="tab" aria-selected={activeVertical === vertical.id} onClick={() => setActiveVertical(vertical.id)} className={`flex shrink-0 items-center gap-2 rounded-full border px-4 py-2.5 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F5A623] ${activeVertical === vertical.id ? "border-[#F5A623] bg-[#F5A623] text-black" : "border-white/15 bg-white/5 text-white/70"}`}><Icon className="h-4 w-4" />{localized(vertical.name)}</button>;
             })}
           </div>
 
@@ -471,10 +472,10 @@ export default function LandingPage() {
                   <article key={vertical.id} onMouseEnter={() => setActiveVertical(vertical.id)} className={`flex flex-col rounded-2xl border p-5 transition-all ${active ? "border-[#F5A623]/70 bg-[#F5A623]/10 shadow-lg shadow-[#F5A623]/10" : "border-white/10 bg-white/[0.03] hover:border-white/25"}`}>
                     <button onClick={() => setActiveVertical(vertical.id)} className="text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F5A623] rounded-lg" aria-pressed={active}>
                       <Icon className="mb-4 h-7 w-7 text-[#F5A623]" />
-                      <h2 className="text-lg font-bold" style={{ fontFamily: "'Syne', sans-serif" }}>{vertical.name[lang]}</h2>
-                      <p className="mt-2 text-sm font-medium text-white/80">{vertical.promise[lang]}</p>
+                      <h2 className="text-lg font-bold" style={{ fontFamily: "'Syne', sans-serif" }}>{localized(vertical.name)}</h2>
+                      <p className="mt-2 text-sm font-medium text-white/80">{localized(vertical.promise)}</p>
                     </button>
-                    <ul className="mt-5 space-y-2.5 text-sm text-white/55">{vertical.bullets.map((bullet) => <li key={bullet.it} className="flex gap-2"><Check className="mt-0.5 h-4 w-4 shrink-0 text-[#F5A623]" />{bullet[lang]}</li>)}</ul>
+                    <ul className="mt-5 space-y-2.5 text-sm text-white/55">{vertical.bullets.map((bullet) => <li key={bullet.it} className="flex gap-2"><Check className="mt-0.5 h-4 w-4 shrink-0 text-[#F5A623]" />{localized(bullet)}</li>)}</ul>
                     <div className="mt-5 flex flex-wrap gap-1.5">{vertical.badges.map((badge) => <span key={badge} className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] text-white/55">{badge}</span>)}</div>
                     <div className="mt-auto grid grid-cols-2 gap-2 pt-6">
                       <Link to={vertical.path}><Button variant="outline" className="w-full rounded-full border-white/20 bg-white text-gray-900 hover:bg-white/90">{t("Discover", "Scopri")}</Button></Link>
@@ -486,9 +487,9 @@ export default function LandingPage() {
             </div>
             <div className="lg:hidden">
               <article className="mb-6 rounded-2xl border border-[#F5A623]/50 bg-[#F5A623]/10 p-5">
-                <h2 className="text-xl font-bold" style={{ fontFamily: "'Syne', sans-serif" }}>{selectedVertical.name[lang]}</h2>
-                <p className="mt-2 text-sm font-medium text-white/80">{selectedVertical.promise[lang]}</p>
-                <ul className="mt-4 space-y-2 text-sm text-white/60">{selectedVertical.bullets.map((bullet) => <li key={bullet.it} className="flex gap-2"><Check className="mt-0.5 h-4 w-4 shrink-0 text-[#F5A623]" />{bullet[lang]}</li>)}</ul>
+                <h2 className="text-xl font-bold" style={{ fontFamily: "'Syne', sans-serif" }}>{localized(selectedVertical.name)}</h2>
+                <p className="mt-2 text-sm font-medium text-white/80">{localized(selectedVertical.promise)}</p>
+                <ul className="mt-4 space-y-2 text-sm text-white/60">{selectedVertical.bullets.map((bullet) => <li key={bullet.it} className="flex gap-2"><Check className="mt-0.5 h-4 w-4 shrink-0 text-[#F5A623]" />{localized(bullet)}</li>)}</ul>
                 <div className="mt-5 grid grid-cols-2 gap-2"><Link to={selectedVertical.path}><Button variant="outline" className="w-full rounded-full bg-white text-gray-900">{t("Discover", "Scopri")}</Button></Link><Link to={`/register?vertical=${selectedVertical.id}`}><Button className="w-full rounded-full bg-[#F5A623] text-black">{t("Try free", "Prova gratis")}</Button></Link></div>
               </article>
             </div>
