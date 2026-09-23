@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
-import { Bot, Eye, EyeOff, Loader2, CalendarCheck, ShoppingBag, UtensilsCrossed, ArrowLeft } from "lucide-react";
+import { Eye, EyeOff, Loader2, CalendarCheck, ShoppingBag, Hotel, ArrowLeft } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 const Register = () => {
@@ -136,9 +136,9 @@ const Register = () => {
                 },
                 {
                   key: "hotel" as const,
-                  Icon: UtensilsCrossed,
-                  title: t("Restaurants & Hotels", "Ristorazione & Hotel"),
-                  subtitle: t("Menus, rooms and info from your documents or website", "Menù, camere e info dai tuoi documenti o dal sito"),
+                  Icon: Hotel,
+                  title: t("Hotels & Hospitality", "Hotel & Ospitalità"),
+                  subtitle: t("Rooms, services and property information from your website", "Camere, servizi e informazioni sulla struttura dal tuo sito"),
                 },
               ].map(({ key, Icon, title, subtitle }) => (
                 <button
@@ -165,14 +165,14 @@ const Register = () => {
           </div>
         ) : (
         <div className="glass rounded-none md:rounded-2xl p-6 md:p-8 animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
-          <button
-            type="button"
-            onClick={() => setVertical(null)}
-            className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-4"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            {t("Back", "Indietro")}
-          </button>
+          {!initialVertical && <button
+              type="button"
+              onClick={() => setVertical(null)}
+              className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              {t("Back", "Indietro")}
+            </button>}
           <h2 className="text-xl font-semibold text-foreground mb-6">{t("registerTitle")}</h2>
 
           <form onSubmit={handleSubmit} className="space-y-4">

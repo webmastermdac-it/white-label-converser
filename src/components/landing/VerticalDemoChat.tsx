@@ -9,6 +9,7 @@ export default function VerticalDemoChat({ vertical }: { vertical: VerticalConte
   const assistantMessage = vertical.demo.assistant[lang];
   const [phase, setPhase] = useState<"user" | "thinking" | "assistant">("user");
   const [typed, setTyped] = useState("");
+  const [cycle, setCycle] = useState(0);
 
   useEffect(() => {
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -27,10 +28,7 @@ export default function VerticalDemoChat({ vertical }: { vertical: VerticalConte
         if (index >= assistantMessage.length && typingTimer) window.clearInterval(typingTimer);
       }, 18);
     }, 1700);
-    const loopTimer = window.setTimeout(() => {
-      setTyped("");
-      setPhase("user");
-    }, 9000);
+    const loopTimer = window.setTimeout(() => setCycle((current) => current + 1), 9000);
 
     return () => {
       window.clearTimeout(thinkingTimer);
@@ -38,7 +36,7 @@ export default function VerticalDemoChat({ vertical }: { vertical: VerticalConte
       window.clearTimeout(loopTimer);
       if (typingTimer) window.clearInterval(typingTimer);
     };
-  }, [assistantMessage, vertical.id, phase === "user"]);
+  }, [assistantMessage, vertical.id, cycle]);
 
   return (
     <div className="w-full max-w-md rounded-2xl border border-white/10 bg-[#151B22] shadow-2xl shadow-black/30 overflow-hidden" aria-live="polite">

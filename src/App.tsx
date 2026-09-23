@@ -14,6 +14,7 @@ import ClientLayout from "@/layouts/ClientLayout";
 // Pages
 import Login from "@/pages/Login";
 import LandingPage from "@/pages/LandingPage";
+import VerticalLanding from "@/pages/VerticalLanding";
 import AdminOverview from "@/pages/admin/AdminOverview";
 import AdminClients from "@/pages/admin/AdminClients";
 import AdminLeads from "@/pages/admin/AdminLeads";
@@ -66,6 +67,9 @@ const App = () => (
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
             <Route path="/terms" element={<Terms />} />
             <Route path="/" element={<LandingPage />} />
+            <Route path="/chatbot-ecommerce" element={<VerticalLanding verticalId="ecommerce" />} />
+            <Route path="/chatbot-appuntamenti" element={<VerticalLanding verticalId="booking" />} />
+            <Route path="/concierge-hotel" element={<VerticalLanding verticalId="hotel" />} />
 
             {/* Admin Routes */}
             <Route
