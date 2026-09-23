@@ -45,8 +45,11 @@ serve(async (req) => {
     // Manual mode: client passes pre-issued long-lived token directly
     if (manual) {
       const { access_token, page_id, username } = manual;
+      await admin.from("channel_secrets").upsert(
+        { bot_id, channel: "instagram", access_token, updated_at: new Date().toISOString() },
+        { onConflict: "bot_id,channel" },
+      );
       await admin.from("chatbot_configs").update({
-        instagram_access_token: access_token,
         instagram_page_id: page_id,
         instagram_username: username,
         instagram_connected: true,
@@ -91,8 +94,11 @@ serve(async (req) => {
     const igAccount = igJson.instagram_business_account;
     if (!igAccount) return json({ error: "No Instagram Business account linked" }, 400);
 
+    await admin.from("channel_secrets").upsert(
+      { bot_id, channel: "instagram", access_token: page.access_token, updated_at: new Date().toISOString() },
+      { onConflict: "bot_id,channel" },
+    );
     await admin.from("chatbot_configs").update({
-      instagram_access_token: page.access_token,
       instagram_page_id: igAccount.id,
       instagram_username: igAccount.username,
       instagram_connected: true,
