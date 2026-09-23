@@ -754,6 +754,7 @@ export type Database = {
           advanced_analytics: boolean
           calendly_integration: boolean
           chat_model: string
+          concierge_requests: boolean
           doc_upload: boolean
           ecommerce_integration: boolean
           id: string
@@ -777,6 +778,7 @@ export type Database = {
           advanced_analytics?: boolean
           calendly_integration?: boolean
           chat_model?: string
+          concierge_requests?: boolean
           doc_upload?: boolean
           ecommerce_integration?: boolean
           id?: string
@@ -800,6 +802,7 @@ export type Database = {
           advanced_analytics?: boolean
           calendly_integration?: boolean
           chat_model?: string
+          concierge_requests?: boolean
           doc_upload?: boolean
           ecommerce_integration?: boolean
           id?: string
@@ -970,6 +973,60 @@ export type Database = {
             columns: ["chatbot_id"]
             isOneToOne: false
             referencedRelation: "chatbot_configs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      service_requests: {
+        Row: {
+          bot_id: string
+          category: string
+          client_id: string
+          created_at: string
+          guest_name: string | null
+          id: string
+          message: string | null
+          resolved_at: string | null
+          room: string
+          status: string
+        }
+        Insert: {
+          bot_id: string
+          category: string
+          client_id: string
+          created_at?: string
+          guest_name?: string | null
+          id?: string
+          message?: string | null
+          resolved_at?: string | null
+          room: string
+          status?: string
+        }
+        Update: {
+          bot_id?: string
+          category?: string
+          client_id?: string
+          created_at?: string
+          guest_name?: string | null
+          id?: string
+          message?: string | null
+          resolved_at?: string | null
+          room?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_requests_bot_id_fkey"
+            columns: ["bot_id"]
+            isOneToOne: false
+            referencedRelation: "chatbot_configs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_requests_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
             referencedColumns: ["id"]
           },
         ]
