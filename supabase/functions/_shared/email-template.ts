@@ -154,10 +154,26 @@ export function newLeadEmail(
     language?: string;
     transcript?: any[];
     dashboardUrl: string;
+    booking?: { check_in?: string; check_out?: string; adults?: number; children?: number; room_name?: string } | null;
   },
   locale: Locale = "it"
 ): string {
   const isEn = locale === "en";
+  const bk = opts.booking;
+  const stayHtml = bk && bk.check_in ? (() => {
+    const nights = bk.check_out ? Math.round((Date.parse(bk.check_out) - Date.parse(bk.check_in)) / 86400000) : 0;
+    const rows: [string, string][] = [
+      [isEn ? "Arrival" : "Arrivo", fmtStayDate(bk.check_in, isEn)],
+      [isEn ? "Departure" : "Partenza", fmtStayDate(bk.check_out || "", isEn)],
+      [isEn ? "Nights" : "Notti", nights > 0 ? String(nights) : "—"],
+      [isEn ? "Guests" : "Ospiti", `${bk.adults ?? 0} ${isEn ? "adults" : "adulti"}${bk.children ? ` + ${bk.children} ${isEn ? "children" : "bambini"}` : ""}`],
+      [isEn ? "Room" : "Camera", bk.room_name || "—"],
+    ];
+    return `<div style="background:#FFF7E8;border:1px solid ${brand.primary_color};border-radius:8px;padding:12px 16px;margin:0 0 20px;">
+      <p style="margin:0 0 8px;font-size:15px;font-weight:700;color:#1A1A1A;">🛏️ ${isEn ? "Stay request" : "Richiesta soggiorno"}</p>
+      <table style="width:100%;border-collapse:collapse;">${rows.map(([k, v]) => `<tr><td style="padding:4px 0;color:#888;font-size:13px;width:90px;">${k}</td><td style="padding:4px 0;font-weight:600;font-size:14px;color:#1A1A1A;">${escHtml(v)}</td></tr>`).join("")}</table>
+    </div>`;
+  })() : "";
   const langMap: Record<string, { flag: string; name: string }> = {
     it: { flag: "🇮🇹", name: "Italiano" }, en: { flag: "🇬🇧", name: "English" },
     fr: { flag: "🇫🇷", name: "Français" }, de: { flag: "🇩🇪", name: "Deutsch" },
@@ -193,6 +209,7 @@ export function newLeadEmail(
   const body = `
     <h1 style="margin:0 0 4px;font-size:24px;font-weight:700;color:#1A1A1A;">${isEn ? "You have a new message 💬" : "Hai ricevuto un nuovo messaggio 💬"}</h1>
     <p style="margin:0 0 20px;font-size:14px;color:#888888;">${escHtml(opts.botName)}</p>
+    ${stayHtml}
     <div style="background:#F5F5F5;border-radius:8px;padding:4px 12px;margin:0 0 20px;font-size:13px;color:#555;">
       ${langInfo.flag} ${lblLang}: <strong>${escHtml(langInfo.name)}</strong>
     </div>
@@ -211,6 +228,20 @@ export function newLeadEmail(
     ${ctaButton(isEn ? "View conversation" : "Visualizza conversazione", opts.dashboardUrl, brand.primary_color)}
   `;
   return emailShell(brand, body);
+}
+
+function fmtStayDate(iso: string, isEn: boolean): string {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || "");
+  if (!m) return iso || "—";
+  return isEn ? `${m[3]}/${m[2]}/${m[1]}` : `${m[3]}/${m[2]}/${m[1]}`;
+}
+
+export function hotelLeadSubject(b: { check_in?: string; check_out?: string; adults?: number; children?: number }, locale: Locale = "it"): string {
+  const isEn = locale === "en";
+  const kids = b.children ? ` + ${b.children} ${isEn ? "children" : "bambini"}` : "";
+  return isEn
+    ? `Stay request: ${fmtStayDate(b.check_in || "", true)} → ${fmtStayDate(b.check_out || "", true)}, ${b.adults ?? 0} adults${kids}`
+    : `Richiesta soggiorno: ${fmtStayDate(b.check_in || "", false)} → ${fmtStayDate(b.check_out || "", false)}, ${b.adults ?? 0} adulti${kids}`;
 }
 
 export function newLeadSubject(name: string, botName: string, locale: Locale = "it"): string {
