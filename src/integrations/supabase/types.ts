@@ -682,6 +682,7 @@ export type Database = {
       }
       leads: {
         Row: {
+          booking: Json | null
           bot_id: string | null
           client_id: string
           created_at: string
@@ -691,12 +692,14 @@ export type Database = {
           message: string | null
           name: string
           phone: string | null
+          source: string | null
           source_url: string | null
           status: string
           transcript: Json | null
           updated_at: string
         }
         Insert: {
+          booking?: Json | null
           bot_id?: string | null
           client_id: string
           created_at?: string
@@ -706,12 +709,14 @@ export type Database = {
           message?: string | null
           name: string
           phone?: string | null
+          source?: string | null
           source_url?: string | null
           status?: string
           transcript?: Json | null
           updated_at?: string
         }
         Update: {
+          booking?: Json | null
           bot_id?: string | null
           client_id?: string
           created_at?: string
@@ -721,6 +726,7 @@ export type Database = {
           message?: string | null
           name?: string
           phone?: string | null
+          source?: string | null
           source_url?: string | null
           status?: string
           transcript?: Json | null

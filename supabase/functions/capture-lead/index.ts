@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { fetchBrandSettings, newLeadEmail, newLeadSubject, fetchCustomTemplate, renderCustomTemplate, replaceSubjectVars, resolveClientOwnerLocale, type Locale } from "../_shared/email-template.ts";
+import { fetchBrandSettings, newLeadEmail, newLeadSubject, hotelLeadSubject, fetchCustomTemplate, renderCustomTemplate, replaceSubjectVars, resolveClientOwnerLocale, type Locale } from "../_shared/email-template.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -56,6 +56,24 @@ serve(async (req) => {
       .eq("id", botConfig.client_id)
       .single();
 
+    // Hotel stay data — only accepted for hotel bots
+    let booking: Record<string, unknown> | null = null;
+    if (botConfig.business_vertical === "hotel" && body.booking && typeof body.booking === "object") {
+      const b = body.booking;
+      const iso = /^\d{4}-\d{2}-\d{2}$/;
+      const today = new Date().toISOString().slice(0, 10);
+      const ci = String(b.check_in || ""), co = String(b.check_out || "");
+      if (!iso.test(ci) || !iso.test(co) || co <= ci || ci < new Date(Date.now() - 86400000).toISOString().slice(0, 10)) {
+        return new Response(JSON.stringify({ error: "Invalid dates" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+      const adults = Math.min(Math.max(parseInt(b.adults) || 1, 1), 30);
+      const children = Math.min(Math.max(parseInt(b.children) || 0, 0), 30);
+      const rooms = Array.isArray(botConfig.hotel_profile?.rooms) ? botConfig.hotel_profile.rooms : [];
+      const room = b.room_id ? rooms.find((r: any) => r?.id === b.room_id) : null;
+      booking = { check_in: ci, check_out: co, adults, children, room_id: room?.id || null, room_name: room?.name || null };
+      void today;
+    }
+
     const clientPlan = clientData?.plan || "free";
     let leadLimitReached = false;
 
@@ -89,6 +107,7 @@ serve(async (req) => {
         source_url: source_url || "",
         status: "new",
         language: lang,
+        ...(booking ? { booking, source: "hotel_quote" } : {}),
       })
       .select()
       .single();
@@ -120,13 +139,13 @@ serve(async (req) => {
             "{{logo_url}}": brand.logo_url || "", "{{bot_name}}": botConfig.name,
           };
           emailHtml = renderCustomTemplate(brand, customTpl, vars);
-          emailSubject = replaceSubjectVars(customTpl.subject, vars);
+          emailSubject = booking ? hotelLeadSubject(booking as any, ownerLocale) : replaceSubjectVars(customTpl.subject, vars);
         } else {
           emailHtml = newLeadEmail(brand, {
             botName: botConfig.name, visitorName: name, visitorEmail: email,
-            phone, message, sourceUrl: source_url, language: lang, transcript, dashboardUrl,
+            phone, message, sourceUrl: source_url, language: lang, transcript, dashboardUrl, booking: booking as any,
           }, ownerLocale);
-          emailSubject = newLeadSubject(name, botConfig.name, ownerLocale);
+          emailSubject = booking ? hotelLeadSubject(booking as any, ownerLocale) : newLeadSubject(name, botConfig.name, ownerLocale);
         }
 
         try {

@@ -8,7 +8,7 @@ const corsHeaders = {
 
 // Only the fields actually read by public/widget.js
 const FIELDS =
-  "name, avatar, primary_color, welcome_message, welcome_msg_it, welcome_msg_en, calendly_url, lead_form_mode, lead_form_message_count";
+  "name, avatar, primary_color, welcome_message, welcome_msg_it, welcome_msg_en, calendly_url, lead_form_mode, lead_form_message_count, business_vertical, hotel_profile";
 
 function json(body: unknown, status = 200, cache = false) {
   return new Response(JSON.stringify(body), {
@@ -42,5 +42,22 @@ Deno.serve(async (req) => {
 
   if (error) return json({ error: "Server error" }, 500);
   if (!data) return json({ error: "Not found" }, 404);
-  return json(data, 200, true);
+  const { business_vertical, hotel_profile, ...base } = data as any;
+  // Extra fields ONLY for hotel bots — other modules get exactly the previous payload
+  if (business_vertical === "hotel") {
+    const hp = hotel_profile || {};
+    const rooms = (Array.isArray(hp.rooms) ? hp.rooms : [])
+      .filter((r: any) => r && r.id && r.name)
+      .map((r: any) => ({ id: String(r.id), name: String(r.name) }));
+    return json({
+      ...base,
+      business_vertical: "hotel",
+      hotel: {
+        rooms,
+        engine_url_template: hp.booking?.engine_url_template || "",
+        date_format: hp.booking?.date_format === "DD/MM/YYYY" ? "DD/MM/YYYY" : "YYYY-MM-DD",
+      },
+    }, 200, true);
+  }
+  return json(base, 200, true);
 });
