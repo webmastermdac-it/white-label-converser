@@ -37,3 +37,6 @@ verify_jwt = false
 
 [functions.close-inactive-chats]
 verify_jwt = false
+
+[functions.widget-config]
+verify_jwt = false

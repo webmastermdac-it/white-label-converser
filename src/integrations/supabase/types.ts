@@ -65,6 +65,41 @@ export type Database = {
         }
         Relationships: []
       }
+      channel_secrets: {
+        Row: {
+          access_token: string
+          bot_id: string
+          channel: string
+          created_at: string
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          access_token: string
+          bot_id: string
+          channel: string
+          created_at?: string
+          id?: string
+          updated_at?: string
+        }
+        Update: {
+          access_token?: string
+          bot_id?: string
+          channel?: string
+          created_at?: string
+          id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "channel_secrets_bot_id_fkey"
+            columns: ["bot_id"]
+            isOneToOne: false
+            referencedRelation: "chatbot_configs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       chat_sessions: {
         Row: {
           bot_id: string | null

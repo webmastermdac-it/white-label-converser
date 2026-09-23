@@ -37,17 +37,25 @@ serve(async (req) => {
       const messaging = entry.messaging || [];
 
       // Find bot by instagram_page_id
-      const { data: bot } = await supabase
+      const { data: botRow } = await supabase
         .from("chatbot_configs")
-        .select("id, client_id, embed_token, instagram_access_token, instagram_connected")
+        .select("id, client_id, embed_token, instagram_connected")
         .eq("instagram_page_id", pageId)
         .eq("instagram_connected", true)
         .maybeSingle();
 
-      if (!bot) {
+      if (!botRow) {
         console.log(`[ig-webhook] no bot for page ${pageId}`);
         continue;
       }
+
+      const { data: secret } = await supabase
+        .from("channel_secrets")
+        .select("access_token")
+        .eq("bot_id", botRow.id)
+        .eq("channel", "instagram")
+        .maybeSingle();
+      const bot = { ...botRow, instagram_access_token: secret?.access_token ?? null };
 
       for (const event of messaging) {
         const senderId = event.sender?.id;

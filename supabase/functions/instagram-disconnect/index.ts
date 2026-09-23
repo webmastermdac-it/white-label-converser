@@ -39,8 +39,8 @@ serve(async (req) => {
       return json({ error: "Forbidden" }, 403);
     }
 
+    await admin.from("channel_secrets").delete().eq("bot_id", bot_id).eq("channel", "instagram");
     await admin.from("chatbot_configs").update({
-      instagram_access_token: null,
       instagram_page_id: null,
       instagram_username: null,
       instagram_connected: false,

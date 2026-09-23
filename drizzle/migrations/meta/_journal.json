@@ -36,6 +36,13 @@
       "when": 1789587698917,
       "tag": "0004_add_chat_sessions_lead_captured",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1790181600777,
+      "tag": "0005_channel_secrets_and_widget_lockdown",
+      "breakpoints": true
     }
   ]
 }
