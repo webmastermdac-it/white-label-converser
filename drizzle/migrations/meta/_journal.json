@@ -43,6 +43,13 @@
       "when": 1790181600777,
       "tag": "0005_channel_secrets_and_widget_lockdown",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1790182089584,
+      "tag": "0006_unify_business_vertical",
+      "breakpoints": true
     }
   ]
 }
