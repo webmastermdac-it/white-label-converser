@@ -51,8 +51,13 @@ Deno.serve(async (req) => {
     const rooms = (Array.isArray(hp.rooms) ? hp.rooms : [])
       .filter((r: any) => r && r.id && r.name)
       .map((r: any) => ({ id: String(r.id), name: String(r.name) }));
+    const { client_id: _clientId, ...safeBase } = base as any;
+    const defaultQuickReplies = ["Pulizia/asciugamani", "Late check-out", "Taxi/transfer", "Ristorante", "Problema in camera", "Altro"];
+    const configuredQuickReplies = Array.isArray(hp.in_stay_quick_replies)
+      ? hp.in_stay_quick_replies.map((x: unknown) => String(x).trim()).filter(Boolean).slice(0, 12)
+      : [];
     return json({
-      ...base,
+      ...safeBase,
       business_vertical: "hotel",
       hotel: {
         property_name: hp.property?.name || base.name,
@@ -60,9 +65,7 @@ Deno.serve(async (req) => {
         engine_url_template: hp.booking?.engine_url_template || "",
         date_format: hp.booking?.date_format === "DD/MM/YYYY" ? "DD/MM/YYYY" : "YYYY-MM-DD",
         concierge_requests: !!plan?.concierge_requests,
-        in_stay_quick_replies: plan?.concierge_requests && Array.isArray(hp.in_stay_quick_replies)
-          ? hp.in_stay_quick_replies.map((x: unknown) => String(x).trim()).filter(Boolean).slice(0, 12)
-          : [],
+        in_stay_quick_replies: plan?.concierge_requests ? (configuredQuickReplies.length ? configuredQuickReplies : defaultQuickReplies) : [],
       },
     }, 200, true);
   }

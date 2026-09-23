@@ -25,6 +25,7 @@ serve(async (req) => {
   try {
     const { messages, embed_token, session_token, source_url, language, stream, room } = await req.json();
     const lang = language || "en";
+    const safeRoom = typeof room === "string" ? room.trim().slice(0, 40) : "";
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
@@ -77,7 +78,7 @@ serve(async (req) => {
     const ragAllowed = plan !== "free";
 
     // ── Conversational lead capture: has this session already produced a lead? ──
-    const conversationalLead = (botConfig as any).lead_form_mode === "conversational";
+    const conversationalLead = (botConfig as any).lead_form_mode === "conversational" && !(botConfig.business_vertical === "hotel" && safeRoom);
     let leadAlreadyCaptured = false;
     if (conversationalLead && session_token) {
       const { data: sessionRow } = await supabase
@@ -239,7 +240,6 @@ serve(async (req) => {
       : "";
 
     // ── Hotel concierge (only for business_vertical = "hotel") ──
-    const safeRoom = typeof room === "string" ? room.trim().slice(0, 40) : "";
     const hotelContext = botConfig.business_vertical === "hotel"
       ? buildHotelContext((botConfig as any).hotel_profile, conversationalLead, safeRoom)
       : "";

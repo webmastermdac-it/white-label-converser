@@ -500,7 +500,7 @@
 
     messages.push({ role: "user", content: text });
     userMessageCount++;
-    if (config && config.lead_form_mode === "after_messages" && !leadSent &&
+    if (!ROOM && config && config.lead_form_mode === "after_messages" && !leadSent &&
         userMessageCount >= (config.lead_form_message_count || 3)) {
       showLeadForm = true;
     }
@@ -540,7 +540,7 @@
             if (result.done) {
               var clean = fullText.replace("[TRIGGER_LEAD_FORM]", "").replace(/\[LEAD_DATA:\{[\s\S]*?\}\]/g, "").trim();
               messages[botIdx] = { role: "assistant", content: clean || t.errorReply };
-              if (fullText.indexOf("[TRIGGER_LEAD_FORM]") !== -1) showLeadForm = true;
+               if (!ROOM && fullText.indexOf("[TRIGGER_LEAD_FORM]") !== -1) showLeadForm = true;
               saveMessages(messages);
               render();
               return;
@@ -576,14 +576,14 @@
       return response.json().then(function(data) {
         var botMsg = data.message || t.errorReply;
         messages.push({ role: "assistant", content: botMsg });
-        if (data.trigger_lead_form) showLeadForm = true;
+         if (!ROOM && data.trigger_lead_form) showLeadForm = true;
         saveMessages(messages);
         isLoading = false;
         render();
       });
     })
     .catch(function(err) {
-      if (err && err.error === "plan_limit") {
+       if (!ROOM && err && err.error === "plan_limit") {
         showLeadForm = true;
       }
       messages.push({ role: "assistant", content: t.errorMsg });
@@ -689,7 +689,7 @@
       config = data;
 
       // Lead form timing: show immediately if configured
-      if (config.lead_form_mode === "immediate" && !leadSent) {
+       if (!ROOM && config.lead_form_mode === "immediate" && !leadSent) {
         showLeadForm = true;
       }
 
@@ -715,7 +715,7 @@
         for (var mi = 0; mi < messages.length; mi++) {
           if (messages[mi] && messages[mi].role === "user") userMessageCount++;
         }
-        if (config.lead_form_mode === "after_messages" && !leadSent &&
+         if (!ROOM && config.lead_form_mode === "after_messages" && !leadSent &&
             userMessageCount >= (config.lead_form_message_count || 3)) {
           showLeadForm = true;
         }
