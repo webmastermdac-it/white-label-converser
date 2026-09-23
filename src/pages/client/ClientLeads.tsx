@@ -13,6 +13,12 @@ import {
 } from "@/components/ui/select";
 import { Download, Search, Filter, Loader2 } from "lucide-react";
 import { getLanguageFlag } from "@/lib/languageFlags";
+import { useActiveModule } from "@/hooks/useActiveModule";
+
+interface Booking { check_in?: string; check_out?: string; adults?: number; children?: number; room_id?: string | null; room_name?: string | null }
+const nightsOf = (b?: Booking | null) => (b?.check_in && b?.check_out ? Math.round((Date.parse(b.check_out) - Date.parse(b.check_in)) / 86400000) : null);
+const fmtDay = (iso?: string) => { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || ""); return m ? `${m[3]}/${m[2]}/${m[1]}` : "—"; };
+const guestsOf = (b?: Booking | null) => (b ? `${b.adults ?? 0}${b.children ? ` + ${b.children}` : ""}` : "—");
 
 interface Lead {
   id: string;
@@ -25,11 +31,16 @@ interface Lead {
   transcript: any[];
   created_at: string;
   language?: string;
+  booking?: Booking | null;
 }
 
 const ClientLeads = () => {
   const { clientId } = useAuth();
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
+  const tl = (it: string, en: string) => (lang === "it" ? it : en);
+  const { module: activeModule } = useActiveModule();
+  const isHotel = activeModule.id === "hotel";
+  const [monthFilter, setMonthFilter] = useState("all");
   const { toast } = useToast();
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
@@ -57,7 +68,11 @@ const ClientLeads = () => {
 
   const exportCSV = () => {
     const headers = [t("lead", "Name"), t("email"), t("phone"), t("message"), t("status"), t("source"), t("date")];
-    const rows = filtered.map((l) => [l.name, l.email, l.phone, l.message, l.status, l.source_url, new Date(l.created_at).toLocaleString()]);
+    const rows: any[][] = filtered.map((l) => [l.name, l.email, l.phone, l.message, l.status, l.source_url, new Date(l.created_at).toLocaleString()]);
+    if (isHotel) {
+      headers.push(tl("Arrivo", "Arrival"), tl("Partenza", "Departure"), tl("Notti", "Nights"), tl("Adulti", "Adults"), tl("Bambini", "Children"), tl("Camera", "Room"));
+      filtered.forEach((l, i) => rows[i].push(l.booking?.check_in || "", l.booking?.check_out || "", nightsOf(l.booking) ?? "", l.booking?.adults ?? "", l.booking?.children ?? "", l.booking?.room_name || ""));
+    }
     const csv = [headers, ...rows].map((r) => r.map((c) => `"${c}"`).join(",")).join("\n");
     const blob = new Blob([csv], { type: "text/csv" });
     const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "leads.csv"; a.click();
@@ -65,8 +80,14 @@ const ClientLeads = () => {
 
   const filtered = leads.filter((l) => {
     const matchSearch = l.name.toLowerCase().includes(search.toLowerCase()) || l.email.toLowerCase().includes(search.toLowerCase());
-    return matchSearch && (statusFilter === "all" || l.status === statusFilter);
+    const matchMonth = !isHotel || monthFilter === "all" || (l.booking?.check_in || "").slice(0, 7) === monthFilter;
+    return matchSearch && matchMonth && (statusFilter === "all" || l.status === statusFilter);
   });
+
+  const arrivalMonths = isHotel
+    ? Array.from(new Set(leads.map((l) => (l.booking?.check_in || "").slice(0, 7)).filter(Boolean))).sort()
+    : [];
+  const monthLabel = (ym: string) => new Date(`${ym}-01T00:00:00`).toLocaleDateString(lang === "it" ? "it-IT" : "en-GB", { month: "long", year: "numeric" });
 
   return (
     <div className="p-4 md:p-6 space-y-4 md:space-y-6 animate-fade-in-up">
@@ -95,6 +116,17 @@ const ClientLeads = () => {
             ))}
           </SelectContent>
         </Select>
+        {isHotel && (
+          <Select value={monthFilter} onValueChange={setMonthFilter}>
+            <SelectTrigger className="w-32 md:w-44 bg-secondary border-border h-12 md:h-10">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent className="bg-card border-border">
+              <SelectItem value="all">{tl("Tutti gli arrivi", "All arrivals")}</SelectItem>
+              {arrivalMonths.map((m) => <SelectItem key={m} value={m} className="capitalize">{monthLabel(m)}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        )}
       </div>
 
       {/* Desktop table */}
@@ -109,6 +141,12 @@ const ClientLeads = () => {
               <tr className="border-b border-border bg-secondary/30">
                 <th className="text-left px-5 py-3 text-xs font-medium text-muted-foreground uppercase">{t("lead")}</th>
                 <th className="text-left px-5 py-3 text-xs font-medium text-muted-foreground uppercase">{t("phone")}</th>
+                {isHotel && <>
+                  <th className="text-left px-5 py-3 text-xs font-medium text-muted-foreground uppercase">{tl("Arrivo", "Arrival")}</th>
+                  <th className="text-left px-5 py-3 text-xs font-medium text-muted-foreground uppercase">{tl("Notti", "Nights")}</th>
+                  <th className="text-left px-5 py-3 text-xs font-medium text-muted-foreground uppercase">{tl("Ospiti", "Guests")}</th>
+                  <th className="text-left px-5 py-3 text-xs font-medium text-muted-foreground uppercase">{tl("Camera", "Room")}</th>
+                </>}
                 <th className="text-left px-5 py-3 text-xs font-medium text-muted-foreground uppercase">{t("status")}</th>
                 <th className="text-left px-5 py-3 text-xs font-medium text-muted-foreground uppercase">{t("date")}</th>
                 <th className="text-right px-5 py-3 text-xs font-medium text-muted-foreground uppercase">{t("actions")}</th>
@@ -124,6 +162,12 @@ const ClientLeads = () => {
                     <p className="text-xs text-muted-foreground">{lead.email}</p>
                   </td>
                   <td className="px-5 py-4 text-sm text-muted-foreground">{lead.phone || "—"}</td>
+                  {isHotel && <>
+                    <td className="px-5 py-4 text-sm text-muted-foreground">{fmtDay(lead.booking?.check_in)}</td>
+                    <td className="px-5 py-4 text-sm text-muted-foreground">{nightsOf(lead.booking) ?? "—"}</td>
+                    <td className="px-5 py-4 text-sm text-muted-foreground">{lead.booking ? guestsOf(lead.booking) : "—"}</td>
+                    <td className="px-5 py-4 text-sm text-muted-foreground">{lead.booking?.room_name || "—"}</td>
+                  </>}
                   <td className="px-5 py-4">
                     <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${
                       lead.status === "new" ? "status-new" : lead.status === "contacted" ? "status-contacted" : "status-closed"
@@ -170,6 +214,9 @@ const ClientLeads = () => {
               </div>
               <p className="text-xs text-muted-foreground">{lead.email}</p>
               {lead.phone && <p className="text-xs text-muted-foreground">{lead.phone}</p>}
+              {isHotel && lead.booking?.check_in && (
+                <p className="text-xs text-foreground">🛏️ {fmtDay(lead.booking.check_in)} · {nightsOf(lead.booking)} {tl("notti", "nights")} · {guestsOf(lead.booking)} {tl("ospiti", "guests")}{lead.booking.room_name ? ` · ${lead.booking.room_name}` : ""}</p>
+              )}
               <div className="flex items-center justify-between pt-1">
                 <p className="text-xs text-muted-foreground">📅 {new Date(lead.created_at).toLocaleString()}</p>
                 {lead.transcript && lead.transcript.length > 0 && (
@@ -195,6 +242,11 @@ const ClientLeads = () => {
                 <div><p className="text-xs text-muted-foreground">{t("status")}</p><p className="text-sm text-foreground mt-1 capitalize">{selectedLead.status}</p></div>
                 <div><p className="text-xs text-muted-foreground">{t("date")}</p><p className="text-sm text-foreground mt-1">{new Date(selectedLead.created_at).toLocaleString()}</p></div>
                 <div><p className="text-xs text-muted-foreground">{t("source")}</p><p className="text-sm text-foreground mt-1 truncate">{selectedLead.source_url || "—"}</p></div>
+                {isHotel && selectedLead.booking?.check_in && (
+                  <div className="col-span-1 sm:col-span-2 rounded-lg bg-secondary/40 p-3 text-sm text-foreground">
+                    🛏️ {fmtDay(selectedLead.booking.check_in)} → {fmtDay(selectedLead.booking.check_out)} · {nightsOf(selectedLead.booking)} {tl("notti", "nights")} · {guestsOf(selectedLead.booking)} {tl("ospiti", "guests")}{selectedLead.booking.room_name ? ` · ${selectedLead.booking.room_name}` : ""}
+                  </div>
+                )}
                 <div className="col-span-1 sm:col-span-2"><p className="text-xs text-muted-foreground">{t("message")}</p><p className="text-sm text-foreground mt-1">{selectedLead.message || "—"}</p></div>
               </div>
               {selectedLead.transcript.length > 0 && (
