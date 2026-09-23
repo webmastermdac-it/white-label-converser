@@ -494,8 +494,8 @@ export default function LandingPage() {
                 <div className="mt-5 grid grid-cols-2 gap-2"><Link to={selectedVertical.path}><Button variant="outline" className="w-full rounded-full bg-white text-gray-900">{t("Discover", "Scopri")}</Button></Link><Link to={`/register?vertical=${selectedVertical.id}`}><Button className="w-full rounded-full bg-[#F5A623] text-black">{t("Try free", "Prova gratis")}</Button></Link></div>
               </article>
             </div>
-            <div className="relative flex flex-col items-center justify-center pt-40 sm:pt-44 lg:pt-0">
-              <div className="pointer-events-none absolute left-1/2 top-2 z-10 flex w-40 -translate-x-1/2 justify-center sm:w-44 lg:-top-36 lg:left-0 lg:w-56 lg:translate-x-0">
+            <div className="relative flex flex-col items-center justify-center">
+              <div className="pointer-events-none relative z-10 flex w-40 justify-center sm:w-44 lg:-mb-20 lg:-ml-10 lg:self-start lg:w-56">
                 {[...Array(20)].map((_, i) => (
                   <span
                     key={i}
