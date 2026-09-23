@@ -171,6 +171,7 @@ export type Database = {
           fallback_message: string | null
           fallback_msg_en: string | null
           fallback_msg_it: string | null
+          hotel_profile: Json
           id: string
           inactivity_timeout_minutes: number
           instagram_access_token: string | null
@@ -213,6 +214,7 @@ export type Database = {
           fallback_message?: string | null
           fallback_msg_en?: string | null
           fallback_msg_it?: string | null
+          hotel_profile?: Json
           id?: string
           inactivity_timeout_minutes?: number
           instagram_access_token?: string | null
@@ -255,6 +257,7 @@ export type Database = {
           fallback_message?: string | null
           fallback_msg_en?: string | null
           fallback_msg_it?: string | null
+          hotel_profile?: Json
           id?: string
           inactivity_timeout_minutes?: number
           instagram_access_token?: string | null

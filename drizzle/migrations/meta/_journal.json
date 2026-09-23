@@ -50,6 +50,13 @@
       "when": 1790182089584,
       "tag": "0006_unify_business_vertical",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1790182609355,
+      "tag": "0007_add_hotel_profile",
+      "breakpoints": true
     }
   ]
 }

@@ -6,6 +6,7 @@ import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, Circle, ArrowRight, ListChecks } from "lucide-react";
 import { getModule } from "@/lib/modules";
+import { hotelChecklistStatus } from "@/lib/hotelProfile";
 
 interface Props {
   botId: string;
@@ -28,12 +29,13 @@ const ActivationChecklist = ({ botId, clientId, vertical, calendlyUrl }: Props) 
   useEffect(() => {
     if (!mod.checklist.length) return;
     (async () => {
-      const [store, products, sessions, kb, faqs] = await Promise.all([
+      const [store, products, sessions, kb, faqs, bot] = await Promise.all([
         supabase.from("ecommerce_configs").select("id", { count: "exact", head: true }).eq("client_id", clientId),
         supabase.from("products").select("id", { count: "exact", head: true }).eq("client_id", clientId).eq("is_active", true),
         supabase.from("chat_sessions").select("id", { count: "exact", head: true }).eq("bot_id", botId),
         supabase.from("knowledge_base").select("id", { count: "exact", head: true }).eq("chatbot_id", botId).eq("status", "ready"),
         supabase.from("faqs").select("id", { count: "exact", head: true }).eq("chatbot_id", botId),
+        supabase.from("chatbot_configs").select("hotel_profile").eq("id", botId).maybeSingle(),
       ]);
       setAuto({
         store: (store.count || 0) > 0,
@@ -41,6 +43,7 @@ const ActivationChecklist = ({ botId, clientId, vertical, calendlyUrl }: Props) 
         widget: (sessions.count || 0) > 0,
         services: (kb.count || 0) + (faqs.count || 0) > 0,
         calendly: !!calendlyUrl,
+        ...hotelChecklistStatus((bot.data as any)?.hotel_profile),
       });
     })();
   }, [botId, clientId, calendlyUrl, mod.id]);
