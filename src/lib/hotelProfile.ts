@@ -11,7 +11,7 @@ export interface HotelGuideItem { id: string; category: GuideCategory; name: str
 export interface HotelProfile {
   property: {
     name: string; type: PropertyType; stars: number | null; address: string; phone: string; email: string;
-    checkin_from: string; checkin_to: string; checkout_until: string; reception_hours: string; languages: string[];
+    checkin_from: string; checkin_to: string; checkout_until: string; reception_hours: string; reception_open: string; reception_close: string; languages: string[];
   };
   rooms: HotelRoom[];
   services: HotelService[];
@@ -45,7 +45,7 @@ export function normalizeHotelProfile(raw: any): HotelProfile {
     property: {
       name: s(p.name), type: PT.includes(p.type) ? p.type : "hotel", stars: n(p.stars) || null, address: s(p.address),
       phone: s(p.phone), email: s(p.email), checkin_from: s(p.checkin_from), checkin_to: s(p.checkin_to),
-      checkout_until: s(p.checkout_until), reception_hours: s(p.reception_hours), languages: arr(p.languages),
+      checkout_until: s(p.checkout_until), reception_hours: s(p.reception_hours), reception_open: s(p.reception_open) || "08:00", reception_close: s(p.reception_close) || "20:00", languages: arr(p.languages),
     },
     rooms: (Array.isArray(r.rooms) ? r.rooms : []).map((x: any) => ({
       id: s(x?.id) || uid(), name: s(x?.name), description: s(x?.description), max_adults: n(x?.max_adults),
