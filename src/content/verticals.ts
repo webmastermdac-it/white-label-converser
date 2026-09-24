@@ -1,6 +1,10 @@
 export type LocalizedText = { en: string; it: string };
 export type VerticalId = "ecommerce" | "booking" | "hotel";
 
+export const DEMO_URL = "mailto:mdac@mdac.it?subject=Demo%20Genius%20Concierge";
+
+export type HotelFeatureKind = "quote" | "concierge" | "requests" | "results" | "import";
+
 export interface VerticalContent {
   id: VerticalId;
   path: string;
@@ -17,6 +21,14 @@ export interface VerticalContent {
   integrationIntro?: LocalizedText;
   faqs: { question: LocalizedText; answer: LocalizedText }[];
   seo: { title: LocalizedText; description: LocalizedText };
+  stats?: { value: LocalizedText; label: LocalizedText }[];
+  problem?: { title: LocalizedText; items: LocalizedText[] };
+  journey?: { title: LocalizedText; moments: { label: LocalizedText; description: LocalizedText }[] };
+  features?: { kind: HotelFeatureKind; title: LocalizedText; points: LocalizedText[] }[];
+  roi?: { title: LocalizedText; note: LocalizedText };
+  service?: { title: LocalizedText; points: LocalizedText[] };
+  demoUrl?: string;
+  finalCta?: LocalizedText;
 }
 
 export const verticals: VerticalContent[] = [
@@ -103,8 +115,8 @@ export const verticals: VerticalContent[] = [
     path: "/concierge-hotel",
     icon: "hotel",
     name: { it: "Concierge Hotel", en: "Hotel Concierge" },
-    promise: { it: "La reception che non chiude mai", en: "The front desk that never closes" },
-    summary: { it: "Accoglie gli ospiti in ogni lingua e trasforma le richieste in prenotazioni dirette.", en: "Welcomes guests in every language and turns enquiries into direct bookings." },
+    promise: { it: "Il tuo hotel risponde sempre. Anche alle 3 di notte.", en: "Your hotel always answers. Even at 3 a.m." },
+    summary: { it: "Genius Concierge risponde agli ospiti in ogni lingua, prepara il preventivo, lo porta sul tuo booking engine e raccoglie le richieste dalle camere. Più prenotazioni dirette, meno telefonate alla reception.", en: "Genius Concierge answers guests in every language, prepares their quote, guides them to your booking engine and collects requests from their rooms. More direct bookings, fewer calls to reception." },
     bullets: [
       { it: "Risponde agli ospiti in ogni lingua", en: "Answers guests in every language" },
       { it: "Trasforma le domande in preventivi con link al tuo booking engine", en: "Turns questions into quotes linked to your booking engine" },
@@ -112,8 +124,8 @@ export const verticals: VerticalContent[] = [
     ],
     badges: ["Hotel", "B&B", "Resort", "Agriturismi"],
     demo: {
-      user: { it: "Avete una camera per 2 dal 12 al 14?", en: "Do you have a room for two from the 12th to the 14th?" },
-      assistant: { it: "La Superior vista lago parte da 140 € a notte con colazione. Ti preparo il link per verificare e prenotare?", en: "The Lake View Superior starts from €140 per night with breakfast. Shall I prepare the link to check and book?" },
+      user: { it: "Avete una camera per 2 adulti e un bambino dal 12 al 14 agosto?", en: "Do you have a room for 2 adults and a child from 12 to 14 August?" },
+      assistant: { it: "Per tre persone ti consiglio la Family con vista lago: da 180 € a notte con colazione. Lasciami un contatto e ti preparo il preventivo.", en: "For three guests, I recommend the Lake View Family room: from €180 per night with breakfast. Leave me your contact details and I’ll prepare your quote." },
     },
     benefits: [
       { title: { it: "Reception 24/7 in ogni lingua", en: "A 24/7 front desk in every language" }, description: { it: "Gli ospiti ricevono risposte immediate prima e durante il soggiorno.", en: "Guests get immediate answers before and during their stay." } },
@@ -125,18 +137,80 @@ export const verticals: VerticalContent[] = [
       { it: "Collega il link del booking engine", en: "Connect your booking engine link" },
       { it: "Installa il widget", en: "Install the widget" },
     ],
-    integrations: [{ it: "Qualsiasi booking engine", en: "Any booking engine" }],
-    integrationIntro: { it: "Compatibile con qualsiasi booking engine tramite link di prenotazione precompilato.", en: "Compatible with any booking engine through a pre-filled booking link." },
+    stats: [
+      { value: { it: "24/7", en: "24/7" }, label: { it: "sempre operativo", en: "always available" } },
+      { value: { it: "Ogni lingua", en: "Every language" }, label: { it: "risponde nella lingua dell'ospite", en: "answers in the guest’s language" } },
+      { value: { it: "0%", en: "0%" }, label: { it: "commissioni sulle prenotazioni", en: "booking commissions" } },
+      { value: { it: "10 minuti", en: "10 minutes" }, label: { it: "per andare online", en: "to go live" } },
+    ],
+    problem: {
+      title: { it: "Ogni domanda senza risposta è una prenotazione che finisce su un portale.", en: "Every unanswered question is a booking that ends up on a portal." },
+      items: [
+        { it: "Il telefono squilla durante i check-in", en: "The phone rings while guests are checking in" },
+        { it: "Il preventivo parte il giorno dopo, quando l'ospite ha già prenotato altrove", en: "The quote goes out the next day, after the guest has already booked elsewhere" },
+        { it: "L'ospite straniero scrive alle 23 e nessuno risponde", en: "An international guest writes at 11 p.m. and no one answers" },
+      ],
+    },
+    journey: {
+      title: { it: "Accanto all'ospite, dalla prima domanda al check-out", en: "By your guest’s side, from the first question to check-out" },
+      moments: [
+        { label: { it: "Prima di prenotare", en: "Before booking" }, description: { it: "Risponde su camere, servizi e policy, prepara il preventivo e porta l'ospite sul tuo booking engine", en: "Answers questions about rooms, services and policies, prepares the quote and guides the guest to your booking engine" } },
+        { label: { it: "Durante il soggiorno", en: "During the stay" }, description: { it: "Con il QR in camera l'ospite chiede asciugamani, taxi o late check-out, scopre la guida locale e la reception riceve tutto in tempo reale", en: "With the in-room QR, guests request towels, a taxi or late check-out, explore your local guide and reception receives everything in real time" } },
+      ],
+    },
+    features: [
+      { kind: "quote", title: { it: "Dalla domanda al preventivo in 30 secondi", en: "From question to quote in 30 seconds" }, points: [
+        { it: "Consiglia la camera giusta per il numero di ospiti", en: "Recommends the right room for the number of guests" },
+        { it: "Prezzi «a partire da», mai inventati", en: "Starting-from prices, never invented" },
+        { it: "Link precompilato al tuo booking engine", en: "A pre-filled link to your booking engine" },
+        { it: "Email alla reception con date e ospiti in evidenza", en: "Reception email with dates and guests clearly highlighted" },
+      ] },
+      { kind: "concierge", title: { it: "Il concierge in camera, senza app", en: "An in-room concierge, with no app" }, points: [
+        { it: "Un QR per ogni camera, pronto da stampare", en: "One printable QR code for every room" },
+        { it: "L'ospite chiede con un tocco", en: "Guests make a request with one tap" },
+        { it: "Guida locale: ristoranti, spiagge, trasporti", en: "Local guide: restaurants, beaches and transport" },
+      ] },
+      { kind: "requests", title: { it: "La reception vede tutto in tempo reale", en: "Reception sees everything in real time" }, points: [
+        { it: "Notifica ed email a ogni richiesta", en: "A notification and email for every request" },
+        { it: "Camera e richiesta sempre chiare", en: "Room and request are always clear" },
+        { it: "Tempo medio di risposta sotto controllo", en: "Average response time stays under control" },
+      ] },
+      { kind: "results", title: { it: "Misuri quanto ti porta", en: "Measure the value it brings" }, points: [
+        { it: "Vedi quanti ospiti porta sul tuo booking engine", en: "See how many guests it sends to your booking engine" },
+        { it: "Quante richieste arrivano fuori orario", en: "See how many requests arrive after hours" },
+        { it: "Lingue degli ospiti e mesi più richiesti", en: "Guest languages and most requested months" },
+      ] },
+      { kind: "import", title: { it: "Impara dal tuo sito in pochi minuti", en: "Learns from your website in minutes" }, points: [
+        { it: "Camere, servizi e policy importati", en: "Rooms, services and policies imported" },
+        { it: "Correggi tutto con salvataggio automatico", en: "Edit everything with automatic saving" },
+        { it: "Checklist guidata fino al go-live", en: "A guided checklist all the way to go-live" },
+      ] },
+    ],
+    roi: { title: { it: "Quanto vale rispondere subito?", en: "What is an immediate answer worth?" }, note: { it: "Stima indicativa basata sui valori che inserisci.", en: "Indicative estimate based on the values you enter." } },
+    service: { title: { it: "Configurato per te da MDAC", en: "Configured for you by MDAC" }, points: [
+      { it: "Impostazione del profilo struttura", en: "Property profile setup" },
+      { it: "Tono di voce su misura", en: "A tailored tone of voice" },
+      { it: "Cartoncini QR pronti da stampare", en: "Print-ready QR cards" },
+      { it: "Formazione dello staff", en: "Staff training" },
+    ] },
+    demoUrl: DEMO_URL,
+    integrations: [{ it: "Sito web", en: "Website" }, { it: "Pagina QR in camera", en: "In-room QR page" }, { it: "Instagram", en: "Instagram" }, { it: "Email", en: "Email" }, { it: "Export CSV", en: "CSV export" }],
+    integrationIntro: { it: "Funziona con il tuo booking engine: se accetta date e ospiti nel link li precompiliamo, altrimenti portiamo l'ospite dritto alla tua pagina di prenotazione.", en: "It works with your booking engine: if its link accepts dates and guest details, we pre-fill them; otherwise, we take guests straight to your booking page." },
     faqs: [
-      { question: { it: "Serve un'integrazione con il mio booking engine?", en: "Do I need an integration with my booking engine?" }, answer: { it: "No, basta il link del booking engine. Genius lo precompila con date e numero di ospiti.", en: "No, the booking engine link is enough. Genius pre-fills it with dates and guest numbers." } },
+      { question: { it: "Serve un'integrazione con il mio booking engine?", en: "Do I need an integration with my booking engine?" }, answer: { it: "No, basta il link di prenotazione.", en: "No, your booking link is all we need." } },
+      { question: { it: "Mi aiuta ad aumentare le prenotazioni dirette?", en: "Does it help me increase direct bookings?" }, answer: { it: "Sì. Ogni preventivo porta l'ospite sul tuo booking engine, senza commissioni.", en: "Yes. Every quote guides the guest to your booking engine, with no commissions." } },
+      { question: { it: "Come funzionano i preventivi in chat?", en: "How do quotes in chat work?" }, answer: { it: "Il concierge raccoglie date e numero di ospiti, suggerisce la camera più adatta e prepara il passaggio al booking engine.", en: "The concierge collects dates and guest numbers, suggests the best room and prepares the handoff to your booking engine." } },
       { question: { it: "Il bot inventa prezzi o disponibilità?", en: "Does the bot invent prices or availability?" }, answer: { it: "No. Indica i prezzi solo come «a partire da» e invita sempre l'ospite a verificare la disponibilità.", en: "No. It only presents prices as “starting from” and always asks guests to verify availability." } },
       { question: { it: "Risponde agli ospiti stranieri?", en: "Does it answer international guests?" }, answer: { it: "Sì. Riconosce la lingua dell'ospite e risponde automaticamente nella stessa lingua.", en: "Yes. It detects the guest's language and automatically replies in that language." } },
-      { question: { it: "Posso provarlo gratis?", en: "Can I try it for free?" }, answer: { it: "Sì. Puoi importare il profilo e provarlo gratuitamente, senza carta di credito.", en: "Yes. You can import your profile and try it for free, with no credit card required." } },
+      { question: { it: "Può fare da concierge sul territorio?", en: "Can it act as a local concierge?" }, answer: { it: "Sì, con la guida locale che compili tu: ristoranti, spiagge, trasporti e luoghi da scoprire.", en: "Yes, using the local guide you create: restaurants, beaches, transport and places to discover." } },
+      { question: { it: "Come capisco se sta portando risultati?", en: "How do I know whether it is delivering results?" }, answer: { it: "La pagina Risultati mostra conversazioni, preventivi, clic verso il booking engine e richieste fuori orario.", en: "The Results page shows conversations, quotes, clicks to your booking engine and after-hours requests." } },
+      { question: { it: "I dati degli ospiti sono miei?", en: "Do I own my guests’ data?" }, answer: { it: "Sì, li vedi nella dashboard e li esporti in CSV.", en: "Yes. You can view them in your dashboard and export them as CSV." } },
     ],
     seo: {
-      title: { it: "Concierge Hotel AI | Genius Chatbot", en: "AI Hotel Concierge | Genius Chatbot" },
-      description: { it: "Il concierge AI multilingue per hotel, B&B e resort che risponde 24/7 e porta gli ospiti alla prenotazione diretta.", en: "The multilingual AI concierge for hotels, B&Bs and resorts that answers 24/7 and drives direct bookings." },
+      title: { it: "Genius Concierge Hotel | Più prenotazioni dirette, reception 24/7", en: "Genius Hotel Concierge | More direct bookings, 24/7 reception" },
+      description: { it: "Il concierge AI per hotel risponde in ogni lingua, prepara preventivi, porta gli ospiti sul booking engine e gestisce le richieste dalle camere.", en: "The AI hotel concierge answers in every language, prepares quotes, guides guests to your booking engine and handles in-room requests." },
     },
+    finalCta: { it: "La tua reception, sempre aperta.", en: "Your front desk, always open." },
   },
 ];
 
