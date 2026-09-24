@@ -1,5 +1,5 @@
 import {
-  ShoppingBag, CalendarCheck, Hotel, Sparkles, Building2, ConciergeBell,
+  ShoppingBag, CalendarCheck, Hotel, Sparkles, Building2, ConciergeBell, TrendingUp,
   type LucideIcon,
 } from "lucide-react";
 
@@ -108,6 +108,7 @@ export const MODULES: Record<ModuleId, ModuleDef> = {
     menu: [
       { key: "hotel-profile", label: { it: "Profilo struttura", en: "Property profile" }, href: "/dashboard/hotel/profile", icon: Building2 },
       { key: "hotel-requests", label: { it: "Richieste ospiti", en: "Guest requests" }, href: "/dashboard/hotel/requests", icon: ConciergeBell },
+      { key: "hotel-results", label: { it: "Risultati", en: "Results" }, href: "/dashboard/hotel/results", icon: TrendingUp },
     ],
     integrations: [],
     kbTemplates: ["restaurant"],

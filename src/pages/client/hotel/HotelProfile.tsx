@@ -165,6 +165,8 @@ const HotelProfile = () => {
               <F label={tl("Check-in fino alle", "Check-in until")}><Input type="time" value={hp.property.checkin_to} onChange={(e) => setP("checkin_to", e.target.value)} /></F>
               <F label={tl("Check-out entro le", "Check-out by")}><Input type="time" value={hp.property.checkout_until} onChange={(e) => setP("checkout_until", e.target.value)} /></F>
               <F label={tl("Orari reception", "Reception hours")}><Input value={hp.property.reception_hours} onChange={(e) => setP("reception_hours", e.target.value)} placeholder="24h" /></F>
+              <F label={tl("Apertura reception (ora italiana)", "Reception opens (Europe/Rome)")}><Input type="time" value={hp.property.reception_open} onChange={(e) => setP("reception_open", e.target.value)} /></F>
+              <F label={tl("Chiusura reception (ora italiana)", "Reception closes (Europe/Rome)")}><Input type="time" value={hp.property.reception_close} onChange={(e) => setP("reception_close", e.target.value)} /></F>
               <F label={tl("Lingue parlate (separate da virgola)", "Languages spoken (comma separated)")}>
                 <CsvInput value={hp.property.languages} onChange={(v) => setP("languages", v)} placeholder="Italiano, English" />
               </F>

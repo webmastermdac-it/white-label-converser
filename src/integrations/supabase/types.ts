@@ -1096,6 +1096,61 @@ export type Database = {
         }
         Relationships: []
       }
+      widget_events: {
+        Row: {
+          bot_id: string
+          client_id: string
+          created_at: string
+          event: string
+          id: string
+          lead_id: string | null
+          meta: Json
+          session_id: string
+        }
+        Insert: {
+          bot_id: string
+          client_id: string
+          created_at?: string
+          event: string
+          id?: string
+          lead_id?: string | null
+          meta?: Json
+          session_id: string
+        }
+        Update: {
+          bot_id?: string
+          client_id?: string
+          created_at?: string
+          event?: string
+          id?: string
+          lead_id?: string | null
+          meta?: Json
+          session_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "widget_events_bot_id_fkey"
+            columns: ["bot_id"]
+            isOneToOne: false
+            referencedRelation: "chatbot_configs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "widget_events_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "widget_events_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

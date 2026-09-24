@@ -7,6 +7,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { LanguageProvider } from "@/hooks/useLanguage";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import HotelProfile from "@/pages/client/hotel/HotelProfile";
+import HotelResults from "./pages/client/hotel/HotelResults";
 import HotelRequests from "@/pages/client/hotel/HotelRequests";
 import PublicConcierge from "@/pages/PublicConcierge";
 import AdminLayout from "@/layouts/AdminLayout";
@@ -125,6 +126,7 @@ const App = () => (
               <Route path="instagram" element={<ClientInstagram />} />
               <Route path="hotel/profile" element={<HotelProfile />} />
               <Route path="hotel/requests" element={<HotelRequests />} />
+              <Route path="hotel/results" element={<HotelResults />} />
             </Route>
 
             <Route path="*" element={<NotFound />} />

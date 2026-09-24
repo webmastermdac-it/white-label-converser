@@ -158,6 +158,7 @@
   };
   var th = hotelLabels[baseLang] || hotelLabels["en"];
   var hotelBookingUrl = "";
+  var hotelLeadId = "";
   function isHotel() { return !!(config && config.business_vertical === "hotel" && config.hotel); }
   function todayIso() { var d = new Date(); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); }
   function fmtHotelDate(iso, f) { var p = iso.split("-"); return f === "DD/MM/YYYY" ? p[2] + "/" + p[1] + "/" + p[0] : iso; }
@@ -418,7 +419,7 @@
     if (leadSent) {
       html += '<div class="mdac-success">' + t.successMsg + '</div>';
       if (isHotel() && hotelBookingUrl) {
-        html += '<div style="text-align:center;margin-top:-6px;"><a class="mdac-cta" href="' + esc(hotelBookingUrl) + '" target="_blank" rel="noopener noreferrer">' + th.bookBtn + '</a></div>';
+        html += '<div style="text-align:center;margin-top:-6px;"><a class="mdac-cta" data-hotel-book="1" href="' + esc(hotelBookingUrl) + '" target="_blank" rel="noopener noreferrer">' + th.bookBtn + '</a></div>';
       }
     }
 
@@ -668,7 +669,10 @@
         language: widgetLang,
       }, booking ? { booking: booking } : {})),
     })
-      .then(function () {
+      .then(function (r) {
+        if (booking && isHotel() && r && r.json) {
+          r.clone().json().then(function (d) { if (d && d.lead_id) hotelLeadId = String(d.lead_id); }).catch(function () {});
+        }
         if (booking) hotelBookingUrl = buildHotelUrl(booking);
         leadSent = true;
         showLeadForm = false;
@@ -680,6 +684,25 @@
         // silent
       });
   }
+
+  // ── Hotel-only analytics: fire-and-forget, never blocks the widget ──
+  function trackHotelEvent(ev) {
+    try {
+      if (!isHotel()) return;
+      var payload = { embed_token: EMBED_TOKEN, session_id: sessionToken, event: ev };
+      if (hotelLeadId) payload.lead_id = hotelLeadId;
+      fetch(SUPABASE_URL + "/functions/v1/track-event", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload), keepalive: true,
+      }).catch(function () {});
+    } catch (e) { /* ignore */ }
+  }
+  shadow.addEventListener("click", function (e) {
+    try {
+      var el = e.target && e.target.closest ? e.target.closest("[data-hotel-book]") : null;
+      if (el) trackHotelEvent("booking_click");
+    } catch (err) { /* ignore */ }
+  });
 
   // ── Init: fetch config via widget-config function (only display fields) ──
   fetch(SUPABASE_URL + "/functions/v1/widget-config?embed_token=" + encodeURIComponent(EMBED_TOKEN))
