@@ -24,10 +24,13 @@ import {
 
 interface ClientChatbotSettingsProps {
   adminMode?: boolean;
+  botIdOverride?: string;
+  hideHeader?: boolean;
 }
 
-const ClientChatbotSettings = ({ adminMode = false }: ClientChatbotSettingsProps) => {
-  const { botId } = useParams<{ botId: string }>();
+const ClientChatbotSettings = ({ adminMode = false, botIdOverride, hideHeader = false }: ClientChatbotSettingsProps) => {
+  const { botId: routeBotId } = useParams<{ botId: string }>();
+  const botId = botIdOverride || routeBotId;
   const { clientId: authClientId } = useAuth();
   const { lang } = useLanguage();
   const { toast } = useToast();
@@ -136,15 +139,17 @@ const ClientChatbotSettings = ({ adminMode = false }: ClientChatbotSettingsProps
   return (
     <div className="p-4 md:p-6 space-y-4 animate-fade-in-up">
       {/* Back link + title */}
-      <div>
-        <Link to={backPath} className="flex items-center gap-2 text-muted-foreground hover:text-foreground text-sm mb-3">
-          <ArrowLeft className="w-4 h-4" /> {tl("Torna ai chatbot", "Back to chatbots")}
-        </Link>
-        <h1 className="text-2xl font-bold text-foreground" style={{ fontFamily: "Syne, sans-serif" }}>
-          {name || botConfig.name}
-        </h1>
-        {siteUrl && <p className="text-sm text-muted-foreground flex items-center gap-1 mt-0.5"><Globe className="w-3.5 h-3.5" /> {siteUrl}</p>}
-      </div>
+      {!hideHeader && (
+        <div>
+          <Link to={backPath} className="flex items-center gap-2 text-muted-foreground hover:text-foreground text-sm mb-3">
+            <ArrowLeft className="w-4 h-4" /> {tl("Torna ai chatbot", "Back to chatbots")}
+          </Link>
+          <h1 className="text-2xl font-bold text-foreground" style={{ fontFamily: "Syne, sans-serif" }}>
+            {name || botConfig.name}
+          </h1>
+          {siteUrl && <p className="text-sm text-muted-foreground flex items-center gap-1 mt-0.5"><Globe className="w-3.5 h-3.5" /> {siteUrl}</p>}
+        </div>
+      )}
 
       {clientId && botId && (
         <ActivationChecklist
