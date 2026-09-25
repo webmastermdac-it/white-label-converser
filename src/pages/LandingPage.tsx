@@ -115,7 +115,83 @@ function FeatureGrid({ t }: { t: (en: string, it: string) => string }) {
 
 // RAGTooltip removed — replaced with inline description
 
-export function PricingGrid({ yearly, t, verticalId }: { yearly: boolean; t: (en: string, it: string) => string; verticalId?: VerticalId }) {
+type PricingPlanId = "free" | "starter" | "pro";
+type PricingVertical = "generic" | "booking" | "ecommerce" | "hospitality";
+
+function getPricingFeatures(t: (en: string, it: string) => string): Record<PricingVertical, Record<PricingPlanId, { features: string[]; locked?: string[] }>> {
+  const freeFeatures = [
+    t("1 AI chatbot on your website", "1 chatbot AI sul tuo sito"),
+    t("Monthly conversations included (see current limit in your plan)", "Conversazioni mensili incluse (vedi limite del piano)"),
+    t("Automatic lead capture", "Cattura lead automatica"),
+    t("Basic customization (colors, avatar)", "Personalizzazione base (colori, avatar)"),
+    t("Guided setup wizard", "Wizard guidato per la configurazione"),
+    t("\"Powered by Chatbot Genius\" badge shown", "Badge \"Powered by Chatbot Genius\" visibile"),
+  ];
+  const freeLocked = [
+    t("Advanced Search (RAG)", "Ricerca Avanzata (RAG)"),
+    t("Document upload (PDF/Word)", "Upload documenti (PDF/Word)"),
+  ];
+  const starterBase = [
+    t("1 chatbot custom for your business type", "1 chatbot personalizzato per il tuo settore"),
+    t("500 conversations/month", "500 conversazioni/mese"),
+    t("Unlimited leads", "Lead illimitati"),
+    t("Advanced system prompt", "Prompt di sistema avanzato"),
+    t("Unlimited FAQs", "FAQ illimitate"),
+    t("PDF/Word upload", "Upload PDF/Word"),
+    t("Email support", "Supporto email"),
+    t("🔍 Advanced Search (RAG) included", "🔍 Ricerca Avanzata (RAG) inclusa"),
+  ];
+  const proBase = [
+    t("Everything in Starter", "Tutto ciò che è incluso in Starter"),
+    t("Unlimited chatbots", "Chatbot illimitati"),
+    t("Unlimited conversations", "Conversazioni illimitate"),
+    t("Advanced analytics", "Analytics avanzati"),
+    t("Dedicated support", "Supporto dedicato"),
+    t("Complete white label", "White label completo"),
+  ];
+  return {
+    generic: {
+      free: { features: freeFeatures, locked: freeLocked },
+      starter: { features: [...starterBase, t("Industry template library", "Libreria di template di settore")] },
+      pro: { features: proBase },
+    },
+    booking: {
+      free: { features: freeFeatures, locked: freeLocked },
+      starter: { features: [...starterBase, t("📅 Calendly integration for in-chat bookings", "📅 Integrazione Calendly per prenotazioni dirette in chat")] },
+      pro: { features: proBase },
+    },
+    ecommerce: {
+      free: { features: freeFeatures, locked: freeLocked },
+      starter: {
+        features: [
+          ...starterBase,
+          t("🛒 XML/CSV feed (daily sync) — up to 500 products", "🛒 Feed XML/CSV (sync giornaliero) — fino a 500 prodotti"),
+          t("Bot knows products, prices and availability", "Il bot conosce prodotti, prezzi e disponibilità"),
+        ],
+      },
+      pro: {
+        features: [
+          ...proBase,
+          t("🛒 Full ecommerce (WooCommerce, Shopify, PrestaShop, API + real-time webhooks)", "🛒 Ecommerce completo (WooCommerce, Shopify, PrestaShop, API + webhook real-time)"),
+          t("Unlimited ecommerce products", "Prodotti ecommerce illimitati"),
+        ],
+      },
+    },
+    hospitality: {
+      free: { features: freeFeatures, locked: freeLocked },
+      starter: {
+        features: [
+          ...starterBase,
+          t("🍽️ Reads menus, documents and your website", "🍽️ Legge menu, documenti e il tuo sito web"),
+          t("Every request saved as a lead", "Ogni richiesta salvata come lead"),
+        ],
+      },
+      pro: { features: proBase },
+    },
+  };
+}
+
+export function PricingGrid({ yearly, t, verticalId, selectedVertical = "generic" }: { yearly: boolean; t: (en: string, it: string) => string; verticalId?: VerticalId; selectedVertical?: PricingVertical }) {
   const gridRef = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(false);
 
