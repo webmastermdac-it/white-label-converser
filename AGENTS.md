@@ -1,3 +1,3 @@
 # Architecture Rules
 
-- Keep universal client navigation items flat; render `activeModule.menu` as one persistent collapsible group on desktop and mobile so future vertical modules scale consistently.
+- Client sidebar shows only universal items; module menu pages (activeModule.menu) render inside the per-bot "Concierge" tab of ClientChatbotSettings via an href→component map, so modules stay per-bot.

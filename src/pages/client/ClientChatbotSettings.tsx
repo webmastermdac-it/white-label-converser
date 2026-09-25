@@ -19,8 +19,19 @@ import { MODULE_CHANGED_EVENT } from "@/hooks/useActiveModule";
 import {
   Loader2, ArrowLeft, Settings, Palette, Database,
   Copy, Code2, Globe, Save, Inbox, MessageSquare,
-  Eye, RefreshCw, Plug, CheckCircle2, Power
+  Eye, RefreshCw, Plug, CheckCircle2, Power, Building2
 } from "lucide-react";
+import { getModule } from "@/lib/modules";
+import HotelProfile from "@/pages/client/hotel/HotelProfile";
+import HotelRequests from "@/pages/client/hotel/HotelRequests";
+import HotelResults from "@/pages/client/hotel/HotelResults";
+
+/** Maps a module menu href to the page component rendered by its dashboard route */
+const MODULE_PAGE_COMPONENTS: Record<string, React.ComponentType<{ botIdOverride?: string }>> = {
+  "/dashboard/hotel/profile": HotelProfile,
+  "/dashboard/hotel/requests": HotelRequests,
+  "/dashboard/hotel/results": HotelResults,
+};
 
 interface ClientChatbotSettingsProps {
   adminMode?: boolean;
@@ -41,6 +52,12 @@ const ClientChatbotSettings = ({ adminMode = false, botIdOverride, hideHeader = 
   const [saving, setSaving] = useState(false);
   const [previewKey, setPreviewKey] = useState(0);
   const [activeTab, setActiveTab] = useState("general");
+  const [conciergeSection, setConciergeSection] = useState<string | null>(null);
+  // Module of THIS bot (not the sidebar's active module)
+  const conciergeMenu = getModule(botConfig?.business_vertical).menu;
+  const currentConciergeKey = conciergeMenu.some((m) => m.key === conciergeSection) ? conciergeSection : conciergeMenu[0]?.key;
+  const currentConciergeItem = conciergeMenu.find((m) => m.key === currentConciergeKey);
+  const ConciergeComponent = currentConciergeItem ? MODULE_PAGE_COMPONENTS[currentConciergeItem.href] : undefined;
   const clientId = botConfig?.client_id || authClientId;
   const backPath = adminMode ? "/admin/bots" : "/dashboard/bots";
 
@@ -170,6 +187,9 @@ const ClientChatbotSettings = ({ adminMode = false, botIdOverride, hideHeader = 
           <TabsTrigger value="knowledge" className="gap-1.5 text-xs"><Database className="w-3.5 h-3.5" /> Conoscenza</TabsTrigger>
           <TabsTrigger value="integrations" className="gap-1.5 text-xs"><Plug className="w-3.5 h-3.5" /> {tl("Integrazioni", "Integrations")}</TabsTrigger>
           <TabsTrigger value="preview" className="gap-1.5 text-xs"><Eye className="w-3.5 h-3.5" /> Preview</TabsTrigger>
+          {conciergeMenu.length > 0 && (
+            <TabsTrigger value="concierge" className="gap-1.5 text-xs"><Building2 className="w-3.5 h-3.5" /> Concierge</TabsTrigger>
+          )}
         </TabsList>
 
 
@@ -410,6 +430,37 @@ const ClientChatbotSettings = ({ adminMode = false, botIdOverride, hideHeader = 
             )}
           </div>
         </TabsContent>
+
+        {conciergeMenu.length > 0 && (
+          <TabsContent value="concierge" className="space-y-4">
+            <div className="flex gap-2 flex-wrap">
+              {conciergeMenu.map((m) => {
+                const Icon = m.icon;
+                const selected = currentConciergeKey === m.key;
+                return (
+                  <button
+                    key={m.key}
+                    type="button"
+                    onClick={() => setConciergeSection(m.key)}
+                    className={`flex items-center gap-1.5 px-4 py-2.5 md:py-2 rounded-full text-sm font-medium transition-all min-h-[44px] border ${
+                      selected
+                        ? "bg-primary/15 text-primary border-primary/40"
+                        : "bg-secondary text-muted-foreground border-border hover:text-foreground"
+                    }`}
+                  >
+                    <Icon className="w-4 h-4" />
+                    {m.label[lang]}
+                  </button>
+                );
+              })}
+            </div>
+            {ConciergeComponent && botId && (
+              <div>
+                <ConciergeComponent key={`${botId}-${currentConciergeKey}`} botIdOverride={botId} />
+              </div>
+            )}
+          </TabsContent>
+        )}
       </Tabs>
     </div>
   );
