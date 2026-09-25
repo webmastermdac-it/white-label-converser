@@ -370,6 +370,7 @@ export default function LandingPage() {
   const [mobileMenu, setMobileMenu] = useState(false);
   const [videoOpen, setVideoOpen] = useState(false);
   const [yearly, setYearly] = useState(false);
+  const [selectedVertical, setSelectedVertical] = useState<"generic" | "booking" | "ecommerce" | "hospitality">("generic");
   const [scrolled, setScrolled] = useState(false);
   const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<string>("dashboard");
@@ -727,6 +728,30 @@ export default function LandingPage() {
             {t("Choose the plan that fits your business.", "Scegli il piano più adatto al tuo business.")}
           </p>
 
+          {/* Vertical tabs */}
+          <div
+            className="flex lg:justify-center gap-2 mb-6 overflow-x-auto pb-1 -mx-4 px-4 sm:mx-0 sm:px-0"
+            role="tablist"
+            aria-label={t("Choose your sector", "Scegli il tuo settore")}
+          >
+            {pricingVerticalTabs.map(({ id, Icon, en, it }) => (
+              <button
+                key={id}
+                role="tab"
+                aria-selected={selectedVertical === id}
+                onClick={() => setSelectedVertical(id)}
+                className={`flex items-center gap-2 shrink-0 px-4 py-2 rounded-full text-sm font-medium border transition-colors duration-300 ${
+                  selectedVertical === id
+                    ? "bg-[#F5A623]/15 text-[#F5A623] border-[#F5A623]"
+                    : "text-white/50 border-white/10 hover:border-white/25"
+                }`}
+              >
+                <Icon className="w-4 h-4" />
+                {t(en, it)}
+              </button>
+            ))}
+          </div>
+
           {/* Toggle */}
           <div className="flex items-center justify-center gap-3 mb-14">
             <span className={`text-sm ${!yearly ? "text-white" : "text-white/40"}`}>{t("Monthly", "Mensile")}</span>
@@ -737,7 +762,7 @@ export default function LandingPage() {
             {yearly && <span className="text-xs bg-[#F5A623]/20 text-[#F5A623] px-2 py-0.5 rounded-full font-medium">-20%</span>}
           </div>
 
-          <PricingGrid yearly={yearly} t={t} />
+          <PricingGrid yearly={yearly} t={t} selectedVertical={selectedVertical} />
         </div>
       </Section>
 
