@@ -34,10 +34,11 @@ function quoteValue(b: any, hp: HotelProfile) {
 }
 const pctChange = (cur: number, prev: number) => (prev === 0 ? (cur > 0 ? null : 0) : Math.round(((cur - prev) / prev) * 100));
 
-const HotelResults = () => {
+const HotelResults = ({ botIdOverride }: { botIdOverride?: string } = {}) => {
   const { lang } = useLanguage();
   const tl = (it: string, en: string) => (lang === "it" ? it : en);
-  const { botId } = useActiveModule();
+  const { botId: activeBotId } = useActiveModule();
+  const botId = botIdOverride ?? activeBotId;
   const [days, setDays] = useState(30);
   const [loading, setLoading] = useState(true);
   const [hp, setHp] = useState<HotelProfile>(normalizeHotelProfile({}));

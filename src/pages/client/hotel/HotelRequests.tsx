@@ -13,10 +13,11 @@ type RequestStatus = "open" | "in_progress" | "done";
 type ServiceRequest = { id: string; room: string; category: string; message: string | null; guest_name: string | null; status: RequestStatus; created_at: string; resolved_at: string | null };
 const statuses: RequestStatus[] = ["open", "in_progress", "done"];
 
-const HotelRequests = () => {
+const HotelRequests = ({ botIdOverride }: { botIdOverride?: string } = {}) => {
   const { lang } = useLanguage();
   const tl = (it: string, en: string) => lang === "it" ? it : en;
-  const { botId } = useActiveModule();
+  const { botId: activeBotId } = useActiveModule();
+  const botId = botIdOverride ?? activeBotId;
   const { canUseConciergeRequests, loading: planLoading } = usePlanConfig();
   const navigate = useNavigate();
   const [rows, setRows] = useState<ServiceRequest[]>([]);

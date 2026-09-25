@@ -24,11 +24,12 @@ import {
 
 type Status = "idle" | "saving" | "saved" | "error";
 
-const HotelProfile = () => {
+const HotelProfile = ({ botIdOverride }: { botIdOverride?: string } = {}) => {
   const { lang } = useLanguage();
   const tl = (it: string, en: string) => (lang === "it" ? it : en);
   const { clientId } = useAuth();
-  const { botId } = useActiveModule();
+  const { botId: activeBotId } = useActiveModule();
+  const botId = botIdOverride ?? activeBotId;
   const { canUseConciergeRequests } = usePlanConfig();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
