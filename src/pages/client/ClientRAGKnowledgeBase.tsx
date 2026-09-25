@@ -155,7 +155,7 @@ const ToneReferenceTable = ({ t }: { t: (it: string, en: string) => string }) =>
       <CollapsibleTrigger className="flex items-center justify-between w-full p-3 rounded-xl bg-secondary hover:bg-accent transition-colors text-left">
         <span className="flex items-center gap-2 text-xs font-medium text-foreground">
           <Table2 className="w-3.5 h-3.5 text-primary" />
-          Confronta tutti i toni
+          {t("Confronta tutti i toni", "Compare all tones")}
         </span>
         <ChevronDown className={`w-3.5 h-3.5 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`} />
       </CollapsibleTrigger>
@@ -215,7 +215,7 @@ const withTonePreset = (prompt: string, presetText: string): string => {
   const end = following?.index ?? prompt.length;
   const before = prompt.slice(0, start);
   const after = prompt.slice(end);
-  return `${before}${block}${after ? `\n\n${after}` : ""}`;
+  return `${before}${block}${after ? `\n${after}` : ""}`;
 };
 
 const statusConfig: Record<string, { icon: any; cls: string; label: string }> = {
