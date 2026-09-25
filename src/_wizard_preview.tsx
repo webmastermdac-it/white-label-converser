@@ -7,7 +7,7 @@ import "@/index.css";
 function WizardPreview() {
   return (
     <div className="min-h-screen bg-background text-foreground p-6">
-      <div className="mx-auto max-w-md rounded-xl border border-border bg-card p-4">
+      <div className="mx-auto max-w-3xl rounded-xl border border-border bg-card p-4">
         <KnowledgeBaseWizard
           clientId="preview-client"
           configId="preview-config"
