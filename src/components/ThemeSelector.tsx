@@ -15,7 +15,9 @@ const options = [
 
 // Below this container width the labels are dropped and only the icons
 // are shown (with aria-label/title), so the group never overflows.
-const ICONS_ONLY_WIDTH = 176;
+// Client sidebar: 208px outer -> ~183px selector (icons only);
+// Admin sidebar: 240px outer -> ~215px selector (labels still fit).
+const ICONS_ONLY_WIDTH = 195;
 
 const ThemeSelector = ({ collapsed = false }: ThemeSelectorProps) => {
   const { theme, setTheme } = useTheme();
