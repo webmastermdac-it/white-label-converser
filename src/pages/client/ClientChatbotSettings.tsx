@@ -168,16 +168,6 @@ const ClientChatbotSettings = ({ adminMode = false, botIdOverride, hideHeader = 
         </div>
       )}
 
-      {clientId && botId && (
-        <ActivationChecklist
-          key={`${botId}-${botConfig.business_vertical}`}
-          botId={botId}
-          clientId={clientId}
-          vertical={botConfig.business_vertical}
-          calendlyUrl={botConfig.calendly_url}
-        />
-      )}
-
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="bg-secondary border border-border flex-wrap h-auto gap-1 p-1">
@@ -195,7 +185,16 @@ const ClientChatbotSettings = ({ adminMode = false, botIdOverride, hideHeader = 
 
         {/* Tab 1 — General */}
         <TabsContent value="general">
-          <div className="glass rounded-xl p-6 space-y-5">
+          {clientId && botId && (
+            <ActivationChecklist
+              key={`${botId}-${botConfig.business_vertical}`}
+              botId={botId}
+              clientId={clientId}
+              vertical={botConfig.business_vertical}
+              calendlyUrl={botConfig.calendly_url}
+            />
+          )}
+          <div className="glass rounded-xl p-6 space-y-5 mt-4">
             <h3 className="font-semibold text-foreground">{tl("Impostazioni Generali", "General Settings")}</h3>
 
             {/* Bot active — prominent state card at top */}
