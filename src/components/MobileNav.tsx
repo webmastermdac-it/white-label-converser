@@ -1,8 +1,8 @@
-import { useState } from "react";
-import { NavLink, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/hooks/useLanguage";
-import { Bot, LogOut, Menu, X, Globe } from "lucide-react";
+import { Bot, ChevronDown, LogOut, Menu, X, Globe } from "lucide-react";
 import { cn } from "@/lib/utils";
 import ThemeSelector from "@/components/ThemeSelector";
 
@@ -17,13 +17,47 @@ interface NavItem {
 interface MobileNavProps {
   items: NavItem[];
   subtitle?: string;
+  verticalGroup?: {
+    id: string;
+    label: string;
+    icon: React.ElementType;
+    items: NavItem[];
+  };
 }
 
-const MobileNav: React.FC<MobileNavProps> = ({ items, subtitle }) => {
+const MobileNav: React.FC<MobileNavProps> = ({ items, subtitle, verticalGroup }) => {
   const [open, setOpen] = useState(false);
+  const verticalStorageKey = verticalGroup ? `client-nav-module-${verticalGroup.id}` : "client-nav-module";
+  const [verticalOpen, setVerticalOpen] = useState(() => {
+    if (!verticalGroup) return false;
+    const saved = localStorage.getItem(`client-nav-module-${verticalGroup.id}`);
+    return saved === null ? verticalGroup.items.length > 0 : saved === "true";
+  });
   const { user, signOut } = useAuth();
   const { lang, setLang } = useLanguage();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    if (!verticalGroup) {
+      setVerticalOpen(false);
+      return;
+    }
+    const saved = localStorage.getItem(verticalStorageKey);
+    setVerticalOpen(saved === null ? verticalGroup.items.length > 0 : saved === "true");
+  }, [verticalGroup?.id, verticalGroup?.items.length, verticalStorageKey]);
+
+  const toggleVertical = () => {
+    setVerticalOpen((current) => {
+      const next = !current;
+      localStorage.setItem(verticalStorageKey, String(next));
+      return next;
+    });
+  };
+
+  const verticalActive = verticalGroup?.items.some(
+    (item) => location.pathname === item.href || location.pathname.startsWith(`${item.href}/`)
+  );
 
   const handleSignOut = async () => {
     await signOut();
@@ -93,6 +127,44 @@ const MobileNav: React.FC<MobileNavProps> = ({ items, subtitle }) => {
                   {!!item.badge && <span className="ml-auto min-w-5 h-5 px-1 rounded-full bg-primary text-primary-foreground text-[11px] grid place-items-center">{item.badge > 99 ? "99+" : item.badge}</span>}
                 </NavLink>
               ))}
+              {verticalGroup && verticalGroup.items.length > 0 && (
+                <div className="pt-1">
+                  <button
+                    type="button"
+                    onClick={toggleVertical}
+                    aria-expanded={verticalOpen}
+                    className={cn(
+                      "flex min-h-[44px] w-full items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium transition-colors",
+                      verticalActive ? "text-primary" : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-foreground"
+                    )}
+                  >
+                    <verticalGroup.icon className="h-5 w-5 flex-shrink-0" />
+                    <span>{verticalGroup.label}</span>
+                    <ChevronDown className={cn("ml-auto h-4 w-4 transition-transform duration-200", verticalOpen && "rotate-180")} />
+                  </button>
+                  <div className={cn("grid transition-[grid-template-rows,opacity] duration-200", verticalOpen ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0")}>
+                    <div className="overflow-hidden">
+                      <div className="ml-5 mt-1 space-y-1 border-l border-sidebar-border pl-2">
+                        {verticalGroup.items.map((item) => (
+                          <NavLink
+                            key={item.href}
+                            to={item.href}
+                            onClick={() => setOpen(false)}
+                            className={({ isActive }) => cn(
+                              "flex min-h-[44px] items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium transition-all",
+                              isActive ? "nav-item-active" : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-foreground"
+                            )}
+                          >
+                            <item.icon className="h-5 w-5 flex-shrink-0" />
+                            <span>{item.label}</span>
+                            {!!item.badge && <span className="ml-auto grid h-5 min-w-5 place-items-center rounded-full bg-primary px-1 text-[11px] text-primary-foreground">{item.badge > 99 ? "99+" : item.badge}</span>}
+                          </NavLink>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
             </nav>
 
             {/* Footer */}

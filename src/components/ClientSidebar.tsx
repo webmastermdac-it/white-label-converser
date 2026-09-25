@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { NavLink, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/hooks/useLanguage";
 import { usePlanConfig } from "@/hooks/usePlanConfig";
@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   LayoutDashboard, MessageSquare,
-  ChevronLeft, ChevronRight, Bot, LogOut, Inbox, Globe, ArrowUpCircle, BarChart3, Plug, Instagram, Settings
+  ChevronDown, ChevronLeft, ChevronRight, Bot, LogOut, Inbox, Globe, ArrowUpCircle, BarChart3, Plug, Instagram, Settings
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import ThemeSelector from "@/components/ThemeSelector";
@@ -20,11 +20,30 @@ const ClientSidebar = () => {
   const { lang, setLang, t } = useLanguage();
   const { canUseEcommerce, canUseCalendly, config: planConfig } = usePlanConfig();
   const { botId, module: activeModule } = useActiveModule();
+  const location = useLocation();
   const openRequests = useOpenServiceRequests();
   const isFree = planConfig?.plan_name === "free";
   const navigate = useNavigate();
   const tl = (it: string, en: string) => lang === "it" ? it : en;
   const isIt = lang === "it";
+  const verticalStorageKey = `client-nav-module-${activeModule.id}`;
+  const [verticalOpen, setVerticalOpen] = useState(() => {
+    const saved = localStorage.getItem(`client-nav-module-${activeModule.id}`);
+    return saved === null ? activeModule.menu.length > 0 : saved === "true";
+  });
+
+  useEffect(() => {
+    const saved = localStorage.getItem(verticalStorageKey);
+    setVerticalOpen(saved === null ? activeModule.menu.length > 0 : saved === "true");
+  }, [activeModule.id, activeModule.menu.length, verticalStorageKey]);
+
+  const toggleVertical = () => {
+    setVerticalOpen((current) => {
+      const next = !current;
+      localStorage.setItem(verticalStorageKey, String(next));
+      return next;
+    });
+  };
 
   const isAdmin = role === "super_admin";
   const botItem = isAdmin
@@ -40,9 +59,19 @@ const ClientSidebar = () => {
     { label: t("leads"), href: "/dashboard/leads", icon: Inbox },
     { label: t("chatHistory"), href: "/dashboard/chats", icon: MessageSquare },
     { label: "Analytics", href: "/dashboard/analytics", icon: BarChart3 },
-    // Module-specific entries (only the active bot's module; others are hidden)
-    ...activeModule.menu.map((m) => ({ label: m.label[lang], href: m.href, icon: m.icon, badge: m.key === "hotel-requests" ? openRequests : 0 })),
   ];
+
+  const verticalNav = activeModule.menu.map((m) => ({
+    label: m.label[lang],
+    href: m.href,
+    icon: m.icon,
+    badge: m.key === "hotel-requests" ? openRequests : 0,
+  }));
+  const verticalActive = verticalNav.some((item) => location.pathname === item.href || location.pathname.startsWith(`${item.href}/`));
+  const VerticalIcon = activeModule.icon;
+  const verticalLabel = activeModule.id === "hotel"
+    ? tl("Hotel Concierge", "Hotel Concierge")
+    : activeModule.name[lang];
 
   const configNav = [
     botItem,
@@ -132,6 +161,41 @@ const ClientSidebar = () => {
       <nav className="px-2 py-3 space-y-1 overflow-y-auto">
         <GroupLabel>{isIt ? "Dati" : "Data"}</GroupLabel>
         {dataNav.map(renderItem)}
+        {verticalNav.length > 0 && (
+          <div className="pt-1">
+            {!collapsed ? (
+              <>
+                <button
+                  type="button"
+                  onClick={toggleVertical}
+                  aria-expanded={verticalOpen}
+                  className={cn(
+                    "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
+                    verticalActive ? "text-primary" : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-foreground"
+                  )}
+                >
+                  <VerticalIcon className="w-4.5 h-4.5 flex-shrink-0" />
+                  <span>{verticalLabel}</span>
+                  <ChevronDown className={cn("ml-auto h-4 w-4 transition-transform duration-200", verticalOpen && "rotate-180")} />
+                </button>
+                <div
+                  className={cn(
+                    "grid transition-[grid-template-rows,opacity] duration-200",
+                    verticalOpen ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
+                  )}
+                >
+                  <div className="overflow-hidden">
+                    <div className="ml-4 mt-1 space-y-1 border-l border-sidebar-border pl-2">
+                      {verticalNav.map(renderItem)}
+                    </div>
+                  </div>
+                </div>
+              </>
+            ) : (
+              <div className="space-y-1">{verticalNav.map(renderItem)}</div>
+            )}
+          </div>
+        )}
       </nav>
 
       <div className="mx-3 border-t border-sidebar-border" />
