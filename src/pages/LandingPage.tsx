@@ -163,8 +163,9 @@ export function PricingGrid({ yearly, t, verticalId }: { yearly: boolean; t: (en
             t("50 conversations/month", "50 conversazioni/mese"),
             t("10 leads/month", "10 lead/mese"),
             t("System prompt (tone & bot role)", "Prompt di sistema (tono e ruolo del bot)"),
-            t("Free text for basic instructions", "Testo libero per istruzioni base"),
             t("5 manual FAQs", "5 FAQ manuali"),
+            t("Lead capture in chat (name + email or phone)", "Raccolta contatti in chat (nome + email o telefono)"),
+            t("Multilingual replies", "Risposte multilingua"),
             t("Email support", "Supporto email"),
           ].map((item, i) => (
             <li key={i} className="flex items-start gap-2"><Check className="w-4 h-4 text-[#F5A623] shrink-0 mt-0.5" />{item}</li>
@@ -173,10 +174,12 @@ export function PricingGrid({ yearly, t, verticalId }: { yearly: boolean; t: (en
             t("🔒 PDF/Word upload", "🔒 Upload PDF/Word"),
             t("🔒 Advanced Search RAG", "🔒 Ricerca Avanzata RAG"),
             t("🔒 Ecommerce integrations", "🔒 Integrazioni ecommerce"),
+            t("🔒 Hotel Concierge module", "🔒 Modulo Concierge Hotel"),
           ].map((item, i) => (
             <li key={`lock-${i}`} className="flex items-start gap-2 text-white/30"><Lock className="w-4 h-4 shrink-0 mt-0.5" />{item}</li>
           ))}
         </ul>
+
         {/* RAG Section */}
         <div className="mt-auto pt-4 border-t border-white/10">
           <div className="mb-2">
@@ -219,19 +222,24 @@ export function PricingGrid({ yearly, t, verticalId }: { yearly: boolean; t: (en
             t("Advanced system prompt", "Prompt di sistema avanzato"),
             t("Unlimited FAQs", "FAQ illimitate"),
             t("PDF/Word upload", "Upload PDF/Word"),
+            t("Website pages and sitemap import", "Importazione pagine del sito e sitemap"),
             t("Industry templates", "Template di settore"),
+            t("Calendly integration for appointments", "Integrazione Calendly per gli appuntamenti"),
             t("Priority support", "Supporto prioritario"),
             t("🔍 Advanced Search (RAG)", "🔍 Ricerca Avanzata (RAG)"),
-            t("🛒 XML/CSV Feed (daily sync)", "🛒 Feed XML/CSV (sync giornaliero)"),
+            t("🛒 XML/CSV Feed, up to 100 products (daily sync)", "🛒 Feed XML/CSV, fino a 100 prodotti (sync giornaliero)"),
           ].map((item, i) => (
             <li key={i} className="flex items-start gap-2"><Check className="w-4 h-4 text-[#F5A623] shrink-0 mt-0.5" />{item}</li>
           ))}
           {[
             t("🔒 Advanced analytics", "🔒 Analytics avanzati"),
+            t("🔒 Full ecommerce with real-time webhooks", "🔒 Ecommerce completo con webhook real-time"),
+            t("🔒 Hotel Concierge module", "🔒 Modulo Concierge Hotel"),
           ].map((item, i) => (
             <li key={`lock-${i}`} className="flex items-start gap-2 text-white/30"><Lock className="w-4 h-4 shrink-0 mt-0.5" />{item}</li>
           ))}
         </ul>
+
         {/* RAG Section */}
         <div className="mt-auto pt-4 border-t border-white/10">
           <div className="mb-2">
@@ -274,14 +282,18 @@ export function PricingGrid({ yearly, t, verticalId }: { yearly: boolean; t: (en
             t("Unlimited leads", "Lead illimitati"),
             t("All Starter features", "Tutte le funzionalità Starter"),
             t("🔍 Advanced Search (RAG) — highlighted", "🔍 Ricerca Avanzata (RAG) — in evidenza"),
+            t("🛒 Full ecommerce (WooCommerce, Shopify, PrestaShop, API + real-time webhooks), unlimited products", "🛒 Ecommerce completo (WooCommerce, Shopify, PrestaShop, API + webhook real-time), prodotti illimitati"),
+            t("🏨 Hotel Concierge: stay quotes, room QR codes, real-time guest requests, Results page", "🏨 Concierge Hotel: preventivi soggiorno, QR per le camere, richieste ospiti in tempo reale, pagina Risultati"),
+            t("📱 Instagram DM channel", "📱 Canale Instagram DM"),
+            t("⏱️ Auto-close inactive chats with recap email", "⏱️ Chiusura automatica chat inattive con email di riepilogo"),
             t("Advanced analytics", "Analytics avanzati"),
-            t("Dedicated support", "Supporto dedicato"),
-            t("🛒 Full ecommerce (WooCommerce, Shopify, PrestaShop, API + real-time webhooks)", "🛒 Ecommerce completo (WooCommerce, Shopify, PrestaShop, API + webhook real-time)"),
             t("Complete white label", "White label completo"),
+            t("Dedicated support", "Supporto dedicato"),
           ].map((item, i) => (
             <li key={i} className="flex items-start gap-2"><Check className="w-4 h-4 text-[#F5A623] shrink-0 mt-0.5" />{item}</li>
           ))}
         </ul>
+
         {/* RAG Section */}
         <div className="mt-auto pt-4 border-t border-[#F5A623]/30">
           <div className="mb-2">

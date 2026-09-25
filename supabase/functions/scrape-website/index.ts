@@ -50,7 +50,18 @@ async function analyzeSite(url: string) {
   if (!res1.ok) throw new Error(`Failed to fetch: ${res1.status}`);
 
   const html1 = await res1.text();
-  const mainContent = extractMainContent(html1);
+  let mainContent = extractMainContent(html1);
+  let dynamic = false;
+
+  // Sites rendered client-side (React/Vue SPA) return an empty shell: fall back
+  // to a rendering proxy and to structured data before giving up.
+  if (isThinContent(mainContent)) {
+    dynamic = true;
+    const rendered = await fetchRenderedText(formattedUrl);
+    const structured = extractStructuredContent(html1);
+    mainContent = [rendered, structured].filter((part) => !isThinContent(part)).join("\n\n") || mainContent;
+  }
+
   const level1Links = extractLinks(html1, formattedUrl);
 
   visited.add(formattedUrl);
@@ -60,6 +71,7 @@ async function analyzeSite(url: string) {
       visited.add(link.url);
     }
   }
+
 
   await Promise.all(level1Links.slice(0, 8).map(async (page) => {
     try {
@@ -82,7 +94,7 @@ async function analyzeSite(url: string) {
   }));
 
   return new Response(
-    JSON.stringify({ content: mainContent, links: allLinks.slice(0, 100) }),
+    JSON.stringify({ content: mainContent, links: allLinks.slice(0, 100), dynamic }),
     { headers: { ...corsHeaders, "Content-Type": "application/json" } }
   );
 }
@@ -98,7 +110,12 @@ async function scrapePages(urls: string[]) {
 
       if (response.ok) {
         const html = await response.text();
-        const text = extractMainContent(html);
+        let text = extractMainContent(html);
+        if (isThinContent(text)) {
+          const rendered = await fetchRenderedText(url);
+          const structured = extractStructuredContent(html);
+          text = [rendered, structured].filter((part) => !isThinContent(part)).join("\n\n") || text;
+        }
         if (text.trim()) {
           contents.push(`--- ${url} ---\n${text}`);
         }
@@ -113,6 +130,94 @@ async function scrapePages(urls: string[]) {
     { headers: { ...corsHeaders, "Content-Type": "application/json" } }
   );
 }
+
+/** True when the extracted text is too short to be real page content (SPA shell). */
+function isThinContent(text: string | null | undefined): boolean {
+  return !text || text.replace(/\s+/g, " ").trim().length < 200;
+}
+
+/** Renders JavaScript-driven pages through public reader proxies. */
+async function fetchRenderedText(url: string): Promise<string> {
+  const proxies = [
+    `https://r.jina.ai/${url}`,
+  ];
+
+
+  for (const proxyUrl of proxies) {
+    try {
+      const res = await fetch(proxyUrl, {
+        headers: { "User-Agent": "Mozilla/5.0 (compatible; GeniusBot/1.0)", Accept: "text/plain, text/html" },
+        signal: AbortSignal.timeout(20000),
+      });
+      if (!res.ok) continue;
+      const body = await res.text();
+      const text = body.includes("<html") || body.includes("<body") ? extractMainContent(body) : cleanText(body);
+      if (!isThinContent(text)) return text.slice(0, 30000);
+    } catch (e) {
+      console.error(`Render proxy failed (${proxyUrl}):`, e);
+    }
+  }
+  return "";
+}
+
+/** Pulls whatever textual content an SPA shell still exposes server-side. */
+function extractStructuredContent(html: string): string {
+  const parts: string[] = [];
+
+  const title = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1];
+  if (title) parts.push(cleanText(title));
+
+  const metaRegex = /<meta[^>]+(?:name|property)=["'](description|og:title|og:description|twitter:title|twitter:description)["'][^>]*content=["']([^"']+)["'][^>]*>/gi;
+  let meta;
+  while ((meta = metaRegex.exec(html)) !== null) parts.push(cleanText(meta[2]));
+
+  const ldRegex = /<script[^>]+type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi;
+  let ld;
+  while ((ld = ldRegex.exec(html)) !== null) {
+    try {
+      parts.push(flattenJson(JSON.parse(ld[1])));
+    } catch { /* ignore malformed JSON-LD */ }
+  }
+
+  const noscriptRegex = /<noscript[^>]*>([\s\S]*?)<\/noscript>/gi;
+  let ns;
+  while ((ns = noscriptRegex.exec(html)) !== null) parts.push(extractMainContent(ns[1]));
+
+  return parts.filter(Boolean).join("\n");
+}
+
+function flattenJson(value: unknown, depth = 0): string {
+  if (depth > 6 || value == null) return "";
+  if (typeof value === "string" || typeof value === "number") return String(value);
+  if (Array.isArray(value)) return value.map((v) => flattenJson(v, depth + 1)).filter(Boolean).join("\n");
+  if (typeof value === "object") {
+    return Object.entries(value as Record<string, unknown>)
+      .filter(([key]) => !key.startsWith("@"))
+      .map(([key, v]) => {
+        const nested = flattenJson(v, depth + 1);
+        return nested ? `${key}: ${nested}` : "";
+      })
+      .filter(Boolean)
+      .join("\n");
+  }
+  return "";
+}
+
+function cleanText(text: string): string {
+  return text
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&nbsp;/g, " ")
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .join("\n");
+}
+
+
 
 function extractMainContent(html: string): string {
   // Remove script, style, nav, footer, header tags
