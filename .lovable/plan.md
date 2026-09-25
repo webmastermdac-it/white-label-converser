@@ -1,19 +1,18 @@
-# Sidebar cliente scalabile per settore
+# Pulizia componenti legacy e preset tono nella sezione attiva
+
+## Obiettivo
+- Confermare che `KnowledgeBaseWizard` e `IndustryTemplateSelector` non siano usati dall’app reale.
+- Eliminare entrambi solo se risultano privi di import effettivi.
+- Portare i sei preset e il confronto dei toni nella sezione `Tono di Voce` realmente usata.
 
 ## Intervento
-- Separare le voci universali dalle voci del modulo attivo nella sidebar desktop.
-- Mostrare le voci verticali esistenti dentro un gruppo richiudibile con icona, nome bilingue del modulo e chevron.
-- Aprire inizialmente il gruppo quando il modulo ha voci; ricordare poi la scelta in `localStorage`, separatamente per modulo.
-- Conservare link attivo, badge delle richieste e tooltip quando la sidebar è ridotta a icone.
-- Applicare lo stesso raggruppamento al menu mobile, senza cambiare il menu amministratore.
+1. Rimuovere i due componenti legacy non importati e l’eventuale anteprima temporanea che dipende dal wizard.
+2. In `StructuredSections`, riusare gli stessi contenuti italiani dei sei preset e lo stesso confronto adattivo già verificato.
+3. Mostrare chip prima della Textarea solo per `tone_of_voice`; al clic aggiornare il testo e invocare subito il salvataggio.
+4. Mostrare il confronto richiudibile dopo la Textarea; lasciare identiche tutte le altre sezioni e le FAQ.
+5. Verificare compilazione e flusso reale nella tab Conoscenza di un bot, con screenshot della sezione aperta, preset applicato e confronto visibile.
 
 ## Dettagli tecnici
-- `ClientSidebar.tsx`: userà `activeModule.menu` come gruppo verticale invece di unirlo alla lista Dati.
-- `MobileNav.tsx`: riceverà opzionalmente un gruppo verticale e ne renderà il controllo richiudibile.
-- `ClientLayout.tsx`: passerà al menu mobile le voci universali e il gruppo del modulo separatamente; è una dipendenza necessaria per evitare che mobile continui a mostrare la lista piatta.
-- Nessuna modifica a destinazioni, route o registro dei moduli.
-
-## Verifica
-- Controllare build e tipi.
-- Verificare con screenshot desktop e mobile un bot hotel con gruppo aperto.
-- Verificare un bot generico o ecommerce con gruppo assente e sidebar corta.
+- Il layout del confronto continuerà a scegliere tabella o righe impilate dalla larghezza reale del contenitore.
+- Nessuna nuova logica bilingue verrà aggiunta a `StructuredSections`; testi e intestazioni resteranno in italiano.
+- Il salvataggio della chip userà `updateField("tone_of_voice", preset.text)` seguito da `onBlurSave()` come richiesto.
