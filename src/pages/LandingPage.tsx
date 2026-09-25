@@ -283,8 +283,11 @@ export function PricingGrid({ yearly, t, verticalId, selectedVertical = "generic
           <h3 className="text-xl font-bold" style={{ fontFamily: "'Syne', sans-serif" }}>Starter</h3>
           <p className="text-white/40 text-sm mt-1">{t("For small businesses and professionals", "Per piccole imprese e professionisti")}</p>
           <div className="mt-3">
-            <span className="text-4xl font-extrabold">€{yearly ? "490" : "49"}</span>
-            <span className="text-white/40 text-sm">/{yearly ? t("year", "anno") : t("month", "mese")}</span>
+            <span className="text-4xl font-extrabold">€{yearly ? "41" : "49"}</span>
+            <span className="text-white/40 text-sm">/{t("month", "mese")}</span>
+            {yearly && (
+              <p className="text-white/40 text-xs mt-1">{t("Billed annually at €490/year — save 17%", "Fatturato annualmente a €490/anno — risparmi il 17%")}</p>
+            )}
           </div>
         </div>
         <Link to={verticalId ? `/register?vertical=${verticalId}` : "/register"} className="block">
@@ -327,8 +330,11 @@ export function PricingGrid({ yearly, t, verticalId, selectedVertical = "generic
           <h3 className="text-xl font-bold" style={{ fontFamily: "'Syne', sans-serif" }}>Pro</h3>
           <p className="text-white/40 text-sm mt-1">{t("For agencies and growing businesses", "Per agenzie e aziende in crescita")}</p>
           <div className="mt-3">
-            <span className="text-4xl font-extrabold">€{yearly ? "1490" : "149"}</span>
-            <span className="text-white/40 text-sm">/{yearly ? t("year", "anno") : t("month", "mese")}</span>
+            <span className="text-4xl font-extrabold">€{yearly ? "124" : "149"}</span>
+            <span className="text-white/40 text-sm">/{t("month", "mese")}</span>
+            {yearly && (
+              <p className="text-white/40 text-xs mt-1">{t("Billed annually at €1490/year — save 17%", "Fatturato annualmente a €1490/anno — risparmi il 17%")}</p>
+            )}
           </div>
         </div>
         <Link to={verticalId ? `/register?vertical=${verticalId}` : "/register"} className="block">
