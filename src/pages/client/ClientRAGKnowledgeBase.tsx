@@ -1615,8 +1615,8 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
         <p className="text-[11px] text-muted-foreground mt-3 flex items-center gap-1">
           <Info className="w-3 h-3 shrink-0" />
           {t(
-            "Scrivi qui le informazioni principali della tua attività: chi sei, prodotti e servizi, tono di voce, argomenti vietati, contatti e orari. Questo testo viene usato come ultima risorsa, dopo FAQ e Knowledge Base.",
-            "Describe here: who you are, your products/services, tone of voice, forbidden topics, contact info and hours. This text is used as a last-resort source, after FAQ and Knowledge Base."
+            "Scrivi qui le informazioni principali della tua attività: chi sei, prodotti e servizi, argomenti vietati, contatti e orari. Questo testo viene usato come ultima risorsa, dopo FAQ e Knowledge Base.",
+            "Describe here: who you are, your products/services, forbidden topics, contact info and hours. This text is used as a last-resort source, after FAQ and Knowledge Base."
           )}
         </p>
       </div>
