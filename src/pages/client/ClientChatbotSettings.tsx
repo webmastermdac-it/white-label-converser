@@ -52,6 +52,12 @@ const ClientChatbotSettings = ({ adminMode = false, botIdOverride, hideHeader = 
   const [saving, setSaving] = useState(false);
   const [previewKey, setPreviewKey] = useState(0);
   const [activeTab, setActiveTab] = useState("general");
+  const [conciergeSection, setConciergeSection] = useState<string | null>(null);
+  // Module of THIS bot (not the sidebar's active module)
+  const conciergeMenu = getModule(botConfig?.business_vertical).menu;
+  const currentConciergeKey = conciergeMenu.some((m) => m.key === conciergeSection) ? conciergeSection : conciergeMenu[0]?.key;
+  const currentConciergeItem = conciergeMenu.find((m) => m.key === currentConciergeKey);
+  const ConciergeComponent = currentConciergeItem ? MODULE_PAGE_COMPONENTS[currentConciergeItem.href] : undefined;
   const clientId = botConfig?.client_id || authClientId;
   const backPath = adminMode ? "/admin/bots" : "/dashboard/bots";
 
@@ -449,7 +455,7 @@ const ClientChatbotSettings = ({ adminMode = false, botIdOverride, hideHeader = 
               })}
             </div>
             {ConciergeComponent && botId && (
-              <div className="-mx-4 md:-mx-8">
+              <div>
                 <ConciergeComponent key={`${botId}-${currentConciergeKey}`} botIdOverride={botId} />
               </div>
             )}
