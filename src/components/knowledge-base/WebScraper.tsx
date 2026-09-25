@@ -43,6 +43,15 @@ const WebScraper: React.FC<Props> = ({ scrapedContent, onUseContent }) => {
       if (error) throw error;
 
       setMainContent(data?.content || "");
+      if (data?.dynamic) {
+        toast({
+          title: t("Dynamic website detected", "Sito dinamico rilevato"),
+          description: t(
+            "This site builds its text with JavaScript. We read it with an alternative method, so check the extracted content below.",
+            "Questo sito costruisce i testi con JavaScript. Lo abbiamo letto con un metodo alternativo: controlla il contenuto estratto qui sotto."
+          ),
+        });
+      }
       setPages(
         (data?.links || []).slice(0, 10).map((l: any) => ({
           url: l.url,
@@ -50,6 +59,7 @@ const WebScraper: React.FC<Props> = ({ scrapedContent, onUseContent }) => {
           selected: false,
         }))
       );
+
     } catch (err: any) {
       toast({
         title: t("Error", "Errore"),

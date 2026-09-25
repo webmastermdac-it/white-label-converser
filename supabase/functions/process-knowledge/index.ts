@@ -138,6 +138,20 @@ async function scrapeUrl(url: string | null): Promise<string> {
   if (!response.ok) throw new Error(`Failed to fetch URL: ${response.status}`);
 
   const html = await response.text();
+  let text = htmlToText(html);
+
+  // JavaScript-rendered pages (SPA) return an empty shell: fall back to a
+  // reader proxy and to structured data (meta tags, JSON-LD, noscript).
+  if (isThinContent(text)) {
+    const rendered = await fetchRenderedText(formattedUrl);
+    const structured = extractStructuredContent(html);
+    text = [rendered, structured].filter((part) => !isThinContent(part)).join("\n\n") || text;
+  }
+
+  return text.slice(0, 100000);
+}
+
+function htmlToText(html: string): string {
   let text = html
     .replace(/<script[\s\S]*?<\/script>/gi, "")
     .replace(/<style[\s\S]*?<\/style>/gi, "")
@@ -148,11 +162,78 @@ async function scrapeUrl(url: string | null): Promise<string> {
     .replace(/<noscript[\s\S]*?<\/noscript>/gi, "");
   text = text.replace(/<(p|div|h[1-6]|li|br|tr)[^>]*>/gi, "\n");
   text = text.replace(/<[^>]+>/g, " ");
-  text = text.replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">")
-    .replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&nbsp;/g, " ");
-  text = text.split("\n").map(l => l.trim()).filter(Boolean).join("\n");
-  return text.slice(0, 100000);
+  return decodeEntities(text);
 }
+
+function decodeEntities(text: string): string {
+  return text
+    .replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&nbsp;/g, " ")
+    .split("\n").map(l => l.trim()).filter(Boolean).join("\n");
+}
+
+function isThinContent(text: string | null | undefined): boolean {
+  return !text || text.replace(/\s+/g, " ").trim().length < 200;
+}
+
+async function fetchRenderedText(url: string): Promise<string> {
+  try {
+    const res = await fetch(`https://r.jina.ai/${url}`, {
+      headers: { "User-Agent": "Mozilla/5.0 (compatible; GeniusBot/1.0)", Accept: "text/plain, text/html" },
+      signal: AbortSignal.timeout(20000),
+    });
+    if (!res.ok) return "";
+    const body = await res.text();
+    const text = body.includes("<html") || body.includes("<body") ? htmlToText(body) : decodeEntities(body);
+    return isThinContent(text) ? "" : text.slice(0, 100000);
+  } catch (e) {
+    console.error("Render proxy failed:", e);
+    return "";
+  }
+}
+
+function extractStructuredContent(html: string): string {
+  const parts: string[] = [];
+
+  const title = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1];
+  if (title) parts.push(decodeEntities(title));
+
+  const metaRegex = /<meta[^>]+(?:name|property)=["'](description|og:title|og:description|twitter:title|twitter:description)["'][^>]*content=["']([^"']+)["'][^>]*>/gi;
+  let meta;
+  while ((meta = metaRegex.exec(html)) !== null) parts.push(decodeEntities(meta[2]));
+
+  const ldRegex = /<script[^>]+type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi;
+  let ld;
+  while ((ld = ldRegex.exec(html)) !== null) {
+    try {
+      parts.push(flattenJson(JSON.parse(ld[1])));
+    } catch { /* ignore malformed JSON-LD */ }
+  }
+
+  const noscriptRegex = /<noscript[^>]*>([\s\S]*?)<\/noscript>/gi;
+  let ns;
+  while ((ns = noscriptRegex.exec(html)) !== null) parts.push(htmlToText(ns[1]));
+
+  return parts.filter(Boolean).join("\n");
+}
+
+function flattenJson(value: unknown, depth = 0): string {
+  if (depth > 6 || value == null) return "";
+  if (typeof value === "string" || typeof value === "number") return String(value);
+  if (Array.isArray(value)) return value.map(v => flattenJson(v, depth + 1)).filter(Boolean).join("\n");
+  if (typeof value === "object") {
+    return Object.entries(value as Record<string, unknown>)
+      .filter(([key]) => !key.startsWith("@"))
+      .map(([key, v]) => {
+        const nested = flattenJson(v, depth + 1);
+        return nested ? `${key}: ${nested}` : "";
+      })
+      .filter(Boolean)
+      .join("\n");
+  }
+  return "";
+}
+
 
 async function extractFileText(supabase: any, filePath: string | null, fileType: string): Promise<string> {
   if (!filePath) return "";
