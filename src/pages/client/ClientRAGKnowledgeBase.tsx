@@ -15,13 +15,12 @@ import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import StructuredSections from "@/components/knowledge-base/StructuredSections";
-import { defaultSections, type KBSections } from "@/components/knowledge-base/types";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import {
   Loader2, Upload, Globe, HelpCircle, FileText, Trash2,
   RefreshCw, CheckCircle2, XCircle, Clock, Plus, Database,
   Search, Map, Send, AlertTriangle, GripVertical, X, Lock,
-  Save, Star, Info, Store, ExternalLink, BookOpen,
+  Save, Star, Info, Store, ExternalLink, BookOpen, Table2, ChevronDown,
 } from "lucide-react";
 
 // ── Types ──
@@ -61,41 +60,163 @@ const normalizeUrl = (url: string): string => {
   }
 };
 
-const instructionHeadings: Record<Exclude<keyof KBSections, "faqs">, string[]> = {
-  about_us: ["Chi siamo", "About Us"],
-  products_services: ["Prodotti e Servizi", "Prodotti / Servizi", "Products & Services"],
-  tone_of_voice: ["Tono di voce", "Tone of Voice"],
-  forbidden_topics: ["Argomenti vietati", "Forbidden Topics"],
-  contacts_hours: ["Contatti e orari", "Contacts & Hours"],
+type TonePreset = {
+  id: string;
+  label: string;
+  sub: string;
+  fullName: string;
+  text: string;
+  characteristics: string;
+  archetypes: string;
+  example: string;
 };
 
-const parseInstructions = (prompt: string): KBSections => {
-  const sections = { ...defaultSections, faqs: [] };
-  if (!prompt.trim()) return sections;
-  const headingToKey = new globalThis.Map<string, Exclude<keyof KBSections, "faqs">>();
-  Object.entries(instructionHeadings).forEach(([key, headings]) =>
-    headings.forEach((heading) => headingToKey.set(heading.toLowerCase(), key as Exclude<keyof KBSections, "faqs">))
+const TONE_PRESETS: TonePreset[] = [
+  {
+    id: "istituzionale",
+    label: "Istituzionale",
+    sub: "Preciso, autorevole, il Lei",
+    fullName: "Istituzionale / Formale",
+    text: `Tono istituzionale e formale: linguaggio preciso e autorevole, terza persona o forma di cortesia ("Lei"), evita slang e abbreviazioni. Esempio: "La ringraziamo per aver scelto i nostri servizi. La vostra sicurezza è la nostra priorità."`,
+    characteristics: `Linguaggio preciso, autorevole, uso della terza persona o del "Lei". Evita slang e abbreviazioni.`,
+    archetypes: "Sovrano, Saggio",
+    example: "La ringraziamo per aver scelto i nostri servizi. La vostra sicurezza è la nostra priorità.",
+  },
+  {
+    id: "amichevole",
+    label: "Amichevole",
+    sub: "Caldo, colloquiale, il tu",
+    fullName: "Amichevole / Informale",
+    text: `Tono amichevole e informale: caldo, accessibile, usa il "tu" e un linguaggio colloquiale ma curato. Esempio: "Ciao! Siamo felici di averti qui. Mettiti comodo, pensiamo a tutto noi."`,
+    characteristics: `Caldo, accessibile, usa il "tu" e un linguaggio colloquiale ma curato.`,
+    archetypes: "Uomo Comune, Innocente",
+    example: "Ciao! Siamo felici di averti qui. Mettiti comodo, pensiamo a tutto noi.",
+  },
+  {
+    id: "ironico",
+    label: "Ironico",
+    sub: "Giocoso, battute leggere",
+    fullName: "Ironico / Divertente",
+    text: `Tono ironico e divertente: giocoso, leggero, fa uso di battute, giochi di parole e piccole storie per intrattenere. Esempio: "Sappiamo che odi i lunedì. Ecco qualcosa che ti farà sorridere (o almeno ci prova)."`,
+    characteristics: "Giocoso, leggero, fa uso di battute, giochi di parole e storielle per intrattenere.",
+    archetypes: "Burlone (Jester)",
+    example: "Sappiamo che odi i lunedì. Ecco qualcosa che ti farà sorridere (o almeno ci prova).",
+  },
+  {
+    id: "ispirazionale",
+    label: "Ispirazionale",
+    sub: "Motivante, epico",
+    fullName: "Ispirazionale / Epico",
+    text: `Tono ispirazionale ed epico: evocativo, motivante, orientato al superamento dei limiti e al cambiamento. Esempio: "Il futuro non si aspetta, si costruisce. Abbatti le barriere e libera il tuo potenziale."`,
+    characteristics: "Evocativo, motivante, orientato al superamento dei limiti e al cambiamento.",
+    archetypes: "Eroe, Ribelle",
+    example: "Il futuro non si aspetta, si costruisce. Abbatti le barriere e libera il tuo potenziale.",
+  },
+  {
+    id: "tecnico",
+    label: "Tecnico",
+    sub: "Dati, precisione, oggettività",
+    fullName: "Tecnico / Specialistico",
+    text: `Tono tecnico e specialistico: focalizzato su dati, precisione, termini di settore e oggettività. Esempio: "Il nuovo algoritmo ottimizza l'efficienza energetica del 42% riducendo i tempi di latenza."`,
+    characteristics: "Focalizzato su dati, precisione scientifica, termini di settore e oggettività.",
+    archetypes: "Creatore, Saggio",
+    example: "Il nuovo algoritmo ottimizza l'efficienza energetica del 42% riducendo i tempi di latenza.",
+  },
+  {
+    id: "irriverente",
+    label: "Irriverente",
+    sub: "Diretto, provocatorio",
+    fullName: "Irriverente / Provocatorio",
+    text: `Tono irriverente e provocatorio: diretto, audace, rompe gli schemi e sfida lo status quo, a volte con sarcasmo. Esempio: "Le solite regole hanno stancato. È ora di fare di testa propria. Tu da che parte stai?"`,
+    characteristics: "Diretto, audace, rompe gli schemi e sfida lo status quo, a volte usando il sarcasmo.",
+    archetypes: "Ribelle (Fuorilegge)",
+    example: "Le solite regole hanno stancato. È ora di fare di testa propria. Tu da che parte stai?",
+  },
+];
+
+const ToneReferenceTable = ({ t }: { t: (it: string, en: string) => string }) => {
+  const [open, setOpen] = useState(false);
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const [wide, setWide] = useState(false);
+
+  useEffect(() => {
+    if (!open) return;
+    const element = wrapRef.current;
+    if (!element) return;
+    const measure = () => setWide(element.offsetWidth >= 620);
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [open]);
+
+  return (
+    <Collapsible open={open} onOpenChange={setOpen}>
+      <CollapsibleTrigger className="flex items-center justify-between w-full p-3 rounded-xl bg-secondary hover:bg-accent transition-colors text-left">
+        <span className="flex items-center gap-2 text-xs font-medium text-foreground">
+          <Table2 className="w-3.5 h-3.5 text-primary" />
+          Confronta tutti i toni
+        </span>
+        <ChevronDown className={`w-3.5 h-3.5 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`} />
+      </CollapsibleTrigger>
+      <CollapsibleContent className="pt-3">
+        <div ref={wrapRef}>
+          {wide ? (
+            <div className="overflow-x-auto rounded-lg border border-border">
+              <table className="w-full min-w-[600px] text-xs">
+                <thead>
+                  <tr className="bg-secondary/60 text-left">
+                    <th className="px-2.5 py-2 font-medium text-foreground whitespace-nowrap">Tono</th>
+                    <th className="px-2.5 py-2 font-medium text-foreground">{t("Caratteristiche principali", "Key characteristics")}</th>
+                    <th className="px-2.5 py-2 font-medium text-foreground whitespace-nowrap">{t("Archetipi associati", "Associated archetypes")}</th>
+                    <th className="px-2.5 py-2 font-medium text-foreground">{t("Esempio pratico", "Practical example")}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {TONE_PRESETS.map((preset) => (
+                    <tr key={preset.id} className="border-t border-border align-top">
+                      <td className="px-2.5 py-2 font-medium text-foreground whitespace-nowrap">{preset.fullName}</td>
+                      <td className="px-2.5 py-2 text-muted-foreground">{preset.characteristics}</td>
+                      <td className="px-2.5 py-2 text-muted-foreground whitespace-nowrap">{preset.archetypes}</td>
+                      <td className="px-2.5 py-2 text-muted-foreground italic">“{preset.example}”</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {TONE_PRESETS.map((preset) => (
+                <div key={preset.id} className="rounded-lg border border-border p-2.5 space-y-1">
+                  <p className="text-xs font-medium text-foreground">{preset.fullName}</p>
+                  <p className="text-[11px] text-muted-foreground"><span className="font-medium text-foreground">{t("Caratteristiche: ", "Characteristics: ")}</span>{preset.characteristics}</p>
+                  <p className="text-[11px] text-muted-foreground"><span className="font-medium text-foreground">{t("Archetipi: ", "Archetypes: ")}</span>{preset.archetypes}</p>
+                  <p className="text-[11px] text-muted-foreground italic">“{preset.example}”</p>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </CollapsibleContent>
+    </Collapsible>
   );
-  const matches = [...prompt.matchAll(/^##\s+(.+)$/gm)];
-  const recognized = matches.filter((match) => headingToKey.has(match[1].trim().toLowerCase()));
-  if (!recognized.length) return { ...sections, about_us: prompt };
-  const leading = prompt.slice(0, recognized[0].index).trim();
-  recognized.forEach((match, index) => {
-    const key = headingToKey.get(match[1].trim().toLowerCase());
-    if (!key) return;
-    const start = (match.index ?? 0) + match[0].length;
-    const end = recognized[index + 1]?.index ?? prompt.length;
-    sections[key] = prompt.slice(start, end).trim();
-  });
-  if (leading) sections.about_us = [leading, sections.about_us].filter(Boolean).join("\n\n");
-  return sections;
 };
 
-const buildInstructions = (sections: KBSections) =>
-  (Object.keys(instructionHeadings) as Exclude<keyof KBSections, "faqs">[])
-    .filter((key) => sections[key].trim())
-    .map((key) => `## ${instructionHeadings[key][0]}\n${sections[key].trim()}`)
-    .join("\n\n");
+// Replace only the named tone block; preserve every other instruction verbatim.
+const withTonePreset = (prompt: string, presetText: string): string => {
+  const block = `## Tono di voce\n${presetText}`;
+  const heading = /^## Tono di voce[^\S\r\n]*\r?$/gm;
+  const match = heading.exec(prompt);
+  if (!match) return prompt ? `${prompt}${/\n$/.test(prompt) ? "\n" : "\n\n"}${block}` : block;
+  const start = match.index;
+  const next = /^## /gm;
+  next.lastIndex = start + match[0].length;
+  const following = next.exec(prompt);
+  const end = following?.index ?? prompt.length;
+  const before = prompt.slice(0, start);
+  const after = prompt.slice(end);
+  return `${before}${block}${after ? `\n\n${after}` : ""}`;
+};
 
 const statusConfig: Record<string, { icon: any; cls: string; label: string }> = {
   processing: { icon: Clock, cls: "bg-warning/10 text-warning border-warning/30", label: "Processing..." },
@@ -236,7 +357,6 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
   // Instructions state
   const [systemPrompt, setSystemPrompt] = useState("");
   const systemPromptRef = useRef("");
-  const [instructionSections, setInstructionSections] = useState<KBSections>(defaultSections);
   const [chatbotVertical, setChatbotVertical] = useState<string | null>(null);
   const [savingPrompt, setSavingPrompt] = useState(false);
   const [activeArea, setActiveArea] = useState<"hub" | "faq" | "knowledge" | "instructions">("hub");
@@ -283,7 +403,6 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
     setChatbotId(configId!);
     setSystemPrompt(promptValue);
     systemPromptRef.current = promptValue;
-    setInstructionSections(parseInstructions(promptValue));
 
     // Staleness watchdog: auto-mark stuck "processing" sources as error
     const staleThreshold = new Date(Date.now() - 5 * 60 * 1000).toISOString();
@@ -755,11 +874,11 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
     setSavingPrompt(false);
   };
 
-  const updateInstructionSections = (next: KBSections) => {
-    const prompt = buildInstructions(next);
-    setInstructionSections(next);
-    setSystemPrompt(prompt);
-    systemPromptRef.current = prompt;
+  const applyTonePreset = async (presetText: string) => {
+    const next = withTonePreset(systemPromptRef.current, presetText);
+    systemPromptRef.current = next;
+    setSystemPrompt(next);
+    await saveInstructions();
   };
 
   // ── Stats ──
@@ -1439,11 +1558,29 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
         />
 
         <div className="space-y-3">
-          <StructuredSections
-            sections={instructionSections}
-            onChange={updateInstructionSections}
-            onBlurSave={saveInstructions}
+          <div className="flex flex-wrap gap-2" aria-label={t("Toni di voce", "Tones of voice")}>
+            {TONE_PRESETS.map((preset) => (
+              <Button key={preset.id} type="button" variant="outline" disabled={savingPrompt || !chatbotId}
+                onClick={() => applyTonePreset(preset.text)}
+                className="h-auto min-w-0 max-w-full flex-col items-start gap-0.5 rounded-lg px-3 py-2 text-left font-normal hover:border-primary/50"
+              >
+                <span className="text-xs font-medium text-foreground">{preset.label}</span>
+                <span className="text-[11px] text-muted-foreground">{preset.sub}</span>
+              </Button>
+            ))}
+          </div>
+          <Textarea
+            value={systemPrompt}
+            onChange={(event) => {
+              systemPromptRef.current = event.target.value;
+              setSystemPrompt(event.target.value);
+            }}
+            rows={10}
+            className="min-h-[180px] resize-y"
+            aria-label={t("Testo delle istruzioni", "Instructions text")}
+            placeholder={t("Scrivi le istruzioni del bot...", "Write your bot's instructions...")}
           />
+          <ToneReferenceTable t={t} />
           <Button onClick={saveInstructions} disabled={savingPrompt} className="gradient-primary text-white border-0 glow-sm w-full h-11">
             {savingPrompt ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
             {t("Salva Istruzioni", "Save Instructions")}
