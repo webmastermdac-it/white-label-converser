@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { industryTemplates, IndustryTemplate } from "./templates";
 import { KBSections, defaultSections } from "./types";
 import { Button } from "@/components/ui/button";
@@ -7,7 +7,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { useLanguage } from "@/hooks/useLanguage";
-import { CheckCircle2, ArrowRight, ArrowLeft, Sparkles, Plus, X } from "lucide-react";
+import { CheckCircle2, ArrowRight, ArrowLeft, Sparkles, Plus, X, ChevronDown, Table2 } from "lucide-react";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import { supabase } from "@/integrations/supabase/client";
 
 interface Props {
@@ -41,6 +46,209 @@ function buildPrompt(sections: KBSections, lang: string): string {
 
   return lines.join("\n\n");
 }
+
+type TonePreset = {
+  id: string;
+  label: { it: string; en: string };
+  sub: { it: string; en: string };
+  fullName: { it: string; en: string };
+  text: { it: string; en: string };
+  characteristics: { it: string; en: string };
+  archetypes: { it: string; en: string };
+  example: { it: string; en: string };
+};
+
+const TONE_PRESETS: TonePreset[] = [
+  {
+    id: "istituzionale",
+    label: { it: "Istituzionale", en: "Institutional" },
+    sub: { it: "Preciso, autorevole, il Lei", en: "Precise, authoritative, formal" },
+    fullName: { it: "Istituzionale / Formale", en: "Institutional / Formal" },
+    text: {
+      it: `Tono istituzionale e formale: linguaggio preciso e autorevole, terza persona o forma di cortesia ("Lei"), evita slang e abbreviazioni. Esempio: "La ringraziamo per aver scelto i nostri servizi. La vostra sicurezza è la nostra priorità."`,
+      en: `Institutional and formal tone: precise, authoritative language, third person or formal courtesy ("you"), avoids slang and abbreviations. Example: "Thank you for choosing our services. Your safety is our priority."`,
+    },
+    characteristics: {
+      it: `Linguaggio preciso, autorevole, uso della terza persona o del "Lei". Evita slang e abbreviazioni.`,
+      en: `Precise, authoritative language, third person or formal "you". Avoids slang and abbreviations.`,
+    },
+    archetypes: { it: "Sovrano, Saggio", en: "Ruler, Sage" },
+    example: {
+      it: "La ringraziamo per aver scelto i nostri servizi. La vostra sicurezza è la nostra priorità.",
+      en: "Thank you for choosing our services. Your safety is our priority.",
+    },
+  },
+  {
+    id: "amichevole",
+    label: { it: "Amichevole", en: "Friendly" },
+    sub: { it: "Caldo, colloquiale, il tu", en: "Warm, casual, informal" },
+    fullName: { it: "Amichevole / Informale", en: "Friendly / Informal" },
+    text: {
+      it: `Tono amichevole e informale: caldo, accessibile, usa il "tu" e un linguaggio colloquiale ma curato. Esempio: "Ciao! Siamo felici di averti qui. Mettiti comodo, pensiamo a tutto noi."`,
+      en: `Friendly and informal tone: warm, approachable, uses the informal "you" and casual but polished language. Example: "Hi! We're happy to have you here. Make yourself at home, we'll take care of everything."`,
+    },
+    characteristics: {
+      it: `Caldo, accessibile, usa il "tu" e un linguaggio colloquiale ma curato.`,
+      en: `Warm, approachable, uses the informal "you" and casual but polished language.`,
+    },
+    archetypes: { it: "Uomo Comune, Innocente", en: "Everyman, Innocent" },
+    example: {
+      it: "Ciao! Siamo felici di averti qui. Mettiti comodo, pensiamo a tutto noi.",
+      en: "Hi! We're happy to have you here. Make yourself at home, we'll take care of everything.",
+    },
+  },
+  {
+    id: "ironico",
+    label: { it: "Ironico", en: "Ironic" },
+    sub: { it: "Giocoso, battute leggere", en: "Playful, light jokes" },
+    fullName: { it: "Ironico / Divertente", en: "Ironic / Fun" },
+    text: {
+      it: `Tono ironico e divertente: giocoso, leggero, fa uso di battute, giochi di parole e piccole storie per intrattenere. Esempio: "Sappiamo che odi i lunedì. Ecco qualcosa che ti farà sorridere (o almeno ci prova)."`,
+      en: `Ironic and fun tone: playful, light, uses jokes, wordplay and little stories to entertain. Example: "We know you hate Mondays. Here's something to make you smile (or at least try)."`,
+    },
+    characteristics: {
+      it: "Giocoso, leggero, fa uso di battute, giochi di parole e storielle per intrattenere.",
+      en: "Playful, light, uses jokes, wordplay and little stories to entertain.",
+    },
+    archetypes: { it: "Burlone (Jester)", en: "Jester" },
+    example: {
+      it: "Sappiamo che odi i lunedì. Ecco qualcosa che ti farà sorridere (o almeno ci prova).",
+      en: "We know you hate Mondays. Here's something to make you smile (or at least try).",
+    },
+  },
+  {
+    id: "ispirazionale",
+    label: { it: "Ispirazionale", en: "Inspirational" },
+    sub: { it: "Motivante, epico", en: "Motivating, epic" },
+    fullName: { it: "Ispirazionale / Epico", en: "Inspirational / Epic" },
+    text: {
+      it: `Tono ispirazionale ed epico: evocativo, motivante, orientato al superamento dei limiti e al cambiamento. Esempio: "Il futuro non si aspetta, si costruisce. Abbatti le barriere e libera il tuo potenziale."`,
+      en: `Inspirational and epic tone: evocative, motivating, focused on pushing limits and change. Example: "The future isn't waited for, it's built. Break down barriers and unleash your potential."`,
+    },
+    characteristics: {
+      it: "Evocativo, motivante, orientato al superamento dei limiti e al cambiamento.",
+      en: "Evocative, motivating, oriented to pushing limits and change.",
+    },
+    archetypes: { it: "Eroe, Ribelle", en: "Hero, Rebel" },
+    example: {
+      it: "Il futuro non si aspetta, si costruisce. Abbatti le barriere e libera il tuo potenziale.",
+      en: "The future isn't waited for, it's built. Break down barriers and unleash your potential.",
+    },
+  },
+  {
+    id: "tecnico",
+    label: { it: "Tecnico", en: "Technical" },
+    sub: { it: "Dati, precisione, oggettività", en: "Data, precision, objectivity" },
+    fullName: { it: "Tecnico / Specialistico", en: "Technical / Specialist" },
+    text: {
+      it: `Tono tecnico e specialistico: focalizzato su dati, precisione, termini di settore e oggettività. Esempio: "Il nuovo algoritmo ottimizza l'efficienza energetica del 42% riducendo i tempi di latenza."`,
+      en: `Technical and specialist tone: focused on data, precision, industry terms and objectivity. Example: "The new algorithm improves energy efficiency by 42% while reducing latency."`,
+    },
+    characteristics: {
+      it: "Focalizzato su dati, precisione scientifica, termini di settore e oggettività.",
+      en: "Focused on data, scientific precision, industry terms and objectivity.",
+    },
+    archetypes: { it: "Creatore, Saggio", en: "Creator, Sage" },
+    example: {
+      it: "Il nuovo algoritmo ottimizza l'efficienza energetica del 42% riducendo i tempi di latenza.",
+      en: "The new algorithm improves energy efficiency by 42% while reducing latency.",
+    },
+  },
+  {
+    id: "irriverente",
+    label: { it: "Irriverente", en: "Irreverent" },
+    sub: { it: "Diretto, provocatorio", en: "Direct, provocative" },
+    fullName: { it: "Irriverente / Provocatorio", en: "Irreverent / Provocative" },
+    text: {
+      it: `Tono irriverente e provocatorio: diretto, audace, rompe gli schemi e sfida lo status quo, a volte con sarcasmo. Esempio: "Le solite regole hanno stancato. È ora di fare di testa propria. Tu da che parte stai?"`,
+      en: `Irreverent and provocative tone: direct, bold, breaks the mold and challenges the status quo, sometimes with sarcasm. Example: "The usual rules have worn out. Time to think for yourself. Which side are you on?"`,
+    },
+    characteristics: {
+      it: "Diretto, audace, rompe gli schemi e sfida lo status quo, a volte usando il sarcasmo.",
+      en: "Direct, bold, breaks the mold and challenges the status quo, sometimes with sarcasm.",
+    },
+    archetypes: { it: "Ribelle (Fuorilegge)", en: "Rebel (Outlaw)" },
+    example: {
+      it: "Le solite regole hanno stancato. È ora di fare di testa propria. Tu da che parte stai?",
+      en: "The usual rules have worn out. Time to think for yourself. Which side are you on?",
+    },
+  },
+];
+
+const ToneReferenceTable: React.FC<{ lang: string }> = ({ lang }) => {
+  const lk = lang === "it" ? "it" : "en";
+  const [open, setOpen] = useState(false);
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const [wide, setWide] = useState(false);
+
+  // Choose table vs stacked layout based on the real container width
+  useEffect(() => {
+    if (!open) return;
+    const measure = () => setWide((wrapRef.current?.offsetWidth ?? 0) >= 620);
+    measure();
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
+  }, [open]);
+
+  return (
+    <Collapsible open={open} onOpenChange={setOpen}>
+      <CollapsibleTrigger className="flex items-center justify-between w-full p-3 rounded-xl bg-secondary hover:bg-accent transition-colors text-left">
+        <span className="flex items-center gap-2 text-xs font-medium text-foreground">
+          <Table2 className="w-3.5 h-3.5 text-primary" />
+          {lang === "it" ? "Confronta tutti i toni" : "Compare all tones"}
+        </span>
+        <ChevronDown
+          className={`w-3.5 h-3.5 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`}
+        />
+      </CollapsibleTrigger>
+      <CollapsibleContent className="pt-3">
+        <div ref={wrapRef}>
+        {wide ? (
+          <div className="overflow-x-auto rounded-lg border border-border">
+            <table className="w-full min-w-[600px] text-xs">
+              <thead>
+                <tr className="bg-secondary/60 text-left">
+                  <th className="px-2.5 py-2 font-medium text-foreground whitespace-nowrap">{lang === "it" ? "Tono" : "Tone"}</th>
+                  <th className="px-2.5 py-2 font-medium text-foreground">{lang === "it" ? "Caratteristiche principali" : "Key traits"}</th>
+                  <th className="px-2.5 py-2 font-medium text-foreground whitespace-nowrap">{lang === "it" ? "Archetipi associati" : "Archetypes"}</th>
+                  <th className="px-2.5 py-2 font-medium text-foreground">{lang === "it" ? "Esempio pratico" : "Example"}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {TONE_PRESETS.map((p) => (
+                  <tr key={p.id} className="border-t border-border align-top">
+                    <td className="px-2.5 py-2 font-medium text-foreground whitespace-nowrap">{p.fullName[lk]}</td>
+                    <td className="px-2.5 py-2 text-muted-foreground">{p.characteristics[lk]}</td>
+                    <td className="px-2.5 py-2 text-muted-foreground whitespace-nowrap">{p.archetypes[lk]}</td>
+                    <td className="px-2.5 py-2 text-muted-foreground italic">“{p.example[lk]}”</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {TONE_PRESETS.map((p) => (
+              <div key={p.id} className="rounded-lg border border-border p-2.5 space-y-1">
+                <p className="text-xs font-medium text-foreground">{p.fullName[lk]}</p>
+                <p className="text-[11px] text-muted-foreground">
+                  <span className="font-medium text-foreground">{lang === "it" ? "Caratteristiche" : "Traits"}: </span>
+                  {p.characteristics[lk]}
+                </p>
+                <p className="text-[11px] text-muted-foreground">
+                  <span className="font-medium text-foreground">{lang === "it" ? "Archetipi" : "Archetypes"}: </span>
+                  {p.archetypes[lk]}
+                </p>
+                <p className="text-[11px] text-muted-foreground italic">“{p.example[lk]}”</p>
+              </div>
+            ))}
+          </div>
+        )}
+        </div>
+      </CollapsibleContent>
+    </Collapsible>
+  );
+};
 
 const STEPS = ["template", "about", "products", "faqs", "tone", "contacts", "review"] as const;
 type Step = typeof STEPS[number];
@@ -243,9 +451,26 @@ const KnowledgeBaseWizard: React.FC<Props> = ({ clientId, configId, currentKnowl
           <div className="space-y-4">
             <div className="space-y-3">
               <Label className="text-sm font-medium">{sectionLabels.tone_of_voice[lang === "it" ? "it" : "en"]}</Label>
+              <div className="flex flex-wrap gap-2">
+                {TONE_PRESETS.map((p) => (
+                  <button
+                    key={p.id}
+                    type="button"
+                    onClick={() => handleSectionChange("tone_of_voice", p.text[langKey])}
+                    className="rounded-xl px-3 py-2 text-left border border-border bg-secondary/30 hover:border-primary/40 hover:bg-primary/5 active:scale-[0.98] transition-all"
+                  >
+                    <span className="block text-xs font-medium text-foreground">{p.label[langKey]}</span>
+                    <span className="block text-[11px] text-muted-foreground">{p.sub[langKey]}</span>
+                  </button>
+                ))}
+              </div>
+              <p className="text-[11px] text-muted-foreground">
+                {l("Cliccando un preset il testo qui sotto viene sostituito: puoi poi modificarlo liberamente.", "Clicking a preset replaces the text below: you can then edit it freely.")}
+              </p>
               <Textarea value={sections.tone_of_voice} onChange={(e) => handleSectionChange("tone_of_voice", e.target.value)}
                 rows={3} className="bg-secondary border-border resize-none text-sm"
                 placeholder={l("Es: professionale ma amichevole...", "E.g.: professional but friendly...")} />
+              <ToneReferenceTable lang={lang} />
             </div>
             <div className="space-y-3">
               <Label className="text-sm font-medium">{sectionLabels.forbidden_topics[lang === "it" ? "it" : "en"]}</Label>
