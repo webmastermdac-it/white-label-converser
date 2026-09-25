@@ -27,6 +27,7 @@ const ClientLayout = () => {
     id: activeModule.id,
     label: activeModule.id === "hotel" ? "Hotel Concierge" : activeModule.name[lang],
     icon: activeModule.icon,
+    afterHref: "/dashboard/analytics",
     items: activeModule.menu.map((m) => ({
       label: m.label[lang],
       href: m.href,

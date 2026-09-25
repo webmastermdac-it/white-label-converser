@@ -22,6 +22,7 @@ interface MobileNavProps {
     label: string;
     icon: React.ElementType;
     items: NavItem[];
+    afterHref?: string;
   };
 }
 
@@ -108,62 +109,43 @@ const MobileNav: React.FC<MobileNavProps> = ({ items, subtitle, verticalGroup })
             {/* Nav items */}
             <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
               {items.map((item) => (
-                <NavLink
-                  key={item.href}
-                  to={item.href}
-                  end={item.end}
-                  onClick={() => setOpen(false)}
-                  className={({ isActive }) =>
-                    cn(
-                      "flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium transition-all min-h-[44px]",
-                      isActive
-                        ? "nav-item-active"
-                        : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-foreground"
-                    )
-                  }
-                >
-                  <item.icon className="w-5 h-5 flex-shrink-0" />
-                  <span>{item.label}</span>
-                  {!!item.badge && <span className="ml-auto min-w-5 h-5 px-1 rounded-full bg-primary text-primary-foreground text-[11px] grid place-items-center">{item.badge > 99 ? "99+" : item.badge}</span>}
-                </NavLink>
-              ))}
-              {verticalGroup && verticalGroup.items.length > 0 && (
-                <div className="pt-1">
-                  <button
-                    type="button"
-                    onClick={toggleVertical}
-                    aria-expanded={verticalOpen}
-                    className={cn(
-                      "flex min-h-[44px] w-full items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium transition-colors",
-                      verticalActive ? "text-primary" : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-foreground"
-                    )}
+                <div key={item.href}>
+                  <NavLink
+                    to={item.href}
+                    end={item.end}
+                    onClick={() => setOpen(false)}
+                    className={({ isActive }) =>
+                      cn(
+                        "flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium transition-all min-h-[44px]",
+                        isActive
+                          ? "nav-item-active"
+                          : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-foreground"
+                      )
+                    }
                   >
-                    <verticalGroup.icon className="h-5 w-5 flex-shrink-0" />
-                    <span>{verticalGroup.label}</span>
-                    <ChevronDown className={cn("ml-auto h-4 w-4 transition-transform duration-200", verticalOpen && "rotate-180")} />
-                  </button>
-                  <div className={cn("grid transition-[grid-template-rows,opacity] duration-200", verticalOpen ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0")}>
-                    <div className="overflow-hidden">
-                      <div className="ml-5 mt-1 space-y-1 border-l border-sidebar-border pl-2">
-                        {verticalGroup.items.map((item) => (
-                          <NavLink
-                            key={item.href}
-                            to={item.href}
-                            onClick={() => setOpen(false)}
-                            className={({ isActive }) => cn(
-                              "flex min-h-[44px] items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium transition-all",
-                              isActive ? "nav-item-active" : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-foreground"
-                            )}
-                          >
-                            <item.icon className="h-5 w-5 flex-shrink-0" />
-                            <span>{item.label}</span>
-                            {!!item.badge && <span className="ml-auto grid h-5 min-w-5 place-items-center rounded-full bg-primary px-1 text-[11px] text-primary-foreground">{item.badge > 99 ? "99+" : item.badge}</span>}
-                          </NavLink>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
+                    <item.icon className="w-5 h-5 flex-shrink-0" />
+                    <span>{item.label}</span>
+                    {!!item.badge && <span className="ml-auto min-w-5 h-5 px-1 rounded-full bg-primary text-primary-foreground text-[11px] grid place-items-center">{item.badge > 99 ? "99+" : item.badge}</span>}
+                  </NavLink>
+                  {verticalGroup?.afterHref === item.href && (
+                    <VerticalGroupMenu
+                      group={verticalGroup}
+                      open={verticalOpen}
+                      active={Boolean(verticalActive)}
+                      onToggle={toggleVertical}
+                      onNavigate={() => setOpen(false)}
+                    />
+                  )}
                 </div>
+              ))}
+              {verticalGroup && !verticalGroup.afterHref && (
+                <VerticalGroupMenu
+                  group={verticalGroup}
+                  open={verticalOpen}
+                  active={Boolean(verticalActive)}
+                  onToggle={toggleVertical}
+                  onNavigate={() => setOpen(false)}
+                />
               )}
             </nav>
 
@@ -185,5 +167,56 @@ const MobileNav: React.FC<MobileNavProps> = ({ items, subtitle, verticalGroup })
     </>
   );
 };
+
+const VerticalGroupMenu = ({
+  group,
+  open,
+  active,
+  onToggle,
+  onNavigate,
+}: {
+  group: NonNullable<MobileNavProps["verticalGroup"]>;
+  open: boolean;
+  active: boolean;
+  onToggle: () => void;
+  onNavigate: () => void;
+}) => (
+  <div className="pt-1">
+    <button
+      type="button"
+      onClick={onToggle}
+      aria-expanded={open}
+      className={cn(
+        "flex min-h-[44px] w-full items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium transition-colors",
+        active ? "text-primary" : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-foreground"
+      )}
+    >
+      <group.icon className="h-5 w-5 flex-shrink-0" />
+      <span>{group.label}</span>
+      <ChevronDown className={cn("ml-auto h-4 w-4 transition-transform duration-200", open && "rotate-180")} />
+    </button>
+    <div className={cn("grid transition-[grid-template-rows,opacity] duration-200", open ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0")}>
+      <div className="overflow-hidden">
+        <div className="ml-5 mt-1 space-y-1 border-l border-sidebar-border pl-2">
+          {group.items.map((item) => (
+            <NavLink
+              key={item.href}
+              to={item.href}
+              onClick={onNavigate}
+              className={({ isActive }) => cn(
+                "flex min-h-[44px] items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium transition-all",
+                isActive ? "nav-item-active" : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-foreground"
+              )}
+            >
+              <item.icon className="h-5 w-5 flex-shrink-0" />
+              <span>{item.label}</span>
+              {!!item.badge && <span className="ml-auto grid h-5 min-w-5 place-items-center rounded-full bg-primary px-1 text-[11px] text-primary-foreground">{item.badge > 99 ? "99+" : item.badge}</span>}
+            </NavLink>
+          ))}
+        </div>
+      </div>
+    </div>
+  </div>
+);
 
 export default MobileNav;
