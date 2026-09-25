@@ -78,6 +78,13 @@
       "when": 1790281836151,
       "tag": "0010_add_widget_events",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1790365095741,
+      "tag": "0011_lead_form_mode_default_conversational",
+      "breakpoints": true
     }
   ]
 }
