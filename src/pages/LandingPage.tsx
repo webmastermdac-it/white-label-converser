@@ -418,6 +418,12 @@ export default function LandingPage() {
   ];
   const selectedVerticalContent = verticals.find((item) => item.id === activeVertical) ?? verticals[0];
   const verticalIcon = (id: VerticalId) => id === "ecommerce" ? ShoppingCart : id === "booking" ? CalendarCheck : Hotel;
+  const pricingVerticalTabs = [
+    { id: "generic" as const, Icon: Globe, en: "Generic", it: "Generico" },
+    { id: "booking" as const, Icon: CalendarCheck, en: "Bookings & Appointments", it: "Prenotazioni & Appuntamenti" },
+    { id: "ecommerce" as const, Icon: ShoppingCart, en: "Ecommerce", it: "Ecommerce" },
+    { id: "hospitality" as const, Icon: BookOpen, en: "Restaurants & Hotels", it: "Ristorazione & Hotel" },
+  ];
   const localized = (text: { en: string; it: string }) => t(text.en, text.it);
 
   const screenshotTabs = [
