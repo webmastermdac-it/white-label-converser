@@ -1,9 +1,9 @@
-import { Link } from "react-router-dom";
-import ChatbotConfigForm from "@/components/ChatbotConfigForm";
+import ClientChatbotSettings from "@/pages/client/ClientChatbotSettings";
 import { Button } from "@/components/ui/button";
-import { Database, Users } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Users } from "lucide-react";
 
-const PLATFORM_CLIENT_ID = "00000000-0000-0000-0000-000000000001";
+const PLATFORM_BOT_CHATBOT_ID = "00000000-0000-0000-0000-000000000002";
 
 const AdminPlatformBot = () => {
   return (
@@ -17,20 +17,13 @@ const AdminPlatformBot = () => {
             Configura identità, aspetto, messaggi e notifiche del bot della piattaforma
           </p>
         </div>
-        <div className="flex gap-2">
-          <Link to="/admin/platform-bot/kb">
-            <Button variant="outline" size="sm" className="border-border">
-              <Database className="w-4 h-4 mr-2" /> Knowledge Base
-            </Button>
-          </Link>
-          <Link to="/admin/platform-leads">
-            <Button variant="outline" size="sm" className="border-border">
-              <Users className="w-4 h-4 mr-2" /> Platform Leads
-            </Button>
-          </Link>
-        </div>
+        <Link to="/admin/platform-leads">
+          <Button variant="outline" size="sm" className="border-border">
+            <Users className="w-4 h-4 mr-2" /> Platform Leads
+          </Button>
+        </Link>
       </div>
-      <ChatbotConfigForm clientId={PLATFORM_CLIENT_ID} />
+      <ClientChatbotSettings botIdOverride={PLATFORM_BOT_CHATBOT_ID} hideHeader adminMode />
     </div>
   );
 };
