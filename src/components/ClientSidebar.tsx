@@ -59,7 +59,7 @@ const ClientSidebar = () => {
         end={(item as any).end}
         className={({ isActive }) =>
           cn(
-            "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150",
+            "flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-xs font-medium transition-all duration-150",
             collapsed && "justify-center",
             isActive
               ? "nav-item-active"
@@ -67,7 +67,7 @@ const ClientSidebar = () => {
           )
         }
       >
-        <item.icon className="w-4.5 h-4.5 flex-shrink-0" />
+        <item.icon className="w-4 h-4 flex-shrink-0" />
         {!collapsed && <span>{item.label}</span>}
         {!!item.badge && <span className={cn("ml-auto min-w-5 h-5 px-1 rounded-full bg-primary text-primary-foreground text-[11px] grid place-items-center", collapsed && "absolute translate-x-3 -translate-y-3")}>{item.badge > 99 ? "99+" : item.badge}</span>}
       </NavLink>
@@ -87,7 +87,7 @@ const ClientSidebar = () => {
 
   const GroupLabel = ({ children }: { children: React.ReactNode }) =>
     collapsed ? null : (
-      <p className="px-3 pt-1 pb-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+      <p className="px-2.5 pt-1 pb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
         {children}
       </p>
     );
@@ -96,7 +96,7 @@ const ClientSidebar = () => {
     <aside
       className={cn(
         "flex flex-col h-screen sticky top-0 transition-all duration-300 border-r border-sidebar-border",
-        collapsed ? "w-16" : "w-60"
+        collapsed ? "w-16" : "w-52"
       )}
       style={{ background: "hsl(var(--sidebar-background))" }}
     >
@@ -125,14 +125,14 @@ const ClientSidebar = () => {
       </div>
 
 
-      <nav className="px-2 py-3 space-y-1 overflow-y-auto">
+      <nav className="px-2 py-2.5 space-y-0.5 overflow-y-auto">
         <GroupLabel>{isIt ? "Dati" : "Data"}</GroupLabel>
         {dataNav.map(renderItem)}
       </nav>
 
       <div className="mx-3 border-t border-sidebar-border" />
 
-      <nav className="flex-1 px-2 py-3 space-y-1 overflow-y-auto">
+      <nav className="flex-1 px-2 py-2.5 space-y-0.5 overflow-y-auto">
         <GroupLabel>{isIt ? "Configurazione" : "Configuration"}</GroupLabel>
         {configNav.map(renderItem)}
       </nav>
