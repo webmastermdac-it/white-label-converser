@@ -15,6 +15,8 @@ import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
+import StructuredSections from "@/components/knowledge-base/StructuredSections";
+import { defaultSections, type KBSections } from "@/components/knowledge-base/types";
 import {
   Loader2, Upload, Globe, HelpCircle, FileText, Trash2,
   RefreshCw, CheckCircle2, XCircle, Clock, Plus, Database,
@@ -58,6 +60,42 @@ const normalizeUrl = (url: string): string => {
     return url.trim().toLowerCase();
   }
 };
+
+const instructionHeadings: Record<Exclude<keyof KBSections, "faqs">, string[]> = {
+  about_us: ["Chi siamo", "About Us"],
+  products_services: ["Prodotti e Servizi", "Prodotti / Servizi", "Products & Services"],
+  tone_of_voice: ["Tono di voce", "Tone of Voice"],
+  forbidden_topics: ["Argomenti vietati", "Forbidden Topics"],
+  contacts_hours: ["Contatti e orari", "Contacts & Hours"],
+};
+
+const parseInstructions = (prompt: string): KBSections => {
+  const sections = { ...defaultSections, faqs: [] };
+  if (!prompt.trim()) return sections;
+  const headingToKey = new globalThis.Map<string, Exclude<keyof KBSections, "faqs">>();
+  Object.entries(instructionHeadings).forEach(([key, headings]) =>
+    headings.forEach((heading) => headingToKey.set(heading.toLowerCase(), key as Exclude<keyof KBSections, "faqs">))
+  );
+  const matches = [...prompt.matchAll(/^##\s+(.+)$/gm)];
+  const recognized = matches.filter((match) => headingToKey.has(match[1].trim().toLowerCase()));
+  if (!recognized.length) return { ...sections, about_us: prompt };
+  const leading = prompt.slice(0, recognized[0].index).trim();
+  recognized.forEach((match, index) => {
+    const key = headingToKey.get(match[1].trim().toLowerCase());
+    if (!key) return;
+    const start = (match.index ?? 0) + match[0].length;
+    const end = recognized[index + 1]?.index ?? prompt.length;
+    sections[key] = prompt.slice(start, end).trim();
+  });
+  if (leading) sections.about_us = [leading, sections.about_us].filter(Boolean).join("\n\n");
+  return sections;
+};
+
+const buildInstructions = (sections: KBSections) =>
+  (Object.keys(instructionHeadings) as Exclude<keyof KBSections, "faqs">[])
+    .filter((key) => sections[key].trim())
+    .map((key) => `## ${instructionHeadings[key][0]}\n${sections[key].trim()}`)
+    .join("\n\n");
 
 const statusConfig: Record<string, { icon: any; cls: string; label: string }> = {
   processing: { icon: Clock, cls: "bg-warning/10 text-warning border-warning/30", label: "Processing..." },
@@ -197,6 +235,8 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
 
   // Instructions state
   const [systemPrompt, setSystemPrompt] = useState("");
+  const systemPromptRef = useRef("");
+  const [instructionSections, setInstructionSections] = useState<KBSections>(defaultSections);
   const [chatbotVertical, setChatbotVertical] = useState<string | null>(null);
   const [savingPrompt, setSavingPrompt] = useState(false);
   const [activeArea, setActiveArea] = useState<"hub" | "faq" | "knowledge" | "instructions">("hub");
@@ -242,6 +282,8 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
     
     setChatbotId(configId!);
     setSystemPrompt(promptValue);
+    systemPromptRef.current = promptValue;
+    setInstructionSections(parseInstructions(promptValue));
 
     // Staleness watchdog: auto-mark stuck "processing" sources as error
     const staleThreshold = new Date(Date.now() - 5 * 60 * 1000).toISOString();
@@ -703,7 +745,7 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
     try {
       const { error } = await supabase
         .from("chatbot_configs")
-        .update({ knowledge_base: systemPrompt } as any)
+        .update({ knowledge_base: systemPromptRef.current } as any)
         .eq("id", chatbotId);
       if (error) throw error;
       toast({ title: "✅", description: t("Istruzioni salvate!", "Instructions saved!") });
@@ -711,6 +753,13 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
       toast({ title: "Errore", description: err.message, variant: "destructive" });
     }
     setSavingPrompt(false);
+  };
+
+  const updateInstructionSections = (next: KBSections) => {
+    const prompt = buildInstructions(next);
+    setInstructionSections(next);
+    setSystemPrompt(prompt);
+    systemPromptRef.current = prompt;
   };
 
   // ── Stats ──
@@ -1390,15 +1439,10 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
         />
 
         <div className="space-y-3">
-          <Textarea
-            value={systemPrompt}
-            onChange={(e) => setSystemPrompt(e.target.value)}
-            placeholder={t(
-              "Descrivi qui: chi sei, i tuoi prodotti/servizi, il tono di voce, gli argomenti vietati, i contatti e gli orari.",
-              "Describe here: who you are, your products/services, tone of voice, forbidden topics, contact info and hours."
-            )}
-            rows={10}
-            className="bg-secondary border-border resize-none font-mono text-sm"
+          <StructuredSections
+            sections={instructionSections}
+            onChange={updateInstructionSections}
+            onBlurSave={saveInstructions}
           />
           <Button onClick={saveInstructions} disabled={savingPrompt} className="gradient-primary text-white border-0 glow-sm w-full h-11">
             {savingPrompt ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
