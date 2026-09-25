@@ -85,6 +85,13 @@
       "when": 1790365095741,
       "tag": "0011_lead_form_mode_default_conversational",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1790377029604,
+      "tag": "0012_add_tone_of_voice",
+      "breakpoints": true
     }
   ]
 }
