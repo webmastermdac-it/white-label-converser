@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { industryTemplates, IndustryTemplate } from "./templates";
 import { KBSections, defaultSections } from "./types";
 import { Button } from "@/components/ui/button";
@@ -178,6 +178,17 @@ const TONE_PRESETS: TonePreset[] = [
 const ToneReferenceTable: React.FC<{ lang: string }> = ({ lang }) => {
   const lk = lang === "it" ? "it" : "en";
   const [open, setOpen] = useState(false);
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const [wide, setWide] = useState(false);
+
+  // Choose table vs stacked layout based on the real container width
+  useEffect(() => {
+    if (!open) return;
+    const measure = () => setWide((wrapRef.current?.offsetWidth ?? 0) >= 620);
+    measure();
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
+  }, [open]);
 
   return (
     <Collapsible open={open} onOpenChange={setOpen}>
@@ -191,45 +202,48 @@ const ToneReferenceTable: React.FC<{ lang: string }> = ({ lang }) => {
         />
       </CollapsibleTrigger>
       <CollapsibleContent className="pt-3">
-        {/* Desktop: compact table */}
-        <div className="hidden md:block overflow-x-auto rounded-lg border border-border">
-          <table className="w-full min-w-[640px] text-xs">
-            <thead>
-              <tr className="bg-secondary/60 text-left">
-                <th className="px-2.5 py-2 font-medium text-foreground whitespace-nowrap">{lang === "it" ? "Tono" : "Tone"}</th>
-                <th className="px-2.5 py-2 font-medium text-foreground">{lang === "it" ? "Caratteristiche principali" : "Key traits"}</th>
-                <th className="px-2.5 py-2 font-medium text-foreground whitespace-nowrap">{lang === "it" ? "Archetipi associati" : "Archetypes"}</th>
-                <th className="px-2.5 py-2 font-medium text-foreground">{lang === "it" ? "Esempio pratico" : "Example"}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {TONE_PRESETS.map((p) => (
-                <tr key={p.id} className="border-t border-border align-top">
-                  <td className="px-2.5 py-2 font-medium text-foreground whitespace-nowrap">{p.fullName[lk]}</td>
-                  <td className="px-2.5 py-2 text-muted-foreground">{p.characteristics[lk]}</td>
-                  <td className="px-2.5 py-2 text-muted-foreground whitespace-nowrap">{p.archetypes[lk]}</td>
-                  <td className="px-2.5 py-2 text-muted-foreground italic">“{p.example[lk]}”</td>
+        <div ref={wrapRef}>
+        {wide ? (
+          <div className="overflow-x-auto rounded-lg border border-border">
+            <table className="w-full min-w-[600px] text-xs">
+              <thead>
+                <tr className="bg-secondary/60 text-left">
+                  <th className="px-2.5 py-2 font-medium text-foreground whitespace-nowrap">{lang === "it" ? "Tono" : "Tone"}</th>
+                  <th className="px-2.5 py-2 font-medium text-foreground">{lang === "it" ? "Caratteristiche principali" : "Key traits"}</th>
+                  <th className="px-2.5 py-2 font-medium text-foreground whitespace-nowrap">{lang === "it" ? "Archetipi associati" : "Archetypes"}</th>
+                  <th className="px-2.5 py-2 font-medium text-foreground">{lang === "it" ? "Esempio pratico" : "Example"}</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        {/* Mobile: stacked rows */}
-        <div className="md:hidden space-y-2">
-          {TONE_PRESETS.map((p) => (
-            <div key={p.id} className="rounded-lg border border-border p-2.5 space-y-1">
-              <p className="text-xs font-medium text-foreground">{p.fullName[lk]}</p>
-              <p className="text-[11px] text-muted-foreground">
-                <span className="font-medium text-foreground">{lang === "it" ? "Caratteristiche" : "Traits"}: </span>
-                {p.characteristics[lk]}
-              </p>
-              <p className="text-[11px] text-muted-foreground">
-                <span className="font-medium text-foreground">{lang === "it" ? "Archetipi" : "Archetypes"}: </span>
-                {p.archetypes[lk]}
-              </p>
-              <p className="text-[11px] text-muted-foreground italic">“{p.example[lk]}”</p>
-            </div>
-          ))}
+              </thead>
+              <tbody>
+                {TONE_PRESETS.map((p) => (
+                  <tr key={p.id} className="border-t border-border align-top">
+                    <td className="px-2.5 py-2 font-medium text-foreground whitespace-nowrap">{p.fullName[lk]}</td>
+                    <td className="px-2.5 py-2 text-muted-foreground">{p.characteristics[lk]}</td>
+                    <td className="px-2.5 py-2 text-muted-foreground whitespace-nowrap">{p.archetypes[lk]}</td>
+                    <td className="px-2.5 py-2 text-muted-foreground italic">“{p.example[lk]}”</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {TONE_PRESETS.map((p) => (
+              <div key={p.id} className="rounded-lg border border-border p-2.5 space-y-1">
+                <p className="text-xs font-medium text-foreground">{p.fullName[lk]}</p>
+                <p className="text-[11px] text-muted-foreground">
+                  <span className="font-medium text-foreground">{lang === "it" ? "Caratteristiche" : "Traits"}: </span>
+                  {p.characteristics[lk]}
+                </p>
+                <p className="text-[11px] text-muted-foreground">
+                  <span className="font-medium text-foreground">{lang === "it" ? "Archetipi" : "Archetypes"}: </span>
+                  {p.archetypes[lk]}
+                </p>
+                <p className="text-[11px] text-muted-foreground italic">“{p.example[lk]}”</p>
+              </div>
+            ))}
+          </div>
+        )}
         </div>
       </CollapsibleContent>
     </Collapsible>
