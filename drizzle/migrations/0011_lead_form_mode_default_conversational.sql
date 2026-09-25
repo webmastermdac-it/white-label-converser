@@ -1,0 +1,1 @@
+ALTER TABLE public.chatbot_configs ALTER COLUMN lead_form_mode SET DEFAULT 'conversational';
