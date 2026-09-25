@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from "react";
 import { Sun, Moon, Monitor } from "lucide-react";
 import { useTheme } from "@/hooks/useTheme";
 import { cn } from "@/lib/utils";
@@ -12,8 +13,26 @@ const options = [
   { value: "system" as const, icon: Monitor, label: "System" },
 ];
 
+// Below this container width the labels are dropped and only the icons
+// are shown (with aria-label/title), so the group never overflows.
+// Client sidebar: 208px outer -> ~183px selector (icons only);
+// Admin sidebar: 240px outer -> ~215px selector (labels still fit).
+const ICONS_ONLY_WIDTH = 195;
+
 const ThemeSelector = ({ collapsed = false }: ThemeSelectorProps) => {
   const { theme, setTheme } = useTheme();
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [narrow, setNarrow] = useState(false);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el || typeof ResizeObserver === "undefined") return;
+    const update = () => setNarrow(el.clientWidth < ICONS_ONLY_WIDTH);
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
 
   if (collapsed) {
     // Cycle through themes on click when collapsed
@@ -31,21 +50,28 @@ const ThemeSelector = ({ collapsed = false }: ThemeSelectorProps) => {
   }
 
   return (
-    <div className="flex items-center gap-0.5 p-0.5 rounded-lg bg-secondary/60 w-full">
+    <div
+      ref={containerRef}
+      className="flex items-center gap-0.5 p-0.5 rounded-lg bg-secondary/60 w-full"
+      role="radiogroup"
+      aria-label="Theme"
+    >
       {options.map(({ value, icon: Icon, label }) => (
         <button
           key={value}
           onClick={() => setTheme(value)}
           className={cn(
-            "flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 rounded-md text-xs font-medium transition-all duration-150",
+            "flex-1 min-w-0 flex items-center justify-center gap-1 px-1.5 py-1.5 rounded-md text-[11px] font-medium transition-all duration-150",
             theme === value
               ? "bg-primary text-primary-foreground shadow-sm"
               : "text-muted-foreground hover:text-foreground"
           )}
           title={label}
+          aria-label={`Theme: ${label}`}
+          aria-pressed={theme === value}
         >
-          <Icon className="w-3.5 h-3.5" />
-          <span className="hidden lg:inline">{label}</span>
+          <Icon className="w-3.5 h-3.5 shrink-0" />
+          {!narrow && <span className="truncate">{label}</span>}
         </button>
       ))}
     </div>
