@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { useLanguage } from "@/hooks/useLanguage";
 import { Button } from "@/components/ui/button";
-import { Play, Star, Menu, X, Check, Loader2, ArrowRight, Users, BookOpen, Bot, ClipboardList, CalendarCheck, Palette, Globe, BarChart3, ShoppingCart, Lock, Hotel, ChevronDown } from "lucide-react";
+import { Play, Star, Menu, X, Check, Loader2, ArrowRight, Users, BookOpen, Bot, ClipboardList, CalendarCheck, Palette, Globe, BarChart3, ShoppingCart, Lock, Hotel, ChevronDown, Sparkles, Rocket, Crown } from "lucide-react";
 import geniusLogo from "@/assets/genius.png";
 import genieHero from "@/assets/genie-mascot-new.png";
 import { supabase } from "@/integrations/supabase/client";
@@ -115,9 +115,86 @@ function FeatureGrid({ t }: { t: (en: string, it: string) => string }) {
 
 // RAGTooltip removed — replaced with inline description
 
-export function PricingGrid({ yearly, t, verticalId }: { yearly: boolean; t: (en: string, it: string) => string; verticalId?: VerticalId }) {
+type PricingPlanId = "free" | "starter" | "pro";
+type PricingVertical = "generic" | "booking" | "ecommerce" | "hospitality";
+
+function getPricingFeatures(t: (en: string, it: string) => string): Record<PricingVertical, Record<PricingPlanId, { features: string[]; locked?: string[] }>> {
+  const freeFeatures = [
+    t("1 AI chatbot on your website", "1 chatbot AI sul tuo sito"),
+    t("Monthly conversations included (see current limit in your plan)", "Conversazioni mensili incluse (vedi limite del piano)"),
+    t("Automatic lead capture", "Cattura lead automatica"),
+    t("Basic customization (colors, avatar)", "Personalizzazione base (colori, avatar)"),
+    t("Guided setup wizard", "Wizard guidato per la configurazione"),
+    t("\"Powered by Chatbot Genius\" badge shown", "Badge \"Powered by Chatbot Genius\" visibile"),
+  ];
+  const freeLocked = [
+    t("Advanced Search (RAG)", "Ricerca Avanzata (RAG)"),
+    t("Document upload (PDF/Word)", "Upload documenti (PDF/Word)"),
+  ];
+  const starterBase = [
+    t("1 chatbot custom for your business type", "1 chatbot personalizzato per il tuo settore"),
+    t("500 conversations/month", "500 conversazioni/mese"),
+    t("Unlimited leads", "Lead illimitati"),
+    t("Advanced system prompt", "Prompt di sistema avanzato"),
+    t("Unlimited FAQs", "FAQ illimitate"),
+    t("PDF/Word upload", "Upload PDF/Word"),
+    t("Email support", "Supporto email"),
+    t("🔍 Advanced Search (RAG) included", "🔍 Ricerca Avanzata (RAG) inclusa"),
+  ];
+  const proBase = [
+    t("Everything in Starter", "Tutto ciò che è incluso in Starter"),
+    t("Unlimited chatbots", "Chatbot illimitati"),
+    t("Unlimited conversations", "Conversazioni illimitate"),
+    t("Advanced analytics", "Analytics avanzati"),
+    t("Dedicated support", "Supporto dedicato"),
+    t("Complete white label", "White label completo"),
+  ];
+  return {
+    generic: {
+      free: { features: freeFeatures, locked: freeLocked },
+      starter: { features: [...starterBase, t("Industry template library", "Libreria di template di settore")] },
+      pro: { features: proBase },
+    },
+    booking: {
+      free: { features: freeFeatures, locked: freeLocked },
+      starter: { features: [...starterBase, t("📅 Calendly integration for in-chat bookings", "📅 Integrazione Calendly per prenotazioni dirette in chat")] },
+      pro: { features: proBase },
+    },
+    ecommerce: {
+      free: { features: freeFeatures, locked: freeLocked },
+      starter: {
+        features: [
+          ...starterBase,
+          t("🛒 XML/CSV feed (daily sync) — up to 500 products", "🛒 Feed XML/CSV (sync giornaliero) — fino a 500 prodotti"),
+          t("Bot knows products, prices and availability", "Il bot conosce prodotti, prezzi e disponibilità"),
+        ],
+      },
+      pro: {
+        features: [
+          ...proBase,
+          t("🛒 Full ecommerce (WooCommerce, Shopify, PrestaShop, API + real-time webhooks)", "🛒 Ecommerce completo (WooCommerce, Shopify, PrestaShop, API + webhook real-time)"),
+          t("Unlimited ecommerce products", "Prodotti ecommerce illimitati"),
+        ],
+      },
+    },
+    hospitality: {
+      free: { features: freeFeatures, locked: freeLocked },
+      starter: {
+        features: [
+          ...starterBase,
+          t("🍽️ Reads menus, documents and your website", "🍽️ Legge menu, documenti e il tuo sito web"),
+          t("Every request saved as a lead", "Ogni richiesta salvata come lead"),
+        ],
+      },
+      pro: { features: proBase },
+    },
+  };
+}
+
+export function PricingGrid({ yearly, t, verticalId, selectedVertical = "generic" }: { yearly: boolean; t: (en: string, it: string) => string; verticalId?: VerticalId; selectedVertical?: PricingVertical }) {
   const gridRef = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(false);
+  const [listReveal, setListReveal] = useState(true);
 
   useEffect(() => {
     const el = gridRef.current;
@@ -129,6 +206,15 @@ export function PricingGrid({ yearly, t, verticalId }: { yearly: boolean; t: (en
     obs.observe(el);
     return () => obs.disconnect();
   }, []);
+
+  useEffect(() => {
+    setListReveal(false);
+    const id = setTimeout(() => setListReveal(true), 40);
+    return () => clearTimeout(id);
+  }, [selectedVertical]);
+
+  const features = getPricingFeatures(t)[selectedVertical];
+  const listClassName = `space-y-3 text-sm text-white/70 transition-all duration-500 ${listReveal ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`;
 
   const cardClass = (i: number, extra = "") =>
     `${extra} transition-all ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`;
@@ -145,6 +231,9 @@ export function PricingGrid({ yearly, t, verticalId }: { yearly: boolean; t: (en
       {/* Free */}
       <div className={cardClass(0, "bg-white/[0.03] border border-white/10 rounded-2xl p-8 space-y-6 flex flex-col")} style={cardStyle(0)}>
         <div>
+          <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-4 bg-white/[0.06]">
+            <Sparkles className="w-6 h-6 text-white/50" />
+          </div>
           <h3 className="text-xl font-bold" style={{ fontFamily: "'Syne', sans-serif" }}>Free</h3>
           <p className="text-white/40 text-sm mt-1">{t("Try Genius with no commitment", "Per provare Genius senza impegno")}</p>
           <div className="mt-3">
@@ -157,25 +246,11 @@ export function PricingGrid({ yearly, t, verticalId }: { yearly: boolean; t: (en
             {t("Start Free", "Inizia Gratis")}
           </Button>
         </Link>
-        <ul className="space-y-3 text-sm text-white/70">
-          {[
-            t("1 custom chatbot for your business type", "1 chatbot personalizzato per il tuo settore"),
-            t("50 conversations/month", "50 conversazioni/mese"),
-            t("10 leads/month", "10 lead/mese"),
-            t("System prompt (tone & bot role)", "Prompt di sistema (tono e ruolo del bot)"),
-            t("5 manual FAQs", "5 FAQ manuali"),
-            t("Lead capture in chat (name + email or phone)", "Raccolta contatti in chat (nome + email o telefono)"),
-            t("Multilingual replies", "Risposte multilingua"),
-            t("Email support", "Supporto email"),
-          ].map((item, i) => (
+        <ul className={listClassName}>
+          {features.free.features.map((item, i) => (
             <li key={i} className="flex items-start gap-2"><Check className="w-4 h-4 text-[#F5A623] shrink-0 mt-0.5" />{item}</li>
           ))}
-          {[
-            t("🔒 PDF/Word upload", "🔒 Upload PDF/Word"),
-            t("🔒 Advanced Search RAG", "🔒 Ricerca Avanzata RAG"),
-            t("🔒 Ecommerce integrations", "🔒 Integrazioni ecommerce"),
-            t("🔒 Hotel Concierge module", "🔒 Modulo Concierge Hotel"),
-          ].map((item, i) => (
+          {(features.free.locked ?? []).map((item, i) => (
             <li key={`lock-${i}`} className="flex items-start gap-2 text-white/30"><Lock className="w-4 h-4 shrink-0 mt-0.5" />{item}</li>
           ))}
         </ul>
@@ -202,6 +277,9 @@ export function PricingGrid({ yearly, t, verticalId }: { yearly: boolean; t: (en
       {/* Starter */}
       <div className={cardClass(1, "bg-white/[0.03] border border-white/10 rounded-2xl p-8 space-y-6 flex flex-col")} style={cardStyle(1)}>
         <div>
+          <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-4 bg-[#F5A623]/15">
+            <Rocket className="w-6 h-6 text-[#F5A623]" />
+          </div>
           <h3 className="text-xl font-bold" style={{ fontFamily: "'Syne', sans-serif" }}>Starter</h3>
           <p className="text-white/40 text-sm mt-1">{t("For small businesses and professionals", "Per piccole imprese e professionisti")}</p>
           <div className="mt-3">
@@ -214,29 +292,9 @@ export function PricingGrid({ yearly, t, verticalId }: { yearly: boolean; t: (en
             {t("Try Free, Then Upgrade", "Prova Gratis, poi Upgrade")}
           </Button>
         </Link>
-        <ul className="space-y-3 text-sm text-white/70">
-          {[
-            t("1 custom chatbot for your business type", "1 chatbot personalizzato per il tuo settore"),
-            t("500 conversations/month", "500 conversazioni/mese"),
-            t("Unlimited leads", "Lead illimitati"),
-            t("Advanced system prompt", "Prompt di sistema avanzato"),
-            t("Unlimited FAQs", "FAQ illimitate"),
-            t("PDF/Word upload", "Upload PDF/Word"),
-            t("Website pages and sitemap import", "Importazione pagine del sito e sitemap"),
-            t("Industry templates", "Template di settore"),
-            t("Calendly integration for appointments", "Integrazione Calendly per gli appuntamenti"),
-            t("Priority support", "Supporto prioritario"),
-            t("🔍 Advanced Search (RAG)", "🔍 Ricerca Avanzata (RAG)"),
-            t("🛒 XML/CSV Feed, up to 100 products (daily sync)", "🛒 Feed XML/CSV, fino a 100 prodotti (sync giornaliero)"),
-          ].map((item, i) => (
+        <ul className={listClassName}>
+          {features.starter.features.map((item, i) => (
             <li key={i} className="flex items-start gap-2"><Check className="w-4 h-4 text-[#F5A623] shrink-0 mt-0.5" />{item}</li>
-          ))}
-          {[
-            t("🔒 Advanced analytics", "🔒 Analytics avanzati"),
-            t("🔒 Full ecommerce with real-time webhooks", "🔒 Ecommerce completo con webhook real-time"),
-            t("🔒 Hotel Concierge module", "🔒 Modulo Concierge Hotel"),
-          ].map((item, i) => (
-            <li key={`lock-${i}`} className="flex items-start gap-2 text-white/30"><Lock className="w-4 h-4 shrink-0 mt-0.5" />{item}</li>
           ))}
         </ul>
 
@@ -263,6 +321,9 @@ export function PricingGrid({ yearly, t, verticalId }: { yearly: boolean; t: (en
       <div className={cardClass(2, "relative bg-gradient-to-br from-[#F5A623]/10 to-transparent border-2 border-[#F5A623]/40 rounded-2xl p-8 space-y-6 shadow-lg shadow-[#F5A623]/10 flex flex-col")} style={cardStyle(2)}>
         <div className="absolute -top-3 right-6 bg-[#F5A623] text-black text-xs font-bold px-3 py-1 rounded-full">{t("Most Popular", "Più Popolare")}</div>
         <div>
+          <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-4 bg-[#F5A623]/25">
+            <Crown className="w-6 h-6 text-[#F5A623]" />
+          </div>
           <h3 className="text-xl font-bold" style={{ fontFamily: "'Syne', sans-serif" }}>Pro</h3>
           <p className="text-white/40 text-sm mt-1">{t("For agencies and growing businesses", "Per agenzie e aziende in crescita")}</p>
           <div className="mt-3">
@@ -275,21 +336,8 @@ export function PricingGrid({ yearly, t, verticalId }: { yearly: boolean; t: (en
             {t("Try Free, Then Upgrade", "Prova Gratis, poi Upgrade")}
           </Button>
         </Link>
-        <ul className="space-y-3 text-sm text-white/70">
-          {[
-            t("1 custom chatbot for your business type", "1 chatbot personalizzato per il tuo settore"),
-            t("Unlimited conversations", "Conversazioni illimitate"),
-            t("Unlimited leads", "Lead illimitati"),
-            t("All Starter features", "Tutte le funzionalità Starter"),
-            t("🔍 Advanced Search (RAG) — highlighted", "🔍 Ricerca Avanzata (RAG) — in evidenza"),
-            t("🛒 Full ecommerce (WooCommerce, Shopify, PrestaShop, API + real-time webhooks), unlimited products", "🛒 Ecommerce completo (WooCommerce, Shopify, PrestaShop, API + webhook real-time), prodotti illimitati"),
-            t("🏨 Hotel Concierge: stay quotes, room QR codes, real-time guest requests, Results page", "🏨 Concierge Hotel: preventivi soggiorno, QR per le camere, richieste ospiti in tempo reale, pagina Risultati"),
-            t("📱 Instagram DM channel", "📱 Canale Instagram DM"),
-            t("⏱️ Auto-close inactive chats with recap email", "⏱️ Chiusura automatica chat inattive con email di riepilogo"),
-            t("Advanced analytics", "Analytics avanzati"),
-            t("Complete white label", "White label completo"),
-            t("Dedicated support", "Supporto dedicato"),
-          ].map((item, i) => (
+        <ul className={listClassName}>
+          {features.pro.features.map((item, i) => (
             <li key={i} className="flex items-start gap-2"><Check className="w-4 h-4 text-[#F5A623] shrink-0 mt-0.5" />{item}</li>
           ))}
         </ul>
@@ -322,6 +370,7 @@ export default function LandingPage() {
   const [mobileMenu, setMobileMenu] = useState(false);
   const [videoOpen, setVideoOpen] = useState(false);
   const [yearly, setYearly] = useState(false);
+  const [selectedVertical, setSelectedVertical] = useState<"generic" | "booking" | "ecommerce" | "hospitality">("generic");
   const [scrolled, setScrolled] = useState(false);
   const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<string>("dashboard");
@@ -367,8 +416,14 @@ export default function LandingPage() {
     { label: t("Pricing", "Prezzi"), id: "pricing" },
     { label: t("References", "Referenze"), id: "references" },
   ];
-  const selectedVertical = verticals.find((item) => item.id === activeVertical) ?? verticals[0];
+  const selectedVerticalContent = verticals.find((item) => item.id === activeVertical) ?? verticals[0];
   const verticalIcon = (id: VerticalId) => id === "ecommerce" ? ShoppingCart : id === "booking" ? CalendarCheck : Hotel;
+  const pricingVerticalTabs = [
+    { id: "generic" as const, Icon: Globe, en: "Generic", it: "Generico" },
+    { id: "booking" as const, Icon: CalendarCheck, en: "Bookings & Appointments", it: "Prenotazioni & Appuntamenti" },
+    { id: "ecommerce" as const, Icon: ShoppingCart, en: "Ecommerce", it: "Ecommerce" },
+    { id: "hospitality" as const, Icon: BookOpen, en: "Restaurants & Hotels", it: "Ristorazione & Hotel" },
+  ];
   const localized = (text: { en: string; it: string }) => t(text.en, text.it);
 
   const screenshotTabs = [
@@ -507,8 +562,8 @@ export default function LandingPage() {
             <div className="hidden grid-cols-3 gap-4 lg:grid">
               {verticals.map((vertical) => { const Icon = verticalIcon(vertical.id); const active = activeVertical === vertical.id; return <article key={vertical.id} onMouseEnter={() => setActiveVertical(vertical.id)} className={`flex flex-col rounded-2xl border p-5 transition-all ${active ? "border-[#F5A623]/70 bg-[#F5A623]/10 shadow-lg shadow-[#F5A623]/10" : "border-white/10 bg-white/[0.03] hover:border-white/25"}`}><button onClick={() => setActiveVertical(vertical.id)} className="rounded-lg text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F5A623]" aria-pressed={active}><Icon className="mb-4 h-7 w-7 text-[#F5A623]" /><h3 className="text-lg font-bold" style={{ fontFamily: "'Syne', sans-serif" }}>{localized(vertical.name)}</h3><p className="mt-2 text-sm font-medium text-white/80">{localized(vertical.promise)}</p></button><ul className="mt-5 space-y-2.5 text-sm text-white/55">{vertical.bullets.map((bullet) => <li key={bullet.it} className="flex gap-2"><Check className="mt-0.5 h-4 w-4 shrink-0 text-[#F5A623]" />{localized(bullet)}</li>)}</ul><div className="mt-5 flex flex-wrap gap-1.5">{vertical.badges.map((badge) => <span key={badge} className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] text-white/55">{badge}</span>)}</div><div className="mt-auto grid grid-cols-2 gap-2 pt-6"><Link to={vertical.path}><Button variant="outline" className="w-full rounded-full border-white/20 bg-white text-gray-900 hover:bg-white/90">{t("Discover", "Scopri")}</Button></Link><Link to={`/register?vertical=${vertical.id}`}><Button className="w-full rounded-full bg-[#F5A623] text-black hover:bg-[#E09800]">{t("Try free", "Prova gratis")}</Button></Link></div></article>; })}
             </div>
-            <div className="lg:hidden"><article className="mb-6 rounded-2xl border border-[#F5A623]/50 bg-[#F5A623]/10 p-5"><h3 className="text-xl font-bold" style={{ fontFamily: "'Syne', sans-serif" }}>{localized(selectedVertical.name)}</h3><p className="mt-2 text-sm font-medium text-white/80">{localized(selectedVertical.promise)}</p><ul className="mt-4 space-y-2 text-sm text-white/60">{selectedVertical.bullets.map((bullet) => <li key={bullet.it} className="flex gap-2"><Check className="mt-0.5 h-4 w-4 shrink-0 text-[#F5A623]" />{localized(bullet)}</li>)}</ul><div className="mt-5 grid grid-cols-2 gap-2"><Link to={selectedVertical.path}><Button variant="outline" className="w-full rounded-full bg-white text-gray-900">{t("Discover", "Scopri")}</Button></Link><Link to={`/register?vertical=${selectedVertical.id}`}><Button className="w-full rounded-full bg-[#F5A623] text-black">{t("Try free", "Prova gratis")}</Button></Link></div></article></div>
-            <div className="flex items-center justify-center"><VerticalDemoChat key={selectedVertical.id} vertical={selectedVertical} /></div>
+            <div className="lg:hidden"><article className="mb-6 rounded-2xl border border-[#F5A623]/50 bg-[#F5A623]/10 p-5"><h3 className="text-xl font-bold" style={{ fontFamily: "'Syne', sans-serif" }}>{localized(selectedVerticalContent.name)}</h3><p className="mt-2 text-sm font-medium text-white/80">{localized(selectedVerticalContent.promise)}</p><ul className="mt-4 space-y-2 text-sm text-white/60">{selectedVerticalContent.bullets.map((bullet) => <li key={bullet.it} className="flex gap-2"><Check className="mt-0.5 h-4 w-4 shrink-0 text-[#F5A623]" />{localized(bullet)}</li>)}</ul><div className="mt-5 grid grid-cols-2 gap-2"><Link to={selectedVerticalContent.path}><Button variant="outline" className="w-full rounded-full bg-white text-gray-900">{t("Discover", "Scopri")}</Button></Link><Link to={`/register?vertical=${selectedVerticalContent.id}`}><Button className="w-full rounded-full bg-[#F5A623] text-black">{t("Try free", "Prova gratis")}</Button></Link></div></article></div>
+            <div className="flex items-center justify-center"><VerticalDemoChat key={selectedVerticalContent.id} vertical={selectedVerticalContent} /></div>
           </div>
         </div>
       </section>
@@ -679,6 +734,30 @@ export default function LandingPage() {
             {t("Choose the plan that fits your business.", "Scegli il piano più adatto al tuo business.")}
           </p>
 
+          {/* Vertical tabs */}
+          <div
+            className="flex lg:justify-center gap-2 mb-6 overflow-x-auto pb-1 -mx-4 px-4 sm:mx-0 sm:px-0"
+            role="tablist"
+            aria-label={t("Choose your sector", "Scegli il tuo settore")}
+          >
+            {pricingVerticalTabs.map(({ id, Icon, en, it }) => (
+              <button
+                key={id}
+                role="tab"
+                aria-selected={selectedVertical === id}
+                onClick={() => setSelectedVertical(id)}
+                className={`flex items-center gap-2 shrink-0 px-4 py-2 rounded-full text-sm font-medium border transition-colors duration-300 ${
+                  selectedVertical === id
+                    ? "bg-[#F5A623]/15 text-[#F5A623] border-[#F5A623]"
+                    : "text-white/50 border-white/10 hover:border-white/25"
+                }`}
+              >
+                <Icon className="w-4 h-4" />
+                {t(en, it)}
+              </button>
+            ))}
+          </div>
+
           {/* Toggle */}
           <div className="flex items-center justify-center gap-3 mb-14">
             <span className={`text-sm ${!yearly ? "text-white" : "text-white/40"}`}>{t("Monthly", "Mensile")}</span>
@@ -689,7 +768,7 @@ export default function LandingPage() {
             {yearly && <span className="text-xs bg-[#F5A623]/20 text-[#F5A623] px-2 py-0.5 rounded-full font-medium">-20%</span>}
           </div>
 
-          <PricingGrid yearly={yearly} t={t} />
+          <PricingGrid yearly={yearly} t={t} selectedVertical={selectedVertical} />
         </div>
       </Section>
 
