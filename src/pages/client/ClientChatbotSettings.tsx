@@ -49,7 +49,7 @@ const ClientChatbotSettings = ({ adminMode = false, botIdOverride, hideHeader = 
   const [siteUrl, setSiteUrl] = useState("");
   const [isActive, setIsActive] = useState(true);
   const [inactivityTimeout, setInactivityTimeout] = useState(30);
-  const [leadFormMode, setLeadFormMode] = useState<"immediate" | "conversational" | "after_messages" | "smart">("smart");
+  const [leadFormMode, setLeadFormMode] = useState<"immediate" | "conversational" | "after_messages" | "smart">("conversational");
   const [leadFormMessageCount, setLeadFormMessageCount] = useState(3);
 
   const tl = (it: string, en: string) => lang === "it" ? it : en;
@@ -67,7 +67,7 @@ const ClientChatbotSettings = ({ adminMode = false, botIdOverride, hideHeader = 
       setSiteUrl((data as any).site_url || "");
       setIsActive(data.is_active ?? true);
       setInactivityTimeout((data as any).inactivity_timeout_minutes ?? 30);
-      setLeadFormMode(((data as any).lead_form_mode as any) || "smart");
+      setLeadFormMode(((data as any).lead_form_mode as any) || "conversational");
       setLeadFormMessageCount((data as any).lead_form_message_count ?? 3);
     }
     setLoading(false);
@@ -278,57 +278,40 @@ const ClientChatbotSettings = ({ adminMode = false, botIdOverride, hideHeader = 
                   </button>
                   <button
                     type="button"
-                    onClick={() => { if (leadFormMode === "immediate" || leadFormMode === "conversational") setLeadFormMode("smart"); }}
+                    onClick={() => setLeadFormMode("after_messages")}
                     className={`flex items-center gap-1.5 px-4 py-2.5 md:py-2 rounded-full text-sm font-medium transition-all min-h-[44px] border ${
-                      leadFormMode !== "immediate" && leadFormMode !== "conversational"
+                      leadFormMode === "after_messages"
                         ? "bg-primary/15 text-primary border-primary/40"
                         : "bg-secondary text-muted-foreground border-border hover:text-foreground"
                     }`}
                   >
-                    {leadFormMode !== "immediate" && leadFormMode !== "conversational" && <CheckCircle2 className="w-4 h-4" />}
-                    {tl("Durante la conversazione", "During the conversation")}
+                    {leadFormMode === "after_messages" && <CheckCircle2 className="w-4 h-4" />}
+                    {tl("Dopo un numero di messaggi", "After a number of messages")}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setLeadFormMode("smart")}
+                    className={`flex items-center gap-1.5 px-4 py-2.5 md:py-2 rounded-full text-sm font-medium transition-all min-h-[44px] border ${
+                      leadFormMode === "smart"
+                        ? "bg-primary/15 text-primary border-primary/40"
+                        : "bg-secondary text-muted-foreground border-border hover:text-foreground"
+                    }`}
+                  >
+                    {leadFormMode === "smart" && <CheckCircle2 className="w-4 h-4" />}
+                    {tl("Solo su richiesta del bot", "Only when the bot asks")}
                   </button>
                 </div>
-
-                {leadFormMode !== "immediate" && leadFormMode !== "conversational" && (
-                  <div className="flex gap-2 flex-wrap items-center pt-2 pl-1 border-l-2 border-border ml-1 pl-4">
-                    <button
-                      type="button"
-                      onClick={() => setLeadFormMode("after_messages")}
-                      className={`flex items-center gap-1.5 px-4 py-2.5 md:py-2 rounded-full text-sm font-medium transition-all min-h-[44px] border ${
-                        leadFormMode === "after_messages"
-                          ? "bg-primary/15 text-primary border-primary/40"
-                          : "bg-secondary text-muted-foreground border-border hover:text-foreground"
-                      }`}
-                    >
-                      {leadFormMode === "after_messages" && <CheckCircle2 className="w-4 h-4" />}
-                      {tl("Dopo un numero di messaggi", "After a number of messages")}
-                    </button>
-                    {leadFormMode === "after_messages" && (
-                      <div className="flex items-center gap-2">
-                        <Input
-                          type="number"
-                          min={1}
-                          max={20}
-                          value={leadFormMessageCount}
-                          onChange={(e) => setLeadFormMessageCount(Math.min(20, Math.max(1, Number(e.target.value) || 1)))}
-                          className="bg-secondary border-border w-20"
-                        />
-                        <span className="text-sm text-muted-foreground">{tl("messaggi", "messages")}</span>
-                      </div>
-                    )}
-                    <button
-                      type="button"
-                      onClick={() => setLeadFormMode("smart")}
-                      className={`flex items-center gap-1.5 px-4 py-2.5 md:py-2 rounded-full text-sm font-medium transition-all min-h-[44px] border ${
-                        leadFormMode === "smart"
-                          ? "bg-primary/15 text-primary border-primary/40"
-                          : "bg-secondary text-muted-foreground border-border hover:text-foreground"
-                      }`}
-                    >
-                      {leadFormMode === "smart" && <CheckCircle2 className="w-4 h-4" />}
-                      {tl("Solo su richiesta del bot (attuale)", "Only when the bot asks (current)")}
-                    </button>
+                {leadFormMode === "after_messages" && (
+                  <div className="flex items-center gap-2 pt-2">
+                    <Input
+                      type="number"
+                      min={1}
+                      max={20}
+                      value={leadFormMessageCount}
+                      onChange={(e) => setLeadFormMessageCount(Math.min(20, Math.max(1, Number(e.target.value) || 1)))}
+                      className="bg-secondary border-border w-20"
+                    />
+                    <span className="text-sm text-muted-foreground">{tl("messaggi", "messages")}</span>
                   </div>
                 )}
               </div>
