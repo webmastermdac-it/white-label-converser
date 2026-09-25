@@ -72,7 +72,7 @@ const instructionHeadings: Record<Exclude<keyof KBSections, "faqs">, string[]> =
 const parseInstructions = (prompt: string): KBSections => {
   const sections = { ...defaultSections, faqs: [] };
   if (!prompt.trim()) return sections;
-  const headingToKey = new Map<string, Exclude<keyof KBSections, "faqs">>();
+  const headingToKey = new globalThis.Map<string, Exclude<keyof KBSections, "faqs">>();
   Object.entries(instructionHeadings).forEach(([key, headings]) =>
     headings.forEach((heading) => headingToKey.set(heading.toLowerCase(), key as Exclude<keyof KBSections, "faqs">))
   );
