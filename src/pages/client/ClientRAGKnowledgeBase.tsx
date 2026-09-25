@@ -202,21 +202,6 @@ const ToneReferenceTable = ({ t }: { t: (it: string, en: string) => string }) =>
   );
 };
 
-// Replace only the named tone block; preserve every other instruction verbatim.
-const withTonePreset = (prompt: string, presetText: string): string => {
-  const block = `## Tono di voce\n${presetText}`;
-  const heading = /^## Tono di voce[^\S\r\n]*\r?$/gm;
-  const match = heading.exec(prompt);
-  if (!match) return prompt ? `${prompt}${/\n$/.test(prompt) ? "\n" : "\n\n"}${block}` : block;
-  const start = match.index;
-  const next = /^## /gm;
-  next.lastIndex = start + match[0].length;
-  const following = next.exec(prompt);
-  const end = following?.index ?? prompt.length;
-  const before = prompt.slice(0, start);
-  const after = prompt.slice(end);
-  return `${before}${block}${after ? `\n${after}` : ""}`;
-};
 
 const statusConfig: Record<string, { icon: any; cls: string; label: string }> = {
   processing: { icon: Clock, cls: "bg-warning/10 text-warning border-warning/30", label: "Processing..." },
@@ -357,6 +342,9 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
   // Instructions state
   const [systemPrompt, setSystemPrompt] = useState("");
   const systemPromptRef = useRef("");
+  const [toneOfVoice, setToneOfVoice] = useState("");
+  const [tonePresetId, setTonePresetId] = useState<string | null>(null);
+  const [savingTone, setSavingTone] = useState(false);
   const [chatbotVertical, setChatbotVertical] = useState<string | null>(null);
   const [savingPrompt, setSavingPrompt] = useState(false);
   const [activeArea, setActiveArea] = useState<"hub" | "faq" | "knowledge" | "instructions">("hub");
@@ -377,16 +365,15 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
     let configId = overrideChatbotId;
     let promptValue = "";
     
+    let loaded: any = null;
     if (overrideChatbotId) {
       const { data: config } = await supabase
         .from("chatbot_configs")
-        .select("id, knowledge_base, business_vertical")
+        .select("id, knowledge_base, business_vertical, tone_of_voice, tone_preset_id")
         .eq("id", overrideChatbotId)
         .single();
       if (!config) { setLoading(false); return; }
-      configId = config.id;
-      promptValue = config.knowledge_base || "";
-      setChatbotVertical((config as any).business_vertical ?? null);
+      loaded = config;
     } else {
       const { data: config } = await supabase
         .from("chatbot_configs")
@@ -395,10 +382,13 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
         .limit(1)
         .single();
       if (!config) { setLoading(false); return; }
-      configId = config.id;
-      promptValue = config.knowledge_base || "";
-      setChatbotVertical((config as any).business_vertical ?? null);
+      loaded = config;
     }
+    configId = loaded.id;
+    promptValue = loaded.knowledge_base || "";
+    setChatbotVertical(loaded.business_vertical ?? null);
+    setToneOfVoice(loaded.tone_of_voice || "");
+    setTonePresetId(loaded.tone_preset_id ?? null);
     
     setChatbotId(configId!);
     setSystemPrompt(promptValue);
@@ -874,11 +864,18 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
     setSavingPrompt(false);
   };
 
-  const applyTonePreset = async (presetText: string) => {
-    const next = withTonePreset(systemPromptRef.current, presetText);
-    systemPromptRef.current = next;
-    setSystemPrompt(next);
-    await saveInstructions();
+  const saveTone = async (text: string, presetId: string | null) => {
+    if (!chatbotId) return;
+    setToneOfVoice(text);
+    setTonePresetId(presetId);
+    setSavingTone(true);
+    const { error } = await supabase
+      .from("chatbot_configs")
+      .update({ tone_of_voice: text || null, tone_preset_id: presetId } as any)
+      .eq("id", chatbotId);
+    setSavingTone(false);
+    if (error) toast({ title: "Errore", description: error.message, variant: "destructive" });
+    else toast({ title: "✅", description: t("Tono salvato!", "Tone saved!") });
   };
 
   // ── Stats ──
@@ -1042,6 +1039,46 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
           ← {t("Torna alla Conoscenza", "Back to Knowledge")}
         </Button>
       )}
+
+      {/* Tone of voice — always applied, outside the priority cascade */}
+      <div className="glass rounded-xl p-5 space-y-3">
+        <div className="flex items-start gap-3">
+          <span className="text-2xl" aria-hidden>🎭</span>
+          <div>
+            <h3 className="font-semibold text-foreground">{t("Tono di voce", "Tone of voice")}</h3>
+            <p className="text-xs text-muted-foreground">
+              {t("Si applica sempre, a ogni risposta del bot", "Always applied to every bot reply")}
+            </p>
+          </div>
+        </div>
+        <div className="flex flex-wrap gap-2" aria-label={t("Toni di voce", "Tones of voice")}>
+          {TONE_PRESETS.map((preset) => {
+            const active = tonePresetId === preset.id;
+            return (
+              <Button key={preset.id} type="button" variant="outline" disabled={savingTone || !chatbotId}
+                aria-pressed={active}
+                onClick={() => saveTone(preset.text, preset.id)}
+                className={`h-auto min-w-0 max-w-full flex-col items-start gap-0.5 rounded-lg px-3 py-2 text-left font-normal hover:border-primary/50 ${
+                  active ? "border-primary bg-primary/15 ring-1 ring-primary" : ""
+                }`}
+              >
+                <span className={`text-xs font-medium ${active ? "text-primary" : "text-foreground"}`}>{preset.label}</span>
+                <span className="text-[11px] text-muted-foreground">{preset.sub}</span>
+              </Button>
+            );
+          })}
+        </div>
+        <Textarea
+          value={toneOfVoice}
+          onChange={(e) => setToneOfVoice(e.target.value)}
+          onBlur={() => saveTone(toneOfVoice, tonePresetId)}
+          rows={4}
+          className="resize-y"
+          aria-label={t("Personalizza il tono", "Customize tone")}
+          placeholder={t("Scegli un tono sopra o descrivilo qui...", "Pick a tone above or describe it here...")}
+        />
+        <ToneReferenceTable t={t} />
+      </div>
 
       {/* ══════════════════════════════════════════════════ */}
       {/* SECTION 1 — FAQ (Priority: HIGH ★★★)             */}
@@ -1550,25 +1587,14 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
           icon="⚙️"
           title={t("Istruzioni", "Instructions")}
           subtitle={t(
-            "Comportamento e tono generali — usato come ultima risorsa",
-            "General behavior and tone — used as last resort"
+            "Comportamento generale — usato come ultima risorsa",
+            "General behavior — used as last resort"
           )}
           stars={1}
           starLabel={t("Priorità bassa", "Low priority")}
         />
 
         <div className="space-y-3">
-          <div className="flex flex-wrap gap-2" aria-label={t("Toni di voce", "Tones of voice")}>
-            {TONE_PRESETS.map((preset) => (
-              <Button key={preset.id} type="button" variant="outline" disabled={savingPrompt || !chatbotId}
-                onClick={() => applyTonePreset(preset.text)}
-                className="h-auto min-w-0 max-w-full flex-col items-start gap-0.5 rounded-lg px-3 py-2 text-left font-normal hover:border-primary/50"
-              >
-                <span className="text-xs font-medium text-foreground">{preset.label}</span>
-                <span className="text-[11px] text-muted-foreground">{preset.sub}</span>
-              </Button>
-            ))}
-          </div>
           <Textarea
             value={systemPrompt}
             onChange={(event) => {
@@ -1580,7 +1606,6 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
             aria-label={t("Testo delle istruzioni", "Instructions text")}
             placeholder={t("Scrivi le istruzioni del bot...", "Write your bot's instructions...")}
           />
-          <ToneReferenceTable t={t} />
           <Button onClick={saveInstructions} disabled={savingPrompt} className="gradient-primary text-white border-0 glow-sm w-full h-11">
             {savingPrompt ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
             {t("Salva Istruzioni", "Save Instructions")}
@@ -1590,8 +1615,8 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
         <p className="text-[11px] text-muted-foreground mt-3 flex items-center gap-1">
           <Info className="w-3 h-3 shrink-0" />
           {t(
-            "Scrivi qui le informazioni principali della tua attività: chi sei, prodotti e servizi, tono di voce, argomenti vietati, contatti e orari. Questo testo viene usato come ultima risorsa, dopo FAQ e Knowledge Base.",
-            "Describe here: who you are, your products/services, tone of voice, forbidden topics, contact info and hours. This text is used as a last-resort source, after FAQ and Knowledge Base."
+            "Scrivi qui le informazioni principali della tua attività: chi sei, prodotti e servizi, argomenti vietati, contatti e orari. Questo testo viene usato come ultima risorsa, dopo FAQ e Knowledge Base.",
+            "Describe here: who you are, your products/services, forbidden topics, contact info and hours. This text is used as a last-resort source, after FAQ and Knowledge Base."
           )}
         </p>
       </div>

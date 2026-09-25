@@ -195,6 +195,8 @@ export type Database = {
           primary_color: string | null
           site_url: string | null
           text_color: string | null
+          tone_of_voice: string | null
+          tone_preset_id: string | null
           updated_at: string
           vertical: string | null
           welcome_message: string | null
@@ -238,6 +240,8 @@ export type Database = {
           primary_color?: string | null
           site_url?: string | null
           text_color?: string | null
+          tone_of_voice?: string | null
+          tone_preset_id?: string | null
           updated_at?: string
           vertical?: string | null
           welcome_message?: string | null
@@ -281,6 +285,8 @@ export type Database = {
           primary_color?: string | null
           site_url?: string | null
           text_color?: string | null
+          tone_of_voice?: string | null
+          tone_preset_id?: string | null
           updated_at?: string
           vertical?: string | null
           welcome_message?: string | null

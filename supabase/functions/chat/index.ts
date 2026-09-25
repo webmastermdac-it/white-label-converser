@@ -38,7 +38,7 @@ serve(async (req) => {
     // ── Step 0: Fetch bot config ──
     const { data: botConfig, error: configError } = await supabase
       .from("chatbot_configs")
-      .select("id, client_id, name, business_vertical, knowledge_base, fallback_message, fallback_msg_en, fallback_msg_it, welcome_msg_it, welcome_msg_en, knowledge_base_products, lead_form_mode, notification_email, email_notifications_enabled, hotel_profile")
+      .select("id, client_id, name, business_vertical, knowledge_base, tone_of_voice, fallback_message, fallback_msg_en, fallback_msg_it, welcome_msg_it, welcome_msg_en, knowledge_base_products, lead_form_mode, notification_email, email_notifications_enabled, hotel_profile")
       .eq("embed_token", embed_token)
       .single();
 
@@ -245,7 +245,8 @@ serve(async (req) => {
       : "";
 
     const instructions = botConfig.knowledge_base || "You are a helpful assistant.";
-    const systemPrompt = `${faqContext}${purchaseRules}${instructions}${hotelContext}${productKnowledge ? "\n\n" + productKnowledge : ""}${ragContext}${pagesIndex}\n\nIMPORTANT INSTRUCTIONS:\n- Be concise, helpful, and professional${languageInstruction}${fallbackInstruction}${conversationalLeadInstruction}${productInstruction}${addToCartInstruction}${orderStatusInstruction}${purchaseInstruction}${formattingInstruction}${pagesIndexInstruction}`;
+    const toneBlock = (botConfig as any).tone_of_voice?.trim() ? `## Tono di voce\n${(botConfig as any).tone_of_voice.trim()}\n\n` : "";
+    const systemPrompt = `${toneBlock}${faqContext}${purchaseRules}${instructions}${hotelContext}${productKnowledge ? "\n\n" + productKnowledge : ""}${ragContext}${pagesIndex}\n\nIMPORTANT INSTRUCTIONS:\n- Be concise, helpful, and professional${languageInstruction}${fallbackInstruction}${conversationalLeadInstruction}${productInstruction}${addToCartInstruction}${orderStatusInstruction}${purchaseInstruction}${formattingInstruction}${pagesIndexInstruction}`;
 
 
     // ── Call AI gateway (with tool-call loop) ──

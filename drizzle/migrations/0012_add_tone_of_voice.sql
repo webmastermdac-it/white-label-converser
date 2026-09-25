@@ -1,0 +1,1 @@
+ALTER TABLE public.chatbot_configs ADD COLUMN IF NOT EXISTS tone_of_voice text, ADD COLUMN IF NOT EXISTS tone_preset_id text;
