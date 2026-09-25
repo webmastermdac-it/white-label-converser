@@ -231,6 +231,9 @@ export function PricingGrid({ yearly, t, verticalId, selectedVertical = "generic
       {/* Free */}
       <div className={cardClass(0, "bg-white/[0.03] border border-white/10 rounded-2xl p-8 space-y-6 flex flex-col")} style={cardStyle(0)}>
         <div>
+          <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-4 bg-white/[0.06]">
+            <Sparkles className="w-6 h-6 text-white/50" />
+          </div>
           <h3 className="text-xl font-bold" style={{ fontFamily: "'Syne', sans-serif" }}>Free</h3>
           <p className="text-white/40 text-sm mt-1">{t("Try Genius with no commitment", "Per provare Genius senza impegno")}</p>
           <div className="mt-3">
@@ -243,25 +246,11 @@ export function PricingGrid({ yearly, t, verticalId, selectedVertical = "generic
             {t("Start Free", "Inizia Gratis")}
           </Button>
         </Link>
-        <ul className="space-y-3 text-sm text-white/70">
-          {[
-            t("1 custom chatbot for your business type", "1 chatbot personalizzato per il tuo settore"),
-            t("50 conversations/month", "50 conversazioni/mese"),
-            t("10 leads/month", "10 lead/mese"),
-            t("System prompt (tone & bot role)", "Prompt di sistema (tono e ruolo del bot)"),
-            t("5 manual FAQs", "5 FAQ manuali"),
-            t("Lead capture in chat (name + email or phone)", "Raccolta contatti in chat (nome + email o telefono)"),
-            t("Multilingual replies", "Risposte multilingua"),
-            t("Email support", "Supporto email"),
-          ].map((item, i) => (
+        <ul className={listClassName}>
+          {features.free.features.map((item, i) => (
             <li key={i} className="flex items-start gap-2"><Check className="w-4 h-4 text-[#F5A623] shrink-0 mt-0.5" />{item}</li>
           ))}
-          {[
-            t("🔒 PDF/Word upload", "🔒 Upload PDF/Word"),
-            t("🔒 Advanced Search RAG", "🔒 Ricerca Avanzata RAG"),
-            t("🔒 Ecommerce integrations", "🔒 Integrazioni ecommerce"),
-            t("🔒 Hotel Concierge module", "🔒 Modulo Concierge Hotel"),
-          ].map((item, i) => (
+          {(features.free.locked ?? []).map((item, i) => (
             <li key={`lock-${i}`} className="flex items-start gap-2 text-white/30"><Lock className="w-4 h-4 shrink-0 mt-0.5" />{item}</li>
           ))}
         </ul>
@@ -288,6 +277,9 @@ export function PricingGrid({ yearly, t, verticalId, selectedVertical = "generic
       {/* Starter */}
       <div className={cardClass(1, "bg-white/[0.03] border border-white/10 rounded-2xl p-8 space-y-6 flex flex-col")} style={cardStyle(1)}>
         <div>
+          <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-4 bg-[#F5A623]/15">
+            <Rocket className="w-6 h-6 text-[#F5A623]" />
+          </div>
           <h3 className="text-xl font-bold" style={{ fontFamily: "'Syne', sans-serif" }}>Starter</h3>
           <p className="text-white/40 text-sm mt-1">{t("For small businesses and professionals", "Per piccole imprese e professionisti")}</p>
           <div className="mt-3">
@@ -300,29 +292,9 @@ export function PricingGrid({ yearly, t, verticalId, selectedVertical = "generic
             {t("Try Free, Then Upgrade", "Prova Gratis, poi Upgrade")}
           </Button>
         </Link>
-        <ul className="space-y-3 text-sm text-white/70">
-          {[
-            t("1 custom chatbot for your business type", "1 chatbot personalizzato per il tuo settore"),
-            t("500 conversations/month", "500 conversazioni/mese"),
-            t("Unlimited leads", "Lead illimitati"),
-            t("Advanced system prompt", "Prompt di sistema avanzato"),
-            t("Unlimited FAQs", "FAQ illimitate"),
-            t("PDF/Word upload", "Upload PDF/Word"),
-            t("Website pages and sitemap import", "Importazione pagine del sito e sitemap"),
-            t("Industry templates", "Template di settore"),
-            t("Calendly integration for appointments", "Integrazione Calendly per gli appuntamenti"),
-            t("Priority support", "Supporto prioritario"),
-            t("🔍 Advanced Search (RAG)", "🔍 Ricerca Avanzata (RAG)"),
-            t("🛒 XML/CSV Feed, up to 100 products (daily sync)", "🛒 Feed XML/CSV, fino a 100 prodotti (sync giornaliero)"),
-          ].map((item, i) => (
+        <ul className={listClassName}>
+          {features.starter.features.map((item, i) => (
             <li key={i} className="flex items-start gap-2"><Check className="w-4 h-4 text-[#F5A623] shrink-0 mt-0.5" />{item}</li>
-          ))}
-          {[
-            t("🔒 Advanced analytics", "🔒 Analytics avanzati"),
-            t("🔒 Full ecommerce with real-time webhooks", "🔒 Ecommerce completo con webhook real-time"),
-            t("🔒 Hotel Concierge module", "🔒 Modulo Concierge Hotel"),
-          ].map((item, i) => (
-            <li key={`lock-${i}`} className="flex items-start gap-2 text-white/30"><Lock className="w-4 h-4 shrink-0 mt-0.5" />{item}</li>
           ))}
         </ul>
 
@@ -349,6 +321,9 @@ export function PricingGrid({ yearly, t, verticalId, selectedVertical = "generic
       <div className={cardClass(2, "relative bg-gradient-to-br from-[#F5A623]/10 to-transparent border-2 border-[#F5A623]/40 rounded-2xl p-8 space-y-6 shadow-lg shadow-[#F5A623]/10 flex flex-col")} style={cardStyle(2)}>
         <div className="absolute -top-3 right-6 bg-[#F5A623] text-black text-xs font-bold px-3 py-1 rounded-full">{t("Most Popular", "Più Popolare")}</div>
         <div>
+          <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-4 bg-[#F5A623]/25">
+            <Crown className="w-6 h-6 text-[#F5A623]" />
+          </div>
           <h3 className="text-xl font-bold" style={{ fontFamily: "'Syne', sans-serif" }}>Pro</h3>
           <p className="text-white/40 text-sm mt-1">{t("For agencies and growing businesses", "Per agenzie e aziende in crescita")}</p>
           <div className="mt-3">
@@ -361,21 +336,8 @@ export function PricingGrid({ yearly, t, verticalId, selectedVertical = "generic
             {t("Try Free, Then Upgrade", "Prova Gratis, poi Upgrade")}
           </Button>
         </Link>
-        <ul className="space-y-3 text-sm text-white/70">
-          {[
-            t("1 custom chatbot for your business type", "1 chatbot personalizzato per il tuo settore"),
-            t("Unlimited conversations", "Conversazioni illimitate"),
-            t("Unlimited leads", "Lead illimitati"),
-            t("All Starter features", "Tutte le funzionalità Starter"),
-            t("🔍 Advanced Search (RAG) — highlighted", "🔍 Ricerca Avanzata (RAG) — in evidenza"),
-            t("🛒 Full ecommerce (WooCommerce, Shopify, PrestaShop, API + real-time webhooks), unlimited products", "🛒 Ecommerce completo (WooCommerce, Shopify, PrestaShop, API + webhook real-time), prodotti illimitati"),
-            t("🏨 Hotel Concierge: stay quotes, room QR codes, real-time guest requests, Results page", "🏨 Concierge Hotel: preventivi soggiorno, QR per le camere, richieste ospiti in tempo reale, pagina Risultati"),
-            t("📱 Instagram DM channel", "📱 Canale Instagram DM"),
-            t("⏱️ Auto-close inactive chats with recap email", "⏱️ Chiusura automatica chat inattive con email di riepilogo"),
-            t("Advanced analytics", "Analytics avanzati"),
-            t("Complete white label", "White label completo"),
-            t("Dedicated support", "Supporto dedicato"),
-          ].map((item, i) => (
+        <ul className={listClassName}>
+          {features.pro.features.map((item, i) => (
             <li key={i} className="flex items-start gap-2"><Check className="w-4 h-4 text-[#F5A623] shrink-0 mt-0.5" />{item}</li>
           ))}
         </ul>
