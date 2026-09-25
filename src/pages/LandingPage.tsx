@@ -194,6 +194,7 @@ function getPricingFeatures(t: (en: string, it: string) => string): Record<Prici
 export function PricingGrid({ yearly, t, verticalId, selectedVertical = "generic" }: { yearly: boolean; t: (en: string, it: string) => string; verticalId?: VerticalId; selectedVertical?: PricingVertical }) {
   const gridRef = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(false);
+  const [listReveal, setListReveal] = useState(true);
 
   useEffect(() => {
     const el = gridRef.current;
@@ -205,6 +206,15 @@ export function PricingGrid({ yearly, t, verticalId, selectedVertical = "generic
     obs.observe(el);
     return () => obs.disconnect();
   }, []);
+
+  useEffect(() => {
+    setListReveal(false);
+    const id = setTimeout(() => setListReveal(true), 40);
+    return () => clearTimeout(id);
+  }, [selectedVertical]);
+
+  const features = getPricingFeatures(t)[selectedVertical];
+  const listClassName = `space-y-3 text-sm text-white/70 transition-all duration-500 ${listReveal ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`;
 
   const cardClass = (i: number, extra = "") =>
     `${extra} transition-all ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`;
