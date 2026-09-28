@@ -18,7 +18,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { toast } from "sonner";
 import { Building2, Check, Copy, GripVertical, Loader2, Plus, Trash2, Wand2, ExternalLink, Upload } from "lucide-react";
 import {
-  normalizeHotelProfile, emptyRoom, emptyService, emptyGuide, buildBookingUrl, uid,
+  normalizeHotelProfile, emptyRoom, emptyService, emptyGuide, uid,
   type HotelProfile as HP,
 } from "@/lib/hotelProfile";
 
@@ -38,6 +38,9 @@ const HotelProfile = ({ botIdOverride }: { botIdOverride?: string } = {}) => {
   const [siteUrl, setSiteUrl] = useState("");
   const [status, setStatus] = useState<Status>("idle");
   const timer = useRef<number>();
+  useEffect(() => {
+    if (searchParams.get("tab") === "booking") navigate("/dashboard/integrations", { replace: true });
+  }, [searchParams, navigate]);
   const loadedFor = useRef<string | null>(null);
 
   useEffect(() => {
@@ -107,14 +110,13 @@ const HotelProfile = ({ botIdOverride }: { botIdOverride?: string } = {}) => {
 
   const setP = (k: keyof HP["property"], v: any) => update((d) => ({ ...d, property: { ...d.property, [k]: v } }));
   const setPol = (k: keyof HP["policies"], v: string) => update((d) => ({ ...d, policies: { ...d.policies, [k]: v } }));
-  const setB = (k: keyof HP["booking"], v: string) => update((d) => ({ ...d, booking: { ...d.booking, [k]: v } }));
   const setR = (k: keyof HP["reviews"], v: string) => update((d) => ({ ...d, reviews: { ...d.reviews, [k]: v } }));
 
   const hint = <p className="text-xs text-muted-foreground italic">{tl("Se lasci vuoto, il bot non ne parla.", "If left empty, the bot won't mention it.")}</p>;
 
   const tabs = [
     ["property", tl("Struttura", "Property")], ["rooms", tl("Camere", "Rooms")], ["services", tl("Servizi", "Services")],
-    ["policies", "Policy"], ["guide", tl("Guida locale", "Local guide")], ["booking", tl("Prenotazioni", "Bookings")],
+    ["policies", "Policy"], ["guide", tl("Guida locale", "Local guide")],
     ["reviews", tl("Recensioni", "Reviews")], ["qr", "QR"],
   ];
 
@@ -261,11 +263,6 @@ const HotelProfile = ({ botIdOverride }: { botIdOverride?: string } = {}) => {
           {hint}
         </TabsContent>
 
-        <TabsContent value="booking" className="space-y-4">
-          <BookingTab hp={hp} setB={setB} tl={tl} />
-          {hint}
-        </TabsContent>
-
         <TabsContent value="reviews" className="space-y-4">
           <Section>
             <Grid>
@@ -394,40 +391,6 @@ const ImageField = ({ value, onChange, clientId, tl }: { value: string; onChange
         {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}{tl("Carica", "Upload")}
       </Button>
     </div>
-  );
-};
-
-const BookingTab = ({ hp, setB, tl }: { hp: HP; setB: (k: keyof HP["booking"], v: string) => void; tl: (a: string, b: string) => string }) => {
-  const ci = new Date(); ci.setDate(ci.getDate() + 14);
-  const co = new Date(ci); co.setDate(co.getDate() + 3);
-  const preview = hp.booking.engine_url_template ? buildBookingUrl(hp.booking.engine_url_template, hp.booking.date_format, ci, co, 2, 1) : "";
-  return (
-    <Section>
-      <Grid>
-        <F label={tl("Link del booking engine", "Booking engine link")} full>
-          <Input value={hp.booking.engine_url_template} onChange={(e) => setB("engine_url_template", e.target.value)} placeholder="https://booking.esempio.it/?arrivo={checkin}&partenza={checkout}&adulti={adults}&bambini={children}" />
-          <p className="text-xs text-muted-foreground">{tl("Segnaposto disponibili:", "Available placeholders:")} <code>{"{checkin}"}</code> <code>{"{checkout}"}</code> <code>{"{adults}"}</code> <code>{"{children}"}</code></p>
-        </F>
-        <F label={tl("Formato date", "Date format")}>
-          <Select value={hp.booking.date_format} onValueChange={(v) => setB("date_format", v)}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent><SelectItem value="YYYY-MM-DD">YYYY-MM-DD</SelectItem><SelectItem value="DD/MM/YYYY">DD/MM/YYYY</SelectItem></SelectContent>
-          </Select>
-        </F>
-        <div />
-        <F label={tl("Telefono prenotazioni", "Booking phone")}><Input value={hp.booking.phone_booking} onChange={(e) => setB("phone_booking", e.target.value)} /></F>
-        <F label={tl("Email prenotazioni", "Booking email")}><Input type="email" value={hp.booking.email_booking} onChange={(e) => setB("email_booking", e.target.value)} /></F>
-      </Grid>
-      {preview && (
-        <div className="rounded-lg border border-border bg-secondary/30 p-3 space-y-2">
-          <p className="text-xs text-muted-foreground">{tl("Anteprima con date di esempio (2 adulti, 1 bambino, 3 notti):", "Preview with sample dates (2 adults, 1 child, 3 nights):")}</p>
-          <p className="text-sm break-all text-foreground">{preview}</p>
-          <Button size="sm" variant="outline" className="gap-2" asChild>
-            <a href={preview} target="_blank" rel="noopener noreferrer"><ExternalLink className="w-4 h-4" />{tl("Prova link", "Test link")}</a>
-          </Button>
-        </div>
-      )}
-    </Section>
   );
 };
 
