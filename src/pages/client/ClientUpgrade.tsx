@@ -175,7 +175,6 @@ const ClientUpgrade = () => {
   const { plan: clientPlan } = usePlan();
   const [yearly, setYearly] = useState(false);
   const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
-  const [couponCode, setCouponCode] = useState("");
 
   const isIt = lang === "it";
 
@@ -401,6 +400,11 @@ const ClientUpgrade = () => {
                   {plan.id === "free" ? (isIt ? "Incluso" : "Included") : `${isIt ? "Passa a" : "Upgrade to"} ${plan.name}`}
                 </Button>
               )}
+              {plan.id !== "free" && (
+                <p className="text-xs text-muted-foreground text-center -mt-2">
+                  {isIt ? "Hai un codice sconto? Potrai inserirlo al passaggio successivo." : "Have a discount code? You'll be able to enter it on the next step."}
+                </p>
+              )}
 
               {/* Branding Footer */}
               <div className="pt-3 border-t border-border text-center">
@@ -414,24 +418,6 @@ const ClientUpgrade = () => {
       </div>
 
       <SetupServiceCard isIt={isIt} />
-
-      {/* Coupon */}
-      <div className="glass rounded-xl p-4">
-        <label className="text-sm text-muted-foreground block mb-2">
-          {isIt ? "Hai già un codice sconto?" : "Have a discount code?"}
-        </label>
-        <div className="flex gap-2">
-          <Input
-            value={couponCode}
-            onChange={(e) => setCouponCode(e.target.value)}
-            placeholder={isIt ? "Inserisci il codice..." : "Enter code..."}
-            className="bg-secondary border-border text-base"
-          />
-          <Button variant="outline" disabled={!couponCode.trim()}>
-            {isIt ? "Applica" : "Apply"}
-          </Button>
-        </div>
-      </div>
     </div>
   );
 };
