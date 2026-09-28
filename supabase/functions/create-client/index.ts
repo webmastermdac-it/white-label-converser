@@ -16,7 +16,9 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
-    const { name, email, password, plan, locale: reqLocale } = await req.json();
+    const { name, email, password, plan, business_vertical, locale: reqLocale } = await req.json();
+    const validVerticals = ["ecommerce", "booking", "hotel", "general"];
+    const botVertical = validVerticals.includes(business_vertical) ? business_vertical : "general";
 
     if (!name || !email || !password) {
       return new Response(JSON.stringify({ error: "Missing required fields" }), {
@@ -52,6 +54,7 @@ serve(async (req) => {
       name: `${name} Assistant`,
       welcome_message: `Ciao! Sono l'assistente virtuale IA di ${name}. Come posso aiutarti?`,
       notification_email: email,
+      business_vertical: botVertical,
     });
 
     // Send welcome email with temporary password
