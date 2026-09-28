@@ -226,6 +226,7 @@ export function PricingGrid({ yearly, t, verticalId, selectedVertical = "generic
   });
 
   return (
+    <>
     <div ref={gridRef} className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
       {/* Free */}
       <div className={cardClass(0, "bg-white/[0.03] border border-white/10 rounded-2xl p-8 space-y-6 flex flex-col")} style={cardStyle(0)}>
