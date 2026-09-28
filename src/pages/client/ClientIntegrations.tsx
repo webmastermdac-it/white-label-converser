@@ -74,7 +74,7 @@ const ClientIntegrations = ({ embedded = false, clientIdOverride }: { embedded?:
     supabase.from("chatbot_configs").select("hotel_profile").eq("id", activeBotId).maybeSingle().then(({ data }) => {
       setHotelEngineUrl(String((data as any)?.hotel_profile?.booking?.engine_url_template || "").trim());
     });
-  }, [activeBotId, activeModule.id, openIdKey()]);
+  }, [activeBotId, activeModule.id]);
 
   const [openId, setOpenId] = useState<IntegrationId | null>(null);
   const [bannerDismissed, setBannerDismissed] = useState(
