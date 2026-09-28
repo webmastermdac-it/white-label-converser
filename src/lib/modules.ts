@@ -110,7 +110,7 @@ export const MODULES: Record<ModuleId, ModuleDef> = {
       { key: "hotel-requests", label: { it: "Richieste ospiti", en: "Guest requests" }, href: "/dashboard/hotel/requests", icon: ConciergeBell },
       { key: "hotel-results", label: { it: "Risultati", en: "Results" }, href: "/dashboard/hotel/results", icon: TrendingUp },
     ],
-    integrations: ["booking_link"],
+    integrations: ["hotel_booking"],
     kbTemplates: ["restaurant"],
     leadFields: [
       { key: "check_in", label: { it: "Check-in", en: "Check-in" }, type: "date" },
@@ -125,7 +125,7 @@ export const MODULES: Record<ModuleId, ModuleDef> = {
     checklist: [
       { key: "profile", kind: "auto", href: "/dashboard/hotel/profile", label: { it: "Completa il profilo struttura", en: "Complete the property profile" } },
       { key: "rooms", kind: "auto", href: "/dashboard/hotel/profile", label: { it: "Aggiungi le camere", en: "Add your rooms" } },
-      { key: "booking_engine", kind: "auto", href: "/dashboard/hotel/profile", label: { it: "Inserisci il link del booking engine", en: "Add the booking engine link" } },
+      { key: "booking_engine", kind: "auto", href: "/dashboard/integrations", label: { it: "Inserisci il link del booking engine", en: "Add the booking engine link" } },
       widgetStep,
       { key: "qr", kind: "auto", href: "/dashboard/hotel/profile?tab=qr", label: { it: "Stampa il QR code", en: "Print the QR code" } },
     ],

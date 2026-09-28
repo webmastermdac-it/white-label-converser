@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useLanguage } from "@/hooks/useLanguage";
 import { usePlanConfig } from "@/hooks/usePlanConfig";
@@ -20,10 +20,12 @@ import {
 import type { LucideIcon } from "lucide-react";
 import ProductCatalogList from "@/components/ecommerce/ProductCatalogList";
 import PlatformGuide from "@/components/ecommerce/PlatformGuide";
+import HotelBookingSettings from "@/components/hotel/HotelBookingSettings";
+import { supabase } from "@/integrations/supabase/client";
 
 
 
-type IntegrationId = Platform | "calendly" | "booking_link";
+type IntegrationId = Platform | "calendly" | "booking_link" | "hotel_booking";
 
 interface IntegrationDef {
   id: IntegrationId;
@@ -45,6 +47,8 @@ const APPOINTMENT_INTEGRATIONS: IntegrationDef[] = [
 ];
 
 const RESERVATION_INTEGRATIONS: IntegrationDef[] = [
+  { id: "hotel_booking", name: "Prenotazioni", color: "#10B981", icon: CalendarCheck },
+  // Generic booking link card: kept but not listed by any module
   { id: "booking_link", name: "Prenotazioni", color: "#10B981", icon: CalendarCheck },
 ];
 
@@ -63,7 +67,14 @@ const ClientIntegrations = ({ embedded = false, clientIdOverride }: { embedded?:
   const { canUseCalendly, canUseEcommerce, loading: planLoading } = usePlanConfig();
   const eco = useEcommerceIntegration(clientIdOverride);
   const cal = useCalendlyIntegration(clientIdOverride);
-  const { module: activeModule } = useActiveModule();
+  const { module: activeModule, botId: activeBotId } = useActiveModule();
+  const [hotelEngineUrl, setHotelEngineUrl] = useState("");
+  useEffect(() => {
+    if (!activeBotId || activeModule.id !== "hotel") { setHotelEngineUrl(""); return; }
+    supabase.from("chatbot_configs").select("hotel_profile").eq("id", activeBotId).maybeSingle().then(({ data }) => {
+      setHotelEngineUrl(String((data as any)?.hotel_profile?.booking?.engine_url_template || "").trim());
+    });
+  }, [activeBotId, activeModule.id, openIdKey()]);
 
   const [openId, setOpenId] = useState<IntegrationId | null>(null);
   const [bannerDismissed, setBannerDismissed] = useState(
@@ -77,6 +88,7 @@ const ClientIntegrations = ({ embedded = false, clientIdOverride }: { embedded?:
   };
 
   const lockedFor = (id: IntegrationId): false | "starter" | "pro" => {
+    if (id === "hotel_booking") return false;
     if (id === "calendly" || id === "booking_link") return canUseCalendly ? false : "pro";
     if (!canUseEcommerce) return "starter";
     return false;
@@ -84,6 +96,7 @@ const ClientIntegrations = ({ embedded = false, clientIdOverride }: { embedded?:
 
 
   const isConnected = (id: IntegrationId) => {
+    if (id === "hotel_booking") return !!hotelEngineUrl;
     if (id === "calendly" || id === "booking_link") return !!cal.calendlyUrl;
     return !!eco.configId && eco.savedPlatform === id;
   };
@@ -120,8 +133,8 @@ const ClientIntegrations = ({ embedded = false, clientIdOverride }: { embedded?:
           : "Offering appointment-based services? Connect Calendly so customers can book right in the chat.")
       : activeModule.id === "hotel"
       ? (isIt
-          ? "Gestisci un ristorante o un hotel? Collega il tuo sistema di prenotazione (TheFork, OpenTable, Booking.com o il tuo sito) e il bot proporrà il link a chi vuole prenotare."
-          : "Running a restaurant or hotel? Connect your booking system (TheFork, OpenTable, Booking.com or your own site) and the bot will offer the link to anyone who wants to book.")
+          ? "Gestisci un hotel? Inserisci qui il link del tuo booking engine: il bot lo proporrà con le date già compilate a chi vuole prenotare."
+          : "Running a hotel? Add your booking engine link here: the bot will offer it with dates pre-filled to anyone who wants to book.")
       : null;
 
   if (planLoading || eco.loading || cal.loading) {
@@ -132,7 +145,7 @@ const ClientIntegrations = ({ embedded = false, clientIdOverride }: { embedded?:
   const activeLocked = openId ? lockedFor(openId) : false;
 
   const openCard = (id: IntegrationId) => {
-    if (id !== "calendly" && id !== "booking_link" && !lockedFor(id)) eco.setPlatform(id as Platform);
+    if (id !== "calendly" && id !== "booking_link" && id !== "hotel_booking" && !lockedFor(id)) eco.setPlatform(id as Platform);
     setOpenId(id);
   };
 
@@ -181,6 +194,8 @@ const ClientIntegrations = ({ embedded = false, clientIdOverride }: { embedded?:
                 {isIt ? "Sblocca con" : "Unlock with"} {activeLocked === "starter" ? "Starter" : "Pro"}
               </Button>
             </div>
+          ) : openId === "hotel_booking" ? (
+            <HotelBookingSettings botId={activeBotId} onSaved={(b) => setHotelEngineUrl(b.engine_url_template.trim())} />
           ) : openId === "booking_link" ? (
             <div className="space-y-5">
               <div className="space-y-2">
@@ -409,14 +424,6 @@ const ClientIntegrations = ({ embedded = false, clientIdOverride }: { embedded?:
       {moduleIntegrations.length === 0 && (
         <div className="rounded-xl border border-border bg-card p-6 text-sm text-muted-foreground">
           <p>{isIt ? "Nessuna integrazione disponibile per il tuo modulo." : "No integrations are available for your module."}</p>
-          {activeModule.id === "hotel" && (
-            <p className="mt-2">
-              {isIt ? "Per l'hotel il link del booking engine si imposta in " : "For hotels, the booking engine link is configured in "}
-              <button onClick={() => navigate("/dashboard/hotel/profile")} className="text-primary underline underline-offset-2">
-                {isIt ? "Profilo struttura" : "Property profile"}
-              </button>.
-            </p>
-          )}
         </div>
       )}
 
