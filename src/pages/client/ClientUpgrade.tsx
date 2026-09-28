@@ -175,7 +175,6 @@ const ClientUpgrade = () => {
   const { plan: clientPlan } = usePlan();
   const [yearly, setYearly] = useState(false);
   const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
-  const [couponCode, setCouponCode] = useState("");
 
   const isIt = lang === "it";
 
@@ -400,6 +399,11 @@ const ClientUpgrade = () => {
                 <Button variant="outline" className="w-full" disabled>
                   {plan.id === "free" ? (isIt ? "Incluso" : "Included") : `${isIt ? "Passa a" : "Upgrade to"} ${plan.name}`}
                 </Button>
+              )}
+              {plan.id !== "free" && (
+                <p className="text-xs text-muted-foreground text-center -mt-2">
+                  {isIt ? "Hai un codice sconto? Potrai inserirlo al passaggio successivo." : "Have a discount code? You'll be able to enter it on the next step."}
+                </p>
               )}
 
               {/* Branding Footer */}
