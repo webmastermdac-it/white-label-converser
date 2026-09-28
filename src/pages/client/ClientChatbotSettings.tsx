@@ -18,9 +18,9 @@ import ActivationChecklist from "@/components/ActivationChecklist";
 import ToneOfVoiceCard from "@/components/ToneOfVoiceCard";
 import { MODULE_CHANGED_EVENT } from "@/hooks/useActiveModule";
 import {
-  AlertTriangle, ArrowLeft, BellRing, Bot, Building2, CalendarDays, CheckCircle2,
-  ChevronRight, ClipboardList, Code2, Copy, Database, Eye, Globe, KeyRound,
-  Loader2, MessageSquareText, Palette, Power, RefreshCw, Save, Settings, Sparkles,
+  AlertTriangle, ArrowLeft, BellRing, Building2, CalendarDays, CheckCircle2,
+  ChevronRight, Code2, Copy, Database, Eye, Globe, KeyRound,
+  Loader2, Palette, Power, RefreshCw, Save, Settings, Sparkles,
 } from "lucide-react";
 import { getModule } from "@/lib/modules";
 import HotelProfile from "@/pages/client/hotel/HotelProfile";
@@ -104,6 +104,9 @@ const ClientChatbotSettings = ({ adminMode = false, botIdOverride, hideHeader = 
     return () => window.removeEventListener(MODULE_CHANGED_EVENT, handler);
   }, [fetchBot]);
   useEffect(() => { void fetchBot(); }, [fetchBot]);
+  useEffect(() => {
+    if (section === "concierge" && botConfig && conciergeMenu.length === 0) openSection(null);
+  }, [section, botConfig, conciergeMenu.length]);
 
   const saveGeneral = async () => {
     if (!botId) return;
@@ -140,8 +143,6 @@ const ClientChatbotSettings = ({ adminMode = false, botIdOverride, hideHeader = 
 
   if (loading) return <div className="flex items-center justify-center p-12"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>;
   if (!botConfig) return <div className="p-6"><Link to={backPath} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"><ArrowLeft className="h-4 w-4" />{tl("Torna ai chatbot", "Back to chatbots")}</Link><p className="mt-4 text-muted-foreground">{tl("Chatbot non trovato", "Chatbot not found")}</p></div>;
-
-  if (section === "concierge" && conciergeMenu.length === 0) openSection(null);
 
   const sectionTitles: Record<SettingsSection, string> = {
     install: tl("Installazione sul sito", "Website installation"), general: tl("Generale", "General"), appearance: tl("Aspetto", "Appearance"), tone: tl("Personalità e tono", "Personality and tone"), knowledge: tl("Conoscenza", "Knowledge"), leads: tl("Lead e notifiche", "Leads and notifications"), preview: tl("Anteprima", "Preview"), concierge: "Concierge",

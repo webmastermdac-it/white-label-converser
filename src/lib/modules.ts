@@ -82,7 +82,7 @@ export const MODULES: Record<ModuleId, ModuleDef> = {
     icon: CalendarCheck,
     color: "200 90% 55%",
     menu: [],
-    integrations: ["calendly"],
+    integrations: [],
     kbTemplates: ["dentist", "medical", "gym"],
     leadFields: [
       { key: "service", label: { it: "Servizio richiesto", en: "Requested service" }, type: "text" },
@@ -137,7 +137,7 @@ export const MODULES: Record<ModuleId, ModuleDef> = {
     icon: Sparkles,
     color: "35 91% 55%",
     menu: [],
-    integrations: [],
+    integrations: ["calendly"],
     kbTemplates: [],
     leadFields: [],
     kpis: [
