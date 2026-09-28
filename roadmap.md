@@ -6,3 +6,7 @@
 - [x] Verificare desktop/mobile, metadata, link e regressioni degli altri verticali.
 - [x] Raggruppare le voci verticali nella navigazione cliente desktop e mobile con stato persistente.
 - [x] Verificare gruppo Hotel aperto e assenza del gruppo per un bot generico/ecommerce.
+- [x] Sostituire le tab della configurazione bot con un hub e pagine interne sincronizzate via query parameter.
+- [x] Estrarre Personalità e tono in una pagina bilingue dedicata e rimuoverla dalla Conoscenza.
+- [x] Filtrare integrazioni e relative scorciatoie/sidebar usando esclusivamente il modulo del bot.
+- [x] Verificare hub, tono IT/EN e Lead e notifiche su un bot reale.

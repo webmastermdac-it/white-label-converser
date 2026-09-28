@@ -3,7 +3,7 @@ import ClientSidebar from "@/components/ClientSidebar";
 import MobileNav from "@/components/MobileNav";
 import { useLanguage } from "@/hooks/useLanguage";
 import {
-  LayoutDashboard, Inbox, MessageSquare, Bot, ArrowUpCircle, BarChart3, Store
+  LayoutDashboard, Inbox, MessageSquare, Bot, ArrowUpCircle, BarChart3, Store, Plug
 } from "lucide-react";
 
 const ClientLayout = () => {
@@ -16,6 +16,7 @@ const ClientLayout = () => {
     { label: t("chatHistory"), href: "/dashboard/chats", icon: MessageSquare },
     { label: "Analytics", href: "/dashboard/analytics", icon: BarChart3 },
     { label: "Ecommerce", href: "/dashboard/ecommerce", icon: Store },
+    { label: t("Integrations", "Integrazioni"), href: "/dashboard/integrations", icon: Plug },
     { label: "Upgrade", href: "/dashboard/upgrade", icon: ArrowUpCircle },
   ];
 

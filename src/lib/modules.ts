@@ -60,7 +60,7 @@ export const MODULES: Record<ModuleId, ModuleDef> = {
     icon: ShoppingBag,
     color: "35 91% 55%",
     menu: [],
-    integrations: ["woocommerce", "shopify", "prestashop"],
+    integrations: ["woocommerce", "shopify", "prestashop", "api", "feed"],
     kbTemplates: ["ecommerce"],
     leadFields: [{ key: "order_number", label: { it: "Numero ordine", en: "Order number" }, type: "text" }],
     kpis: [
@@ -137,7 +137,7 @@ export const MODULES: Record<ModuleId, ModuleDef> = {
     icon: Sparkles,
     color: "35 91% 55%",
     menu: [],
-    integrations: [],
+    integrations: ["calendly"],
     kbTemplates: [],
     leadFields: [],
     kpis: [
