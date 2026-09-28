@@ -14,6 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import ChatbotConfigForm from "@/components/ChatbotConfigForm";
 import ClientRAGKnowledgeBase from "@/pages/client/ClientRAGKnowledgeBase";
 import BotMessagesCard from "@/components/BotMessagesCard";
+import BotModuleCard from "@/components/BotModuleCard";
 import ActivationChecklist from "@/components/ActivationChecklist";
 import ToneOfVoiceCard from "@/components/ToneOfVoiceCard";
 import { MODULE_CHANGED_EVENT } from "@/hooks/useActiveModule";
@@ -45,7 +46,7 @@ interface ClientChatbotSettingsProps {
 const ClientChatbotSettings = ({ adminMode = false, botIdOverride, hideHeader = false }: ClientChatbotSettingsProps) => {
   const { botId: routeBotId } = useParams<{ botId: string }>();
   const botId = botIdOverride || routeBotId;
-  const { clientId: authClientId } = useAuth();
+  const { clientId: authClientId, role } = useAuth();
   const { lang } = useLanguage();
   const { toast } = useToast();
   const widgetUrl = useWidgetUrl();
@@ -172,7 +173,7 @@ const ClientChatbotSettings = ({ adminMode = false, botIdOverride, hideHeader = 
       </> : <>
         <div><Button variant="ghost" onClick={() => openSection(null)} className="mb-2 -ml-3 gap-2 text-muted-foreground"><ArrowLeft className="h-4 w-4" />{tl("Configurazione", "Configuration")}</Button><h1 className="text-2xl font-bold text-foreground" style={{ fontFamily: "Syne, sans-serif" }}>{sectionTitles[section]}</h1></div>
         {section === "install" && <InstallationContent />}
-        {section === "general" && <div className="space-y-4"><div className="glass space-y-5 rounded-xl p-6"><div className={`flex items-center justify-between gap-3 rounded-xl border p-5 ${isActive ? "border-success/30 bg-success/10" : "border-destructive/20 bg-destructive/5"}`}><div className="flex items-start gap-3"><Power className={`mt-0.5 h-5 w-5 ${isActive ? "text-success" : "text-muted-foreground"}`} /><div><p className="text-sm font-medium text-foreground">{tl("Bot attivo", "Bot active")}</p><p className="text-xs text-muted-foreground">{tl("Abilita/disabilita il widget", "Enable/disable the widget")}</p></div></div><Switch checked={isActive} onCheckedChange={setIsActive} /></div><div className="space-y-2"><Label>{tl("Nome del bot", "Bot name")}</Label><Input value={name} onChange={(event) => setName(event.target.value)} className="bg-secondary" /></div><div className="space-y-2"><Label>{tl("URL del sito", "Site URL")}</Label><Input value={siteUrl} onChange={(event) => setSiteUrl(event.target.value)} placeholder="https://mysite.com" className="bg-secondary" /></div><Button onClick={saveGeneral} disabled={savingGeneral} className="gap-2"><Save className="h-4 w-4" />{tl("Salva", "Save")}</Button></div>{botId && <BotMessagesCard chatbotId={botId} />}</div>}
+        {section === "general" && <div className="space-y-4"><div className="glass space-y-5 rounded-xl p-6"><div className={`flex items-center justify-between gap-3 rounded-xl border p-5 ${isActive ? "border-success/30 bg-success/10" : "border-destructive/20 bg-destructive/5"}`}><div className="flex items-start gap-3"><Power className={`mt-0.5 h-5 w-5 ${isActive ? "text-success" : "text-muted-foreground"}`} /><div><p className="text-sm font-medium text-foreground">{tl("Bot attivo", "Bot active")}</p><p className="text-xs text-muted-foreground">{tl("Abilita/disabilita il widget", "Enable/disable the widget")}</p></div></div><Switch checked={isActive} onCheckedChange={setIsActive} /></div><div className="space-y-2"><Label>{tl("Nome del bot", "Bot name")}</Label><Input value={name} onChange={(event) => setName(event.target.value)} className="bg-secondary" /></div><div className="space-y-2"><Label>{tl("URL del sito", "Site URL")}</Label><Input value={siteUrl} onChange={(event) => setSiteUrl(event.target.value)} placeholder="https://mysite.com" className="bg-secondary" /></div><Button onClick={saveGeneral} disabled={savingGeneral} className="gap-2"><Save className="h-4 w-4" />{tl("Salva", "Save")}</Button></div>{botId && <BotModuleCard chatbotId={botId} canChange={adminMode || role === "super_admin"} />}{botId && <BotMessagesCard chatbotId={botId} />}</div>}
         {section === "appearance" && clientId && <ChatbotConfigForm clientId={clientId} chatbotId={botId} sectionFilter={["identity", "appearance"]} />}
         {section === "tone" && botId && <ToneOfVoiceCard chatbotId={botId} />}
         {section === "knowledge" && <ClientRAGKnowledgeBase overrideChatbotId={botId} />}

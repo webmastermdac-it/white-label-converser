@@ -17,6 +17,7 @@ import {
   Loader2, Plus, Bot, Copy, Code2, Settings, Activity,
   MessageSquare, Inbox, Lock, Globe, Trash2
 } from "lucide-react";
+import { MODULES, MODULE_IDS, type ModuleId } from "@/lib/modules";
 
 interface ChatbotCard {
   id: string;
@@ -41,6 +42,7 @@ const ClientChatbots = () => {
   const [showCreate, setShowCreate] = useState(false);
   const [newName, setNewName] = useState("");
   const [newSiteUrl, setNewSiteUrl] = useState("");
+  const [newModule, setNewModule] = useState<ModuleId | null>(null);
   const [creating, setCreating] = useState(false);
 
   const tl = (it: string, en: string) => lang === "it" ? it : en;
@@ -84,7 +86,7 @@ const ClientChatbots = () => {
   const limitReached = maxChatbots !== -1 && bots.length >= maxChatbots;
 
   const handleCreate = async () => {
-    if (!newName.trim() || !newSiteUrl.trim() || !clientId) return;
+    if (!newName.trim() || !newSiteUrl.trim() || !newModule || !clientId) return;
     if (limitReached) return;
     setCreating(true);
     try {
@@ -94,6 +96,7 @@ const ClientChatbots = () => {
           client_id: clientId,
           name: newName.trim(),
           site_url: newSiteUrl.trim(),
+          business_vertical: newModule,
         } as any)
         .select()
         .single();
@@ -102,6 +105,7 @@ const ClientChatbots = () => {
       setShowCreate(false);
       setNewName("");
       setNewSiteUrl("");
+      setNewModule(null);
       navigate(`/dashboard/bots/${data.id}`);
     } catch (err: any) {
       toast({ title: "Error", description: err.message, variant: "destructive" });
@@ -252,12 +256,38 @@ const ClientChatbots = () => {
                 className="bg-secondary border-border"
               />
             </div>
+            <div className="space-y-2">
+              <Label>{tl("Tipo di bot", "Bot type")} *</Label>
+              <div className="grid grid-cols-2 gap-2">
+                {MODULE_IDS.map((id) => {
+                  const m = MODULES[id];
+                  const active = newModule === id;
+                  return (
+                    <button
+                      key={id}
+                      type="button"
+                      aria-pressed={active}
+                      onClick={() => setNewModule(id)}
+                      className={`flex flex-col gap-1 rounded-lg border p-3 text-left transition-colors ${
+                        active ? "border-primary bg-primary/10" : "border-border bg-secondary hover:border-primary/40"
+                      }`}
+                    >
+                      <span className="flex items-center gap-2 text-sm font-medium text-foreground">
+                        <m.icon className="h-4 w-4 shrink-0" style={{ color: `hsl(${m.color})` }} />
+                        {tl(m.name.it, m.name.en)}
+                      </span>
+                      <span className="text-xs text-muted-foreground">{tl(m.description.it, m.description.en)}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowCreate(false)}>{tl("Annulla", "Cancel")}</Button>
             <Button
               onClick={handleCreate}
-              disabled={creating || !newName.trim() || !newSiteUrl.trim()}
+              disabled={creating || !newName.trim() || !newSiteUrl.trim() || !newModule}
               className="gradient-primary text-white border-0"
             >
               {creating && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
