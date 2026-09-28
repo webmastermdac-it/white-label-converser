@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import ChatbotConfigForm from "@/components/ChatbotConfigForm";
+import BotMessagesCard from "@/components/BotMessagesCard";
 import { Loader2, ArrowLeft, Eye, RefreshCw, Bot, Globe, Activity, Copy, Settings, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -151,7 +152,10 @@ const AdminClientConfig = () => {
             </TabsList>
 
             <TabsContent value="config">
-              <ChatbotConfigForm clientId={clientId} chatbotId={selectedBotId} />
+              <div className="space-y-6">
+                <BotMessagesCard chatbotId={selectedBotId} />
+                <ChatbotConfigForm clientId={clientId} chatbotId={selectedBotId} />
+              </div>
             </TabsContent>
 
             <TabsContent value="kb">
