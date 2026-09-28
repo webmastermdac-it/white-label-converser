@@ -250,7 +250,7 @@ const ClientIntegrations = ({ embedded = false, clientIdOverride }: { embedded?:
                 </div>
               </div>
 
-              <Button onClick={cal.save} disabled={cal.saving} className="w-full">
+              <Button onClick={() => cal.save()} disabled={cal.saving} className="w-full">
                 {cal.saving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                 {isIt ? "Salva" : "Save"}
               </Button>
