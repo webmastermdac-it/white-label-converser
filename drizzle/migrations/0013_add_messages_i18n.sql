@@ -1,0 +1,1 @@
+ALTER TABLE public.chatbot_configs ADD COLUMN IF NOT EXISTS messages_i18n jsonb DEFAULT '{}'::jsonb;
