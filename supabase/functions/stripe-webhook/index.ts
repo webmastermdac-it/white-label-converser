@@ -122,7 +122,9 @@ serve(async (req) => {
       if (session.subscription) {
         try {
           const sub = await stripe.subscriptions.retrieve(session.subscription as string);
-          planExpiresAt = new Date(sub.current_period_end * 1000).toISOString();
+          const periodEnd = (sub.items?.data?.[0] as any)?.current_period_end;
+          if (!periodEnd) throw new Error("current_period_end missing on subscription item");
+          planExpiresAt = new Date(periodEnd * 1000).toISOString();
           log("Subscription expiry", { planExpiresAt });
         } catch (subErr: any) {
           log("Error retrieving subscription", { message: subErr.message });
@@ -201,6 +203,60 @@ serve(async (req) => {
 
       if (error) log("Error downgrading client", { error });
       else log("Client downgraded to free", { data });
+    }
+
+    if (event.type === "customer.subscription.updated") {
+      const sub = event.data.object as Stripe.Subscription;
+      const customerId = sub.customer as string;
+      const item: any = sub.items?.data?.[0];
+      log("Subscription updated", { customerId, status: sub.status, priceId: item?.price?.id });
+
+      if (["canceled", "unpaid", "incomplete_expired"].includes(sub.status)) {
+        const { data, error } = await supabase
+          .from("clients")
+          .update({ plan: "free", stripe_subscription_id: null, plan_interval: null, plan_expires_at: null })
+          .eq("stripe_customer_id", customerId)
+          .select("id, email, plan");
+        if (error) log("Error downgrading client", { error });
+        else log("Client downgraded to free", { data });
+      } else if (sub.status === "past_due") {
+        log("Subscription past_due: plan unchanged", { customerId });
+      } else {
+        const priceId = item?.price?.id;
+        const { data: rows } = priceId
+          ? await supabase
+              .from("plan_configs")
+              .select("plan_name, stripe_price_month, stripe_price_year")
+              .or(`stripe_price_month.eq.${priceId},stripe_price_year.eq.${priceId}`)
+              .limit(1)
+          : { data: null };
+        const match = rows?.[0];
+        if (!match) {
+          log("Unrecognized price ID, no changes", { priceId });
+        } else {
+          const planInterval = match.stripe_price_year === priceId ? "year" : "month";
+          const payload: Record<string, unknown> = {
+            plan: match.plan_name,
+            plan_interval: planInterval,
+            stripe_subscription_id: sub.id,
+          };
+          if (item?.current_period_end) {
+            payload.plan_expires_at = new Date(item.current_period_end * 1000).toISOString();
+          }
+          const { data, error } = await supabase
+            .from("clients")
+            .update(payload)
+            .eq("stripe_customer_id", customerId)
+            .select("id, email, plan");
+          if (error) log("Error updating client subscription", { error });
+          else log("Client subscription updated", { data, payload });
+        }
+      }
+    }
+
+    if (event.type === "invoice.payment_failed") {
+      const invoice = event.data.object as Stripe.Invoice;
+      log("Invoice payment failed", { customer: invoice.customer, invoiceId: invoice.id });
     }
 
     // Always return 200 to prevent Stripe retries

@@ -784,6 +784,8 @@ export type Database = {
           priority_support: boolean
           remove_branding: boolean
           sector_templates: boolean
+          stripe_price_month: string | null
+          stripe_price_year: string | null
           updated_at: string
         }
         Insert: {
@@ -808,6 +810,8 @@ export type Database = {
           priority_support?: boolean
           remove_branding?: boolean
           sector_templates?: boolean
+          stripe_price_month?: string | null
+          stripe_price_year?: string | null
           updated_at?: string
         }
         Update: {
@@ -832,6 +836,8 @@ export type Database = {
           priority_support?: boolean
           remove_branding?: boolean
           sector_templates?: boolean
+          stripe_price_month?: string | null
+          stripe_price_year?: string | null
           updated_at?: string
         }
         Relationships: []
