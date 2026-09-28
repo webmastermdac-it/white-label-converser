@@ -251,6 +251,8 @@ const ClientIntegrations = ({ embedded = false, clientIdOverride }: { embedded?:
                 )}
               </div>
 
+              <PlatformGuide platform={openId as Platform} isIt={isIt} />
+
               <Button onClick={() => eco.save(openId as Platform)} disabled={eco.saving} className="w-full">
                 {eco.saving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                 {isIt ? "Salva configurazione" : "Save configuration"}
