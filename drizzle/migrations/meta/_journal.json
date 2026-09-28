@@ -113,6 +113,13 @@
       "when": 1790612337293,
       "tag": "0015_create_setup_requests",
       "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1790612883821,
+      "tag": "0016_plan_configs_stripe_prices",
+      "breakpoints": true
     }
   ]
 }

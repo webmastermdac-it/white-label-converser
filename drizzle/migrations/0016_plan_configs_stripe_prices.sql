@@ -1,0 +1,3 @@
+ALTER TABLE public.plan_configs ADD COLUMN IF NOT EXISTS stripe_price_month text, ADD COLUMN IF NOT EXISTS stripe_price_year text;
+UPDATE public.plan_configs SET stripe_price_month='price_1T3FrlCK92CnCFRSGWBF7jcb', stripe_price_year='price_1T3Fs0CK92CnCFRSiW6kleSr' WHERE plan_name='starter';
+UPDATE public.plan_configs SET stripe_price_month='price_1T3FsECK92CnCFRSvfDFHiUt', stripe_price_year='price_1T3FsWCK92CnCFRSWK4odPK8' WHERE plan_name='pro';
