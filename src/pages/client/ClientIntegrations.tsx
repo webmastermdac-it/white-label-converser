@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import ProductCatalogList from "@/components/ecommerce/ProductCatalogList";
+import PlatformGuide from "@/components/ecommerce/PlatformGuide";
 
 
 
@@ -208,9 +209,6 @@ const ClientIntegrations = ({ embedded = false, clientIdOverride }: { embedded?:
                     <div><Label>Store URL</Label><Input placeholder="https://miostore.it" value={eco.storeUrl} onChange={e => eco.setStoreUrl(e.target.value)} /></div>
                     <div><Label>Consumer Key</Label><Input placeholder="ck_..." value={eco.apiKey} onChange={e => eco.setApiKey(e.target.value)} /></div>
                     <div><Label>Consumer Secret</Label><Input type="password" value={eco.apiSecret} onChange={e => eco.setApiSecret(e.target.value)} /></div>
-                    <p className="text-xs text-muted-foreground">{isIt ? "Genera le chiavi in WooCommerce → Impostazioni → Avanzate → REST API" : "Generate keys in WooCommerce → Settings → Advanced → REST API"}</p>
-                    <p className="text-xs text-amber-500">{isIt ? "Per far completare acquisti reali dal chatbot le chiavi devono avere permessi Read/Write (non solo Read). Se sono in sola lettura, rigenerale con Read/Write e salvale qui." : "To let the chatbot complete real purchases the keys must have Read/Write permissions (not Read only). If they are read-only, regenerate them with Read/Write and save them here."}</p>
-                    <p className="text-xs text-muted-foreground">{isIt ? "Per lo stato ordini: le chiavi devono poter leggere gli ordini (Read basta)." : "For order status: the keys must be able to read orders (Read is enough)."}</p>
                   </>
                 )}
                 {openId === "shopify" && (
@@ -222,17 +220,12 @@ const ClientIntegrations = ({ embedded = false, clientIdOverride }: { embedded?:
                       <Input type="password" value={eco.storefrontToken} onChange={e => eco.setStorefrontToken(e.target.value)} />
                       <p className="text-xs text-muted-foreground mt-1">{isIt ? "Necessario per creare acquisti reali dal chatbot: Shopify Admin → App → Sviluppa app → API Storefront → genera lo Storefront access token" : "Required for real purchases from the chatbot: Shopify Admin → Apps → Develop apps → Storefront API → generate the Storefront access token"}</p>
                     </div>
-                    <p className="text-xs text-muted-foreground">{isIt ? "Crea una app privata in Shopify Admin → Apps → Develop apps" : "Create a private app in Shopify Admin → Apps → Develop apps"}</p>
-                    <p className="text-xs text-muted-foreground">{isIt ? "Per lo stato ordini: l'Access Token Admin deve avere lo scope read_orders (e read_all_orders per ordini oltre 60 giorni)." : "For order status: the Admin Access Token needs the read_orders scope (and read_all_orders for orders older than 60 days)."}</p>
                   </>
                 )}
                 {openId === "prestashop" && (
                   <>
                     <div><Label>Store URL</Label><Input placeholder="https://miostore.it" value={eco.storeUrl} onChange={e => eco.setStoreUrl(e.target.value)} /></div>
                     <div><Label>API Key</Label><Input type="password" value={eco.apiKey} onChange={e => eco.setApiKey(e.target.value)} /></div>
-                    <p className="text-xs text-muted-foreground">{isIt ? "Genera la chiave in PrestaShop → Parametri avanzati → Servizi web" : "Generate key in PrestaShop → Advanced Parameters → Web Services"}</p>
-                    <p className="text-xs text-amber-500">{isIt ? "Per gli acquisti reali dal chatbot la chiave deve avere permessi di scrittura (Add/Modify) su carts, customers e addresses: Parametri avanzati → Servizi web → modifica la chiave." : "For real purchases from the chatbot the key needs write permissions (Add/Modify) on carts, customers and addresses: Advanced Parameters → Web Services → edit the key."}</p>
-                    <p className="text-xs text-muted-foreground">{isIt ? "Per lo stato ordini: la chiave Servizi web deve avere permesso GET su orders, customers, order_states, order_carriers e carriers." : "For order status: the Web Services key needs GET permission on orders, customers, order_states, order_carriers and carriers."}</p>
                   </>
                 )}
                 {openId === "api" && (
@@ -257,6 +250,8 @@ const ClientIntegrations = ({ embedded = false, clientIdOverride }: { embedded?:
                   </>
                 )}
               </div>
+
+              <PlatformGuide platform={openId as Platform} isIt={isIt} />
 
               <Button onClick={() => eco.save(openId as Platform)} disabled={eco.saving} className="w-full">
                 {eco.saving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
