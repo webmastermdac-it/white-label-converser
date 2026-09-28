@@ -1,10 +1,10 @@
-import { getModule } from "@/lib/modules";
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useLanguage } from "@/hooks/useLanguage";
 import { usePlanConfig } from "@/hooks/usePlanConfig";
 import { useEcommerceIntegration, type Platform } from "@/hooks/useEcommerceIntegration";
 import { useCalendlyIntegration } from "@/hooks/useCalendlyIntegration";
+import { useActiveModule } from "@/hooks/useActiveModule";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";

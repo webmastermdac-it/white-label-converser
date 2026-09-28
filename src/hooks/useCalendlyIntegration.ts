@@ -2,17 +2,24 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/hooks/useLanguage";
+import { useActiveModule } from "@/hooks/useActiveModule";
 import { toast } from "@/hooks/use-toast";
 
 /**
  * chatbot_configs.calendly_url stays the only source of truth for Calendly,
  * and chatbot_configs.business_vertical the only source for the vertical.
+ *
+ * The bot is resolved from botIdOverride when given, otherwise from
+ * useActiveModule() so it always matches the bot shown in the sidebar —
+ * never "the first bot of the client".
  */
-export function useCalendlyIntegration(clientIdOverride?: string | null) {
+export function useCalendlyIntegration(clientIdOverride?: string | null, botIdOverride?: string | null) {
   const { clientId: authClientId } = useAuth();
   const clientId = clientIdOverride ?? authClientId;
   const { lang } = useLanguage();
   const isIt = lang === "it";
+  const { botId: activeBotId } = useActiveModule();
+  const targetBotId = botIdOverride ?? activeBotId;
 
   const [botId, setBotId] = useState<string | null>(null);
   const [botName, setBotName] = useState("");
@@ -23,12 +30,12 @@ export function useCalendlyIntegration(clientIdOverride?: string | null) {
   const [saving, setSaving] = useState(false);
 
   const load = useCallback(async () => {
-    if (!clientId) { setLoading(false); return; }
+    if (!clientId || !targetBotId) { setLoading(false); return; }
     const { data } = await supabase
       .from("chatbot_configs")
       .select("id, name, calendly_url, primary_color, business_vertical")
       .eq("client_id", clientId)
-      .limit(1)
+      .eq("id", targetBotId)
       .maybeSingle();
     if (data) {
       const d = data as any;
@@ -39,7 +46,7 @@ export function useCalendlyIntegration(clientIdOverride?: string | null) {
       setVertical((d.business_vertical as any) || "general");
     }
     setLoading(false);
-  }, [clientId]);
+  }, [clientId, targetBotId]);
 
   useEffect(() => { load(); }, [load]);
 
