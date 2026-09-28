@@ -15,7 +15,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import {
   Plug, Lock, Loader2, RefreshCw, CheckCircle2, XCircle, Clock,
   Settings2, FileText, CalendarDays, ShoppingBag, Store, ShoppingCart, Sparkles, X, ArrowUpCircle, ArrowLeft,
-  ChevronDown, History,
+  ChevronDown, History, CalendarCheck,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import ProductCatalogList from "@/components/ecommerce/ProductCatalogList";
@@ -23,7 +23,7 @@ import PlatformGuide from "@/components/ecommerce/PlatformGuide";
 
 
 
-type IntegrationId = Platform | "calendly";
+type IntegrationId = Platform | "calendly" | "booking_link";
 
 interface IntegrationDef {
   id: IntegrationId;
@@ -42,6 +42,16 @@ const ECOMMERCE_INTEGRATIONS: IntegrationDef[] = [
 
 const APPOINTMENT_INTEGRATIONS: IntegrationDef[] = [
   { id: "calendly", name: "Calendly", color: "#006BFF", icon: CalendarDays },
+];
+
+const RESERVATION_INTEGRATIONS: IntegrationDef[] = [
+  { id: "booking_link", name: "Prenotazioni", color: "#10B981", icon: CalendarCheck },
+];
+
+const BOOKING_LABELS = [
+  { it: "Prenota un tavolo", en: "Book a table" },
+  { it: "Prenota una camera", en: "Book a room" },
+  { it: "Prenota ora", en: "Book now" },
 ];
 
 const BANNER_KEY = "integrations_banner_dismissed";
@@ -67,14 +77,14 @@ const ClientIntegrations = ({ embedded = false, clientIdOverride }: { embedded?:
   };
 
   const lockedFor = (id: IntegrationId): false | "starter" | "pro" => {
-    if (id === "calendly") return canUseCalendly ? false : "pro";
+    if (id === "calendly" || id === "booking_link") return canUseCalendly ? false : "pro";
     if (!canUseEcommerce) return "starter";
     return false;
   };
 
 
   const isConnected = (id: IntegrationId) => {
-    if (id === "calendly") return !!cal.calendlyUrl;
+    if (id === "calendly" || id === "booking_link") return !!cal.calendlyUrl;
     return !!eco.configId && eco.savedPlatform === id;
   };
   const moduleIntegrations = activeModule.integrations;
@@ -91,7 +101,12 @@ const ClientIntegrations = ({ embedded = false, clientIdOverride }: { embedded?:
       title: isIt ? "Appuntamenti" : "Appointments",
       items: APPOINTMENT_INTEGRATIONS.filter((item) => moduleIntegrations.includes(item.id)),
     };
-    return [ecommerceCat, bookingCat].filter((category) => category.items.length > 0);
+    const reservationCat = {
+      key: "reservations",
+      title: isIt ? "Prenotazioni" : "Reservations",
+      items: RESERVATION_INTEGRATIONS.filter((item) => moduleIntegrations.includes(item.id)),
+    };
+    return [reservationCat, ecommerceCat, bookingCat].filter((category) => category.items.length > 0);
   }, [moduleIntegrations.join("|"), isIt]);
 
   const bannerText = moduleIntegrations.length === 0 ? null : activeModule.id === "ecommerce"
@@ -103,17 +118,21 @@ const ClientIntegrations = ({ embedded = false, clientIdOverride }: { embedded?:
       ? (isIt
           ? "Offri servizi su appuntamento? Collega Calendly per far prenotare i clienti direttamente in chat."
           : "Offering appointment-based services? Connect Calendly so customers can book right in the chat.")
+      : activeModule.id === "hotel"
+      ? (isIt
+          ? "Gestisci un ristorante o un hotel? Collega il tuo sistema di prenotazione (TheFork, OpenTable, Booking.com o il tuo sito) e il bot proporrà il link a chi vuole prenotare."
+          : "Running a restaurant or hotel? Connect your booking system (TheFork, OpenTable, Booking.com or your own site) and the bot will offer the link to anyone who wants to book.")
       : null;
 
   if (planLoading || eco.loading || cal.loading) {
     return <div className="p-8 flex items-center justify-center"><Loader2 className="w-6 h-6 animate-spin" /></div>;
   }
 
-  const activeDef = [...ECOMMERCE_INTEGRATIONS, ...APPOINTMENT_INTEGRATIONS].find(i => i.id === openId);
+  const activeDef = [...ECOMMERCE_INTEGRATIONS, ...APPOINTMENT_INTEGRATIONS, ...RESERVATION_INTEGRATIONS].find(i => i.id === openId);
   const activeLocked = openId ? lockedFor(openId) : false;
 
   const openCard = (id: IntegrationId) => {
-    if (id !== "calendly" && !lockedFor(id)) eco.setPlatform(id as Platform);
+    if (id !== "calendly" && id !== "booking_link" && !lockedFor(id)) eco.setPlatform(id as Platform);
     setOpenId(id);
   };
 
@@ -160,6 +179,41 @@ const ClientIntegrations = ({ embedded = false, clientIdOverride }: { embedded?:
               <Button onClick={() => navigate("/dashboard/upgrade")} className="w-full">
                 <ArrowUpCircle className="w-4 h-4 mr-2" />
                 {isIt ? "Sblocca con" : "Unlock with"} {activeLocked === "starter" ? "Starter" : "Pro"}
+              </Button>
+            </div>
+          ) : openId === "booking_link" ? (
+            <div className="space-y-5">
+              <div className="space-y-2">
+                <Label>{isIt ? "URL del sistema di prenotazione" : "Booking system URL"}</Label>
+                <Input
+                  placeholder="https://www.thefork.it/ristorante/..."
+                  value={cal.calendlyUrl}
+                  onChange={(e) => cal.setCalendlyUrl(e.target.value)}
+                />
+                {cal.calendlyUrl && !cal.calendlyUrl.trim().startsWith("https://") && (
+                  <p className="text-xs text-destructive">
+                    {isIt ? "L'indirizzo deve iniziare con https://" : "The URL must start with https://"}
+                  </p>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label>{isIt ? "Testo del pulsante" : "Button text"}</Label>
+                <Select value={cal.bookingButtonLabel || BOOKING_LABELS[2].it} onValueChange={cal.setBookingButtonLabel}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {BOOKING_LABELS.map((l) => (
+                      <SelectItem key={l.it} value={l.it}>{isIt ? l.it : l.en}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <Button
+                onClick={() => cal.save({ booking_button_label: cal.bookingButtonLabel || BOOKING_LABELS[2].it })}
+                disabled={cal.saving || (!!cal.calendlyUrl.trim() && !cal.calendlyUrl.trim().startsWith("https://"))}
+                className="w-full"
+              >
+                {cal.saving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                {isIt ? "Salva" : "Save"}
               </Button>
             </div>
           ) : openId === "calendly" ? (
