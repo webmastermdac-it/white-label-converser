@@ -14,12 +14,13 @@ import { useToast } from "@/hooks/use-toast";
 import ChatbotConfigForm from "@/components/ChatbotConfigForm";
 import ClientRAGKnowledgeBase from "@/pages/client/ClientRAGKnowledgeBase";
 import ClientIntegrations from "@/pages/client/ClientIntegrations";
+import BotMessagesCard from "@/components/BotMessagesCard";
 import ActivationChecklist from "@/components/ActivationChecklist";
 import { MODULE_CHANGED_EVENT } from "@/hooks/useActiveModule";
 import {
   Loader2, ArrowLeft, Settings, Palette, Database,
   Copy, Code2, Globe, Save, Inbox, MessageSquare,
-  Eye, RefreshCw, Plug, CheckCircle2, Power, Building2
+  Eye, RefreshCw, Plug, CheckCircle2, Power, Building2, KeyRound, AlertTriangle
 } from "lucide-react";
 import { getModule } from "@/lib/modules";
 import HotelProfile from "@/pages/client/hotel/HotelProfile";
@@ -173,7 +174,6 @@ const ClientChatbotSettings = ({ adminMode = false, botIdOverride, hideHeader = 
         <TabsList className="bg-secondary border border-border flex-wrap h-auto gap-1 p-1">
           <TabsTrigger value="general" className="gap-1.5 text-xs"><Settings className="w-3.5 h-3.5" /> {tl("Generale", "General")}</TabsTrigger>
           <TabsTrigger value="appearance" className="gap-1.5 text-xs"><Palette className="w-3.5 h-3.5" /> {tl("Aspetto", "Appearance")}</TabsTrigger>
-          <TabsTrigger value="messages" className="gap-1.5 text-xs"><MessageSquare className="w-3.5 h-3.5" /> {tl("Messaggi e fallback", "Messages & fallback")}</TabsTrigger>
           <TabsTrigger value="knowledge" className="gap-1.5 text-xs"><Database className="w-3.5 h-3.5" /> Conoscenza</TabsTrigger>
           <TabsTrigger value="integrations" className="gap-1.5 text-xs"><Plug className="w-3.5 h-3.5" /> {tl("Integrazioni", "Integrations")}</TabsTrigger>
           <TabsTrigger value="preview" className="gap-1.5 text-xs"><Eye className="w-3.5 h-3.5" /> Preview</TabsTrigger>
@@ -185,6 +185,54 @@ const ClientChatbotSettings = ({ adminMode = false, botIdOverride, hideHeader = 
 
         {/* Tab 1 — General */}
         <TabsContent value="general">
+          <div className="rounded-xl border-2 border-primary bg-primary/5 p-6 space-y-5">
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 rounded-lg bg-primary/15 flex items-center justify-center shrink-0">
+                <KeyRound className="w-5 h-5 text-primary" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-foreground text-lg">{tl("Il token del tuo chatbot", "Your chatbot token")}</h3>
+                <p className="text-sm text-muted-foreground">{tl("È il codice che collega il tuo sito a questo chatbot: senza token il chatbot non si carica e non riceve nessuna configurazione.", "It's the code that connects your website to this chatbot: without the token the chatbot won't load or receive any configuration.")}</p>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <Input value={botConfig.embed_token} readOnly className="bg-secondary border-border font-mono text-base h-12" />
+              <Button variant="outline" onClick={copyToken} className="h-12 gap-1.5"><Copy className="w-4 h-4" /> {tl("Copia", "Copy")}</Button>
+            </div>
+            <div className="space-y-2">
+              <Label>{tl("Codice Embed", "Embed Code")}</Label>
+              <div className="bg-secondary rounded-lg p-3 pr-24 relative">
+                <pre className="text-xs text-foreground font-mono whitespace-pre-wrap break-all">
+{`<!-- ${name} -->
+<script src="${widgetUrl}" data-token="${botConfig.embed_token}" async></script>`}
+                </pre>
+                <Button variant="ghost" size="sm" className="absolute top-2 right-2 gap-1.5" onClick={copyEmbed}>
+                  <Code2 className="w-3.5 h-3.5" /> {tl("Copia", "Copy")}
+                </Button>
+              </div>
+            </div>
+            <ol className="list-decimal pl-5 space-y-1 text-sm text-foreground">
+              <li>{tl("Copia il codice qui sopra.", "Copy the code above.")}</li>
+              <li>{tl("Incollalo nel tuo sito subito prima del tag </body>, su tutte le pagine dove vuoi il chatbot (di solito nel footer o nel template globale).", "Paste it into your site right before the </body> tag, on every page where you want the chatbot (usually in the footer or global template).")}</li>
+              <li>{tl("Salva e pubblica il sito: il chatbot appare in basso a destra.", "Save and publish the site: the chatbot appears in the bottom right corner.")}</li>
+            </ol>
+            <div className="rounded-lg border border-border bg-secondary/60 p-4 space-y-1.5">
+              <p className="text-sm font-medium text-foreground">{tl("Dove incollarlo", "Where to paste it")}</p>
+              <ul className="text-xs text-muted-foreground space-y-1">
+                <li><span className="font-medium text-foreground">WordPress:</span> {tl("plugin WPCode o \"Insert Headers and Footers\", sezione Footer", "WPCode or \"Insert Headers and Footers\" plugin, Footer section")}</li>
+                <li><span className="font-medium text-foreground">Shopify:</span> {tl("theme.liquid prima di </body>", "theme.liquid before </body>")}</li>
+                <li><span className="font-medium text-foreground">Wix:</span> {tl("Impostazioni > Codice personalizzato > Body-fine", "Settings > Custom code > Body-end")}</li>
+                <li><span className="font-medium text-foreground">Webflow:</span> Project settings &gt; Custom code &gt; Footer</li>
+                <li><span className="font-medium text-foreground">Squarespace:</span> {tl("Impostazioni > Avanzate > Inserimento codice > Footer", "Settings > Advanced > Code injection > Footer")}</li>
+              </ul>
+            </div>
+            <div className="flex items-start gap-2 rounded-lg border border-yellow-500/40 bg-yellow-500/10 p-3 text-sm text-yellow-600 dark:text-yellow-400">
+              <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
+              <span>{tl("Ogni chatbot ha un token unico. Non condividerlo pubblicamente fuori dal sito: se cambia, il widget smette di funzionare.", "Each chatbot has a unique token. Don't share it publicly outside your site: if it changes, the widget stops working.")}</span>
+            </div>
+          </div>
+          {botId && <div className="mt-4"><BotMessagesCard chatbotId={botId} /></div>}
+          <div className="mt-4" />
           {clientId && botId && (
             <ActivationChecklist
               key={`${botId}-${botConfig.business_vertical}`}
@@ -342,29 +390,6 @@ const ClientChatbotSettings = ({ adminMode = false, botIdOverride, hideHeader = 
 
 
 
-            {/* Embed token (read-only) */}
-            <div className="space-y-2">
-              <Label>{tl("Token Embed", "Embed Token")}</Label>
-              <div className="flex gap-2">
-                <Input value={botConfig.embed_token} readOnly className="bg-secondary border-border font-mono text-xs" />
-                <Button variant="outline" size="icon" onClick={copyToken}><Copy className="w-4 h-4" /></Button>
-              </div>
-            </div>
-
-            {/* Embed snippet (read-only) */}
-            <div className="space-y-2">
-              <Label>{tl("Codice Embed", "Embed Code")}</Label>
-              <div className="bg-secondary rounded-lg p-3 relative">
-                <pre className="text-xs text-foreground font-mono whitespace-pre-wrap break-all">
-{`<!-- ${name} -->
-<script src="${widgetUrl}" data-token="${botConfig.embed_token}" async></script>`}
-                </pre>
-                <Button variant="ghost" size="sm" className="absolute top-2 right-2 gap-1.5" onClick={copyEmbed}>
-                  <Code2 className="w-3.5 h-3.5" /> {tl("Copia", "Copy")}
-                </Button>
-              </div>
-            </div>
-
             <Button onClick={saveGeneral} disabled={saving} className="gradient-primary text-white border-0 glow-sm gap-2">
               {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
               {tl("Salva", "Save")}
@@ -384,10 +409,6 @@ const ClientChatbotSettings = ({ adminMode = false, botIdOverride, hideHeader = 
           {clientId && <ChatbotConfigForm clientId={clientId} chatbotId={botId} sectionFilter={["identity", "appearance"]} />}
         </TabsContent>
 
-        {/* Tab 2b — Messages & fallback */}
-        <TabsContent value="messages">
-          {clientId && <ChatbotConfigForm clientId={clientId} chatbotId={botId} sectionFilter={["messages"]} />}
-        </TabsContent>
 
 
 
