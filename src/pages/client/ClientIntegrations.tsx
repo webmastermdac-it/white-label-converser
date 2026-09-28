@@ -95,8 +95,8 @@ const ClientIntegrations = ({ embedded = false, clientIdOverride }: { embedded?:
 
   const bannerText = moduleIntegrations.length === 0 ? null : activeModule.id === "ecommerce"
     ? (isIt
-        ? "Hai un ecommerce? Collega il tuo store per far conoscere al bot prodotti, prezzi e disponibilità in tempo reale."
-        : "Running an online store? Connect it so the bot knows products, prices and stock in real time.")
+        ? "Hai un e-commerce o un sito con catalogo? Collega il tuo store o un feed XML/CSV per far conoscere al bot prodotti, prezzi e disponibilità in tempo reale."
+        : "Have an online store or a site with a catalog? Connect your store or an XML/CSV feed so the bot knows products, prices and availability in real time.")
     : activeModule.id === "booking"
 
       ? (isIt
@@ -210,6 +210,7 @@ const ClientIntegrations = ({ embedded = false, clientIdOverride }: { embedded?:
                     <div><Label>Consumer Secret</Label><Input type="password" value={eco.apiSecret} onChange={e => eco.setApiSecret(e.target.value)} /></div>
                     <p className="text-xs text-muted-foreground">{isIt ? "Genera le chiavi in WooCommerce → Impostazioni → Avanzate → REST API" : "Generate keys in WooCommerce → Settings → Advanced → REST API"}</p>
                     <p className="text-xs text-amber-500">{isIt ? "Per far completare acquisti reali dal chatbot le chiavi devono avere permessi Read/Write (non solo Read). Se sono in sola lettura, rigenerale con Read/Write e salvale qui." : "To let the chatbot complete real purchases the keys must have Read/Write permissions (not Read only). If they are read-only, regenerate them with Read/Write and save them here."}</p>
+                    <p className="text-xs text-muted-foreground">{isIt ? "Per lo stato ordini: le chiavi devono poter leggere gli ordini (Read basta)." : "For order status: the keys must be able to read orders (Read is enough)."}</p>
                   </>
                 )}
                 {openId === "shopify" && (
@@ -222,6 +223,7 @@ const ClientIntegrations = ({ embedded = false, clientIdOverride }: { embedded?:
                       <p className="text-xs text-muted-foreground mt-1">{isIt ? "Necessario per creare acquisti reali dal chatbot: Shopify Admin → App → Sviluppa app → API Storefront → genera lo Storefront access token" : "Required for real purchases from the chatbot: Shopify Admin → Apps → Develop apps → Storefront API → generate the Storefront access token"}</p>
                     </div>
                     <p className="text-xs text-muted-foreground">{isIt ? "Crea una app privata in Shopify Admin → Apps → Develop apps" : "Create a private app in Shopify Admin → Apps → Develop apps"}</p>
+                    <p className="text-xs text-muted-foreground">{isIt ? "Per lo stato ordini: l'Access Token Admin deve avere lo scope read_orders (e read_all_orders per ordini oltre 60 giorni)." : "For order status: the Admin Access Token needs the read_orders scope (and read_all_orders for orders older than 60 days)."}</p>
                   </>
                 )}
                 {openId === "prestashop" && (
@@ -230,6 +232,7 @@ const ClientIntegrations = ({ embedded = false, clientIdOverride }: { embedded?:
                     <div><Label>API Key</Label><Input type="password" value={eco.apiKey} onChange={e => eco.setApiKey(e.target.value)} /></div>
                     <p className="text-xs text-muted-foreground">{isIt ? "Genera la chiave in PrestaShop → Parametri avanzati → Servizi web" : "Generate key in PrestaShop → Advanced Parameters → Web Services"}</p>
                     <p className="text-xs text-amber-500">{isIt ? "Per gli acquisti reali dal chatbot la chiave deve avere permessi di scrittura (Add/Modify) su carts, customers e addresses: Parametri avanzati → Servizi web → modifica la chiave." : "For real purchases from the chatbot the key needs write permissions (Add/Modify) on carts, customers and addresses: Advanced Parameters → Web Services → edit the key."}</p>
+                    <p className="text-xs text-muted-foreground">{isIt ? "Per lo stato ordini: la chiave Servizi web deve avere permesso GET su orders, customers, order_states, order_carriers e carriers." : "For order status: the Web Services key needs GET permission on orders, customers, order_states, order_carriers and carriers."}</p>
                   </>
                 )}
                 {openId === "api" && (
