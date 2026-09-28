@@ -1,0 +1,1 @@
+ALTER TABLE public.chatbot_configs ADD COLUMN IF NOT EXISTS booking_button_label text;
