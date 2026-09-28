@@ -55,8 +55,8 @@ const widgetStep: ChecklistStepDef = {
 export const MODULES: Record<ModuleId, ModuleDef> = {
   ecommerce: {
     id: "ecommerce",
-    name: { it: "Ecommerce", en: "Ecommerce" },
-    description: { it: "Negozi online con catalogo prodotti", en: "Online stores with product catalog" },
+    name: { it: "E-commerce e catalogo", en: "E-commerce & catalog" },
+    description: { it: "Negozi online o siti con catalogo prodotti", en: "Online stores or sites with a product catalog" },
     icon: ShoppingBag,
     color: "35 91% 55%",
     menu: [],
