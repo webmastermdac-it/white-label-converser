@@ -12,7 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 const Register = () => {
   const { user, role, loading } = useAuth();
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const { toast } = useToast();
   const navigate = useNavigate();
   const [fullName, setFullName] = useState("");
@@ -64,6 +64,16 @@ const Register = () => {
 
       if (data?.error === "email_exists") {
         setErrors({ email: t("registerEmailExists") });
+        setIsLoading(false);
+        return;
+      }
+
+      if (data?.error === "weak_password") {
+        setErrors({
+          password: lang === "it"
+            ? "Questa password è troppo comune o compare in elenchi di password rubate. Scegline una diversa."
+            : "This password is too common or appears in leaked password lists. Please choose a different one.",
+        });
         setIsLoading(false);
         return;
       }
