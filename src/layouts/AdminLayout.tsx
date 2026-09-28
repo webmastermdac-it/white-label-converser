@@ -4,7 +4,7 @@ import { AdminClientFilterProvider } from "@/contexts/AdminClientFilterContext";
 import MobileNav from "@/components/MobileNav";
 import { useLanguage } from "@/hooks/useLanguage";
 import {
-  BarChart3, Users, Inbox, MessageSquare, Settings, CreditCard, TrendingUp, Store, Bot
+  BarChart3, Users, Inbox, MessageSquare, Settings, CreditCard, TrendingUp, Store, Bot, Wrench
 } from "lucide-react";
 
 const AdminLayout = () => {
@@ -13,6 +13,7 @@ const AdminLayout = () => {
   const adminNav = [
     { label: t("overview"), href: "/admin", icon: BarChart3, end: true },
     { label: t("clients"), href: "/admin/clients", icon: Users },
+    { label: "Setup", href: "/admin/setup", icon: Wrench },
     { label: t("allLeads"), href: "/admin/leads", icon: Inbox },
     { label: t("chatSessions"), href: "/admin/chats", icon: MessageSquare },
     { label: t("settings"), href: "/admin/settings", icon: Settings },
