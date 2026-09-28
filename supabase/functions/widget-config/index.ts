@@ -8,7 +8,7 @@ const corsHeaders = {
 
 // Only the fields actually read by public/widget.js
 const FIELDS =
-  "name, avatar, primary_color, background_color, text_color, circle_color, launcher_position, welcome_message, welcome_msg_it, welcome_msg_en, calendly_url, lead_form_mode, lead_form_message_count, business_vertical, hotel_profile, client_id";
+  "name, avatar, primary_color, background_color, text_color, circle_color, launcher_position, welcome_message, welcome_msg_it, welcome_msg_en, messages_i18n, calendly_url, lead_form_mode, lead_form_message_count, business_vertical, hotel_profile, client_id";
 
 function json(body: unknown, status = 200, cache = false) {
   return new Response(JSON.stringify(body), {

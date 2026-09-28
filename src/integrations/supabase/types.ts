@@ -189,6 +189,7 @@ export type Database = {
           launcher_position: string | null
           lead_form_message_count: number
           lead_form_mode: string
+          messages_i18n: Json | null
           name: string
           notification_email: string | null
           notify_new_chat_enabled: boolean
@@ -234,6 +235,7 @@ export type Database = {
           launcher_position?: string | null
           lead_form_message_count?: number
           lead_form_mode?: string
+          messages_i18n?: Json | null
           name?: string
           notification_email?: string | null
           notify_new_chat_enabled?: boolean
@@ -279,6 +281,7 @@ export type Database = {
           launcher_position?: string | null
           lead_form_message_count?: number
           lead_form_mode?: string
+          messages_i18n?: Json | null
           name?: string
           notification_email?: string | null
           notify_new_chat_enabled?: boolean

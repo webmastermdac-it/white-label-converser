@@ -92,6 +92,13 @@
       "when": 1790377029604,
       "tag": "0012_add_tone_of_voice",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1790585587425,
+      "tag": "0013_add_messages_i18n",
+      "breakpoints": true
     }
   ]
 }

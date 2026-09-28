@@ -38,7 +38,7 @@ serve(async (req) => {
     // ── Step 0: Fetch bot config ──
     const { data: botConfig, error: configError } = await supabase
       .from("chatbot_configs")
-      .select("id, client_id, name, business_vertical, knowledge_base, tone_of_voice, fallback_message, fallback_msg_en, fallback_msg_it, welcome_msg_it, welcome_msg_en, knowledge_base_products, lead_form_mode, notification_email, email_notifications_enabled, hotel_profile")
+      .select("id, client_id, name, business_vertical, knowledge_base, tone_of_voice, fallback_message, fallback_msg_en, fallback_msg_it, messages_i18n, welcome_msg_it, welcome_msg_en, knowledge_base_products, lead_form_mode, notification_email, email_notifications_enabled, hotel_profile")
       .eq("embed_token", embed_token)
       .single();
 
@@ -160,7 +160,7 @@ serve(async (req) => {
     // STEP 3 — INSTRUCTIONS FALLBACK (lowest priority)
     // Build system prompt and call AI
     // ══════════════════════════════════════════════════════
-    const fallbackConcept = botConfig.fallback_msg_en || botConfig.fallback_message || "I don't have this information, but I can connect you with one of our consultants!";
+    const fallbackConcept = (botConfig as any).messages_i18n?.fallback?.en?.text || botConfig.fallback_msg_en || botConfig.fallback_message || "I don't have this information, but I can connect you with one of our consultants!";
     let productKnowledge = botConfig.knowledge_base_products || "";
 
     if (matchedProducts) {

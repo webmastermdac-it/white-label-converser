@@ -727,6 +727,18 @@
         welcomeMsg = config.welcome_msg_en || config.welcome_msg_it || config.welcome_message || "Hello! How can I help you?";
       }
 
+      // Optional: auto-translated messages (messages_i18n) take precedence when present
+      var i18nW = config.messages_i18n && config.messages_i18n.welcome;
+      if (i18nW) {
+        if (baseLang === "it" && (config.welcome_message || config.welcome_msg_it)) {
+          // Italian is the base language
+        } else if (i18nW[baseLang] && i18nW[baseLang].text) {
+          welcomeMsg = i18nW[baseLang].text;
+        } else if (baseLang !== "it" && i18nW.en && i18nW.en.text) {
+          welcomeMsg = i18nW.en.text;
+        }
+      }
+
       // Check if welcome message changed since last session — if so, reset conversation
       var prevWelcome = null;
       try { prevWelcome = sessionStorage.getItem(WELCOME_KEY); } catch(e) {}
