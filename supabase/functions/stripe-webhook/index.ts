@@ -53,6 +53,55 @@ serve(async (req) => {
   try {
     if (event.type === "checkout.session.completed") {
       const session = event.data.object as Stripe.Checkout.Session;
+
+      // Setup professionale (pagamento singolo): gestito a parte, NON tocca gli abbonamenti
+      if (session.metadata?.type === "setup_service") {
+        const setupId = session.metadata?.setup_request_id;
+        log("Setup service payment", { setupId, sessionId: session.id });
+        if (setupId) {
+          const { data: updated, error: upErr } = await supabase
+            .from("setup_requests")
+            .update({
+              status: "paid",
+              paid_at: new Date().toISOString(),
+              stripe_payment_intent: (session.payment_intent as string) || null,
+            })
+            .eq("id", setupId)
+            .eq("status", "pending_payment")
+            .select("id, client_id, phone, notes, amount_cents, currency");
+          if (upErr) log("Error updating setup_request", { upErr });
+
+          const reqRow = updated?.[0];
+          const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
+          if (reqRow && RESEND_API_KEY) {
+            try {
+              const { data: cl } = await supabase.from("clients").select("name, email").eq("id", reqRow.client_id).maybeSingle();
+              const esc = (s: string) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]!));
+              const amount = `${(reqRow.amount_cents / 100).toFixed(2)} ${String(reqRow.currency).toUpperCase()} + IVA`;
+              const to = Deno.env.get("SETUP_NOTIFY_EMAIL") || "sviluppo@mdac.it";
+              const html = `<h2>Nuovo Setup professionale pagato</h2>
+<p><b>Cliente:</b> ${esc(cl?.name || "")}<br/><b>Email:</b> ${esc(cl?.email || session.customer_details?.email || "")}<br/><b>Telefono:</b> ${esc(reqRow.phone)}<br/><b>Importo:</b> ${esc(amount)}</p>
+<p><b>Note:</b><br/>${esc(reqRow.notes || "—").replace(/\n/g, "<br/>")}</p>`;
+              const res = await fetch("https://api.resend.com/emails", {
+                method: "POST",
+                headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  from: `Genius Chatbot <noreply@chatbot.your-genius.com>`,
+                  to: [to],
+                  subject: `Setup professionale pagato – ${cl?.name || cl?.email || ""}`,
+                  html,
+                }),
+              });
+              if (!res.ok) log("Setup email error", { status: res.status, body: await res.text() });
+            } catch (mailErr: any) {
+              log("Setup email exception", { message: mailErr?.message });
+            }
+          }
+        }
+        return new Response(JSON.stringify({ received: true }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
       log("Session data", {
         customer: session.customer,
         subscription: session.subscription,
