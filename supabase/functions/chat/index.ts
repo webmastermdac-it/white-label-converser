@@ -194,14 +194,12 @@ serve(async (req) => {
     // ── Real purchase tools (only for ecommerce chatbots with a configured store) ──
     let ecommerceConfigured = false;
     let ecommerceStoreUrl = "";
-    let ecommerceHasConfig = false;
     if (botConfig.business_vertical === "ecommerce") {
       const { data: ecomCfg } = await supabase
         .from("ecommerce_configs")
         .select("platform, store_url")
         .eq("client_id", botConfig.client_id)
         .maybeSingle();
-      ecommerceHasConfig = !!ecomCfg;
       ecommerceConfigured = !!ecomCfg && ["woocommerce", "shopify", "prestashop"].includes(ecomCfg.platform);
       ecommerceStoreUrl = (ecomCfg?.store_url || "").replace(/\/$/, "");
     }
