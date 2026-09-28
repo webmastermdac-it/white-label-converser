@@ -68,6 +68,16 @@ const Register = () => {
         return;
       }
 
+      if (data?.error === "weak_password") {
+        setErrors({
+          password: lang === "it"
+            ? "Questa password è troppo comune o compare in elenchi di password rubate. Scegline una diversa."
+            : "This password is too common or appears in leaked password lists. Please choose a different one.",
+        });
+        setIsLoading(false);
+        return;
+      }
+
       if (data?.error) {
         toast({ title: t("loginFailed"), description: data.error, variant: "destructive" });
         setIsLoading(false);

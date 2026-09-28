@@ -39,13 +39,20 @@ serve(async (req) => {
 
     const { data: existingUsers } = await supabaseAdmin.auth.admin.listUsers();
     if (existingUsers?.users?.some((u: any) => u.email === email)) {
-      return new Response(JSON.stringify({ error: "email_exists" }), { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      // 200 so the client can read the code and show a field error (non-2xx hides the body)
+      return new Response(JSON.stringify({ error: "email_exists" }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
       email, password, email_confirm: true, user_metadata: { full_name }
     });
-    if (authError) throw authError;
+    if (authError) {
+      const code = (authError as any).code;
+      if (code === "weak_password" || /weak|easy to guess|pwned/i.test(authError.message)) {
+        return new Response(JSON.stringify({ error: "weak_password" }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+      throw authError;
+    }
 
     const { data: clientData, error: clientError } = await supabaseAdmin
       .from("clients").insert({ name: company_name, email, plan: "free" }).select().single();
