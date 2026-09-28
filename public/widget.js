@@ -411,7 +411,7 @@
       html += '<textarea id="mdac-lead-message" placeholder="' + t.messagePlaceholder + '"></textarea>';
       html += '<button class="mdac-lead-btn" id="mdac-lead-submit">' + t.submitBtn + '</button>';
       if (config.calendly_url) {
-        html += '<button class="mdac-calendly" id="mdac-calendly">' + t.calendlyBtn + '</button>';
+        html += '<button class="mdac-calendly" id="mdac-calendly">' + (config.booking_button_label ? "📅 " + esc(config.booking_button_label) : t.calendlyBtn) + '</button>';
       }
       html += '</div>';
     }

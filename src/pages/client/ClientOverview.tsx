@@ -34,7 +34,7 @@ const ClientOverview = () => {
   const [loading, setLoading] = useState(true);
   const [monthlyChats, setMonthlyChats] = useState(0);
   const [monthlyLeads, setMonthlyLeads] = useState(0);
-  const [vertical, setVertical] = useState<"ecommerce" | "booking" | "hotel" | "general">("general");
+  const [vertical, setVertical] = useState<"ecommerce" | "booking" | "hotel" | "hospitality" | "general">("general");
   const [calendlyConnected, setCalendlyConnected] = useState(false);
   const [syncedProducts, setSyncedProducts] = useState(0);
 
@@ -105,7 +105,7 @@ const ClientOverview = () => {
       setRecentLeads((recent.data as any) || []);
       setEmbedToken(botConfig.data?.embed_token || "");
       const bc = botConfig.data as any;
-      const bv = (bc?.business_vertical || "general") as "ecommerce" | "booking" | "hotel" | "general";
+      const bv = (bc?.business_vertical || "general") as "ecommerce" | "booking" | "hotel" | "hospitality" | "general";
       setVertical(bv);
       setCalendlyConnected(!!bc?.calendly_url);
       if (bv === "ecommerce") {
@@ -275,7 +275,7 @@ const ClientOverview = () => {
               <p className="text-xs text-muted-foreground">
                 {vertical === "ecommerce"
                   ? t("syncedProducts", "Prodotti sincronizzati")
-                  : t("calendlyConnected", "Calendly collegato")}
+                  : (vertical === "hotel" || vertical === "hospitality") ? t("bookingConnected", "Prenotazioni collegate") : t("calendlyConnected", "Calendly collegato")}
               </p>
             </div>
             <ArrowUpRight className="w-4 h-4 text-muted-foreground ml-auto" />

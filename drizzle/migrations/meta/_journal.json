@@ -99,6 +99,13 @@
       "when": 1790585587425,
       "tag": "0013_add_messages_i18n",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1790605600047,
+      "tag": "0014_add_booking_button_label",
+      "breakpoints": true
     }
   ]
 }

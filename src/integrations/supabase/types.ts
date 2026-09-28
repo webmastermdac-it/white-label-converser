@@ -161,6 +161,7 @@ export type Database = {
         Row: {
           avatar: string | null
           background_color: string | null
+          booking_button_label: string | null
           business_vertical: string
           calendly_url: string | null
           circle_color: string | null
@@ -207,6 +208,7 @@ export type Database = {
         Insert: {
           avatar?: string | null
           background_color?: string | null
+          booking_button_label?: string | null
           business_vertical?: string
           calendly_url?: string | null
           circle_color?: string | null
@@ -253,6 +255,7 @@ export type Database = {
         Update: {
           avatar?: string | null
           background_color?: string | null
+          booking_button_label?: string | null
           business_vertical?: string
           calendly_url?: string | null
           circle_color?: string | null

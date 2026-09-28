@@ -79,6 +79,7 @@ const POSITIONS = ["bottom-left", "bottom-right"];
 const VERTICALS = [
   { value: "ecommerce", emoji: "🛒", it: "Ecommerce / Vendita prodotti", en: "Ecommerce / Product sales" },
   { value: "booking", emoji: "📅", it: "Servizi su appuntamento", en: "Appointment-based services" },
+  { value: "hospitality", emoji: "🍽️", it: "Ristorazione & Hotel", en: "Restaurants & Hotels" },
   { value: "general", emoji: "💬", it: "Generico / Assistenza clienti", en: "General / Customer support" },
 ];
 
