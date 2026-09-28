@@ -52,13 +52,13 @@ const ClientIntegrations = ({ embedded = false, clientIdOverride }: { embedded?:
   const { canUseCalendly, canUseEcommerce, loading: planLoading } = usePlanConfig();
   const eco = useEcommerceIntegration(clientIdOverride);
   const cal = useCalendlyIntegration(clientIdOverride);
+  const { module: activeModule } = useActiveModule();
 
   const [openId, setOpenId] = useState<IntegrationId | null>(null);
   const [bannerDismissed, setBannerDismissed] = useState(
     () => localStorage.getItem(BANNER_KEY) === "1"
   );
 
-  const vertical = cal.vertical;
 
   const dismissBanner = () => {
     localStorage.setItem(BANNER_KEY, "1");
@@ -76,8 +76,8 @@ const ClientIntegrations = ({ embedded = false, clientIdOverride }: { embedded?:
     if (id === "calendly") return !!cal.calendlyUrl;
     return !!eco.configId && eco.savedPlatform === id;
   };
+  const moduleIntegrations = activeModule.integrations;
 
-  const moduleIntegrations = getModule(vertical).integrations;
 
   const categories = useMemo(() => {
     const ecommerceCat = {
