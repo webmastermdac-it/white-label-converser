@@ -9,12 +9,6 @@ import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Save, Bot, Palette, MessageSquare, Zap, Mail, SendHorizonal } from "lucide-react";
 import { useLanguage } from "@/hooks/useLanguage";
-import { MODULES, MODULE_IDS, toModuleId, type ModuleId } from "@/lib/modules";
-import { MODULE_CHANGED_EVENT } from "@/hooks/useActiveModule";
-import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
-  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 
 interface Config {
   id?: string;
@@ -97,21 +91,6 @@ const ChatbotConfigForm: React.FC<ChatbotConfigFormProps> = ({ clientId, chatbot
   const [saving, setSaving] = useState(false);
   const [sendingTest, setSendingTest] = useState(false);
   const [activeSection, setActiveSection] = useState(sectionFilter?.[0] || "identity");
-  const [pendingModule, setPendingModule] = useState<ModuleId | null>(null);
-
-  const confirmModuleChange = async () => {
-    if (!pendingModule || !config.id) return;
-    const next = pendingModule;
-    setPendingModule(null);
-    const { error } = await supabase.from("chatbot_configs").update({ business_vertical: next }).eq("id", config.id);
-    if (error) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
-      return;
-    }
-    set("business_vertical", next);
-    window.dispatchEvent(new Event(MODULE_CHANGED_EVENT));
-    toast({ title: lang === "it" ? "Modulo aggiornato" : "Module updated" });
-  };
 
 
   useEffect(() => {
@@ -164,7 +143,6 @@ const ChatbotConfigForm: React.FC<ChatbotConfigFormProps> = ({ clientId, chatbot
           .update({
             name: config.name,
             avatar: config.avatar,
-            business_vertical: config.business_vertical,
             primary_color: config.primary_color,
             background_color: config.background_color,
             text_color: config.text_color,
@@ -247,50 +225,6 @@ const ChatbotConfigForm: React.FC<ChatbotConfigFormProps> = ({ clientId, chatbot
         <div className="glass rounded-xl p-6 space-y-5 animate-fade-in-up">
           <h3 className="font-semibold text-foreground">{t("identity")}</h3>
 
-          <div className="space-y-2">
-            <Label>{lang === "it" ? "Modulo del bot" : "Bot module"}</Label>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-              {MODULE_IDS.map((id) => {
-                const m = MODULES[id];
-                const active = toModuleId(config.business_vertical) === id;
-                return (
-                  <button
-                    key={id}
-                    type="button"
-                    onClick={() => { if (!active) setPendingModule(id); }}
-                    className={`flex items-center gap-2 p-3 rounded-lg border text-sm text-left transition-colors ${
-                      active ? "border-primary bg-primary/10 text-foreground" : "border-border bg-secondary hover:border-primary/40 text-muted-foreground"
-                    }`}
-                  >
-                    <m.icon className="w-4 h-4 shrink-0" style={{ color: `hsl(${m.color})` }} />
-                    <span>{m.name[lang]}</span>
-                  </button>
-                );
-              })}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              {lang === "it" ? "Il modulo decide quali sezioni vedi nella dashboard." : "The module decides which sections you see in the dashboard."}
-            </p>
-          </div>
-
-          <AlertDialog open={!!pendingModule} onOpenChange={(o) => !o && setPendingModule(null)}>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>
-                  {lang === "it" ? "Cambiare modulo?" : "Change module?"}
-                </AlertDialogTitle>
-                <AlertDialogDescription>
-                  {pendingModule && (lang === "it"
-                    ? `Il bot passerà al modulo "${MODULES[pendingModule].name.it}". Menu, checklist e integrazioni consigliate cambieranno. Dati e contenuti già salvati restano invariati.`
-                    : `The bot will switch to the "${MODULES[pendingModule].name.en}" module. Menu, checklist and recommended integrations will change. Saved data and content stay unchanged.`)}
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>{lang === "it" ? "Annulla" : "Cancel"}</AlertDialogCancel>
-                <AlertDialogAction onClick={confirmModuleChange}>{lang === "it" ? "Conferma" : "Confirm"}</AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
 
 
 
