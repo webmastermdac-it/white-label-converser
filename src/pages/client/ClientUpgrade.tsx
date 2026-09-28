@@ -418,24 +418,6 @@ const ClientUpgrade = () => {
       </div>
 
       <SetupServiceCard isIt={isIt} />
-
-      {/* Coupon */}
-      <div className="glass rounded-xl p-4">
-        <label className="text-sm text-muted-foreground block mb-2">
-          {isIt ? "Hai già un codice sconto?" : "Have a discount code?"}
-        </label>
-        <div className="flex gap-2">
-          <Input
-            value={couponCode}
-            onChange={(e) => setCouponCode(e.target.value)}
-            placeholder={isIt ? "Inserisci il codice..." : "Enter code..."}
-            className="bg-secondary border-border text-base"
-          />
-          <Button variant="outline" disabled={!couponCode.trim()}>
-            {isIt ? "Applica" : "Apply"}
-          </Button>
-        </div>
-      </div>
     </div>
   );
 };
