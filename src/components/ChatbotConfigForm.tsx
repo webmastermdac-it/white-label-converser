@@ -168,12 +168,6 @@ const ChatbotConfigForm: React.FC<ChatbotConfigFormProps> = ({ clientId, chatbot
             primary_color: config.primary_color,
             background_color: config.background_color,
             text_color: config.text_color,
-            welcome_message: config.welcome_message,
-            welcome_msg_it: config.welcome_msg_it,
-            welcome_msg_en: config.welcome_msg_en,
-            fallback_message: config.fallback_message,
-            fallback_msg_it: config.fallback_msg_it,
-            fallback_msg_en: config.fallback_msg_en,
             calendly_url: config.calendly_url,
             notification_email: config.notification_email,
             email_notifications_enabled: config.email_notifications_enabled,
@@ -211,7 +205,6 @@ const ChatbotConfigForm: React.FC<ChatbotConfigFormProps> = ({ clientId, chatbot
   const allSections = [
     { id: "identity", label: t("identity"), icon: Bot },
     { id: "appearance", label: t("appearance"), icon: Palette },
-    { id: "messages", label: t("Messages & fallback", "Messaggi e fallback"), icon: MessageSquare },
     { id: "notifications", label: t("notifications"), icon: Mail },
   ];
   const sections = sectionFilter ? allSections.filter((s) => sectionFilter.includes(s.id)) : allSections;
@@ -464,68 +457,6 @@ const ChatbotConfigForm: React.FC<ChatbotConfigFormProps> = ({ clientId, chatbot
             </div>
             <div className="text-xs px-3 py-2 rounded-xl inline-block" style={{ backgroundColor: config.primary_color, color: "#fff" }}>
               {t("chatPreview")}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Messages */}
-      {isVisible("messages") && (
-        <div className="glass rounded-xl p-6 space-y-5 animate-fade-in-up">
-          <h3 className="font-semibold text-foreground">{t("chatMessages")}</h3>
-
-          <div className="space-y-3">
-            <Label>{t("welcomeMessage")}</Label>
-            <div className="space-y-3">
-              <div className="space-y-1.5">
-                <Label className="text-xs text-muted-foreground">🇮🇹 {t("Welcome message (IT)", "Messaggio di benvenuto (IT)")}</Label>
-                <Textarea
-                  value={config.welcome_msg_it}
-                  onChange={(e) => set("welcome_msg_it", e.target.value)}
-                  placeholder="Ciao! Come posso aiutarti?"
-                  rows={2}
-                  className="bg-secondary border-border resize-none"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-xs text-muted-foreground">🇬🇧 {t("Welcome message (EN)", "Messaggio di benvenuto (EN)")}</Label>
-                <Textarea
-                  value={config.welcome_msg_en}
-                  onChange={(e) => set("welcome_msg_en", e.target.value)}
-                  placeholder="Hello! How can I help you?"
-                  rows={2}
-                  className="bg-secondary border-border resize-none"
-                />
-              </div>
-            </div>
-          </div>
-
-          <div className="pt-2 border-t border-border space-y-5">
-            <h3 className="font-semibold text-foreground">{t("fallbackBehavior")}</h3>
-
-            <div className="space-y-3">
-              <Label>{t("fallbackMsgIt")}</Label>
-              <Textarea
-                value={config.fallback_msg_it}
-                onChange={(e) => set("fallback_msg_it", e.target.value)}
-                placeholder="Non ho questa informazione, ma posso metterti in contatto con un nostro consulente!"
-                rows={3}
-                className="bg-secondary border-border resize-none"
-              />
-            </div>
-
-            <div className="space-y-3">
-              <Label>{t("fallbackMsgEn")}</Label>
-              <Textarea
-                value={config.fallback_msg_en}
-                onChange={(e) => set("fallback_msg_en", e.target.value)}
-                placeholder="I don't have this information, but I can connect you with one of our consultants!"
-                rows={3}
-                className="bg-secondary border-border resize-none"
-              />
-              <p className="text-xs text-muted-foreground">
-                {t("fallbackDesc")}
-              </p>
             </div>
           </div>
         </div>
