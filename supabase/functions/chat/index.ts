@@ -191,17 +191,17 @@ serve(async (req) => {
       ? `\n\nADD TO CART RULE:\nWhen a user wants to add a product to the cart, answer normally and append, on a separate final line, this marker with the exact product ID taken from the catalog (the "id" or "sku" field shown in the catalog):\n[ADD_TO_CART:{"product_id":"<exact external_id>","qty":<quantity>}]\nNever show this marker to the user, it is removed automatically.`
       : "";
 
-    const orderStatusInstruction = `\n\nSe l'utente chiede lo stato di un ordine, chiedigli SEMPRE numero ordine ed email usata per l'acquisto (se non li ha già forniti entrambi in questo messaggio). Solo quando hai entrambi, includi alla fine del messaggio, su una riga a parte:\n[CHECK_ORDER:{"order_number":"<numero esatto>","email":"<email esatta>"}]\nNon mostrare mai questo marker all'utente, verrà rimosso automaticamente.\nSe il controllo non trova l'ordine, suggerisci di verificare i dati o di contattare l'assistenza.`;
-
     // ── Real purchase tools (only for ecommerce chatbots with a configured store) ──
     let ecommerceConfigured = false;
     let ecommerceStoreUrl = "";
+    let ecommerceHasConfig = false;
     if (botConfig.business_vertical === "ecommerce") {
       const { data: ecomCfg } = await supabase
         .from("ecommerce_configs")
         .select("platform, store_url")
         .eq("client_id", botConfig.client_id)
         .maybeSingle();
+      ecommerceHasConfig = !!ecomCfg;
       ecommerceConfigured = !!ecomCfg && ["woocommerce", "shopify", "prestashop"].includes(ecomCfg.platform);
       ecommerceStoreUrl = (ecomCfg?.store_url || "").replace(/\/$/, "");
     }
@@ -228,6 +228,22 @@ serve(async (req) => {
               },
             },
           },
+          {
+            type: "function",
+            function: {
+              name: "check_order_status",
+              description:
+                "Controlla lo stato di un ordine già effettuato. Usalo solo dopo aver ottenuto dal visitatore sia il numero ordine sia l'email usata per l'acquisto.",
+              parameters: {
+                type: "object",
+                properties: {
+                  order_number: { type: "string", description: "Numero ordine indicato dal visitatore" },
+                  email: { type: "string", description: "Email usata per l'acquisto" },
+                },
+                required: ["order_number", "email"],
+              },
+            },
+          },
         ]
       : [];
 
@@ -238,6 +254,12 @@ serve(async (req) => {
     const purchaseRules = ecommerceConfigured
       ? `REGOLE OBBLIGATORIE SUGLI ACQUISTI (PRIORITÀ MASSIMA, prevalgono su ogni altra istruzione):\n1. Non hai la possibilità di aggiungere prodotti al carrello, avanzare un checkout o confermare pagamenti semplicemente parlandone. Puoi farlo SOLO chiamando il tool create_real_checkout.\n2. Non dire mai "ho aggiunto al carrello", "sto procedendo al checkout", "ordine confermato" o frasi simili se non hai appena ricevuto un risultato success:true dal tool.\n3. Se l'utente vuole comprare, prima raccogli in modo naturale i dati necessari (prodotto, quantità, nome, email, telefono, indirizzo), poi chiama create_real_checkout.\n4. Se il tool ritorna un errore, dillo chiaramente all'utente (es: "non riesco a creare il checkout in questo momento, puoi completare l'acquisto direttamente su ${ecommerceStoreUrl || "il nostro sito"} oppure riprova tra poco") — non inventare mai una soluzione alternativa che non hai verificato.\n5. Quando il tool ha successo, manda all'utente il checkout_url reale ricevuto, spiegando che lì può scegliere il metodo di pagamento che preferisce e completare l'acquisto in sicurezza.\n\n`
       : "";
+
+    const orderStatusInstruction = ecommerceConfigured
+      ? `\n\nORDINI:\n- Se il visitatore chiede lo stato di un ordine, chiedi SEMPRE sia il numero ordine sia l'email usata per l'acquisto (se non li ha già forniti).\n- Chiama il tool check_order_status solo quando hai entrambi.\n- Rispondi nella lingua del visitatore e nel tono di voce del bot, riportando in modo naturale: stato dell'ordine, data dell'ordine, se è stato spedito, corriere, numero di tracking e link di tracking quando presenti.\n- Non inventare mai date di consegna o dettagli non restituiti dal tool.\n- Se found=false, di' che non trovi un ordine con quei dati e suggerisci di verificarli o di contattare l'assistenza.\n- Non rivelare mai altri dati dell'ordine o del cliente.\n- Se il tool restituisce error "rate_limited", invita a riprovare più tardi o a contattare l'assistenza.`
+      : botConfig.business_vertical === "ecommerce"
+        ? `\n\nORDINI: non puoi controllare lo stato degli ordini. Se il visitatore lo chiede, invitalo gentilmente a contattare direttamente il negozio o l'assistenza.`
+        : "";
 
     // ── Hotel concierge (only for business_vertical = "hotel") ──
     const hotelContext = botConfig.business_vertical === "hotel"
@@ -301,13 +323,25 @@ serve(async (req) => {
       }
     }
 
+    async function runOrderStatusTool(args: any) {
+      try {
+        const resp = await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/get-order-status`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ embed_token, order_number: String(args.order_number || ""), email: String(args.email || "") }),
+        });
+        return await resp.json();
+      } catch (e: any) {
+        return { found: false, error: e.message };
+      }
+    }
+
     // ── Markers post-processing (identical for streaming and non-streaming) ──
     const stripMarkers = (text: string) =>
       text
         .replace("[TRIGGER_LEAD_FORM]", "")
         .replace(/\[LEAD_DATA:\{[\s\S]*?\}\]/g, "")
-        .replace(/\[ADD_TO_CART:.*?\]/g, "")
-        .replace(/\[CHECK_ORDER:.*?\]/g, "");
+        .replace(/\[ADD_TO_CART:.*?\]/g, "");
 
     async function postProcess(fullMessage: string) {
       // ── Add-to-cart marker → real store cart link ──
@@ -362,30 +396,6 @@ serve(async (req) => {
         }
       }
 
-      // ── Order status marker → verified order lookup ──
-      let orderStatusText = "";
-      const checkOrderMatch = fullMessage.match(/\[CHECK_ORDER:(\{.*?\})\]/);
-      if (checkOrderMatch) {
-        try {
-          const { order_number, email } = JSON.parse(checkOrderMatch[1]);
-          const statusResp = await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/get-order-status`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ embed_token, order_number, email }),
-          });
-          const statusData = await statusResp.json();
-          if (statusData.found) {
-            const dateStr = statusData.order_date ? new Date(statusData.order_date).toLocaleDateString("it-IT") : "";
-            orderStatusText = `\n\n📦 **Stato ordine #${order_number}**: ${statusData.status}${dateStr ? ` (ordinato il ${dateStr})` : ""}`;
-          } else {
-            orderStatusText = `\n\nNon ho trovato nessun ordine con numero "${order_number}" e questa email. Verifica i dati e riprova.`;
-          }
-        } catch (e) {
-          console.error("[chat] check_order error:", e);
-          orderStatusText = "\n\nSi è verificato un errore nel controllo dell'ordine, riprova tra poco.";
-        }
-      }
-
       // ── Conversational lead marker → create the lead automatically ──
       if (conversationalLead && !leadAlreadyCaptured) {
         const leadDataMatch = fullMessage.match(/\[LEAD_DATA:(\{.*?\})\]/);
@@ -414,7 +424,7 @@ serve(async (req) => {
         }
       }
 
-      const cleanMessage = stripMarkers(fullMessage).trim() + cartLinkMarkdown + orderStatusText;
+      const cleanMessage = stripMarkers(fullMessage).trim() + cartLinkMarkdown;
       const triggerLead = !conversationalLead && fullMessage.indexOf("[TRIGGER_LEAD_FORM]") !== -1;
 
       // Save session in background
@@ -551,6 +561,9 @@ serve(async (req) => {
         if (call.function?.name === "create_real_checkout") {
           result = await runCheckoutTool(args);
           console.log(`[chat] tool create_real_checkout → success=${result.success}`);
+        } else if (call.function?.name === "check_order_status") {
+          result = await runOrderStatusTool(args);
+          console.log(`[chat] tool check_order_status → found=${result.found}`);
         }
         convo.push({
           role: "tool",
