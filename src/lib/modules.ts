@@ -110,7 +110,7 @@ export const MODULES: Record<ModuleId, ModuleDef> = {
       { key: "hotel-requests", label: { it: "Richieste ospiti", en: "Guest requests" }, href: "/dashboard/hotel/requests", icon: ConciergeBell },
       { key: "hotel-results", label: { it: "Risultati", en: "Results" }, href: "/dashboard/hotel/results", icon: TrendingUp },
     ],
-    integrations: [],
+    integrations: ["booking_link"],
     kbTemplates: ["restaurant"],
     leadFields: [
       { key: "check_in", label: { it: "Check-in", en: "Check-in" }, type: "date" },

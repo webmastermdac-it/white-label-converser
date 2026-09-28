@@ -24,6 +24,7 @@ export function useCalendlyIntegration(clientIdOverride?: string | null, botIdOv
   const [botId, setBotId] = useState<string | null>(null);
   const [botName, setBotName] = useState("");
   const [calendlyUrl, setCalendlyUrl] = useState("");
+  const [bookingButtonLabel, setBookingButtonLabel] = useState("");
   const [primaryColor, setPrimaryColor] = useState("#F59E0B");
   const [vertical, setVertical] = useState<"ecommerce" | "booking" | "hotel" | "general">("general");
   const [loading, setLoading] = useState(true);
@@ -33,7 +34,7 @@ export function useCalendlyIntegration(clientIdOverride?: string | null, botIdOv
     if (!clientId || !targetBotId) { setLoading(false); return; }
     const { data } = await supabase
       .from("chatbot_configs")
-      .select("id, name, calendly_url, primary_color, business_vertical")
+      .select("id, name, calendly_url, primary_color, business_vertical, booking_button_label")
       .eq("client_id", clientId)
       .eq("id", targetBotId)
       .maybeSingle();
@@ -42,6 +43,7 @@ export function useCalendlyIntegration(clientIdOverride?: string | null, botIdOv
       setBotId(d.id);
       setBotName(d.name || "");
       setCalendlyUrl(d.calendly_url || "");
+      setBookingButtonLabel(d.booking_button_label || "");
       setPrimaryColor(d.primary_color || "#F59E0B");
       setVertical((d.business_vertical as any) || "general");
     }
@@ -50,12 +52,12 @@ export function useCalendlyIntegration(clientIdOverride?: string | null, botIdOv
 
   useEffect(() => { load(); }, [load]);
 
-  const save = async () => {
+  const save = async (extra?: { booking_button_label?: string | null }) => {
     if (!botId) return;
     setSaving(true);
     const { error } = await supabase
       .from("chatbot_configs")
-      .update({ calendly_url: calendlyUrl } as any)
+      .update({ calendly_url: calendlyUrl, ...(extra || {}) } as any)
       .eq("id", botId);
     setSaving(false);
     if (error) {
@@ -65,5 +67,5 @@ export function useCalendlyIntegration(clientIdOverride?: string | null, botIdOv
     toast({ title: isIt ? "Calendly salvato!" : "Calendly saved!" });
   };
 
-  return { botId, botName, calendlyUrl, setCalendlyUrl, primaryColor, vertical, loading, saving, save, reload: load };
+  return { botId, botName, calendlyUrl, setCalendlyUrl, bookingButtonLabel, setBookingButtonLabel, primaryColor, vertical, loading, saving, save, reload: load };
 }
