@@ -19,6 +19,7 @@ import LandingPage from "@/pages/LandingPage";
 import VerticalLanding from "@/pages/VerticalLanding";
 import AdminOverview from "@/pages/admin/AdminOverview";
 import AdminClients from "@/pages/admin/AdminClients";
+import AdminSetupRequests from "@/pages/admin/AdminSetupRequests";
 import AdminLeads from "@/pages/admin/AdminLeads";
 import AdminSettings from "@/pages/admin/AdminSettings";
 import AdminClientConfig from "@/pages/admin/AdminClientConfig";
@@ -86,6 +87,7 @@ const App = () => (
               <Route index element={<AdminOverview />} />
               <Route path="clients" element={<AdminClients />} />
               <Route path="clients/:clientId" element={<AdminClientConfig />} />
+              <Route path="setup" element={<AdminSetupRequests />} />
               <Route path="bots" element={<AdminBots />} />
               <Route path="bots/:botId" element={<ClientChatbotSettings adminMode />} />
               <Route path="leads" element={<AdminLeads />} />
