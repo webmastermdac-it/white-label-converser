@@ -93,11 +93,12 @@ const ClientIntegrations = ({ embedded = false, clientIdOverride }: { embedded?:
     return [ecommerceCat, bookingCat].filter((category) => category.items.length > 0);
   }, [moduleIntegrations.join("|"), isIt]);
 
-  const bannerText = moduleIntegrations.length === 0 ? null : vertical === "ecommerce"
+  const bannerText = moduleIntegrations.length === 0 ? null : activeModule.id === "ecommerce"
     ? (isIt
         ? "Hai un ecommerce? Collega il tuo store per far conoscere al bot prodotti, prezzi e disponibilità in tempo reale."
         : "Running an online store? Connect it so the bot knows products, prices and stock in real time.")
-    : vertical === "booking"
+    : activeModule.id === "booking"
+
       ? (isIt
           ? "Offri servizi su appuntamento? Collega Calendly per far prenotare i clienti direttamente in chat."
           : "Offering appointment-based services? Connect Calendly so customers can book right in the chat.")
@@ -330,6 +331,15 @@ const ClientIntegrations = ({ embedded = false, clientIdOverride }: { embedded?:
           <p className="text-muted-foreground text-sm mt-1">
             {isIt ? "Collega i tuoi strumenti al chatbot" : "Connect your tools to the chatbot"}
           </p>
+          {cal.botName && (
+            <p className="text-xs text-muted-foreground mt-1">
+              {isIt ? "Integrazioni per: " : "Integrations for: "}
+              <span className="text-foreground font-medium">{cal.botName}</span>
+              {" · "}
+              {isIt ? activeModule.name.it : activeModule.name.en}
+            </p>
+          )}
+
         </div>
       )}
 
@@ -347,7 +357,7 @@ const ClientIntegrations = ({ embedded = false, clientIdOverride }: { embedded?:
       {moduleIntegrations.length === 0 && (
         <div className="rounded-xl border border-border bg-card p-6 text-sm text-muted-foreground">
           <p>{isIt ? "Nessuna integrazione disponibile per il tuo modulo." : "No integrations are available for your module."}</p>
-          {vertical === "hotel" && (
+          {activeModule.id === "hotel" && (
             <p className="mt-2">
               {isIt ? "Per l'hotel il link del booking engine si imposta in " : "For hotels, the booking engine link is configured in "}
               <button onClick={() => navigate("/dashboard/hotel/profile")} className="text-primary underline underline-offset-2">
@@ -399,7 +409,7 @@ const ClientIntegrations = ({ embedded = false, clientIdOverride }: { embedded?:
         </section>
       ))}
 
-      {vertical === "ecommerce" && eco.configId && eco.savedPlatform && canUseEcommerce && (
+      {activeModule.id === "ecommerce" && eco.configId && eco.savedPlatform && canUseEcommerce && (
         <section className="space-y-3">
           <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
             {isIt ? "Sincronizzazione catalogo" : "Catalog synchronization"}
