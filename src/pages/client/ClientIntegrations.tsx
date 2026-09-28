@@ -226,9 +226,6 @@ const ClientIntegrations = ({ embedded = false, clientIdOverride }: { embedded?:
                   <>
                     <div><Label>Store URL</Label><Input placeholder="https://miostore.it" value={eco.storeUrl} onChange={e => eco.setStoreUrl(e.target.value)} /></div>
                     <div><Label>API Key</Label><Input type="password" value={eco.apiKey} onChange={e => eco.setApiKey(e.target.value)} /></div>
-                    <p className="text-xs text-muted-foreground">{isIt ? "Genera la chiave in PrestaShop → Parametri avanzati → Servizi web" : "Generate key in PrestaShop → Advanced Parameters → Web Services"}</p>
-                    <p className="text-xs text-amber-500">{isIt ? "Per gli acquisti reali dal chatbot la chiave deve avere permessi di scrittura (Add/Modify) su carts, customers e addresses: Parametri avanzati → Servizi web → modifica la chiave." : "For real purchases from the chatbot the key needs write permissions (Add/Modify) on carts, customers and addresses: Advanced Parameters → Web Services → edit the key."}</p>
-                    <p className="text-xs text-muted-foreground">{isIt ? "Per lo stato ordini: la chiave Servizi web deve avere permesso GET su orders, customers, order_states, order_carriers e carriers." : "For order status: the Web Services key needs GET permission on orders, customers, order_states, order_carriers and carriers."}</p>
                   </>
                 )}
                 {openId === "api" && (
