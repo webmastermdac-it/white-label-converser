@@ -12,6 +12,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue
 } from "@/components/ui/select";
 import { Plus, Search, Loader2, Trash2, ExternalLink, Users } from "lucide-react";
+import { MODULES, MODULE_IDS } from "@/lib/modules";
 
 interface Client {
   id: string;
@@ -25,13 +26,14 @@ const plans = ["starter", "pro", "enterprise"];
 
 const AdminClients = () => {
   const { toast } = useToast();
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
+  const isIt = lang === "it";
   const [clients, setClients] = useState<Client[]>([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [creating, setCreating] = useState(false);
-  const [form, setForm] = useState({ name: "", email: "", plan: "starter", password: "" });
+  const [form, setForm] = useState({ name: "", email: "", plan: "starter", password: "", business_vertical: "general" });
 
   const filtered = clients.filter(
     (c) => c.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -54,14 +56,14 @@ const AdminClients = () => {
     setCreating(true);
     try {
       const { data, error } = await supabase.functions.invoke("create-client", {
-        body: { name: form.name, email: form.email, password: form.password, plan: form.plan }
+        body: { name: form.name, email: form.email, password: form.password, plan: form.plan, business_vertical: form.business_vertical }
       });
       if (error) throw new Error(error.message);
       if (data?.error) throw new Error(data.error);
 
       toast({ title: t("clientCreated"), description: `${form.name}` });
       setDialogOpen(false);
-      setForm({ name: "", email: "", plan: "starter", password: "" });
+      setForm({ name: "", email: "", plan: "starter", password: "", business_vertical: "general" });
       fetchClients();
     } catch (err: any) {
       toast({ title: "Error", description: err.message, variant: "destructive" });
@@ -127,6 +129,21 @@ const AdminClients = () => {
                   <SelectTrigger className="bg-secondary border-border"><SelectValue /></SelectTrigger>
                   <SelectContent className="bg-card border-border">
                     {plans.map((p) => <SelectItem key={p} value={p} className="capitalize">{p}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>{isIt ? "Tipo di bot" : "Bot type"}</Label>
+                <Select value={form.business_vertical} onValueChange={(v) => setForm({ ...form, business_vertical: v })}>
+                  <SelectTrigger className="bg-secondary border-border">
+                    <SelectValue placeholder={isIt ? "Tipo di bot" : "Bot type"} />
+                  </SelectTrigger>
+                  <SelectContent className="bg-card border-border">
+                    {MODULE_IDS.map((id) => (
+                      <SelectItem key={id} value={id}>
+                        {MODULES[id].name[lang]}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
