@@ -5,6 +5,7 @@ import { Bot, LogOut, Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import ThemeSelector from "@/components/ThemeSelector";
 import LanguageMenu from "@/components/LanguageMenu";
+import { useActiveModule } from "@/hooks/useActiveModule";
 
 interface NavItem {
   label: string;
@@ -22,7 +23,9 @@ interface MobileNavProps {
 const MobileNav: React.FC<MobileNavProps> = ({ items, subtitle }) => {
   const [open, setOpen] = useState(false);
   const { user, signOut } = useAuth();
+  const { module: activeModule } = useActiveModule();
   const navigate = useNavigate();
+  const visibleItems = items.filter((item) => item.href !== "/dashboard/integrations" || activeModule.integrations.length > 0);
 
   const handleSignOut = async () => {
     await signOut();
@@ -72,7 +75,7 @@ const MobileNav: React.FC<MobileNavProps> = ({ items, subtitle }) => {
 
             {/* Nav items */}
             <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-              {items.map((item) => (
+              {visibleItems.map((item) => (
                 <div key={item.href}>
                   <NavLink
                     to={item.href}

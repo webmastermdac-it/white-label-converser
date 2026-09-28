@@ -19,7 +19,7 @@ const ClientSidebar = () => {
   const { user, signOut, role } = useAuth();
   const { lang, t } = useLanguage();
   const { canUseEcommerce, canUseCalendly, config: planConfig } = usePlanConfig();
-  const { botId } = useActiveModule();
+  const { botId, module: activeModule } = useActiveModule();
   const isFree = planConfig?.plan_name === "free";
   const navigate = useNavigate();
   const tl = (it: string, en: string) => lang === "it" ? it : en;
@@ -43,7 +43,9 @@ const ClientSidebar = () => {
 
   const configNav = [
     botItem,
-    { label: tl("Integrazioni", "Integrations"), href: "/dashboard/integrations", icon: Plug },
+    ...(activeModule.integrations.length > 0
+      ? [{ label: tl("Integrazioni", "Integrations"), href: "/dashboard/integrations", icon: Plug }]
+      : []),
     { label: "Instagram", href: "/dashboard/instagram", icon: Instagram },
     { label: "Upgrade", href: "/dashboard/upgrade", icon: ArrowUpCircle },
   ];

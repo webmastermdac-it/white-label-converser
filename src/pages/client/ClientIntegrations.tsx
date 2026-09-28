@@ -77,25 +77,23 @@ const ClientIntegrations = ({ embedded = false, clientIdOverride }: { embedded?:
     return !!eco.configId && eco.savedPlatform === id;
   };
 
-  const recommended = (id: IntegrationId) => {
-    return getModule(vertical).integrations.includes(id);
-  };
+  const moduleIntegrations = getModule(vertical).integrations;
 
   const categories = useMemo(() => {
     const ecommerceCat = {
       key: "ecommerce",
       title: isIt ? "Ecommerce" : "Ecommerce",
-      items: ECOMMERCE_INTEGRATIONS,
+      items: ECOMMERCE_INTEGRATIONS.filter((item) => moduleIntegrations.includes(item.id)),
     };
     const bookingCat = {
       key: "booking",
       title: isIt ? "Appuntamenti" : "Appointments",
-      items: APPOINTMENT_INTEGRATIONS,
+      items: APPOINTMENT_INTEGRATIONS.filter((item) => moduleIntegrations.includes(item.id)),
     };
-    return vertical === "booking" ? [bookingCat, ecommerceCat] : [ecommerceCat, bookingCat];
-  }, [vertical, isIt]);
+    return [ecommerceCat, bookingCat].filter((category) => category.items.length > 0);
+  }, [moduleIntegrations.join("|"), isIt]);
 
-  const bannerText = vertical === "ecommerce"
+  const bannerText = moduleIntegrations.length === 0 ? null : vertical === "ecommerce"
     ? (isIt
         ? "Hai un ecommerce? Collega il tuo store per far conoscere al bot prodotti, prezzi e disponibilità in tempo reale."
         : "Running an online store? Connect it so the bot knows products, prices and stock in real time.")
@@ -346,6 +344,20 @@ const ClientIntegrations = ({ embedded = false, clientIdOverride }: { embedded?:
         </div>
       )}
 
+      {moduleIntegrations.length === 0 && (
+        <div className="rounded-xl border border-border bg-card p-6 text-sm text-muted-foreground">
+          <p>{isIt ? "Nessuna integrazione disponibile per il tuo modulo." : "No integrations are available for your module."}</p>
+          {vertical === "hotel" && (
+            <p className="mt-2">
+              {isIt ? "Per l'hotel il link del booking engine si imposta in " : "For hotels, the booking engine link is configured in "}
+              <button onClick={() => navigate("/dashboard/hotel/profile")} className="text-primary underline underline-offset-2">
+                {isIt ? "Profilo struttura" : "Property profile"}
+              </button>.
+            </p>
+          )}
+        </div>
+      )}
+
       {categories.map((cat) => (
         <section key={cat.key} className="space-y-3">
           <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">{cat.title}</h2>
@@ -359,11 +371,6 @@ const ClientIntegrations = ({ embedded = false, clientIdOverride }: { embedded?:
                   onClick={() => openCard(item.id)}
                   className="relative flex flex-col items-center justify-center gap-3 p-5 rounded-xl border border-border bg-card hover:border-primary/50 transition-all text-center"
                 >
-                  {recommended(item.id) && !locked && (
-                    <Badge className="absolute top-2 right-2 bg-primary/15 text-primary border-0 text-[10px]">
-                      {isIt ? "Consigliato per te" : "Recommended"}
-                    </Badge>
-                  )}
                   <div
                     className="w-12 h-12 rounded-full flex items-center justify-center"
                     style={{ backgroundColor: `${item.color}22` }}
@@ -392,7 +399,7 @@ const ClientIntegrations = ({ embedded = false, clientIdOverride }: { embedded?:
         </section>
       ))}
 
-      {eco.configId && eco.savedPlatform && canUseEcommerce && (
+      {vertical === "ecommerce" && eco.configId && eco.savedPlatform && canUseEcommerce && (
         <section className="space-y-3">
           <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
             {isIt ? "Sincronizzazione catalogo" : "Catalog synchronization"}
@@ -495,7 +502,7 @@ const ClientIntegrations = ({ embedded = false, clientIdOverride }: { embedded?:
 
 
 
-      <section className="space-y-3">
+      {moduleIntegrations.length > 0 && <section className="space-y-3">
         <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-2">
           {isIt ? "Altro" : "More"}
           <Badge variant="secondary" className="text-[10px]">{isIt ? "Prossimamente" : "Coming soon"}</Badge>
@@ -503,7 +510,7 @@ const ClientIntegrations = ({ embedded = false, clientIdOverride }: { embedded?:
         <div className="p-6 rounded-xl border border-dashed border-border text-sm text-muted-foreground">
           {isIt ? "Nuovi connettori in arrivo." : "New connectors coming soon."}
         </div>
-      </section>
+      </section>}
 
     </div>
   );
