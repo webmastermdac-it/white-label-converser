@@ -367,6 +367,58 @@ export function PricingGrid({ yearly, t, verticalId, selectedVertical = "generic
         </div>
       </div>
     </div>
+
+    {/* Setup professionale */}
+    <div className={cardClass(3, "mt-8 max-w-5xl mx-auto grid md:grid-cols-2 gap-8 bg-white/[0.03] border border-dashed border-[#F5A623]/40 rounded-2xl p-8")} style={cardStyle(3)}>
+      <div>
+        <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-4 bg-[#F5A623]/15">
+          <Wrench className="w-6 h-6 text-[#F5A623]" />
+        </div>
+        <div className="flex flex-wrap items-center gap-3">
+          <h3 className="text-xl font-bold" style={{ fontFamily: "'Syne', sans-serif" }}>{t("Professional setup", "Setup professionale")}</h3>
+          <span className="text-xs font-semibold px-2.5 py-1 rounded-full border border-[#F5A623]/40 text-[#F5A623]">{t("Optional", "Facoltativo")}</span>
+        </div>
+        <div className="mt-3">
+          <span className="text-4xl font-extrabold">€500</span>
+          <span className="text-white/40 text-sm"> + IVA · {t("one-off", "una tantum")}</span>
+        </div>
+        <p className="mt-4 text-sm leading-relaxed text-white/55">{t("Want to start with an optimized, professional setup? We contact you, install the chatbot, configure it and test it together with you. Prefer to do it yourself? You can set it up on your own at no extra cost.", "Vuoi partire con una configurazione ottimizzata e professionale? Ti contattiamo, installiamo il chatbot, lo configuriamo e lo testiamo insieme a te. Preferisci fare da solo? Puoi configurarlo in autonomia, senza costi aggiuntivi.")}</p>
+      </div>
+      <div className="flex flex-col">
+        <ul className={listClassName}>
+          {[
+            t("Contact and analysis of your needs", "Contatto e analisi delle tue esigenze"),
+            t("Widget installation on your website", "Installazione del widget sul tuo sito"),
+            t("Prompt, FAQ and knowledge base setup", "Configurazione di prompt, FAQ e knowledge base"),
+            t("Testing together with you", "Test insieme a te"),
+            t("Tips on tone of voice and usage", "Consigli su tone of voice e utilizzo"),
+          ].map((item, i) => (
+            <li key={i} className="flex items-start gap-2"><Check className="w-4 h-4 text-[#F5A623] shrink-0 mt-0.5" />{item}</li>
+          ))}
+        </ul>
+        <Link to={verticalId ? `/register?vertical=${verticalId}` : "/register"} className="block mt-6">
+          <Button className="w-full bg-[#F5A623] hover:bg-[#E09800] text-black rounded-full h-11 font-semibold">
+            {t("Start free and request the setup", "Inizia gratis e richiedi il setup")}
+          </Button>
+        </Link>
+        <p className="mt-3 text-xs text-white/40">
+          {t("Already have an account? Request it from the Upgrade page", "Hai già un account? Richiedilo dalla pagina Upgrade").split("Upgrade").length > 1 ? (
+            <>
+              {t("Already have an account? Request it from the Upgrade ", "Hai già un account? Richiedilo dalla pagina ")}
+              <Link to="/dashboard/upgrade" className="underline text-white/60 hover:text-[#F5A623]">Upgrade</Link>
+            </>
+          ) : (
+            <>
+              {t("Already have an account? Request it from the ", "Hai già un account? Richiedilo dalla pagina ")}
+              <Link to="/dashboard/upgrade" className="underline text-white/60 hover:text-[#F5A623]">Upgrade</Link>
+              {t(" page", "")}
+            </>
+          )}
+        </p>
+        <p className="mt-1 text-xs text-white/40">{t("Available with any plan, including Free.", "Disponibile con qualsiasi piano, anche Free.")}</p>
+      </div>
+    </div>
+    </>
   );
 }
 
