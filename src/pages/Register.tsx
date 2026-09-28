@@ -12,7 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 const Register = () => {
   const { user, role, loading } = useAuth();
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const { toast } = useToast();
   const navigate = useNavigate();
   const [fullName, setFullName] = useState("");
