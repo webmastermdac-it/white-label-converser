@@ -74,7 +74,7 @@ const ClientChatbotSettings = ({ adminMode = false, botIdOverride, hideHeader = 
   const ConciergeComponent = currentConciergeItem ? MODULE_PAGE_COMPONENTS[currentConciergeItem.href] : undefined;
   const backPath = adminMode ? "/admin/bots" : "/dashboard/bots";
   const tl = (it: string, en: string) => lang === "it" ? it : en;
-  const calendly = useCalendlyIntegration(clientId);
+  const calendly = useCalendlyIntegration(clientId, botId);
   const supportsCalendly = botModule.integrations.includes("calendly");
 
   const openSection = (next: SettingsSection | null) => {
