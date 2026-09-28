@@ -60,7 +60,7 @@ export const MODULES: Record<ModuleId, ModuleDef> = {
     icon: ShoppingBag,
     color: "35 91% 55%",
     menu: [],
-    integrations: ["woocommerce", "shopify", "prestashop"],
+    integrations: ["woocommerce", "shopify", "prestashop", "api", "feed"],
     kbTemplates: ["ecommerce"],
     leadFields: [{ key: "order_number", label: { it: "Numero ordine", en: "Order number" }, type: "text" }],
     kpis: [
@@ -110,7 +110,7 @@ export const MODULES: Record<ModuleId, ModuleDef> = {
       { key: "hotel-requests", label: { it: "Richieste ospiti", en: "Guest requests" }, href: "/dashboard/hotel/requests", icon: ConciergeBell },
       { key: "hotel-results", label: { it: "Risultati", en: "Results" }, href: "/dashboard/hotel/results", icon: TrendingUp },
     ],
-    integrations: [],
+    integrations: ["calendly"],
     kbTemplates: ["restaurant"],
     leadFields: [
       { key: "check_in", label: { it: "Check-in", en: "Check-in" }, type: "date" },
