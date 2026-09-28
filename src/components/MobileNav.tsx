@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { useLanguage } from "@/hooks/useLanguage";
-import { Bot, LogOut, Menu, X, Globe } from "lucide-react";
+import { Bot, LogOut, Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import ThemeSelector from "@/components/ThemeSelector";
+import LanguageMenu from "@/components/LanguageMenu";
 
 interface NavItem {
   label: string;
@@ -22,7 +22,6 @@ interface MobileNavProps {
 const MobileNav: React.FC<MobileNavProps> = ({ items, subtitle }) => {
   const [open, setOpen] = useState(false);
   const { user, signOut } = useAuth();
-  const { lang, setLang } = useLanguage();
   const navigate = useNavigate();
 
   const handleSignOut = async () => {
@@ -99,13 +98,7 @@ const MobileNav: React.FC<MobileNavProps> = ({ items, subtitle }) => {
             {/* Footer */}
             <div className="p-4 border-t border-sidebar-border space-y-3">
               <ThemeSelector />
-              <button
-                onClick={() => { setLang(lang === "it" ? "en" : "it"); }}
-                className="flex items-center gap-2 px-3 py-2 w-full rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-sidebar-accent transition-colors min-h-[44px]"
-              >
-                <Globe className="w-4 h-4" />
-                {lang === "it" ? "🇮🇹 Italiano" : "🇬🇧 English"}
-              </button>
+              <LanguageMenu large />
               <p className="text-xs text-muted-foreground px-3 truncate">{user?.email}</p>
             </div>
           </div>

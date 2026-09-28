@@ -2,28 +2,31 @@ import { useState, useCallback, useContext, createContext, type ReactNode } from
 import { translations, type TranslationKey } from "@/i18n/translations";
 import React from "react";
 
+export type AppLang = "it" | "en" | "de" | "fr" | "es";
 type Lang = "it" | "en";
 
-function detectLang(): Lang {
-  const stored = localStorage.getItem("genius-lang") as Lang | null;
-  if (stored === "it" || stored === "en") return stored;
+function detectLang(): AppLang {
+  const stored = localStorage.getItem("genius-lang");
+  if (stored === "it" || stored === "en" || stored === "de" || stored === "fr" || stored === "es") return stored;
   return navigator.language?.startsWith("it") ? "it" : "en";
 }
 
 interface LanguageContextType {
   lang: Lang;
-  setLang: (l: Lang) => void;
+  contentLang: AppLang;
+  setLang: (l: AppLang) => void;
   t: (enOrKey: string, it?: string) => string;
 }
 
 const LanguageContext = createContext<LanguageContextType | null>(null);
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
-  const [lang, setLangState] = useState<Lang>(detectLang);
+  const [contentLang, setContentLang] = useState<AppLang>(detectLang);
+  const lang: Lang = contentLang === "it" ? "it" : "en";
 
-  const setLang = useCallback((l: Lang) => {
+  const setLang = useCallback((l: AppLang) => {
     localStorage.setItem("genius-lang", l);
-    setLangState(l);
+    setContentLang(l);
   }, []);
 
   const t = useCallback((enOrKey: string, it?: string) => {
@@ -35,17 +38,18 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     return enOrKey;
   }, [lang]);
 
-  return React.createElement(LanguageContext.Provider, { value: { lang, setLang, t } }, children);
+  return React.createElement(LanguageContext.Provider, { value: { lang, contentLang, setLang, t } }, children);
 }
 
 export function useLanguage() {
   const ctx = useContext(LanguageContext);
   if (!ctx) {
     // Fallback for components outside provider (shouldn't happen in practice)
-    const [lang, setLangState] = useState<Lang>(detectLang);
-    const setLang = useCallback((l: Lang) => {
+    const [contentLang, setContentLang] = useState<AppLang>(detectLang);
+    const lang: Lang = contentLang === "it" ? "it" : "en";
+    const setLang = useCallback((l: AppLang) => {
       localStorage.setItem("genius-lang", l);
-      setLangState(l);
+      setContentLang(l);
     }, []);
     const t = useCallback((enOrKey: string, it?: string) => {
       if (it !== undefined) return lang === "it" ? it : enOrKey;
@@ -53,7 +57,7 @@ export function useLanguage() {
       if (entry) return entry[lang];
       return enOrKey;
     }, [lang]);
-    return { lang, setLang, t };
+    return { lang, contentLang, setLang, t };
   }
   return ctx;
 }

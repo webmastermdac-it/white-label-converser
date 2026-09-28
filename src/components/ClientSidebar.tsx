@@ -8,15 +8,16 @@ import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   LayoutDashboard, MessageSquare,
-  ChevronLeft, ChevronRight, Bot, LogOut, Inbox, Globe, ArrowUpCircle, BarChart3, Plug, Instagram, Settings
+  ChevronLeft, ChevronRight, Bot, LogOut, Inbox, ArrowUpCircle, BarChart3, Plug, Instagram, Settings
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import ThemeSelector from "@/components/ThemeSelector";
+import LanguageMenu from "@/components/LanguageMenu";
 
 const ClientSidebar = () => {
   const [collapsed, setCollapsed] = useState(false);
   const { user, signOut, role } = useAuth();
-  const { lang, setLang, t } = useLanguage();
+  const { lang, t } = useLanguage();
   const { canUseEcommerce, canUseCalendly, config: planConfig } = usePlanConfig();
   const { botId } = useActiveModule();
   const isFree = planConfig?.plan_name === "free";
@@ -141,19 +142,18 @@ const ClientSidebar = () => {
         {!collapsed && (
           <>
             <ThemeSelector />
-            <button
-              onClick={() => setLang(lang === "it" ? "en" : "it")}
-              className="flex items-center gap-2 px-3 py-2 w-full rounded-lg text-xs text-muted-foreground hover:text-foreground hover:bg-sidebar-accent transition-colors"
-            >
-              <Globe className="w-3.5 h-3.5" />
-              {lang === "it" ? "🇮🇹 Italiano" : "🇬🇧 English"}
-            </button>
+            <LanguageMenu />
             <div className="px-3 py-2">
               <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
             </div>
           </>
         )}
-        {collapsed && <ThemeSelector collapsed />}
+        {collapsed && (
+          <>
+            <ThemeSelector collapsed />
+            <LanguageMenu collapsed />
+          </>
+        )}
         <Button
           variant="ghost"
           size="sm"

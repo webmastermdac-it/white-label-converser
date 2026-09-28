@@ -4,9 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { useLanguage } from "@/hooks/useLanguage";
+import { useLanguage, type AppLang } from "@/hooks/useLanguage";
 import { Loader2, Save, Sparkles } from "lucide-react";
 
 const DEFAULT_WELCOME = "Ciao! Sono un assistente virtuale basato su intelligenza artificiale. Come posso aiutarti?";
@@ -19,24 +18,24 @@ type Kind = "welcome" | "fallback";
 type Entry = { text: string; manual: boolean };
 type I18n = Record<Kind, Partial<Record<Target, Entry>>>;
 
-const LANG_OPTIONS: { value: Lang; label: string }[] = [
-  { value: "it", label: "🇮🇹 Italiano (base)" },
-  { value: "en", label: "🇬🇧 English" },
-  { value: "fr", label: "🇫🇷 Français" },
-  { value: "de", label: "🇩🇪 Deutsch" },
-  { value: "es", label: "🇪🇸 Español" },
+const LANG_OPTIONS: { value: AppLang; flag: string; label: string }[] = [
+  { value: "it", flag: "🇮🇹", label: "Italiano" },
+  { value: "en", flag: "🇬🇧", label: "English" },
+  { value: "fr", flag: "🇫🇷", label: "Français" },
+  { value: "de", flag: "🇩🇪", label: "Deutsch" },
+  { value: "es", flag: "🇪🇸", label: "Español" },
 ];
 
 const emptyI18n = (): I18n => ({ welcome: {}, fallback: {} });
 
 const BotMessagesCard = ({ chatbotId }: { chatbotId: string }) => {
   const { toast } = useToast();
-  const { t, lang } = useLanguage();
+  const { t, lang, contentLang } = useLanguage();
   const tl = (it: string, en: string) => (lang === "it" ? it : en);
   const [welcome, setWelcome] = useState(DEFAULT_WELCOME);
   const [fallback, setFallback] = useState(DEFAULT_FALLBACK);
   const [i18n, setI18n] = useState<I18n>(emptyI18n());
-  const [viewLang, setViewLang] = useState<Lang>("it");
+  const viewLang: Lang = contentLang;
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [regen, setRegen] = useState<Kind | null>(null);
@@ -170,16 +169,19 @@ const BotMessagesCard = ({ chatbotId }: { chatbotId: string }) => {
     return <div className="glass rounded-xl p-6 flex justify-center"><Loader2 className="w-5 h-5 animate-spin text-primary" /></div>;
   }
 
+  const currentLanguage = LANG_OPTIONS.find((option) => option.value === contentLang) ?? LANG_OPTIONS[0];
+
   return (
     <div className="glass rounded-xl p-6 space-y-5">
-      <div className="flex items-center justify-between gap-3 flex-wrap">
+      <div className="space-y-1">
         <h3 className="font-semibold text-foreground">{tl("Messaggi del chatbot", "Chatbot messages")}</h3>
-        <Select value={viewLang} onValueChange={(v) => setViewLang(v as Lang)}>
-          <SelectTrigger className="w-48 h-9 bg-secondary border-border"><SelectValue /></SelectTrigger>
-          <SelectContent>
-            {LANG_OPTIONS.map((o) => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
-          </SelectContent>
-        </Select>
+        <p className="text-xs text-muted-foreground">
+          {tl("Stai modificando:", "You are editing:")} {currentLanguage.flag} {currentLanguage.label}
+          {contentLang !== "it" && tl(
+            " · le traduzioni si generano da sole, puoi modificarle. Cambia lingua dal menu in basso a sinistra.",
+            " · translations are generated automatically; you can edit them. Change language from the menu at the bottom left.",
+          )}
+        </p>
       </div>
 
       <div className="space-y-2">
