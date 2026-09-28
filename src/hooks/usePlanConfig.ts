@@ -12,9 +12,7 @@ export interface PlanConfig {
   max_leads_month: number;
   max_faqs: number;
   max_documents: number;
-  remove_branding: boolean;
   doc_upload: boolean;
-  sector_templates: boolean;
   calendly_integration: boolean;
   advanced_analytics: boolean;
   priority_support: boolean;
@@ -33,9 +31,7 @@ const DEFAULTS: PlanConfig = {
   max_leads_month: 10,
   max_faqs: 5,
   max_documents: 0,
-  remove_branding: false,
   doc_upload: false,
-  sector_templates: false,
   calendly_integration: false,
   advanced_analytics: false,
   priority_support: false,
@@ -52,6 +48,7 @@ export function usePlanConfig() {
   const [loading, setLoading] = useState(true);
 
   const fetchConfig = useCallback(async () => {
+    setLoading(true);
     const targetPlan = role === "super_admin" ? "pro" : plan;
     const { data } = await supabase
       .from("plan_configs" as any)
@@ -83,9 +80,7 @@ export function usePlanConfig() {
     maxFaqs: isAdmin ? -1 : config.max_faqs,
     maxDocuments: isAdmin ? -1 : config.max_documents,
     // Feature flags
-    canRemoveBranding: isAdmin || config.remove_branding,
     canUploadDocs: isAdmin || config.doc_upload,
-    canUseSectorTemplates: isAdmin || config.sector_templates,
     canUseCalendly: isAdmin || config.calendly_integration,
     canUseAdvancedAnalytics: isAdmin || config.advanced_analytics,
     hasPrioritySupport: isAdmin || config.priority_support,

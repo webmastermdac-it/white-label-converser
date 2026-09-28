@@ -147,12 +147,11 @@ function getPricingFeatures(t: (en: string, it: string) => string): Record<Prici
     t("Unlimited conversations", "Conversazioni illimitate"),
     t("Advanced analytics", "Analytics avanzati"),
     t("Dedicated support", "Supporto dedicato"),
-    t("Complete white label", "White label completo"),
   ];
   return {
     generic: {
       free: { features: freeFeatures, locked: freeLocked },
-      starter: { features: [...starterBase, t("Industry template library", "Libreria di template di settore")] },
+      starter: { features: starterBase },
       pro: { features: proBase },
     },
     booking: {

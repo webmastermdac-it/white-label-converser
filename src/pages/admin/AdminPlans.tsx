@@ -20,9 +20,7 @@ interface PlanRow {
   max_faqs: number;
   max_documents: number;
   max_products: number;
-  remove_branding: boolean;
   doc_upload: boolean;
-  sector_templates: boolean;
   calendly_integration: boolean;
   advanced_analytics: boolean;
   priority_support: boolean;
@@ -45,9 +43,7 @@ const PLAN_EMOJI: Record<string, string> = {
 };
 
 const FEATURE_KEYS: { key: keyof PlanRow; label: string }[] = [
-  { key: "remove_branding", label: "Rimozione branding" },
   { key: "doc_upload", label: "Upload documenti" },
-  { key: "sector_templates", label: "Template settore" },
   { key: "calendly_integration", label: "Integrazione Calendly" },
   { key: "advanced_analytics", label: "Analytics avanzate" },
   { key: "priority_support", label: "Supporto prioritario" },
@@ -58,9 +54,7 @@ const FEATURE_KEYS: { key: keyof PlanRow; label: string }[] = [
 
 // Features that have enforcement in the app
 const ENFORCED_FEATURES = new Set([
-  "remove_branding",
   "doc_upload",
-  "sector_templates",
   "calendly_integration",
   "knowledge_base_wizard",
   "ecommerce_integration",
@@ -124,9 +118,7 @@ const AdminPlans = () => {
         max_faqs: current.max_faqs,
         max_documents: current.max_documents,
         max_products: current.max_products,
-        remove_branding: current.remove_branding,
         doc_upload: current.doc_upload,
-        sector_templates: current.sector_templates,
         calendly_integration: current.calendly_integration,
         advanced_analytics: current.advanced_analytics,
         priority_support: current.priority_support,
