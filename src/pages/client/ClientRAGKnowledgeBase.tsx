@@ -15,12 +15,11 @@ import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import {
   Loader2, Upload, Globe, HelpCircle, FileText, Trash2,
   RefreshCw, CheckCircle2, XCircle, Clock, Plus, Database,
   Search, Map, Send, AlertTriangle, GripVertical, X, Lock,
-  Save, Star, Info, Store, ExternalLink, BookOpen, Table2, ChevronDown,
+  Save, Star, Info, Store, ExternalLink, BookOpen,
 } from "lucide-react";
 
 // ── Types ──
@@ -59,149 +58,6 @@ const normalizeUrl = (url: string): string => {
     return url.trim().toLowerCase();
   }
 };
-
-type TonePreset = {
-  id: string;
-  label: string;
-  sub: string;
-  fullName: string;
-  text: string;
-  characteristics: string;
-  archetypes: string;
-  example: string;
-};
-
-const TONE_PRESETS: TonePreset[] = [
-  {
-    id: "istituzionale",
-    label: "Istituzionale",
-    sub: "Preciso, autorevole, il Lei",
-    fullName: "Istituzionale / Formale",
-    text: `Tono istituzionale e formale: linguaggio preciso e autorevole, terza persona o forma di cortesia ("Lei"), evita slang e abbreviazioni. Esempio: "La ringraziamo per aver scelto i nostri servizi. La vostra sicurezza è la nostra priorità."`,
-    characteristics: `Linguaggio preciso, autorevole, uso della terza persona o del "Lei". Evita slang e abbreviazioni.`,
-    archetypes: "Sovrano, Saggio",
-    example: "La ringraziamo per aver scelto i nostri servizi. La vostra sicurezza è la nostra priorità.",
-  },
-  {
-    id: "amichevole",
-    label: "Amichevole",
-    sub: "Caldo, colloquiale, il tu",
-    fullName: "Amichevole / Informale",
-    text: `Tono amichevole e informale: caldo, accessibile, usa il "tu" e un linguaggio colloquiale ma curato. Esempio: "Ciao! Siamo felici di averti qui. Mettiti comodo, pensiamo a tutto noi."`,
-    characteristics: `Caldo, accessibile, usa il "tu" e un linguaggio colloquiale ma curato.`,
-    archetypes: "Uomo Comune, Innocente",
-    example: "Ciao! Siamo felici di averti qui. Mettiti comodo, pensiamo a tutto noi.",
-  },
-  {
-    id: "ironico",
-    label: "Ironico",
-    sub: "Giocoso, battute leggere",
-    fullName: "Ironico / Divertente",
-    text: `Tono ironico e divertente: giocoso, leggero, fa uso di battute, giochi di parole e piccole storie per intrattenere. Esempio: "Sappiamo che odi i lunedì. Ecco qualcosa che ti farà sorridere (o almeno ci prova)."`,
-    characteristics: "Giocoso, leggero, fa uso di battute, giochi di parole e storielle per intrattenere.",
-    archetypes: "Burlone (Jester)",
-    example: "Sappiamo che odi i lunedì. Ecco qualcosa che ti farà sorridere (o almeno ci prova).",
-  },
-  {
-    id: "ispirazionale",
-    label: "Ispirazionale",
-    sub: "Motivante, epico",
-    fullName: "Ispirazionale / Epico",
-    text: `Tono ispirazionale ed epico: evocativo, motivante, orientato al superamento dei limiti e al cambiamento. Esempio: "Il futuro non si aspetta, si costruisce. Abbatti le barriere e libera il tuo potenziale."`,
-    characteristics: "Evocativo, motivante, orientato al superamento dei limiti e al cambiamento.",
-    archetypes: "Eroe, Ribelle",
-    example: "Il futuro non si aspetta, si costruisce. Abbatti le barriere e libera il tuo potenziale.",
-  },
-  {
-    id: "tecnico",
-    label: "Tecnico",
-    sub: "Dati, precisione, oggettività",
-    fullName: "Tecnico / Specialistico",
-    text: `Tono tecnico e specialistico: focalizzato su dati, precisione, termini di settore e oggettività. Esempio: "Il nuovo algoritmo ottimizza l'efficienza energetica del 42% riducendo i tempi di latenza."`,
-    characteristics: "Focalizzato su dati, precisione scientifica, termini di settore e oggettività.",
-    archetypes: "Creatore, Saggio",
-    example: "Il nuovo algoritmo ottimizza l'efficienza energetica del 42% riducendo i tempi di latenza.",
-  },
-  {
-    id: "irriverente",
-    label: "Irriverente",
-    sub: "Diretto, provocatorio",
-    fullName: "Irriverente / Provocatorio",
-    text: `Tono irriverente e provocatorio: diretto, audace, rompe gli schemi e sfida lo status quo, a volte con sarcasmo. Esempio: "Le solite regole hanno stancato. È ora di fare di testa propria. Tu da che parte stai?"`,
-    characteristics: "Diretto, audace, rompe gli schemi e sfida lo status quo, a volte usando il sarcasmo.",
-    archetypes: "Ribelle (Fuorilegge)",
-    example: "Le solite regole hanno stancato. È ora di fare di testa propria. Tu da che parte stai?",
-  },
-];
-
-const ToneReferenceTable = ({ t }: { t: (it: string, en: string) => string }) => {
-  const [open, setOpen] = useState(false);
-  const wrapRef = useRef<HTMLDivElement>(null);
-  const [wide, setWide] = useState(false);
-
-  useEffect(() => {
-    if (!open) return;
-    const element = wrapRef.current;
-    if (!element) return;
-    const measure = () => setWide(element.offsetWidth >= 620);
-    measure();
-    const observer = new ResizeObserver(measure);
-    observer.observe(element);
-    return () => observer.disconnect();
-  }, [open]);
-
-  return (
-    <Collapsible open={open} onOpenChange={setOpen}>
-      <CollapsibleTrigger className="flex items-center justify-between w-full p-3 rounded-xl bg-secondary hover:bg-accent transition-colors text-left">
-        <span className="flex items-center gap-2 text-xs font-medium text-foreground">
-          <Table2 className="w-3.5 h-3.5 text-primary" />
-          {t("Confronta tutti i toni", "Compare all tones")}
-        </span>
-        <ChevronDown className={`w-3.5 h-3.5 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`} />
-      </CollapsibleTrigger>
-      <CollapsibleContent className="pt-3">
-        <div ref={wrapRef}>
-          {wide ? (
-            <div className="overflow-x-auto rounded-lg border border-border">
-              <table className="w-full min-w-[600px] text-xs">
-                <thead>
-                  <tr className="bg-secondary/60 text-left">
-                    <th className="px-2.5 py-2 font-medium text-foreground whitespace-nowrap">Tono</th>
-                    <th className="px-2.5 py-2 font-medium text-foreground">{t("Caratteristiche principali", "Key characteristics")}</th>
-                    <th className="px-2.5 py-2 font-medium text-foreground whitespace-nowrap">{t("Archetipi associati", "Associated archetypes")}</th>
-                    <th className="px-2.5 py-2 font-medium text-foreground">{t("Esempio pratico", "Practical example")}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {TONE_PRESETS.map((preset) => (
-                    <tr key={preset.id} className="border-t border-border align-top">
-                      <td className="px-2.5 py-2 font-medium text-foreground whitespace-nowrap">{preset.fullName}</td>
-                      <td className="px-2.5 py-2 text-muted-foreground">{preset.characteristics}</td>
-                      <td className="px-2.5 py-2 text-muted-foreground whitespace-nowrap">{preset.archetypes}</td>
-                      <td className="px-2.5 py-2 text-muted-foreground italic">“{preset.example}”</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          ) : (
-            <div className="space-y-2">
-              {TONE_PRESETS.map((preset) => (
-                <div key={preset.id} className="rounded-lg border border-border p-2.5 space-y-1">
-                  <p className="text-xs font-medium text-foreground">{preset.fullName}</p>
-                  <p className="text-[11px] text-muted-foreground"><span className="font-medium text-foreground">{t("Caratteristiche: ", "Characteristics: ")}</span>{preset.characteristics}</p>
-                  <p className="text-[11px] text-muted-foreground"><span className="font-medium text-foreground">{t("Archetipi: ", "Archetypes: ")}</span>{preset.archetypes}</p>
-                  <p className="text-[11px] text-muted-foreground italic">“{preset.example}”</p>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </CollapsibleContent>
-    </Collapsible>
-  );
-};
-
 
 const statusConfig: Record<string, { icon: any; cls: string; label: string }> = {
   processing: { icon: Clock, cls: "bg-warning/10 text-warning border-warning/30", label: "Processing..." },
@@ -342,9 +198,6 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
   // Instructions state
   const [systemPrompt, setSystemPrompt] = useState("");
   const systemPromptRef = useRef("");
-  const [toneOfVoice, setToneOfVoice] = useState("");
-  const [tonePresetId, setTonePresetId] = useState<string | null>(null);
-  const [savingTone, setSavingTone] = useState(false);
   const [chatbotVertical, setChatbotVertical] = useState<string | null>(null);
   const [savingPrompt, setSavingPrompt] = useState(false);
   const [activeArea, setActiveArea] = useState<"hub" | "faq" | "knowledge" | "instructions">("hub");
@@ -369,7 +222,7 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
     if (overrideChatbotId) {
       const { data: config } = await supabase
         .from("chatbot_configs")
-        .select("id, knowledge_base, business_vertical, tone_of_voice, tone_preset_id")
+        .select("id, knowledge_base, business_vertical")
         .eq("id", overrideChatbotId)
         .single();
       if (!config) { setLoading(false); return; }
@@ -387,8 +240,6 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
     configId = loaded.id;
     promptValue = loaded.knowledge_base || "";
     setChatbotVertical(loaded.business_vertical ?? null);
-    setToneOfVoice(loaded.tone_of_voice || "");
-    setTonePresetId(loaded.tone_preset_id ?? null);
     
     setChatbotId(configId!);
     setSystemPrompt(promptValue);
@@ -864,20 +715,6 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
     setSavingPrompt(false);
   };
 
-  const saveTone = async (text: string, presetId: string | null) => {
-    if (!chatbotId) return;
-    setToneOfVoice(text);
-    setTonePresetId(presetId);
-    setSavingTone(true);
-    const { error } = await supabase
-      .from("chatbot_configs")
-      .update({ tone_of_voice: text || null, tone_preset_id: presetId } as any)
-      .eq("id", chatbotId);
-    setSavingTone(false);
-    if (error) toast({ title: "Errore", description: error.message, variant: "destructive" });
-    else toast({ title: "✅", description: t("Tono salvato!", "Tone saved!") });
-  };
-
   // ── Stats ──
   const totalChunks = sources.filter(s => s.status === "ready").reduce((sum, s) => sum + s.chunk_count, 0);
   const readySources = sources.filter(s => s.status === "ready").length;
@@ -1039,46 +876,6 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
           ← {t("Torna alla Conoscenza", "Back to Knowledge")}
         </Button>
       )}
-
-      {/* Tone of voice — always applied, outside the priority cascade */}
-      <div className="glass rounded-xl p-5 space-y-3">
-        <div className="flex items-start gap-3">
-          <span className="text-2xl" aria-hidden>🎭</span>
-          <div>
-            <h3 className="font-semibold text-foreground">{t("Tono di voce", "Tone of voice")}</h3>
-            <p className="text-xs text-muted-foreground">
-              {t("Si applica sempre, a ogni risposta del bot", "Always applied to every bot reply")}
-            </p>
-          </div>
-        </div>
-        <div className="flex flex-wrap gap-2" aria-label={t("Toni di voce", "Tones of voice")}>
-          {TONE_PRESETS.map((preset) => {
-            const active = tonePresetId === preset.id;
-            return (
-              <Button key={preset.id} type="button" variant="outline" disabled={savingTone || !chatbotId}
-                aria-pressed={active}
-                onClick={() => saveTone(preset.text, preset.id)}
-                className={`h-auto min-w-0 max-w-full flex-col items-start gap-0.5 rounded-lg px-3 py-2 text-left font-normal hover:border-primary/50 ${
-                  active ? "border-primary bg-primary/15 ring-1 ring-primary" : ""
-                }`}
-              >
-                <span className={`text-xs font-medium ${active ? "text-primary" : "text-foreground"}`}>{preset.label}</span>
-                <span className="text-[11px] text-muted-foreground">{preset.sub}</span>
-              </Button>
-            );
-          })}
-        </div>
-        <Textarea
-          value={toneOfVoice}
-          onChange={(e) => setToneOfVoice(e.target.value)}
-          onBlur={() => saveTone(toneOfVoice, tonePresetId)}
-          rows={4}
-          className="resize-y"
-          aria-label={t("Personalizza il tono", "Customize tone")}
-          placeholder={t("Scegli un tono sopra o descrivilo qui...", "Pick a tone above or describe it here...")}
-        />
-        <ToneReferenceTable t={t} />
-      </div>
 
       {/* ══════════════════════════════════════════════════ */}
       {/* SECTION 1 — FAQ (Priority: HIGH ★★★)             */}
