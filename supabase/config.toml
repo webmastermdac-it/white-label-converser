@@ -49,3 +49,6 @@ verify_jwt = false
 
 [functions.track-event]
 verify_jwt = false
+
+[functions.create-setup-checkout]
+verify_jwt = false
