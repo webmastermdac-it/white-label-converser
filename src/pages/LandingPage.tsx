@@ -402,18 +402,9 @@ export function PricingGrid({ yearly, t, verticalId, selectedVertical = "generic
           </Button>
         </Link>
         <p className="mt-3 text-xs text-white/40">
-          {t("Already have an account? Request it from the Upgrade page", "Hai già un account? Richiedilo dalla pagina Upgrade").split("Upgrade").length > 1 ? (
-            <>
-              {t("Already have an account? Request it from the Upgrade ", "Hai già un account? Richiedilo dalla pagina ")}
-              <Link to="/dashboard/upgrade" className="underline text-white/60 hover:text-[#F5A623]">Upgrade</Link>
-            </>
-          ) : (
-            <>
-              {t("Already have an account? Request it from the ", "Hai già un account? Richiedilo dalla pagina ")}
-              <Link to="/dashboard/upgrade" className="underline text-white/60 hover:text-[#F5A623]">Upgrade</Link>
-              {t(" page", "")}
-            </>
-          )}
+          {t("Already have an account? Request it from the ", "Hai già un account? Richiedilo dalla pagina ")}
+          <Link to="/dashboard/upgrade" className="underline text-white/60 hover:text-[#F5A623]">Upgrade</Link>
+          {t(" page", "")}
         </p>
         <p className="mt-1 text-xs text-white/40">{t("Available with any plan, including Free.", "Disponibile con qualsiasi piano, anche Free.")}</p>
       </div>
