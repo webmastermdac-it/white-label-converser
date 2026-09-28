@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/hooks/useLanguage";
@@ -6,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   Users, Settings, BarChart3, MessageSquare, ChevronLeft,
-  ChevronRight, Bot, LogOut, Shield, Inbox, CreditCard, TrendingUp, Store, Mail
+  ChevronRight, Bot, LogOut, Shield, Inbox, CreditCard, TrendingUp, Store, Mail, Wrench
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import ThemeSelector from "@/components/ThemeSelector";
@@ -19,6 +20,17 @@ const AdminSidebar = () => {
   const { lang, t } = useLanguage();
   const navigate = useNavigate();
   const isIt = lang === "it";
+  const [paidSetups, setPaidSetups] = useState(0);
+
+  useEffect(() => {
+    const load = async () => {
+      const { count } = await supabase.from("setup_requests").select("id", { count: "exact", head: true }).eq("status", "paid");
+      setPaidSetups(count || 0);
+    };
+    load();
+    window.addEventListener("setup-requests-changed", load);
+    return () => window.removeEventListener("setup-requests-changed", load);
+  }, []);
 
   const dataNav = [
     { label: t("overview"), href: "/admin", icon: BarChart3, end: true },
@@ -29,6 +41,7 @@ const AdminSidebar = () => {
 
   const configNav = [
     { label: t("clients"), href: "/admin/clients", icon: Users },
+    { label: "Setup", href: "/admin/setup", icon: Wrench, badge: paidSetups },
     { label: isIt ? "I miei Bot" : "My Bots", href: "/admin/bots", icon: Bot },
     { label: "Piani", href: "/admin/plans", icon: CreditCard },
     { label: "Ecommerce", href: "/admin/ecommerce", icon: Store },
@@ -43,7 +56,7 @@ const AdminSidebar = () => {
     navigate("/login");
   };
 
-  const renderItem = (item: { label: string; href: string; icon: React.ElementType; end?: boolean }) => {
+  const renderItem = (item: { label: string; href: string; icon: React.ElementType; end?: boolean; badge?: number }) => {
     const link = (
       <NavLink
         to={item.href}
@@ -59,7 +72,12 @@ const AdminSidebar = () => {
         }
       >
         <item.icon className="w-4.5 h-4.5 flex-shrink-0" />
-        {!collapsed && <span>{item.label}</span>}
+        {!collapsed && <span className="flex-1">{item.label}</span>}
+        {!!item.badge && item.badge > 0 && (
+          <span className={cn("min-w-5 h-5 px-1.5 rounded-full bg-primary text-primary-foreground text-[11px] font-semibold flex items-center justify-center", collapsed && "absolute -mt-6 ml-6 min-w-4 h-4 px-1 text-[10px]")}>
+            {item.badge}
+          </span>
+        )}
       </NavLink>
     );
 

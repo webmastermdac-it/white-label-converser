@@ -1,13 +1,173 @@
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
+import { FunctionsHttpError } from "@supabase/supabase-js";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/hooks/useLanguage";
 import { usePlan } from "@/hooks/usePlan";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Check, Loader2, Lock } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import { toast } from "@/hooks/use-toast";
+import { Check, CheckCircle2, Loader2, Lock, Wrench } from "lucide-react";
 
 // RAGInfoTooltip removed — replaced with inline description
+
+const SetupServiceCard = ({ isIt }: { isIt: boolean }) => {
+  const { clientId } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [phone, setPhone] = useState("");
+  const [notes, setNotes] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [phoneError, setPhoneError] = useState<string | null>(null);
+  const [status, setStatus] = useState<string | null>(null);
+  const [justPaid, setJustPaid] = useState(false);
+
+  const loadStatus = useCallback(async () => {
+    if (!clientId) return;
+    const { data } = await supabase
+      .from("setup_requests")
+      .select("status")
+      .eq("client_id", clientId)
+      .not("status", "in", "(pending_payment,cancelled)")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    setStatus(data?.status ?? null);
+  }, [clientId]);
+
+  useEffect(() => { loadStatus(); }, [loadStatus]);
+
+  useEffect(() => {
+    const s = searchParams.get("setup");
+    if (!s) return;
+    if (s === "success") {
+      setJustPaid(true);
+      loadStatus();
+      const t = setTimeout(loadStatus, 4000);
+      setTimeout(() => clearTimeout(t), 5000);
+    } else if (s === "cancel") {
+      toast({ title: isIt ? "Pagamento annullato, nessun addebito." : "Payment cancelled, no charge made." });
+    }
+    const next = new URLSearchParams(searchParams);
+    next.delete("setup");
+    setSearchParams(next, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const statusMessages: Record<string, string> = {
+    paid: isIt ? "Pagamento ricevuto. Ti contatteremo a breve al numero indicato." : "Payment received. We'll contact you shortly at the number provided.",
+    contacted: isIt ? "Ti abbiamo contattato: controlla la tua email/telefono." : "We've contacted you: check your email/phone.",
+    in_progress: isIt ? "Il tuo setup è in lavorazione." : "Your setup is in progress.",
+    completed: isIt ? "Setup completato. Grazie!" : "Setup completed. Thank you!",
+  };
+
+  const submit = async () => {
+    const p = phone.trim();
+    if (p.length < 6) {
+      setPhoneError(isIt ? "Inserisci un numero di telefono valido (minimo 6 caratteri)." : "Enter a valid phone number (at least 6 characters).");
+      return;
+    }
+    setPhoneError(null);
+    setLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("create-setup-checkout", {
+        body: { phone: p, notes: notes.trim() },
+      });
+      if (error) {
+        let msg = error.message;
+        if (error instanceof FunctionsHttpError) {
+          try { const j = await error.context.json(); msg = j.error || msg; } catch { /* ignore */ }
+        }
+        throw new Error(msg);
+      }
+      if (data?.url) window.location.href = data.url;
+    } catch (err: any) {
+      toast({ title: isIt ? "Impossibile avviare il pagamento" : "Unable to start payment", description: err.message, variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const items = isIt
+    ? ["Contatto e analisi delle tue esigenze", "Installazione del widget sul tuo sito", "Configurazione di prompt, FAQ e knowledge base", "Test insieme a te", "Consigli su tone of voice e utilizzo"]
+    : ["Contact and analysis of your needs", "Widget installation on your website", "Prompt, FAQ and knowledge base setup", "Testing together with you", "Tips on tone of voice and usage"];
+
+  return (
+    <div className="glass rounded-2xl p-6 border border-dashed border-primary/40">
+      {justPaid && (
+        <div className="mb-4 flex items-center gap-2 rounded-lg border border-primary/40 bg-primary/10 p-3 text-sm text-foreground">
+          <CheckCircle2 className="w-4 h-4 text-primary shrink-0" />
+          {isIt ? "Grazie! Pagamento ricevuto, ti contatteremo a breve." : "Thank you! Payment received, we'll contact you shortly."}
+        </div>
+      )}
+      <div className="grid gap-6 md:grid-cols-2">
+        <div className="space-y-3">
+          <div className="flex items-center gap-2 flex-wrap">
+            <Wrench className="w-5 h-5 text-primary" />
+            <h2 className="text-xl font-bold text-foreground">{isIt ? "Setup professionale" : "Professional setup"}</h2>
+            <Badge variant="outline">{isIt ? "Facoltativo" : "Optional"}</Badge>
+          </div>
+          <p className="text-lg font-semibold text-primary">{isIt ? "€500 + IVA, una tantum" : "€500 + VAT, one-off"}</p>
+          <p className="text-sm text-muted-foreground">
+            {isIt
+              ? "Vuoi essere sicuro di partire con una configurazione ottimizzata e professionale? Ti contattiamo, installiamo il chatbot, lo configuriamo e lo testiamo insieme a te. Ti diamo anche consigli su tone of voice e su come farlo rendere al meglio. Se preferisci, puoi configurarlo da solo in autonomia."
+              : "Want to be sure you start with an optimized, professional setup? We contact you, install the chatbot, configure it and test it together with you. We also give you tips on tone of voice and how to get the most out of it. If you prefer, you can set it up yourself."}
+          </p>
+          <ul className="space-y-1.5 text-sm">
+            {items.map((f) => (
+              <li key={f} className="flex items-start gap-2 text-muted-foreground">
+                <Check className="w-4 h-4 text-primary shrink-0 mt-0.5" />{f}
+              </li>
+            ))}
+          </ul>
+          <p className="text-xs text-muted-foreground">{isIt ? "Disponibile con qualsiasi piano, anche Free." : "Available with any plan, including Free."}</p>
+        </div>
+
+        <div className="space-y-3">
+          {status && statusMessages[status] ? (
+            <div className="h-full flex items-center gap-2 rounded-lg border border-primary/40 bg-primary/10 p-4 text-sm text-foreground">
+              <CheckCircle2 className="w-5 h-5 text-primary shrink-0" />
+              {statusMessages[status]}
+            </div>
+          ) : (
+            <>
+              <div>
+                <label className="text-sm text-muted-foreground block mb-1">{isIt ? "Telefono *" : "Phone *"}</label>
+                <Input
+                  type="tel"
+                  value={phone}
+                  onChange={(e) => { setPhone(e.target.value); if (phoneError) setPhoneError(null); }}
+                  maxLength={40}
+                  placeholder="+39 ..."
+                  className="bg-secondary border-border text-base"
+                  aria-invalid={!!phoneError}
+                />
+                {phoneError && <p className="text-xs text-destructive mt-1">{phoneError}</p>}
+              </div>
+              <div>
+                <label className="text-sm text-muted-foreground block mb-1">{isIt ? "Note (facoltative)" : "Notes (optional)"}</label>
+                <Textarea
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value.slice(0, 1000))}
+                  maxLength={1000}
+                  rows={4}
+                  placeholder={isIt ? "Sito web, orari in cui preferisci essere contattato, richieste particolari" : "Website, preferred contact hours, special requests"}
+                  className="bg-secondary border-border text-base"
+                />
+                <p className="text-xs text-muted-foreground text-right mt-1">{notes.length}/1000</p>
+              </div>
+              <Button className="w-full gradient-primary text-white border-0" onClick={submit} disabled={loading}>
+                {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : (isIt ? "Richiedi il setup" : "Request setup")}
+              </Button>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const ClientUpgrade = () => {
   const { clientId } = useAuth();
@@ -252,6 +412,8 @@ const ClientUpgrade = () => {
           );
         })}
       </div>
+
+      <SetupServiceCard isIt={isIt} />
 
       {/* Coupon */}
       <div className="glass rounded-xl p-4">
