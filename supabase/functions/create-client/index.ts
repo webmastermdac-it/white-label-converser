@@ -43,7 +43,15 @@ serve(async (req) => {
     const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
       email, password, email_confirm: true, user_metadata: { full_name: name }
     });
-    if (authError) { await supabaseAdmin.from("clients").delete().eq("id", clientData.id); throw authError; }
+    if (authError) {
+      await supabaseAdmin.from("clients").delete().eq("id", clientData.id);
+      if ((authError as any).code === "weak_password") {
+        return new Response(JSON.stringify({ error: "Password troppo debole o già comparsa in elenchi pubblici: scegline una diversa. / Password is too weak or known to be leaked: choose a different one.", code: "weak_password" }), {
+          status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" }
+        });
+      }
+      throw authError;
+    }
 
     const locale: Locale = resolveLocale(reqLocale);
 
