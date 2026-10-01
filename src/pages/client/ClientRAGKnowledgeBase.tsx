@@ -810,8 +810,8 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
           <Lock className="h-4 w-4 shrink-0 text-primary" />
           <p className="min-w-0 flex-1 text-xs font-medium text-foreground">
             {t(
-              "3 funzionalità avanzate disponibili con Pro — Documenti, Ricerca Avanzata, Ecommerce",
-              "3 advanced features available with Pro — Documents, Advanced Search, Ecommerce"
+              "3 funzionalità avanzate disponibili con Pro — Documenti, Ricerca Avanzata, Ecommerce e Catalogo",
+              "3 advanced features available with Pro — Documents, Advanced Search, Ecommerce & Catalog"
             )}
           </p>
           <Button variant="outline" size="sm" onClick={() => showUpgrade("pro")} className="h-7 shrink-0 text-xs">
@@ -980,7 +980,7 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
             />
             {chatbotVertical === "ecommerce" && (
               <LockedProFeature
-                title={t("Integrazione Ecommerce", "Ecommerce integration")}
+                title={t("🛒 Product Catalog", "🛒 Catalogo Prodotti")}
                 description={t("Disponibile con il piano Pro", "Available on Pro plan")}
                 onUpgrade={() => showUpgrade("pro")}
               />
@@ -1360,7 +1360,7 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
                   clientId ? <EcommerceKBStatus clientId={clientId} /> : null
                 ) : (
                   <LockedProFeature
-                    title={t("Integrazione Ecommerce", "Ecommerce integration")}
+                    title={t("🛒 Product Catalog", "🛒 Catalogo Prodotti")}
                     description={t("Disponibile con il piano Pro", "Available on Pro plan")}
                     onUpgrade={() => showUpgrade("pro")}
                   />

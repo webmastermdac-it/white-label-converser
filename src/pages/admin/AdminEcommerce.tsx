@@ -82,7 +82,7 @@ const AdminEcommerce = () => {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2">
-            <Store className="w-6 h-6" /> Ecommerce
+            <Store className="w-6 h-6" /> E-commerce e Catalogo
           </h1>
           <p className="text-muted-foreground text-sm mt-1">
             {isIt ? "Panoramica integrazioni ecommerce di tutti i clienti" : "Overview of all client ecommerce integrations"}

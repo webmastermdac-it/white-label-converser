@@ -63,7 +63,7 @@ const featureItems = [
   { Icon: Palette, color: "340 82% 52%", en: "Full Customization", it: "Personalizzazione Totale", descEn: "Colors, avatar, tone of voice. Your chatbot, your brand. Complete white-label.", descIt: "Colori, avatar, tono di voce. Il tuo chatbot, il tuo brand. Completa white-label." },
   { Icon: Globe, color: "199 89% 48%", en: "Multilingual", it: "Multilingua", descEn: "Speaks English and Italian. Auto-detects visitor language.", descIt: "Parla italiano e inglese. Rileva automaticamente la lingua del visitatore." },
   { Icon: BarChart3, color: "262 83% 58%", en: "Full Dashboard", it: "Dashboard Completa", descEn: "Track leads, conversations, and conversions in real time with advanced analytics.", descIt: "Monitora lead, conversazioni e conversioni in tempo reale con analytics avanzati." },
-  { Icon: ShoppingCart, color: "38 90% 55%", en: "Ecommerce Integration", it: "Integrazione Ecommerce", descEn: "Connect WooCommerce, Shopify or PrestaShop. The bot knows products, prices, availability and variants in real time. Automatic sync every 24 hours.", descIt: "Connetti WooCommerce, Shopify o PrestaShop. Il bot conosce prodotti, prezzi, disponibilità e varianti in tempo reale. Sincronizzazione automatica ogni 24 ore." },
+  { Icon: ShoppingCart, color: "38 90% 55%", en: "Ecommerce & Catalog Integration", it: "Integrazione Ecommerce e Catalogo", descEn: "Connect WooCommerce, Shopify or PrestaShop. The bot knows products, prices, availability and variants in real time. Automatic sync every 24 hours.", descIt: "Connetti WooCommerce, Shopify o PrestaShop. Il bot conosce prodotti, prezzi, disponibilità e varianti in tempo reale. Sincronizzazione automatica ogni 24 ore." },
 ];
 
 function FeatureGrid({ t }: { t: (en: string, it: string) => string }) {
@@ -164,15 +164,15 @@ function getPricingFeatures(t: (en: string, it: string) => string): Record<Prici
       starter: {
         features: [
           ...starterBase,
-          t("🛒 XML/CSV feed (daily sync) — up to 500 products", "🛒 Feed XML/CSV (sync giornaliero) — fino a 500 prodotti"),
+          t("🛒 XML/CSV feed (daily sync) — up to 500 catalog products", "🛒 Feed XML/CSV (sync giornaliero) — fino a 500 prodotti a catalogo"),
           t("Bot knows products, prices and availability", "Il bot conosce prodotti, prezzi e disponibilità"),
         ],
       },
       pro: {
         features: [
           ...proBase,
-          t("🛒 Full ecommerce (WooCommerce, Shopify, PrestaShop, API + real-time webhooks)", "🛒 Ecommerce completo (WooCommerce, Shopify, PrestaShop, API + webhook real-time)"),
-          t("Unlimited ecommerce products", "Prodotti ecommerce illimitati"),
+          t("🛒 Full ecommerce & catalog (WooCommerce, Shopify, PrestaShop, API + real-time webhooks)", "🛒 Ecommerce e catalogo completo (WooCommerce, Shopify, PrestaShop, API + webhook real-time)"),
+          t("Unlimited catalog products", "Prodotti a catalogo illimitati"),
         ],
       },
     },
@@ -470,7 +470,7 @@ export default function LandingPage() {
   const pricingVerticalTabs = [
     { id: "generic" as const, Icon: Globe, en: "Generic", it: "Generico" },
     { id: "booking" as const, Icon: CalendarCheck, en: "Bookings & Appointments", it: "Prenotazioni & Appuntamenti" },
-    { id: "ecommerce" as const, Icon: ShoppingCart, en: "Ecommerce", it: "Ecommerce" },
+    { id: "ecommerce" as const, Icon: ShoppingCart, en: "Ecommerce & Catalog", it: "Ecommerce & Catalogo" },
     { id: "hospitality" as const, Icon: BookOpen, en: "Restaurants & Hotels", it: "Ristorazione & Hotel" },
   ];
   const localized = (text: { en: string; it: string }) => t(text.en, text.it);
@@ -481,7 +481,7 @@ export default function LandingPage() {
     { key: "config", label: t("Configuration", "Configurazione"), img: screenshotSettings, desc: t("Configure identity, colors, behavior and knowledge base in minutes.", "Configura identità, colori, comportamento e knowledge base in pochi minuti.") },
     { key: "chat-history", label: t("Chat History", "Storico Chat"), img: screenshotChatHistory, desc: t("View all conversations with details on messages, duration and dates.", "Visualizza tutte le conversazioni con dettagli su messaggi, durata e date.") },
     { key: "analytics", label: "Analytics", img: screenshotCharts, desc: t("Advanced charts: lead distribution, status, source pages and trends.", "Grafici avanzati: distribuzione lead, stato, pagine sorgente e trend.") },
-    { key: "ecommerce", label: "Ecommerce", img: screenshotEcommerce, desc: t("Connect your store: WooCommerce, Shopify, PrestaShop or custom feeds.", "Connetti il tuo store: WooCommerce, Shopify, PrestaShop o feed personalizzati.") },
+    { key: "ecommerce", label: "Ecommerce & Catalogo", img: screenshotEcommerce, desc: t("Connect your store: WooCommerce, Shopify, PrestaShop or custom feeds.", "Connetti il tuo store: WooCommerce, Shopify, PrestaShop o feed personalizzati.") },
   ];
 
   return (

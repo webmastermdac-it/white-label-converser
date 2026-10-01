@@ -20,7 +20,7 @@ const AdminLayout = () => {
     { label: "I miei Bot", href: "/admin/bots", icon: Bot },
     { label: "Piani", href: "/admin/plans", icon: CreditCard },
     { label: "Analytics", href: "/admin/analytics", icon: TrendingUp },
-    { label: "Ecommerce", href: "/admin/ecommerce", icon: Store },
+    { label: "E-commerce e Catalogo", href: "/admin/ecommerce", icon: Store },
   ];
 
   return (
