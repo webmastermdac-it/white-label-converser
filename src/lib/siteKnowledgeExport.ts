@@ -20,7 +20,7 @@ const PRICING: { name: string; monthly: string; yearly: string; features: Locali
       { it: "Prompt di sistema (tono e ruolo del bot)", en: "System prompt (tone and bot role)" },
       { it: "5 FAQ manuali", en: "5 manual FAQs" },
       { it: "Supporto email", en: "Email support" },
-      { it: "Non incluso: upload PDF/Word, Ricerca Avanzata RAG, integrazioni ecommerce, modulo Concierge Hotel", en: "Not included: PDF/Word upload, Advanced Search RAG, ecommerce integrations, Hotel Concierge module" },
+      { it: "Non incluso: upload PDF/Word, Ricerca Avanzata RAG, integrazioni ecommerce e catalogo, modulo Concierge Hotel", en: "Not included: PDF/Word upload, Advanced Search RAG, Ecommerce & catalog integrations, Hotel Concierge module" },
     ],
   },
   {
@@ -37,7 +37,7 @@ const PRICING: { name: string; monthly: string; yearly: string; features: Locali
       { it: "Catalogo prodotti da feed XML/CSV con sincronizzazione giornaliera (fino a 100 prodotti)", en: "Product catalog from XML/CSV feed with daily sync (up to 100 products)" },
       { it: "Integrazione Calendly per gli appuntamenti", en: "Calendly integration for appointments" },
       { it: "Supporto prioritario", en: "Priority support" },
-      { it: "Non incluso: analytics avanzati, ecommerce completo con webhook, modulo Concierge Hotel", en: "Not included: advanced analytics, full ecommerce with webhooks, Hotel Concierge module" },
+      { it: "Non incluso: analytics avanzati, ecommerce e catalogo completo con webhook, modulo Concierge Hotel", en: "Not included: advanced analytics, Full ecommerce & catalog with webhooks, Hotel Concierge module" },
     ],
   },
   {
