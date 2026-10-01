@@ -20,7 +20,7 @@ const PRICING: { name: string; monthly: string; yearly: string; features: Locali
       { it: "Prompt di sistema (tono e ruolo del bot)", en: "System prompt (tone and bot role)" },
       { it: "5 FAQ manuali", en: "5 manual FAQs" },
       { it: "Supporto email", en: "Email support" },
-      { it: "Non incluso: upload PDF/Word, Ricerca Avanzata RAG, integrazioni ecommerce, modulo Concierge Hotel", en: "Not included: PDF/Word upload, Advanced Search RAG, ecommerce integrations, Hotel Concierge module" },
+      { it: "Non incluso: upload PDF/Word, Ricerca Avanzata RAG, integrazioni ecommerce e catalogo, modulo Concierge Hotel", en: "Not included: PDF/Word upload, Advanced Search RAG, Ecommerce & catalog integrations, Hotel Concierge module" },
     ],
   },
   {
@@ -37,7 +37,7 @@ const PRICING: { name: string; monthly: string; yearly: string; features: Locali
       { it: "Catalogo prodotti da feed XML/CSV con sincronizzazione giornaliera (fino a 100 prodotti)", en: "Product catalog from XML/CSV feed with daily sync (up to 100 products)" },
       { it: "Integrazione Calendly per gli appuntamenti", en: "Calendly integration for appointments" },
       { it: "Supporto prioritario", en: "Priority support" },
-      { it: "Non incluso: analytics avanzati, ecommerce completo con webhook, modulo Concierge Hotel", en: "Not included: advanced analytics, full ecommerce with webhooks, Hotel Concierge module" },
+      { it: "Non incluso: analytics avanzati, ecommerce e catalogo completo con webhook, modulo Concierge Hotel", en: "Not included: advanced analytics, Full ecommerce & catalog with webhooks, Hotel Concierge module" },
     ],
   },
   {
@@ -48,7 +48,7 @@ const PRICING: { name: string; monthly: string; yearly: string; features: Locali
       { it: "1 chatbot personalizzato per il tuo settore", en: "1 custom chatbot for your business type" },
       { it: "Conversazioni e lead illimitati", en: "Unlimited conversations and leads" },
       { it: "Ricerca Avanzata (RAG) con priorità", en: "Advanced Search (RAG) with priority" },
-      { it: "Ecommerce completo: WooCommerce, Shopify, PrestaShop, API e webhook in tempo reale, prodotti illimitati", en: "Full ecommerce: WooCommerce, Shopify, PrestaShop, API and real-time webhooks, unlimited products" },
+      { it: "Ecommerce e catalogo completo: WooCommerce, Shopify, PrestaShop, API e webhook in tempo reale, prodotti a catalogo illimitati", en: "Full ecommerce & catalog: WooCommerce, Shopify, PrestaShop, API and real-time webhooks, unlimited catalog products" },
       { it: "Modulo Concierge Hotel: preventivi soggiorno, link al booking engine, QR per le camere, richieste degli ospiti in tempo reale e pagina Risultati", en: "Hotel Concierge module: stay quotes, booking engine link, room QR codes, real-time guest requests and Results page" },
       { it: "Canale Instagram DM", en: "Instagram DM channel" },
       { it: "Chiusura automatica delle chat inattive con email di riepilogo", en: "Automatic closing of inactive chats with recap email" },

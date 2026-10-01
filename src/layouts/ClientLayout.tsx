@@ -15,7 +15,7 @@ const ClientLayout = () => {
     { label: t("leads"), href: "/dashboard/leads", icon: Inbox },
     { label: t("chatHistory"), href: "/dashboard/chats", icon: MessageSquare },
     { label: "Analytics", href: "/dashboard/analytics", icon: BarChart3 },
-    { label: "Ecommerce", href: "/dashboard/ecommerce", icon: Store },
+    { label: "E-commerce e Catalogo", href: "/dashboard/ecommerce", icon: Store },
     { label: t("Integrations", "Integrazioni"), href: "/dashboard/integrations", icon: Plug },
     { label: "Upgrade", href: "/dashboard/upgrade", icon: ArrowUpCircle },
   ];

@@ -106,7 +106,7 @@ const ClientIntegrations = ({ embedded = false, clientIdOverride }: { embedded?:
   const categories = useMemo(() => {
     const ecommerceCat = {
       key: "ecommerce",
-      title: isIt ? "Ecommerce" : "Ecommerce",
+      title: isIt ? "Ecommerce & Catalogo" : "Ecommerce & Catalog",
       items: ECOMMERCE_INTEGRATIONS.filter((item) => moduleIntegrations.includes(item.id)),
     };
     const bookingCat = {
@@ -124,8 +124,8 @@ const ClientIntegrations = ({ embedded = false, clientIdOverride }: { embedded?:
 
   const bannerText = moduleIntegrations.length === 0 ? null : activeModule.id === "ecommerce"
     ? (isIt
-        ? "Hai un e-commerce o un sito con catalogo? Collega il tuo store o un feed XML/CSV per far conoscere al bot prodotti, prezzi e disponibilità in tempo reale."
-        : "Have an online store or a site with a catalog? Connect your store or an XML/CSV feed so the bot knows products, prices and availability in real time.")
+        ? "Hai un ecommerce o un sito con catalogo? Collega i tuoi prodotti per far conoscere al bot prezzi e disponibilità in tempo reale."
+        : "Have an online store or a product catalog? Connect your products so the bot knows prices and availability in real time.")
     : activeModule.id === "booking"
 
       ? (isIt

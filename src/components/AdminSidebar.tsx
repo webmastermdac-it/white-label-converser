@@ -44,7 +44,7 @@ const AdminSidebar = () => {
     { label: "Setup", href: "/admin/setup", icon: Wrench, badge: paidSetups },
     { label: isIt ? "I miei Bot" : "My Bots", href: "/admin/bots", icon: Bot },
     { label: "Piani", href: "/admin/plans", icon: CreditCard },
-    { label: "Ecommerce", href: "/admin/ecommerce", icon: Store },
+    { label: "E-commerce e Catalogo", href: "/admin/ecommerce", icon: Store },
     { label: "Email & Notifiche", href: "/admin/email-templates", icon: Mail },
     { label: t("settings"), href: "/admin/settings", icon: Settings },
     { label: "🧞 Platform Bot", href: "/admin/platform-bot", icon: Bot },
