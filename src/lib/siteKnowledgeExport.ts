@@ -48,7 +48,7 @@ const PRICING: { name: string; monthly: string; yearly: string; features: Locali
       { it: "1 chatbot personalizzato per il tuo settore", en: "1 custom chatbot for your business type" },
       { it: "Conversazioni e lead illimitati", en: "Unlimited conversations and leads" },
       { it: "Ricerca Avanzata (RAG) con priorità", en: "Advanced Search (RAG) with priority" },
-      { it: "Ecommerce completo: WooCommerce, Shopify, PrestaShop, API e webhook in tempo reale, prodotti illimitati", en: "Full ecommerce: WooCommerce, Shopify, PrestaShop, API and real-time webhooks, unlimited products" },
+      { it: "Ecommerce e catalogo completo: WooCommerce, Shopify, PrestaShop, API e webhook in tempo reale, prodotti a catalogo illimitati", en: "Full ecommerce & catalog: WooCommerce, Shopify, PrestaShop, API and real-time webhooks, unlimited catalog products" },
       { it: "Modulo Concierge Hotel: preventivi soggiorno, link al booking engine, QR per le camere, richieste degli ospiti in tempo reale e pagina Risultati", en: "Hotel Concierge module: stay quotes, booking engine link, room QR codes, real-time guest requests and Results page" },
       { it: "Canale Instagram DM", en: "Instagram DM channel" },
       { it: "Chiusura automatica delle chat inattive con email di riepilogo", en: "Automatic closing of inactive chats with recap email" },

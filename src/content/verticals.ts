@@ -36,7 +36,7 @@ export const verticals: VerticalContent[] = [
     id: "ecommerce",
     path: "/chatbot-ecommerce",
     icon: "cart",
-    name: { it: "Chatbot Ecommerce", en: "Ecommerce Chatbot" },
+    name: { it: "Ecommerce & Catalogo", en: "Ecommerce & Catalog" },
     promise: { it: "Il commesso che conosce tutto il catalogo", en: "The sales assistant who knows your entire catalog" },
     summary: { it: "Trasforma ogni visita in un consiglio d'acquisto utile, anche quando il tuo team non è online.", en: "Turn every visit into a helpful shopping recommendation, even when your team is offline." },
     bullets: [

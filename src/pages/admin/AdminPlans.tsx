@@ -48,7 +48,7 @@ const FEATURE_KEYS: { key: keyof PlanRow; label: string }[] = [
   { key: "advanced_analytics", label: "Analytics avanzate" },
   { key: "priority_support", label: "Supporto prioritario" },
   { key: "knowledge_base_wizard", label: "Wizard knowledge base" },
-  { key: "ecommerce_integration", label: "Integrazione Ecommerce" },
+  { key: "ecommerce_integration", label: "Integrazione Ecommerce e Catalogo" },
   { key: "concierge_requests", label: "Concierge in soggiorno" },
 ];
 

@@ -56,7 +56,7 @@ export const MODULES: Record<ModuleId, ModuleDef> = {
   ecommerce: {
     id: "ecommerce",
     name: { it: "E-commerce e catalogo", en: "E-commerce & catalog" },
-    description: { it: "Negozi online o siti con catalogo prodotti", en: "Online stores or sites with a product catalog" },
+    description: { it: "Per negozi online e siti con solo catalogo: WooCommerce, Shopify, PrestaShop, feed XML/CSV o API. Anche senza carrello.", en: "For online stores and catalog-only websites: WooCommerce, Shopify, PrestaShop, XML/CSV feed or API. No cart required." },
     icon: ShoppingBag,
     color: "35 91% 55%",
     menu: [],

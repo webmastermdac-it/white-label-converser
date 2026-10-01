@@ -141,8 +141,8 @@ const Register = () => {
                 {
                   key: "ecommerce" as const,
                   Icon: ShoppingBag,
-                  title: t("Ecommerce", "Ecommerce"),
-                  subtitle: t("Online store with product catalog integration", "Store online con integrazione del catalogo prodotti"),
+                  title: t("Ecommerce & Catalog", "Ecommerce & Catalogo"),
+                  subtitle: t("Online store or catalog-only website, with product integration", "Negozio online o sito con solo catalogo, con integrazione prodotti"),
                 },
                 {
                   key: "hotel" as const,
