@@ -379,8 +379,8 @@ export function PricingGrid({ yearly, t, verticalId, selectedVertical = "generic
           <span className="text-xs font-semibold px-2.5 py-1 rounded-full border border-[#F5A623]/40 text-[#F5A623]">{t("Optional", "Facoltativo")}</span>
         </div>
         <div className="mt-3">
-          <span className="text-4xl font-extrabold">€500</span>
-          <span className="text-white/40 text-sm"> + {t("VAT", "IVA")} · {t("one-off", "una tantum")}</span>
+          <span className="text-4xl font-extrabold">€570</span>
+          <span className="text-white/40 text-sm"> {t("one-off", "una tantum")}</span>
         </div>
         <p className="mt-4 text-sm leading-relaxed text-white/55">{t("Want to start with an optimized, professional setup? We contact you, install the chatbot, configure it and test it together with you. Prefer to do it yourself? You can set it up on your own at no extra cost.", "Vuoi partire con una configurazione ottimizzata e professionale? Ti contattiamo, installiamo il chatbot, lo configuriamo e lo testiamo insieme a te. Preferisci fare da solo? Puoi configurarlo in autonomia, senza costi aggiuntivi.")}</p>
       </div>

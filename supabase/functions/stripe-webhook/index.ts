@@ -77,7 +77,7 @@ serve(async (req) => {
             try {
               const { data: cl } = await supabase.from("clients").select("name, email").eq("id", reqRow.client_id).maybeSingle();
               const esc = (s: string) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]!));
-              const amount = `${(reqRow.amount_cents / 100).toFixed(2)} ${String(reqRow.currency).toUpperCase()} + IVA`;
+              const amount = `${(reqRow.amount_cents / 100).toFixed(2)} ${String(reqRow.currency).toUpperCase()}`;
               const to = Deno.env.get("SETUP_NOTIFY_EMAIL") || "sviluppo@mdac.it";
               const html = `<h2>Nuovo Setup professionale pagato</h2>
 <p><b>Cliente:</b> ${esc(cl?.name || "")}<br/><b>Email:</b> ${esc(cl?.email || session.customer_details?.email || "")}<br/><b>Telefono:</b> ${esc(reqRow.phone)}<br/><b>Importo:</b> ${esc(amount)}</p>

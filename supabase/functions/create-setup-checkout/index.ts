@@ -52,10 +52,24 @@ serve(async (req) => {
       .eq("client_id", clientId).eq("status", "pending_payment");
 
     const { data: row, error: insErr } = await admin.from("setup_requests")
-      .insert({ client_id: clientId, phone, notes, status: "pending_payment" }).select("id").single();
+      .insert({ client_id: clientId, phone, notes, status: "pending_payment", amount_cents: 57000, currency: "eur" }).select("id").single();
     if (insErr || !row) throw insErr || new Error("Insert failed");
 
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", { apiVersion: "2025-08-27.basil" });
+    const taxRates = await stripe.taxRates.list({ active: true, limit: 100 });
+    let taxRate = taxRates.data.find((rate) =>
+      rate.inclusive && rate.percentage === 22 && rate.country === "IT" && rate.display_name === "IVA"
+    );
+    if (!taxRate) {
+      taxRate = await stripe.taxRates.create({
+        display_name: "IVA",
+        description: "IVA 22%",
+        percentage: 22,
+        inclusive: true,
+        country: "IT",
+        jurisdiction: "IT",
+      });
+    }
     const origin = req.headers.get("origin") || Deno.env.get("SITE_URL") || "https://genius-chatbot.lovable.app";
     const metadata = { type: "setup_service", setup_request_id: row.id, client_id: clientId };
 
@@ -65,13 +79,14 @@ serve(async (req) => {
       line_items: [{
         price_data: {
           currency: "eur",
-          unit_amount: 50000,
+          unit_amount: 57000,
           product_data: {
             name: "Setup professionale chatbot",
             description: "Installazione, configurazione e test del chatbot insieme al team, con consigli su tone of voice e utilizzo",
           },
         },
         quantity: 1,
+        tax_rates: [taxRate.id],
       }],
       allow_promotion_codes: true,
       billing_address_collection: "required",
