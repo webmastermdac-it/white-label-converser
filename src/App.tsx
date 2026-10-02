@@ -17,6 +17,7 @@ import ClientLayout from "@/layouts/ClientLayout";
 import Login from "@/pages/Login";
 import LandingPage from "@/pages/LandingPage";
 import VerticalLanding from "@/pages/VerticalLanding";
+import SetupAssistito from "@/pages/SetupAssistito";
 import AdminOverview from "@/pages/admin/AdminOverview";
 import AdminClients from "@/pages/admin/AdminClients";
 import AdminSetupRequests from "@/pages/admin/AdminSetupRequests";
@@ -73,6 +74,7 @@ const App = () => (
             <Route path="/chatbot-ecommerce" element={<VerticalLanding verticalId="ecommerce" />} />
             <Route path="/chatbot-appuntamenti" element={<VerticalLanding verticalId="booking" />} />
             <Route path="/concierge-hotel" element={<VerticalLanding verticalId="hotel" />} />
+            <Route path="/setup-assistito" element={<SetupAssistito />} />
             <Route path="/c/:embed_token" element={<PublicConcierge />} />
 
             {/* Admin Routes */}

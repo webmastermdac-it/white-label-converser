@@ -40,6 +40,11 @@ const SetupServiceCard = ({ isIt }: { isIt: boolean }) => {
   useEffect(() => { loadStatus(); }, [loadStatus]);
 
   useEffect(() => {
+    if (window.location.hash !== "#setup") return;
+    document.getElementById("setup")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, []);
+
+  useEffect(() => {
     const s = searchParams.get("setup");
     if (!s) return;
     if (s === "success") {
@@ -95,7 +100,7 @@ const SetupServiceCard = ({ isIt }: { isIt: boolean }) => {
     : ["Contact and analysis of your needs", "Widget installation on your website", "Prompt, FAQ and knowledge base setup", "Testing together with you", "Tips on tone of voice and usage"];
 
   return (
-    <div className="glass rounded-2xl p-6 border border-dashed border-primary/40">
+    <div id="setup" className="glass scroll-mt-6 rounded-2xl p-6 border border-dashed border-primary/40">
       {justPaid && (
         <div className="mb-4 flex items-center gap-2 rounded-lg border border-primary/40 bg-primary/10 p-3 text-sm text-foreground">
           <CheckCircle2 className="w-4 h-4 text-primary shrink-0" />

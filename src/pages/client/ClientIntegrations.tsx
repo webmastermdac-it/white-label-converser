@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useLanguage } from "@/hooks/useLanguage";
 import { usePlanConfig } from "@/hooks/usePlanConfig";
 import { useEcommerceIntegration, type Platform } from "@/hooks/useEcommerceIntegration";
@@ -397,6 +397,11 @@ const ClientIntegrations = ({ embedded = false, clientIdOverride }: { embedded?:
           </h1>
           <p className="text-muted-foreground text-sm mt-1">
             {isIt ? "Collega i tuoi strumenti al chatbot" : "Connect your tools to the chatbot"}
+          </p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            <Link to="/dashboard/upgrade#setup" className="hover:text-foreground transition-colors">
+              {isIt ? "Hai bisogno di aiuto con il collegamento? Scopri il Setup professionale (€500 + IVA)" : "Need help connecting? Discover the professional setup (€500 + VAT)"}
+            </Link>
           </p>
           {cal.botName && (
             <p className="text-xs text-muted-foreground mt-1">

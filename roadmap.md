@@ -10,3 +10,7 @@
 - [x] Estrarre Personalità e tono in una pagina bilingue dedicata e rimuoverla dalla Conoscenza.
 - [x] Filtrare integrazioni e relative scorciatoie/sidebar usando esclusivamente il modulo del bot.
 - [x] Verificare hub, tono IT/EN e Lead e notifiche su un bot reale.
+- [x] Migliorare le integrazioni della landing Ecommerce senza cambiare gli altri verticali.
+- [x] Creare e collegare la pagina pubblica Setup professionale bilingue.
+- [x] Aggiungere ancora Setup e collegamento di aiuto nelle pagine cliente.
+- [x] Verificare le nuove pagine e le regressioni dei verticali esistenti.
