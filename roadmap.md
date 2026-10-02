@@ -14,4 +14,4 @@
 - [x] Creare e collegare la pagina pubblica Setup professionale bilingue.
 - [x] Aggiungere ancora Setup e collegamento di aiuto nelle pagine cliente.
 - [x] Verificare le nuove pagine e le regressioni dei verticali esistenti.
-- [ ] Aggiornare il Setup professionale a €570 IVA inclusa nei pagamenti e in tutti i testi visibili.
+- [x] Aggiornare il Setup professionale a €570 IVA inclusa nei pagamenti e in tutti i testi visibili.
