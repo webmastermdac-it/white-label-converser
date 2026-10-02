@@ -1,36 +1,27 @@
-# Hub configurazione bot e pagina tono
+# Integrazioni Ecommerce e pagina Setup professionale
 
 ## Obiettivo
-Sostituire le tab della configurazione bot con un hub di riquadri e pagine interne nello stesso indirizzo, sincronizzate tramite `?section=`. Separare completamente “Personalità e tono” dalla pagina Conoscenza.
+Rendere più chiara la compatibilità Ecommerce nella landing dedicata e aggiungere una pagina pubblica bilingue per il servizio Setup professionale già acquistabile dalla pagina Upgrade.
 
-## Implementazione
-- Trasformare `ClientChatbotSettings` in navigazione a stato/query param:
-  - nessun parametro mostra intestazione, token compatto, checklist e griglia delle sezioni;
-  - ogni riquadro apre una pagina a tutta larghezza con ritorno al hub;
-  - mantenere `adminMode`, `botIdOverride`, `hideHeader` e il contenuto Concierge per il bot corrente.
-- Separare i salvataggi:
-  - Generale aggiorna solo nome, URL e stato;
-  - Lead e notifiche aggiorna solo timeout e modalità/numero messaggi del form;
-  - messaggi, aspetto, notifiche, integrazioni, conoscenza e anteprima continuano a usare i componenti e la logica esistenti.
-- Spostare l’installazione completa nella pagina dedicata e lasciare nel hub una card token compatta con copia e collegamento alle istruzioni.
-- Creare il registro bilingue dei sei preset in `src/lib/tonePresets.ts`.
-- Creare `ToneOfVoiceCard` autonomo:
-  - carica e salva `tone_of_voice` e `tone_preset_id` per il bot;
-  - mantiene chip, testo libero e confronto adattivo;
-  - riallinea automaticamente un preset non personalizzato quando cambia la lingua globale, senza toast e senza cicli.
-- Rimuovere esclusivamente la UI e lo stato del tono da `ClientRAGKnowledgeBase`, lasciando invariati FAQ, documenti e istruzioni.
+## Interventi
+- Installare `simple-icons` e creare `EcommerceIntegrations` con:
+  - connettori dedicati WooCommerce, Shopify e PrestaShop;
+  - compatibilità via feed/API per Magento, BigCommerce, Wix, Shopware, OpenCart e cataloghi personalizzati;
+  - loghi inline, nota marchi e richiamo al Setup professionale.
+- Usare il nuovo blocco soltanto in `/chatbot-ecommerce`; Appuntamenti e Hotel manterranno l’attuale sezione Integrazioni.
+- Aggiornare esclusivamente le FAQ Ecommerce indicate in `verticals.ts`.
+- Creare `/setup-assistito` con intestazione, contenuti, checklist, vantaggi, processo, FAQ, invito finale e footer coerenti con le landing esistenti.
+- Collegare le CTA alla pagina Upgrade per utenti autenticati e alla registrazione Ecommerce per i visitatori.
+- Aggiungere l’ancora `#setup` alla scheda esistente e lo scorrimento automatico quando viene aperta tramite link.
+- Aggiungere nella pagina Integrazioni cliente il collegamento discreto al Setup professionale.
 
 ## Dettagli tecnici
-- Sezioni ammesse: `install`, `general`, `appearance`, `tone`, `knowledge`, `leads`, `integrations`, `preview`, `concierge`; valori non validi tornano al hub.
-- `useSearchParams` aggiorna la cronologia del browser senza nuove route.
-- I badge del hub derivano dai dati già caricati del bot secondo le regole richieste.
-- Nessuna modifica a database, funzioni, widget o routing.
+- Nessuna modifica a pagamenti, funzioni server, database, sicurezza, hook o logica della scheda Setup esistente.
+- Testi IT/EN tramite `t(en, it)` e stile allineato a `VerticalLanding`.
+- I loghi mancanti nella versione installata avranno un fallback testuale senza interrompere la compilazione.
 
 ## Verifica
-- Controllare compilazione e diagnostica.
-- Verificare su un bot reale:
-  - hub completo;
-  - pagina Personalità e tono in italiano;
-  - stessa pagina in inglese tramite selettore globale;
-  - pagina Lead e notifiche.
-- Acquisire i quattro screenshot richiesti senza alterare permanentemente i dati del bot.
+- Controllare la compilazione e i log della preview.
+- Verificare desktop e mobile su `/chatbot-ecommerce` e `/setup-assistito`.
+- Verificare che `/chatbot-appuntamenti` e `/concierge-hotel` mantengano le integrazioni esistenti.
+- Verificare il collegamento pubblico alla registrazione senza avviare pagamenti o creare dati.
