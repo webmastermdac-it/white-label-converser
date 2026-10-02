@@ -1,0 +1,1 @@
+ALTER TABLE public.setup_requests ALTER COLUMN amount_cents SET DEFAULT 57000;

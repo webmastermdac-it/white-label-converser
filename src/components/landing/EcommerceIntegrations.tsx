@@ -85,7 +85,7 @@ export default function EcommerceIntegrations() {
             <h3 className="text-xl font-bold" style={{ fontFamily: "'Syne', sans-serif" }}>{t("Don't want to deal with it? We'll set it up for you", "Non vuoi pensarci tu? Ti configuriamo noi")}</h3>
           </div>
           <p className="mt-4 text-sm leading-relaxed text-white/55">{t("Store or feed connection, chatbot configuration and testing together with our team.", "Collegamento dello store o del feed, configurazione e test del chatbot insieme al nostro team.")}</p>
-          <p className="mt-3 font-semibold text-[#F5A623]">{t("€500 + VAT, one-off", "€500 + IVA, una tantum")}</p>
+          <p className="mt-3 font-semibold text-[#F5A623]">{t("€570 one-off", "€570 una tantum")}</p>
         </div>
         <Link to="/setup-assistito">
           <Button className="w-full rounded-full bg-[#F5A623] px-6 text-black hover:bg-[#E09800]">{t("Discover the professional setup", "Scopri il Setup professionale")}</Button>

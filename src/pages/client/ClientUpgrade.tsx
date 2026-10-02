@@ -114,7 +114,7 @@ const SetupServiceCard = ({ isIt }: { isIt: boolean }) => {
             <h2 className="text-xl font-bold text-foreground">{isIt ? "Setup professionale" : "Professional setup"}</h2>
             <Badge variant="outline">{isIt ? "Facoltativo" : "Optional"}</Badge>
           </div>
-          <p className="text-lg font-semibold text-primary">{isIt ? "€500 + IVA, una tantum" : "€500 + VAT, one-off"}</p>
+          <p className="text-lg font-semibold text-primary">{isIt ? "€570 una tantum" : "€570 one-off"}</p>
           <p className="text-sm text-muted-foreground">
             {isIt
               ? "Vuoi essere sicuro di partire con una configurazione ottimizzata e professionale? Ti contattiamo, installiamo il chatbot, lo configuriamo e lo testiamo insieme a te. Ti diamo anche consigli su tone of voice e su come farlo rendere al meglio. Se preferisci, puoi configurarlo da solo in autonomia."
