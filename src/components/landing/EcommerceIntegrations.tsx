@@ -16,10 +16,11 @@ type LogoCardProps = {
   name: string;
   icon?: SimpleIcon;
   native?: boolean;
+  nativeLabel?: string;
   fallbackIcon?: typeof FileCode;
 };
 
-const LogoCard = ({ name, icon, native, fallbackIcon: FallbackIcon }: LogoCardProps) => (
+const LogoCard = ({ name, icon, native, nativeLabel, fallbackIcon: FallbackIcon }: LogoCardProps) => (
   <article className={`group flex min-h-32 flex-col items-center justify-center rounded-xl border bg-white/[0.03] p-4 transition-colors ${native ? "border-[#F5A623]/40 hover:border-[#F5A623]/70" : "border-white/10 hover:border-white/25"}`}>
     {icon ? (
       <svg viewBox="0 0 24 24" aria-hidden="true" className="h-9 w-9 fill-white/70 transition-colors group-hover:fill-white">
@@ -31,7 +32,7 @@ const LogoCard = ({ name, icon, native, fallbackIcon: FallbackIcon }: LogoCardPr
       <span className="text-lg font-bold text-white/70 transition-colors group-hover:text-white" style={{ fontFamily: "'Syne', sans-serif" }}>{name}</span>
     )}
     <h3 className="mt-3 text-sm font-semibold text-white/80">{name}</h3>
-    {native && <span className="mt-2 rounded-full bg-[#F5A623]/15 px-2.5 py-1 text-[10px] font-semibold text-[#F5A623]">Native connector</span>}
+    {native && <span className="mt-2 rounded-full bg-[#F5A623]/15 px-2.5 py-1 text-[10px] font-semibold text-[#F5A623]">{nativeLabel}</span>}
   </article>
 );
 
@@ -62,7 +63,7 @@ export default function EcommerceIntegrations() {
       <div className="mt-10">
         <p className="mb-4 text-xs font-semibold uppercase text-[#F5A623]">{t("Dedicated connectors", "Connettori dedicati")}</p>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-          {nativeConnectors.map((platform) => <LogoCard key={platform.name} {...platform} native />)}
+          {nativeConnectors.map((platform) => <LogoCard key={platform.name} {...platform} native nativeLabel={t("Native connector", "Connettore nativo")} />)}
         </div>
       </div>
 
