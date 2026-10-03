@@ -1,3 +1,4 @@
+import Seo from "@/components/Seo";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight, Bot, CalendarCheck, Check, ChevronDown, Hotel, Menu, ShoppingCart, X } from "lucide-react";
@@ -29,22 +30,6 @@ export default function VerticalLanding({ verticalId }: { verticalId: VerticalId
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  useEffect(() => {
-    if (!vertical) return;
-    document.title = vertical.seo.title[lang];
-    const description = document.querySelector('meta[name="description"]');
-    const ogTitle = document.querySelector('meta[property="og:title"]');
-    const ogDescription = document.querySelector('meta[property="og:description"]');
-    description?.setAttribute("content", vertical.seo.description[lang]);
-    ogTitle?.setAttribute("content", vertical.seo.title[lang]);
-    ogDescription?.setAttribute("content", vertical.seo.description[lang]);
-    return () => {
-      document.title = "Genius Chatbot | Assistenti AI per Ecommerce, Appuntamenti e Hotel";
-      description?.setAttribute("content", "Scegli l'assistente AI per la tua attività: vende online, fissa appuntamenti o accoglie gli ospiti. Provalo gratis in 5 minuti.");
-      ogTitle?.setAttribute("content", "Genius Chatbot | Un assistente AI per ogni attività");
-      ogDescription?.setAttribute("content", "Assistenti AI per ecommerce, appuntamenti e hotel. Si installano in 5 minuti e trasformano le conversazioni in contatti pronti.");
-    };
-  }, [lang, vertical]);
 
   if (!vertical) return null;
   const Icon = iconFor(vertical.id);
