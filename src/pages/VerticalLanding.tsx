@@ -1,7 +1,7 @@
 import Seo from "@/components/Seo";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowRight, Bot, CalendarCheck, Check, ChevronDown, Hotel, Menu, ShoppingCart, X } from "lucide-react";
+import { ArrowRight, Bot, CalendarCheck, Check, ChevronDown, Hotel, Menu, ShoppingCart, Building2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import CookieBanner from "@/components/CookieBanner";
