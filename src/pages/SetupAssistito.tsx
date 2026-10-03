@@ -12,7 +12,7 @@ import geniusLogo from "@/assets/genius.png";
 
 export default function SetupAssistito() {
   const { user } = useAuth();
-  const { lang, setLang, t } = useLanguage();
+  const { lang, setLang, t, localized } = useLanguage();
   const setupHref = user ? "/dashboard/upgrade#setup" : "/register?vertical=ecommerce";
 
 
