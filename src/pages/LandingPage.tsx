@@ -57,12 +57,12 @@ function Section({ children, className = "", id }: { children: React.ReactNode; 
 
 /* ─── Staggered feature cards ─── */
 const featureItems = [
-  { Icon: Bot, color: "38 90% 55%", en: "AI Conversations", it: "Conversazioni AI", descEn: "Trained on your business. Answers questions, handles objections, qualifies leads 24/7.", descIt: "Addestrato sul tuo business. Risponde alle domande, gestisce le obiezioni e qualifica i lead 24/7." },
-  { Icon: ClipboardList, color: "199 89% 48%", en: "Lead Capture", it: "Cattura Lead", descEn: "Never lose a visitor. When the bot can't answer, it captures their contact instantly.", descIt: "Non perdere mai un visitatore. Quando il bot non può rispondere, cattura il contatto istantaneamente." },
+  { Icon: Bot, color: "38 90% 55%", en: "AI Conversations", it: "Conversazioni AI", descEn: "Answers questions using your business content and can collect leads at any time.", descIt: "Risponde alle domande usando i contenuti della tua attività e può raccogliere lead in qualsiasi momento." },
+  { Icon: ClipboardList, color: "199 89% 48%", en: "Lead Capture", it: "Cattura Lead", descEn: "When the bot can't answer, it can ask the visitor for their contact details.", descIt: "Quando il bot non può rispondere, può chiedere al visitatore i dati di contatto." },
   { Icon: CalendarCheck, color: "142 71% 45%", en: "Booking", it: "Prenotazioni", descEn: "Integrated Calendly. Visitors book appointments directly in the chat.", descIt: "Calendly integrato. I visitatori prenotano appuntamenti direttamente nella chat." },
   { Icon: Palette, color: "340 82% 52%", en: "Full Customization", it: "Personalizzazione Totale", descEn: "Colors, avatar and tone of voice: adapt the chatbot to your brand.", descIt: "Colori, avatar e tono di voce: adatta il chatbot al tuo brand." },
   { Icon: Globe, color: "199 89% 48%", en: "Multilingual", it: "Multilingua", descEn: "Speaks English and Italian. Auto-detects visitor language.", descIt: "Parla italiano e inglese. Rileva automaticamente la lingua del visitatore." },
-  { Icon: BarChart3, color: "262 83% 58%", en: "Full Dashboard", it: "Dashboard Completa", descEn: "Track leads, conversations, and conversions in real time with advanced analytics.", descIt: "Monitora lead, conversazioni e conversioni in tempo reale con analytics avanzati." },
+  { Icon: BarChart3, color: "262 83% 58%", en: "Full Dashboard", it: "Dashboard Completa", descEn: "Review leads, conversations and activity data from the dashboard.", descIt: "Consulta lead, conversazioni e dati di attività dalla dashboard." },
   { Icon: ShoppingCart, color: "38 90% 55%", en: "Ecommerce & Catalog Integration", it: "Integrazione Ecommerce e Catalogo", descEn: "Connect WooCommerce, Shopify or PrestaShop. The bot knows products, prices, availability and variants in real time. Automatic sync every 24 hours.", descIt: "Connetti WooCommerce, Shopify o PrestaShop. Il bot conosce prodotti, prezzi, disponibilità e varianti in tempo reale. Sincronizzazione automatica ogni 24 ore." },
 ];
 
@@ -317,7 +317,6 @@ export function PricingGrid({ yearly, t, verticalId, selectedVertical = "generic
 
       {/* Pro */}
       <div className={cardClass(2, "relative bg-gradient-to-br from-[#F5A623]/10 to-transparent border-2 border-[#F5A623]/40 rounded-2xl p-8 space-y-6 shadow-lg shadow-[#F5A623]/10 flex flex-col")} style={cardStyle(2)}>
-        <div className="absolute -top-3 right-6 bg-[#F5A623] text-black text-xs font-bold px-3 py-1 rounded-full">{t("Most Popular", "Più Popolare")}</div>
         <div>
           <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-4 bg-[#F5A623]/25">
             <Crown className="w-6 h-6 text-[#F5A623]" />
@@ -621,7 +620,7 @@ export default function LandingPage() {
             {t("Everything You Need", "Tutto Ciò di Cui Hai Bisogno")}
           </h2>
           <p className="text-white/50 text-center mb-14 max-w-2xl mx-auto">
-            {t("Powerful features to turn every website visitor into a qualified lead.", "Funzionalità potenti per trasformare ogni visitatore del sito in un lead qualificato.")}
+            {t("Tools to answer visitors, collect contacts and manage your chatbot.", "Strumenti per rispondere ai visitatori, raccogliere contatti e gestire il chatbot.")}
           </p>
           <FeatureGrid t={t} />
         </div>
@@ -698,15 +697,15 @@ export default function LandingPage() {
             </p>
             <p>
               {t(
-                "With creativity, in-depth data analysis and results orientation, we generate quality traffic, acquire interested contacts, increase sales and retain satisfied customers.",
-                "Con creatività, studio approfondito dei dati e orientamento al risultato, generiamo traffico di qualità, acquisiamo contatti interessati, aumentiamo le vendite e fidelizziamo i clienti soddisfatti dell'esperienza."
+                "We combine digital strategy, content, development and data analysis to support companies in managing their online presence.",
+                "Uniamo strategia digitale, contenuti, sviluppo e analisi dei dati per supportare le aziende nella gestione della loro presenza online."
               )}
             </p>
             <p className="text-white/70 font-medium">
               <span className="text-[#F5A623] font-bold">Genius Chatbot</span>{" "}
               {t(
-                "is our cutting-edge AI product, born from twenty years of digital marketing experience to offer an intelligent virtual assistant to every business.",
-                "è il nostro prodotto AI all'avanguardia, nato dall'esperienza ventennale nel digital marketing per offrire un assistente virtuale intelligente ad ogni azienda."
+                "is our AI product, developed from our digital marketing experience to provide businesses with a configurable virtual assistant.",
+                "è il nostro prodotto AI, sviluppato a partire dalla nostra esperienza nel digital marketing per offrire alle aziende un assistente virtuale configurabile."
               )}
             </p>
           </div>

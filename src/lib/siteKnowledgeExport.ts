@@ -63,9 +63,9 @@ const HOME: Record<"it" | "en", { title: string; lines: string[] }[]> = {
     {
       title: "Genius Chatbot — che cos'è",
       lines: [
-        "Genius Chatbot è la piattaforma di assistenti AI di MDAC S.r.l. (agenzia di digital marketing attiva dal 2004, oltre 250 clienti).",
+        "Genius Chatbot è la piattaforma di assistenti AI di MDAC S.r.l., agenzia di digital marketing attiva dal 2004.",
         "Un assistente AI per ogni attività: vende, fissa appuntamenti, accoglie gli ospiti.",
-        "Si installa in 5 minuti, parla la lingua dei clienti e consegna contatti pronti.",
+        "Si integra nel sito, risponde in più lingue e può raccogliere i contatti dei visitatori.",
         "Sito: https://chatbot.your-genius.com — contatti: mdac@mdac.it",
       ],
     },
@@ -95,9 +95,9 @@ const HOME: Record<"it" | "en", { title: string; lines: string[] }[]> = {
     {
       title: "Genius Chatbot — what it is",
       lines: [
-        "Genius Chatbot is the AI assistant platform by MDAC S.r.l. (digital marketing agency since 2004, over 250 clients).",
+        "Genius Chatbot is the AI assistant platform by MDAC S.r.l., a digital marketing agency active since 2004.",
         "An AI assistant for every business: it sells, books appointments and welcomes guests.",
-        "It installs in 5 minutes, speaks your customers' language and delivers ready-to-contact leads.",
+        "It integrates into your website, replies in multiple languages and can collect visitor contact details.",
         "Website: https://chatbot.your-genius.com — contact: mdac@mdac.it",
       ],
     },
