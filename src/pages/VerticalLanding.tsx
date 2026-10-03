@@ -1,3 +1,4 @@
+import PublicLanguageSelect from "@/components/PublicLanguageSelect";
 import Seo from "@/components/Seo";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
@@ -33,7 +34,6 @@ export default function VerticalLanding({ verticalId }: { verticalId: VerticalId
 
   if (!vertical) return null;
   const Icon = iconFor(vertical.id);
-  const localized = (text: { en: string; it: string }) => t(text.en, text.it);
   const hasHotelStory = Boolean(vertical.stats && vertical.problem && vertical.journey && vertical.features && vertical.roi && vertical.service && vertical.demoUrl);
 
   return (
@@ -55,7 +55,7 @@ export default function VerticalLanding({ verticalId }: { verticalId: VerticalId
             <a href="#pricing" className="text-sm text-white/60 hover:text-white">{t("Pricing", "Prezzi")}</a>
           </div>
           <div className="flex items-center gap-3">
-            <Button variant="outline" onClick={() => setLang(lang === "it" ? "en" : "it")} className="h-7 rounded-full border-white/20 bg-transparent px-2.5 text-xs text-white hover:border-[#F5A623] hover:bg-transparent hover:text-[#F5A623]">{lang === "it" ? "EN" : "IT"}</Button>
+            <PublicLanguageSelect className="text-white" />
             <Link to="/login" className="hidden text-sm text-white/60 hover:text-white sm:block">{t("Login", "Accedi")}</Link>
             <Link to={`/register?vertical=${vertical.id}`} className="hidden sm:block"><Button className="h-9 rounded-full border border-[#F5A623] bg-transparent px-5 text-[#F5A623] hover:bg-[#F5A623] hover:text-black">{t("Try Free", "Prova Gratis")}</Button></Link>
             <Button variant="ghost" size="icon" className="text-white hover:bg-white/10 hover:text-white lg:hidden" onClick={() => setMobileMenu((open) => !open)} aria-label={t("Open menu", "Apri menu")}>{mobileMenu ? <X /> : <Menu />}</Button>

@@ -1,3 +1,4 @@
+import PublicLanguageSelect from "@/components/PublicLanguageSelect";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { useLanguage } from "@/hooks/useLanguage";
@@ -481,7 +482,6 @@ export default function LandingPage() {
     { id: "ecommerce" as const, Icon: ShoppingCart, en: "Ecommerce & Catalog", it: "Ecommerce & Catalogo" },
     { id: "hospitality" as const, Icon: BookOpen, en: "Restaurants & Hotels", it: "Ristorazione & Hotel" },
   ];
-  const localized = (text: { en: string; it: string }) => t(text.en, text.it);
 
   const screenshotTabs = [
     { key: "dashboard", label: "Dashboard", img: screenshotDashboard, desc: t("Monitor all conversations, leads, and performance in real time.", "Monitora tutte le conversazioni, i lead e le performance in tempo reale.") },
@@ -539,12 +539,7 @@ export default function LandingPage() {
           </div>
 
           <div className="flex items-center gap-3">
-            <button
-              onClick={() => setLang(lang === "it" ? "en" : "it")}
-              className="text-xs font-semibold px-2.5 py-1 rounded-full border border-white/20 hover:border-[#F5A623] hover:text-[#F5A623] transition-colors"
-            >
-              {lang === "it" ? "EN" : "IT"}
-            </button>
+            <PublicLanguageSelect />
             <Link to="/login" className="hidden sm:block text-sm text-white/60 hover:text-white hover:underline underline-offset-4 transition-colors">
               {t("Login", "Accedi")}
             </Link>
@@ -599,7 +594,7 @@ export default function LandingPage() {
               Powered by AI • {t("Active 24/7", "Attivo 24/7")}
             </div>
             <h1 className="text-4xl font-extrabold leading-tight sm:text-5xl lg:text-6xl" style={{ fontFamily: "'Syne', sans-serif" }}>
-              {lang === "en" ? <>An AI assistant for every business. <span className="text-[#F5A623]">Choose yours.</span></> : <>Un assistente AI per ogni attività. <span className="text-[#F5A623]">Scegli il tuo.</span></>}
+              <>{t("An AI assistant for every business.", "Un assistente AI per ogni attività.")} <span className="text-[#F5A623]">{t("Choose yours.", "Scegli il tuo.")}</span></>
             </h1>
             <p className="mx-auto max-w-xl text-lg leading-relaxed text-white/55 sm:text-xl md:mx-0">
               {t("Create an AI assistant for sales, appointments or hospitality, tailored to your content and your brand.", "Crea un assistente AI per vendite, appuntamenti o ospitalità, adattato ai tuoi contenuti e al tuo brand.")}
@@ -714,7 +709,7 @@ export default function LandingPage() {
         <div className="max-w-5xl mx-auto px-4 sm:px-6">
           <p className="text-[#F5A623] text-sm font-semibold text-center mb-3 tracking-wider uppercase">{t("About Us", "Chi Siamo")}</p>
           <h2 className="text-3xl sm:text-4xl font-bold text-center mb-6" style={{ fontFamily: "'Syne', sans-serif" }}>
-            {lang === "en" ? <>A Product by <span className="text-[#F5A623]">MDAC Web Agency</span></> : <>Un Prodotto di <span className="text-[#F5A623]">MDAC Web Agency</span></>}
+            <>{t("A Product by", "Un Prodotto di")} <span className="text-[#F5A623]">MDAC Web Agency</span></>
           </h2>
           <div className="max-w-3xl mx-auto space-y-4 text-white/60 text-center leading-relaxed">
             <p>
@@ -832,7 +827,7 @@ export default function LandingPage() {
         <div className="max-w-3xl mx-auto px-4 sm:px-6 text-center space-y-6">
           <p className="text-[#F5A623] text-sm font-semibold tracking-wider uppercase">{t("Start free", "Inizia gratis")}</p>
           <h2 className="text-3xl sm:text-4xl font-bold" style={{ fontFamily: "'Syne', sans-serif" }}>
-            {lang === "en" ? <>Create your <span className="text-[#F5A623]">AI assistant.</span></> : <>Crea il tuo <span className="text-[#F5A623]">assistente AI.</span></>}
+            <>{t("Create your", "Crea il tuo")} <span className="text-[#F5A623]">{t("AI assistant.", "assistente AI.")}</span></>
           </h2>
           <p className="text-white/50 max-w-lg mx-auto">
             {t("Start your free trial today — no credit card required.", "Inizia la prova gratuita oggi — nessuna carta di credito richiesta.")}
