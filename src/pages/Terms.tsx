@@ -49,11 +49,11 @@ export default function Terms() {
               <p>Il servizio è disponibile con i seguenti piani di abbonamento:</p>
               <ul>
                 <li><strong>Free</strong> — €0: 1 chatbot, 50 conversazioni/mese, 10 lead/mese, prompt di sistema (tono e ruolo del bot), 5 FAQ manuali, raccolta contatti in chat, risposte multilingua, supporto email e branding “Free Chatbot Genius” nel widget.</li>
-                <li><strong>Starter</strong> — €49/mese o €490/anno: 1 chatbot, 500 conversazioni/mese, lead illimitati, prompt di sistema avanzato, FAQ illimitate, upload PDF/Word, importazione di pagine del sito e sitemap, integrazione Calendly, supporto prioritario, Ricerca Avanzata (RAG), feed XML/CSV con sincronizzazione giornaliera, fino a 100 prodotti a catalogo e branding “Chatbot Genius” nel widget.</li>
-                <li><strong>Pro</strong> — €149/mese o €1490/anno: 1 chatbot personalizzato per il settore, conversazioni e lead illimitati, tutte le funzionalità Starter, Ricerca Avanzata (RAG) in evidenza, ecommerce e catalogo completo con WooCommerce, Shopify, PrestaShop, API e webhook in tempo reale, prodotti a catalogo illimitati, Concierge Hotel, Instagram DM, chiusura automatica delle chat inattive con email di riepilogo, analytics avanzati, supporto dedicato e branding “Chatbot Genius” nel widget.</li>
+                <li><strong>Starter</strong> — €49/mese o €490/anno: 1 chatbot, 500 conversazioni/mese, lead illimitati, prompt di sistema avanzato, FAQ illimitate, upload PDF/Word, importazione di pagine del sito e sitemap, supporto prioritario, Ricerca Avanzata (RAG), feed XML/CSV con sincronizzazione giornaliera, fino a 500 prodotti a catalogo e branding “Chatbot Genius” nel widget.</li>
+                <li><strong>Pro</strong> — €149/mese o €1490/anno: 1 chatbot personalizzato per il settore, conversazioni e lead illimitati, tutte le funzionalità Starter, integrazione Calendly per gli appuntamenti, Ricerca Avanzata (RAG) in evidenza, ecommerce e catalogo completo con WooCommerce, Shopify, PrestaShop, API e webhook in tempo reale, prodotti a catalogo illimitati, Concierge Hotel, Instagram DM, chiusura automatica delle chat inattive con email di riepilogo, analytics avanzati, supporto dedicato e branding “Chatbot Genius” nel widget.</li>
               </ul>
               <p>Tutti i prezzi indicati sono IVA inclusa.</p>
-              <p>Il piano Free può essere modificato o sospeso con un preavviso ragionevole. Gli abbonamenti si rinnovano automaticamente e possono essere disdetti dal portale o dalla dashboard. I pagamenti vengono elaborati tramite Stripe.</p>
+              <p>Il piano Free può essere modificato o sospeso con un preavviso ragionevole. Gli abbonamenti si rinnovano automaticamente. Per la disdetta scrivere a <a href="mailto:mdac@mdac.it" className="text-primary hover:underline">mdac@mdac.it</a> prima della data di rinnovo. I pagamenti vengono elaborati tramite Stripe.</p>
             </Section>
             <Section title="3. Obblighi dell'Utente">
               <p>L'utente si impegna a:</p>
@@ -65,7 +65,7 @@ export default function Terms() {
               <p>In ogni caso, la responsabilità di MDAC S.r.l. è limitata all'importo versato dall'utente nei 12 mesi precedenti.</p>
             </Section>
             <Section title="5. Disdetta dell'Abbonamento">
-              <p>L'utente può disdire il proprio abbonamento in qualsiasi momento con un preavviso di <strong>30 giorni</strong>. La disdetta può essere effettuata dalla dashboard del cliente o contattando <a href="mailto:mdac@mdac.it" className="text-primary hover:underline">mdac@mdac.it</a>.</p>
+              <p>Gli abbonamenti si rinnovano automaticamente. Per la disdetta scrivere a <a href="mailto:mdac@mdac.it" className="text-primary hover:underline">mdac@mdac.it</a> prima della data di rinnovo.</p>
               <p>Alla scadenza dell'abbonamento, l'accesso al servizio viene disabilitato. I dati dell'utente vengono conservati per 30 giorni dalla disdetta, dopodiché vengono eliminati definitivamente.</p>
             </Section>
             <Section title="6. Legge Applicabile e Foro Competente">
@@ -84,11 +84,11 @@ export default function Terms() {
               <p>The service is available with the following subscription plans:</p>
               <ul>
                 <li><strong>Free</strong> — €0: 1 chatbot, 50 conversations/month, 10 leads/month, system prompt (tone and bot role), 5 manual FAQs, in-chat lead capture, multilingual replies, email support and “Free Chatbot Genius” branding in the widget.</li>
-                <li><strong>Starter</strong> — €49/month or €490/year: 1 chatbot, 500 conversations/month, unlimited leads, advanced system prompt, unlimited FAQs, PDF/Word upload, website page and sitemap import, Calendly integration, priority support, Advanced Search (RAG), daily XML/CSV feed sync, up to 100 catalog products and “Chatbot Genius” branding in the widget.</li>
-                <li><strong>Pro</strong> — €149/month or €1490/year: 1 custom chatbot for the business type, unlimited conversations and leads, all Starter features, highlighted Advanced Search (RAG), full ecommerce and catalog with WooCommerce, Shopify, PrestaShop, API and real-time webhooks, unlimited catalog products, Hotel Concierge, Instagram DM, automatic closing of inactive chats with recap email, advanced analytics, dedicated support and “Chatbot Genius” branding in the widget.</li>
+                <li><strong>Starter</strong> — €49/month or €490/year: 1 chatbot, 500 conversations/month, unlimited leads, advanced system prompt, unlimited FAQs, PDF/Word upload, website page and sitemap import, priority support, Advanced Search (RAG), daily XML/CSV feed sync, up to 500 catalog products and “Chatbot Genius” branding in the widget.</li>
+                <li><strong>Pro</strong> — €149/month or €1490/year: 1 custom chatbot for the business type, unlimited conversations and leads, all Starter features, Calendly integration for appointments, highlighted Advanced Search (RAG), full ecommerce and catalog with WooCommerce, Shopify, PrestaShop, API and real-time webhooks, unlimited catalog products, Hotel Concierge, Instagram DM, automatic closing of inactive chats with recap email, advanced analytics, dedicated support and “Chatbot Genius” branding in the widget.</li>
               </ul>
               <p>All prices shown include VAT.</p>
-              <p>The Free plan may be changed or suspended with reasonable notice. Subscriptions renew automatically and can be cancelled through the portal or dashboard. Payments are processed through Stripe.</p>
+              <p>The Free plan may be changed or suspended with reasonable notice. Subscriptions renew automatically. To cancel, write to <a href="mailto:mdac@mdac.it" className="text-primary hover:underline">mdac@mdac.it</a> before the renewal date. Payments are processed through Stripe.</p>
             </Section>
             <Section title="3. User Obligations">
               <p>The user agrees to:</p>
@@ -100,7 +100,7 @@ export default function Terms() {
               <p>In any case, MDAC S.r.l.'s liability is limited to the amount paid by the user in the preceding 12 months.</p>
             </Section>
             <Section title="5. Subscription Cancellation">
-              <p>The user may cancel their subscription at any time with <strong>30 days' notice</strong>. Cancellation can be done from the client dashboard or by contacting <a href="mailto:mdac@mdac.it" className="text-primary hover:underline">mdac@mdac.it</a>.</p>
+              <p>Subscriptions renew automatically. To cancel, write to <a href="mailto:mdac@mdac.it" className="text-primary hover:underline">mdac@mdac.it</a> before the renewal date.</p>
               <p>Upon subscription expiry, access to the service is disabled. User data is retained for 30 days after cancellation, after which it is permanently deleted.</p>
             </Section>
             <Section title="6. Governing Law and Jurisdiction">
