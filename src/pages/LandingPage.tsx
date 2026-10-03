@@ -483,7 +483,7 @@ export default function LandingPage() {
   const screenshotTabs = [
     { key: "dashboard", label: "Dashboard", img: screenshotDashboard, desc: t("Monitor all conversations, leads, and performance in real time.", "Monitora tutte le conversazioni, i lead e le performance in tempo reale.") },
     { key: "widget", label: "Chatbot Widget", img: screenshotWidget, desc: t("The widget integrates seamlessly on any website with full customization.", "Il widget si integra perfettamente su qualsiasi sito con personalizzazione completa.") },
-    { key: "config", label: t("Configuration", "Configurazione"), img: screenshotSettings, desc: t("Configure identity, colors, behavior and knowledge base in minutes.", "Configura identità, colori, comportamento e knowledge base in pochi minuti.") },
+    { key: "config", label: t("Configuration", "Configurazione"), img: screenshotSettings, desc: t("Configure identity, colors, behavior and knowledge base.", "Configura identità, colori, comportamento e knowledge base.") },
     { key: "chat-history", label: t("Chat History", "Storico Chat"), img: screenshotChatHistory, desc: t("View all conversations with details on messages, duration and dates.", "Visualizza tutte le conversazioni con dettagli su messaggi, durata e date.") },
     { key: "analytics", label: "Analytics", img: screenshotCharts, desc: t("Advanced charts: lead distribution, status, source pages and trends.", "Grafici avanzati: distribuzione lead, stato, pagine sorgente e trend.") },
     { key: "ecommerce", label: "Ecommerce & Catalogo", img: screenshotEcommerce, desc: t("Connect your store: WooCommerce, Shopify, PrestaShop or custom feeds.", "Connetti il tuo store: WooCommerce, Shopify, PrestaShop o feed personalizzati.") },
@@ -614,7 +614,7 @@ export default function LandingPage() {
             ))}
             <div className="mascot-aura pointer-events-none absolute left-1/2 top-1/2 h-80 w-80 rounded-full" style={{ transform: "translate(-50%, -50%)", background: "radial-gradient(circle, rgba(245,166,35,0.18) 0%, rgba(245,166,35,0.06) 50%, transparent 70%)", animation: "auraPulse 3.5s ease-in-out infinite", zIndex: 0 }} />
             <div className="mascot-motion relative z-[1]" style={{ animation: "genieReveal 2.4s cubic-bezier(0.16, 1, 0.3, 1) forwards, floatMascot 4s ease-in-out 2.4s infinite", opacity: 0 }}>
-              <img src={genieHero} alt="Genius Chatbot Genie" className="w-72 sm:w-96" style={{ filter: "drop-shadow(0 0 50px rgba(245,166,35,0.35)) drop-shadow(0 0 100px rgba(245,166,35,0.15))" }} />
+              <img src={genieHero} alt={t("Genius Chatbot genie mascot", "Il genio, mascotte di Genius Chatbot")} className="w-72 sm:w-96" style={{ filter: "drop-shadow(0 0 50px rgba(245,166,35,0.35)) drop-shadow(0 0 100px rgba(245,166,35,0.15))" }} />
             </div>
           </div>
         </div>
@@ -629,7 +629,7 @@ export default function LandingPage() {
           </div>
           <div className="mt-6 grid items-stretch gap-8 lg:mt-12 lg:grid-cols-[minmax(0,1fr)_400px]">
             <div className="hidden grid-cols-2 gap-4 lg:grid">
-              {verticals.map((vertical) => { const Icon = verticalIcon(vertical.id); const active = activeVertical === vertical.id; return <article key={vertical.id} onMouseEnter={() => setActiveVertical(vertical.id)} className={`flex flex-col rounded-2xl border p-5 transition-all ${active ? "border-[#F5A623]/70 bg-[#F5A623]/10 shadow-lg shadow-[#F5A623]/10" : "border-white/10 bg-white/[0.03] hover:border-white/25"}`}><button onClick={() => setActiveVertical(vertical.id)} className="rounded-lg text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F5A623]" aria-pressed={active}><Icon className="mb-4 h-7 w-7 text-[#F5A623]" /><h3 className="text-lg font-bold" style={{ fontFamily: "'Syne', sans-serif" }}>{localized(vertical.name)}</h3><p className="mt-2 text-sm font-medium text-white/80">{localized(vertical.promise)}</p></button><ul className="mt-5 space-y-2.5 text-sm text-white/55">{vertical.bullets.map((bullet) => <li key={bullet.it} className="flex gap-2"><Check className="mt-0.5 h-4 w-4 shrink-0 text-[#F5A623]" />{localized(bullet)}</li>)}</ul><div className="mt-5 flex flex-wrap gap-1.5">{vertical.badges.map((badge) => <span key={badge} className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] text-white/55">{badge}</span>)}</div><div className="mt-auto grid grid-cols-2 gap-2 pt-6"><Link to={vertical.path}><Button variant="outline" className="w-full rounded-full border-white/20 bg-white text-gray-900 hover:bg-white/90">{t("Discover", "Scopri")}</Button></Link><Link to={`/register?vertical=${vertical.id}`}><Button className="w-full rounded-full bg-[#F5A623] text-black hover:bg-[#E09800]">{t("Try free", "Prova gratis")}</Button></Link></div></article>; })}
+              {verticals.map((vertical) => { const Icon = verticalIcon(vertical.id); const active = activeVertical === vertical.id; return <article key={vertical.id} onMouseEnter={() => setActiveVertical(vertical.id)} className={`flex flex-col rounded-2xl border p-5 transition-all ${active ? "border-[#F5A623]/70 bg-[#F5A623]/10 shadow-lg shadow-[#F5A623]/10" : "border-white/10 bg-white/[0.03] hover:border-white/25"}`}><button onClick={() => setActiveVertical(vertical.id)} className="rounded-lg text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F5A623]" aria-pressed={active}><Icon className="mb-4 h-7 w-7 text-[#F5A623]" /><h3 className="text-lg font-bold" style={{ fontFamily: "'Syne', sans-serif" }}>{localized(vertical.name)}</h3><p className="mt-2 text-sm font-medium text-white/80">{localized(vertical.promise)}</p></button><ul className="mt-5 space-y-2.5 text-sm text-white/55">{vertical.bullets.map((bullet) => <li key={bullet.it} className="flex gap-2"><Check className="mt-0.5 h-4 w-4 shrink-0 text-[#F5A623]" />{localized(bullet)}</li>)}</ul><div className="mt-5 flex flex-wrap gap-1.5">{vertical.badges.map((badge) => { const label = typeof badge === "string" ? badge : localized(badge); return <span key={label} className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] text-white/55">{label}</span>; })}</div><div className="mt-auto grid grid-cols-2 gap-2 pt-6"><Link to={vertical.path}><Button variant="outline" className="w-full rounded-full border-white/20 bg-white text-gray-900 hover:bg-white/90">{t("Discover", "Scopri")}</Button></Link><Link to={`/register?vertical=${vertical.id}`}><Button className="w-full rounded-full bg-[#F5A623] text-black hover:bg-[#E09800]">{t("Try free", "Prova gratis")}</Button></Link></div></article>; })}
             </div>
             <div className="space-y-4 lg:hidden"><article className="rounded-2xl border border-[#F5A623]/50 bg-[#F5A623]/10 p-5"><h3 className="text-xl font-bold" style={{ fontFamily: "'Syne', sans-serif" }}>{localized(selectedVerticalContent.name)}</h3><p className="mt-2 text-sm font-medium text-white/80">{localized(selectedVerticalContent.promise)}</p><ul className="mt-4 space-y-2 text-sm text-white/60">{selectedVerticalContent.bullets.map((bullet) => <li key={bullet.it} className="flex gap-2"><Check className="mt-0.5 h-4 w-4 shrink-0 text-[#F5A623]" />{localized(bullet)}</li>)}</ul><div className="mt-5 grid grid-cols-2 gap-2"><Link to={selectedVerticalContent.path}><Button variant="outline" className="w-full rounded-full bg-white text-gray-900">{t("Discover", "Scopri")}</Button></Link><Link to={`/register?vertical=${selectedVerticalContent.id}`}><Button className="w-full rounded-full bg-[#F5A623] text-black">{t("Try free", "Prova gratis")}</Button></Link></div></article></div>
             <div className="flex items-center justify-center"><VerticalDemoChat key={selectedVerticalContent.id} vertical={selectedVerticalContent} /></div>
@@ -863,7 +863,7 @@ export default function LandingPage() {
             </div>
 
             <div className="text-sm text-white/40 space-y-1 md:text-right">
-              <p className="font-medium text-white/60">Genius Chatbot è un prodotto MDAC S.r.l.</p>
+              <p className="font-medium text-white/60">{t("Genius Chatbot is a product by MDAC S.r.l.", "Genius Chatbot è un prodotto MDAC S.r.l.")}</p>
               <p>Via Padana Superiore, 173/A – 25035 Ospitaletto (BS)</p>
               <p>P.IVA 04333340984</p>
               <p>mdac@mdac.it | +39 030 68 40 636</p>
@@ -889,7 +889,7 @@ export default function LandingPage() {
               className="w-full h-full rounded-xl"
               allow="autoplay; encrypted-media"
               allowFullScreen
-              title="Demo video"
+              title={t("Demo video", "Video dimostrativo")}
             />
           </div>
         </div>

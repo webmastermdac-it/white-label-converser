@@ -13,7 +13,7 @@ export interface VerticalContent {
   promise: LocalizedText;
   summary: LocalizedText;
   bullets: LocalizedText[];
-  badges: string[];
+  badges: (string | LocalizedText)[];
   demo: { user: LocalizedText; assistant: LocalizedText };
   benefits: { title: LocalizedText; description: LocalizedText }[];
   steps: LocalizedText[];
@@ -181,7 +181,7 @@ export const verticals: VerticalContent[] = [
         { it: "Quante richieste arrivano fuori orario", en: "See how many requests arrive after hours" },
         { it: "Lingue degli ospiti e mesi più richiesti", en: "Guest languages and most requested months" },
       ] },
-      { kind: "import", title: { it: "Impara dal tuo sito in pochi minuti", en: "Learns from your website in minutes" }, points: [
+      { kind: "import", title: { it: "Impara dai contenuti del tuo sito", en: "Learns from your website content" }, points: [
         { it: "Camere, servizi e policy importati", en: "Rooms, services and policies imported" },
         { it: "Correggi tutto con salvataggio automatico", en: "Edit everything with automatic saving" },
         { it: "Checklist guidata fino al go-live", en: "A guided checklist all the way to go-live" },
@@ -225,7 +225,7 @@ export const verticals: VerticalContent[] = [
       { it: "Raccoglie i contatti dei visitatori", en: "Collects contacts from visitors" },
       { it: "Funziona senza integrazioni obbligatorie", en: "Works without required integrations" },
     ],
-    badges: ["B2B", "Studi professionali", "Siti vetrina"],
+    badges: ["B2B", { it: "Studi professionali", en: "Professional firms" }, { it: "Siti vetrina", en: "Brochure sites" }],
     demo: {
       user: { it: "Vi occupate anche di consulenza fiscale? Che orari avete?", en: "Do you also offer tax consulting? What are your opening hours?" },
       assistant: { it: "Sì, lo studio segue consulenza fiscale per privati e aziende. Siamo aperti dal lunedì al venerdì, 9–18. Vuoi lasciarmi nome ed email per essere ricontattato?", en: "Yes, the firm provides tax consulting for individuals and companies. We're open Monday to Friday, 9am–6pm. Would you like to leave your name and email so we can get back to you?" },

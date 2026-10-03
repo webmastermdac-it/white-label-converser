@@ -5,8 +5,7 @@ import { useLanguage } from "@/hooks/useLanguage";
 import { ArrowLeft, FileText } from "lucide-react";
 
 export default function Terms() {
-  const { lang: globalLang } = useLanguage();
-  const [lang, setLang] = useState<"it" | "en">(globalLang);
+  const { lang, setLang } = useLanguage();
 
   return (
     <div className="min-h-screen bg-background text-foreground">
