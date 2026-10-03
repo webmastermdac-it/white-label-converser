@@ -36,7 +36,7 @@ export default function SetupAssistito() {
   ];
   const faqs = [
     { question: { it: "Serve un piano a pagamento?", en: "Do I need a paid plan?" }, answer: { it: "No, il setup è disponibile con qualsiasi piano, anche Free.", en: "No, the setup is available with any plan, including Free." } },
-    { question: { it: "Come avviene il pagamento?", en: "How does payment work?" }, answer: { it: "Il pagamento è una tantum di €570, online e in modo sicuro tramite Stripe. Puoi inserire i dati per la fattura.", en: "Payment is a one-off €570, made securely online through Stripe. You can enter your invoice details." } },
+    { question: { it: "Come avviene il pagamento?", en: "How does payment work?" }, answer: { it: "Il pagamento è una tantum di €570, IVA inclusa, online e in modo sicuro tramite Stripe. Puoi inserire i dati per la fattura.", en: "Payment is a one-off €570, VAT included, made securely online through Stripe. You can enter your invoice details." } },
     { question: { it: "Posso configurarlo da solo?", en: "Can I set it up myself?" }, answer: { it: "Sì, il setup è facoltativo: puoi configurare tutto in autonomia dalla dashboard.", en: "Yes, the setup is optional: you can configure everything yourself from the dashboard." } },
     { question: { it: "Con quali piattaforme lavorate?", en: "Which platforms do you work with?" }, answer: { it: "WooCommerce, Shopify, PrestaShop, feed XML/CSV e API per i cataloghi custom.", en: "WooCommerce, Shopify, PrestaShop, XML/CSV feeds and APIs for custom catalogs." } },
   ];
@@ -50,7 +50,7 @@ export default function SetupAssistito() {
 
   return (
     <div className="min-h-screen overflow-x-hidden bg-[#0F1419] text-white" style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>
-      <Seo title={t("Professional chatbot setup | Genius Chatbot", "Setup professionale chatbot | Genius Chatbot")} description={t("We connect your store or catalog, configure and test your AI chatbot with you. One-off €570.", "Colleghiamo il tuo store o catalogo, configuriamo e testiamo il chatbot AI con te. €570 una tantum.")} path="/setup-assistito" />
+      <Seo title={t("Professional chatbot setup | Genius Chatbot", "Setup professionale chatbot | Genius Chatbot")} description={t("We connect your store or catalog, configure and test your AI chatbot with you. One-off €570, VAT included.", "Colleghiamo il tuo store o catalogo, configuriamo e testiamo il chatbot AI con te. €570 una tantum, IVA inclusa.")} path="/setup-assistito" />
       <header className="border-b border-white/10 bg-[#0F1419]/95">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
           <Link to="/" className="flex items-center gap-2.5"><img src={geniusLogo} alt="Genius" className="h-9 w-9" /><span className="hidden text-lg font-bold sm:inline" style={{ fontFamily: "'Syne', sans-serif" }}>Genius <span className="text-[#F5A623]">Chatbot</span></span></Link>
@@ -67,7 +67,7 @@ export default function SetupAssistito() {
             <span className="inline-flex items-center gap-2 rounded-full border border-[#F5A623]/30 bg-[#F5A623]/10 px-4 py-1.5 text-sm text-[#F5A623]"><Wrench className="h-4 w-4" />{t("Professional setup", "Setup professionale")}</span>
             <h1 className="mt-6 text-4xl font-extrabold leading-tight sm:text-5xl lg:text-6xl" style={{ fontFamily: "'Syne', sans-serif" }}>{t("We set it up. You focus on selling.", "Lo configuriamo noi. Tu pensi a vendere.")}</h1>
             <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-white/55">{t("We contact you, connect your store or catalog, configure the chatbot and test it together with you.", "Ti contattiamo, colleghiamo il tuo store o il tuo catalogo, configuriamo il chatbot e lo testiamo insieme a te.")}</p>
-            <p className="mt-6 text-2xl font-bold text-[#F5A623]">{t("€570 one-off", "€570 una tantum")}</p>
+            <p className="mt-6 text-2xl font-bold text-[#F5A623]">{t("€570 one-off · VAT included", "€570 una tantum · IVA inclusa")}</p>
             <div className="mt-8"><SetupCta /></div>
           </div>
         </section>

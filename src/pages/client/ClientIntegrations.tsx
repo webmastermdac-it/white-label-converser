@@ -405,7 +405,7 @@ const ClientIntegrations = ({ embedded = false, clientIdOverride }: { embedded?:
           {activeModule.id !== "general" && (
             <p className="mt-1 text-xs text-muted-foreground">
               <Link to="/dashboard/upgrade#setup" className="hover:text-foreground transition-colors">
-                {isIt ? "Hai bisogno di aiuto con il collegamento? Scopri il Setup professionale (€570)" : "Need help connecting? Discover the professional setup (€570)"}
+                {isIt ? "Hai bisogno di aiuto con il collegamento? Scopri il Setup professionale (€570, IVA inclusa)" : "Need help connecting? Discover the professional setup (€570, VAT included)"}
               </Link>
             </p>
           )}

@@ -190,7 +190,8 @@ function verticalBlock(lang: "it" | "en"): string {
 function pricingBlock(lang: "it" | "en"): string {
   const isIt = lang === "it";
   const lines: string[] = [];
-  lines.push(section(isIt ? "Piani e prezzi (IVA esclusa)" : "Plans and pricing (VAT excluded)").trim());
+  lines.push(section(isIt ? "Piani e prezzi (IVA inclusa)" : "Plans and pricing (VAT included)").trim());
+  lines.push(isIt ? "Tutti i prezzi indicati sono IVA inclusa." : "All prices shown include VAT.");
   lines.push(
     isIt
       ? "Il piano annuale costa meno di 12 mensilità. Si inizia gratis, senza carta di credito, e si passa a un piano superiore quando serve."

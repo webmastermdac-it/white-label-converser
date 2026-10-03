@@ -242,6 +242,7 @@ export function PricingGrid({ yearly, t, verticalId, selectedVertical = "generic
           <div className="mt-3">
             <span className="text-4xl font-extrabold">€0</span>
             <span className="text-white/40 text-sm">/{t("month", "mese")}</span>
+            <p className="mt-1 text-xs text-white/40">{t("Prices include VAT", "Prezzi IVA inclusa")}</p>
           </div>
         </div>
         <Link to={verticalId ? `/register?vertical=${verticalId}` : "/register"} className="block">
@@ -291,6 +292,7 @@ export function PricingGrid({ yearly, t, verticalId, selectedVertical = "generic
             {yearly && (
               <p className="text-white/40 text-xs mt-1">{t("Billed annually at €490/year — save 17%", "Fatturato annualmente a €490/anno — risparmi il 17%")}</p>
             )}
+            <p className="mt-1 text-xs text-white/40">{t("Prices include VAT", "Prezzi IVA inclusa")}</p>
           </div>
         </div>
         <Link to={verticalId ? `/register?vertical=${verticalId}` : "/register"} className="block">
@@ -340,6 +342,7 @@ export function PricingGrid({ yearly, t, verticalId, selectedVertical = "generic
             {yearly && (
               <p className="text-white/40 text-xs mt-1">{t("Billed annually at €1490/year — save 17%", "Fatturato annualmente a €1490/anno — risparmi il 17%")}</p>
             )}
+            <p className="mt-1 text-xs text-white/40">{t("Prices include VAT", "Prezzi IVA inclusa")}</p>
           </div>
         </div>
         <Link to={verticalId ? `/register?vertical=${verticalId}` : "/register"} className="block">
@@ -385,7 +388,7 @@ export function PricingGrid({ yearly, t, verticalId, selectedVertical = "generic
         </div>
         <div className="mt-3">
           <span className="text-4xl font-extrabold">€570</span>
-          <span className="text-white/40 text-sm"> {t("one-off", "una tantum")}</span>
+          <span className="text-white/40 text-sm"> {t("one-off · VAT included", "una tantum · IVA inclusa")}</span>
         </div>
         <p className="mt-4 text-sm leading-relaxed text-white/55">{t("Want to start with an optimized, professional setup? We contact you, install the chatbot, configure it and test it together with you. Prefer to do it yourself? You can set it up on your own at no extra cost.", "Vuoi partire con una configurazione ottimizzata e professionale? Ti contattiamo, installiamo il chatbot, lo configuriamo e lo testiamo insieme a te. Preferisci fare da solo? Puoi configurarlo in autonomia, senza costi aggiuntivi.")}</p>
       </div>
@@ -500,9 +503,9 @@ export default function LandingPage() {
         { "@context": "https://schema.org", "@type": "Organization", name: "MDAC S.r.l.", url: SITE_URL, logo: `${SITE_URL}/images/genius-icon.png`, email: "mdac@mdac.it", telephone: "+39 030 68 40 636", address: { "@type": "PostalAddress", streetAddress: "Via Padana Superiore 173/A", postalCode: "25035", addressLocality: "Ospitaletto", addressRegion: "BS", addressCountry: "IT" }, vatID: "IT04333340984" },
         { "@context": "https://schema.org", "@type": "SoftwareApplication", name: "Genius Chatbot", applicationCategory: "BusinessApplication", operatingSystem: "Web", url: SITE_URL, publisher: { "@type": "Organization", name: "MDAC S.r.l." },
           offers: [
-            { "@type": "Offer", name: "Free", price: "0", priceCurrency: "EUR" },
-            { "@type": "Offer", name: "Starter", price: "49", priceCurrency: "EUR", priceSpecification: { "@type": "UnitPriceSpecification", price: "49", priceCurrency: "EUR", unitText: "MONTH" } },
-            { "@type": "Offer", name: "Pro", price: "149", priceCurrency: "EUR", priceSpecification: { "@type": "UnitPriceSpecification", price: "149", priceCurrency: "EUR", unitText: "MONTH" } },
+            { "@type": "Offer", name: "Free", price: "0", priceCurrency: "EUR", valueAddedTaxIncluded: true },
+            { "@type": "Offer", name: "Starter", price: "49", priceCurrency: "EUR", valueAddedTaxIncluded: true, priceSpecification: { "@type": "UnitPriceSpecification", price: "49", priceCurrency: "EUR", unitText: "MONTH", valueAddedTaxIncluded: true } },
+            { "@type": "Offer", name: "Pro", price: "149", priceCurrency: "EUR", valueAddedTaxIncluded: true, priceSpecification: { "@type": "UnitPriceSpecification", price: "149", priceCurrency: "EUR", unitText: "MONTH", valueAddedTaxIncluded: true } },
           ] },
       ]) }} />
       {/* ─── NAVBAR ─── */}

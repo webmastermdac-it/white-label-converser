@@ -51,6 +51,7 @@ export default function Terms() {
                 <li><strong>Starter</strong> — €49/mese o €490/anno: 1 chatbot, 500 conversazioni/mese, lead illimitati, prompt di sistema avanzato, FAQ illimitate, upload PDF/Word, importazione di pagine del sito e sitemap, integrazione Calendly, supporto prioritario, Ricerca Avanzata (RAG), feed XML/CSV con sincronizzazione giornaliera, fino a 100 prodotti a catalogo e branding “Chatbot Genius” nel widget.</li>
                 <li><strong>Pro</strong> — €149/mese o €1490/anno: 1 chatbot personalizzato per il settore, conversazioni e lead illimitati, tutte le funzionalità Starter, Ricerca Avanzata (RAG) in evidenza, ecommerce e catalogo completo con WooCommerce, Shopify, PrestaShop, API e webhook in tempo reale, prodotti a catalogo illimitati, Concierge Hotel, Instagram DM, chiusura automatica delle chat inattive con email di riepilogo, analytics avanzati, supporto dedicato e branding “Chatbot Genius” nel widget.</li>
               </ul>
+              <p>Tutti i prezzi indicati sono IVA inclusa.</p>
               <p>Il piano Free può essere modificato o sospeso con un preavviso ragionevole. Gli abbonamenti si rinnovano automaticamente e possono essere disdetti dal portale o dalla dashboard. I pagamenti vengono elaborati tramite Stripe.</p>
             </Section>
             <Section title="3. Obblighi dell'Utente">
@@ -85,6 +86,7 @@ export default function Terms() {
                 <li><strong>Starter</strong> — €49/month or €490/year: 1 chatbot, 500 conversations/month, unlimited leads, advanced system prompt, unlimited FAQs, PDF/Word upload, website page and sitemap import, Calendly integration, priority support, Advanced Search (RAG), daily XML/CSV feed sync, up to 100 catalog products and “Chatbot Genius” branding in the widget.</li>
                 <li><strong>Pro</strong> — €149/month or €1490/year: 1 custom chatbot for the business type, unlimited conversations and leads, all Starter features, highlighted Advanced Search (RAG), full ecommerce and catalog with WooCommerce, Shopify, PrestaShop, API and real-time webhooks, unlimited catalog products, Hotel Concierge, Instagram DM, automatic closing of inactive chats with recap email, advanced analytics, dedicated support and “Chatbot Genius” branding in the widget.</li>
               </ul>
+              <p>All prices shown include VAT.</p>
               <p>The Free plan may be changed or suspended with reasonable notice. Subscriptions renew automatically and can be cancelled through the portal or dashboard. Payments are processed through Stripe.</p>
             </Section>
             <Section title="3. User Obligations">
