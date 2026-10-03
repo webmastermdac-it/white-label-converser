@@ -15,6 +15,7 @@ const LANGUAGES: { value: AppLang; flag: string; label: string }[] = [
   { value: "de", flag: "🇩🇪", label: "Deutsch" },
   { value: "fr", flag: "🇫🇷", label: "Français" },
   { value: "es", flag: "🇪🇸", label: "Español" },
+  { value: "pt", flag: "🇵🇹", label: "Português" },
 ];
 
 interface LanguageMenuProps {

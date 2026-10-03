@@ -1,3 +1,4 @@
+import PublicLanguageSelect from "@/components/PublicLanguageSelect";
 import Seo from "@/components/Seo";
 import { useState } from "react";
 import { Link } from "react-router-dom";
@@ -5,23 +6,18 @@ import { useLanguage } from "@/hooks/useLanguage";
 import { ArrowLeft, FileText } from "lucide-react";
 
 export default function Terms() {
-  const { lang, setLang } = useLanguage();
+  const { contentLang, lang, t } = useLanguage();
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <Seo title={lang === "it" ? "Termini di Servizio | Genius Chatbot" : "Terms of Service | Genius Chatbot"} description={lang === "it" ? "Termini e condizioni d'uso di Genius Chatbot, servizio di MDAC S.r.l.: piani, pagamenti, responsabilità e disdetta." : "Terms and conditions of Genius Chatbot, a service by MDAC S.r.l.: plans, payments, liability and cancellation."} path="/terms" />
+      <Seo title={t("Terms of Service | Genius Chatbot", "Termini di Servizio | Genius Chatbot")} description={t("Terms and conditions of Genius Chatbot, a service by MDAC S.r.l.: plans, payments, liability and cancellation.", "Termini e condizioni d'uso di Genius Chatbot, servizio di MDAC S.r.l.: piani, pagamenti, responsabilità e disdetta.")} path="/terms" />
       {/* Header bar */}
       <div className="border-b border-border/50 backdrop-blur-sm bg-background/80 sticky top-0 z-10">
         <div className="max-w-[800px] mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary transition-colors">
             <ArrowLeft className="w-4 h-4" /> Home
           </Link>
-          <button
-            onClick={() => setLang(lang === "it" ? "en" : "it")}
-            className="text-xs font-semibold px-3 py-1.5 rounded-full border border-border hover:border-primary/50 hover:text-primary transition-colors"
-          >
-            {lang === "it" ? "🇬🇧 English" : "🇮🇹 Italiano"}
-          </button>
+          <PublicLanguageSelect />
         </div>
       </div>
 
@@ -39,6 +35,11 @@ export default function Terms() {
           {lang === "it" ? "Ultima modifica: Ottobre 2026" : "Last updated: October 2026"}
         </p>
 
+        {contentLang !== "it" && contentLang !== "en" && (
+          <p role="note" className="mb-8 rounded-lg border border-border bg-secondary/40 px-4 py-3 text-sm text-muted-foreground">
+            {t("The legal text is available in Italian and English; the Italian version prevails.", "Il testo giuridico è disponibile in italiano e inglese; fa fede la versione italiana.")}
+          </p>
+        )}
         {lang === "it" ? (
           <div className="space-y-8">
             <Section title="1. Descrizione del Servizio">

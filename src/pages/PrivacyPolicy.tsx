@@ -1,3 +1,4 @@
+import PublicLanguageSelect from "@/components/PublicLanguageSelect";
 import Seo from "@/components/Seo";
 import { useState } from "react";
 import { Link } from "react-router-dom";
@@ -5,23 +6,18 @@ import { useLanguage } from "@/hooks/useLanguage";
 import { ArrowLeft, Shield } from "lucide-react";
 
 export default function PrivacyPolicy() {
-  const { lang, setLang } = useLanguage();
+  const { contentLang, lang, t } = useLanguage();
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <Seo title={lang === "it" ? "Informativa Privacy | Genius Chatbot" : "Privacy Policy | Genius Chatbot"} description={lang === "it" ? "Come MDAC S.r.l. tratta i dati personali in Genius Chatbot: dati raccolti, finalità, conservazione e diritti GDPR." : "How MDAC S.r.l. processes personal data in Genius Chatbot: data collected, purposes, retention and GDPR rights."} path="/privacy-policy" />
+      <Seo title={t("Privacy Policy | Genius Chatbot", "Informativa Privacy | Genius Chatbot")} description={t("How MDAC S.r.l. processes personal data in Genius Chatbot: data collected, purposes, retention and GDPR rights.", "Come MDAC S.r.l. tratta i dati personali in Genius Chatbot: dati raccolti, finalità, conservazione e diritti GDPR.")} path="/privacy-policy" />
       {/* Header bar */}
       <div className="border-b border-border/50 backdrop-blur-sm bg-background/80 sticky top-0 z-10">
         <div className="max-w-[800px] mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary transition-colors">
             <ArrowLeft className="w-4 h-4" /> Home
           </Link>
-          <button
-            onClick={() => setLang(lang === "it" ? "en" : "it")}
-            className="text-xs font-semibold px-3 py-1.5 rounded-full border border-border hover:border-primary/50 hover:text-primary transition-colors"
-          >
-            {lang === "it" ? "🇬🇧 English" : "🇮🇹 Italiano"}
-          </button>
+          <PublicLanguageSelect />
         </div>
       </div>
 
@@ -39,6 +35,11 @@ export default function PrivacyPolicy() {
           {lang === "it" ? "Ultima modifica: Febbraio 2025" : "Last updated: February 2025"}
         </p>
 
+        {contentLang !== "it" && contentLang !== "en" && (
+          <p role="note" className="mb-8 rounded-lg border border-border bg-secondary/40 px-4 py-3 text-sm text-muted-foreground">
+            {t("The legal text is available in Italian and English; the Italian version prevails.", "Il testo giuridico è disponibile in italiano e inglese; fa fede la versione italiana.")}
+          </p>
+        )}
         {lang === "it" ? (
           <div className="space-y-8">
             <Section title="1. Titolare del Trattamento">
