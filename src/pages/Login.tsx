@@ -34,7 +34,7 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center px-4 md:p-4">
+    <div className="relative min-h-screen bg-background flex items-center justify-center px-4 md:p-4">
       <Seo title="Login | Genius Chatbot" path="/login" noindex />
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-1/4 left-1/4 w-96 h-96 rounded-full bg-primary/5 blur-3xl" />
