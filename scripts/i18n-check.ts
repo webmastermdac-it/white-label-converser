@@ -39,7 +39,7 @@ const strings = new Map<string, string>(); // en -> first file
 const textOf = (n: ts.Node | undefined) =>
   n && (ts.isStringLiteral(n) || ts.isNoSubstitutionTemplateLiteral(n)) ? n.text : undefined;
 const add = (en: string | undefined, file: string) => {
-  if (en && en.trim() && /[A-Za-z]/.test(en) && !strings.has(en)) strings.set(en, file);
+  if (en && en.trim() && /[A-Za-z]/.test(en) && !/^[a-z]{2}-[A-Z]{2}$/.test(en) && !strings.has(en)) strings.set(en, file);
 };
 
 const BRANDS = ["Genius Chatbot", "MDAC", "Calendly", "Stripe", "WooCommerce", "Shopify", "PrestaShop", "Instagram", "Concierge"];
