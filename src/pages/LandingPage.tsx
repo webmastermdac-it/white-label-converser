@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { useLanguage } from "@/hooks/useLanguage";
 import { Button } from "@/components/ui/button";
-import { Play, Menu, X, Check, Loader2, ArrowRight, BookOpen, Bot, ClipboardList, CalendarCheck, Palette, Globe, BarChart3, ShoppingCart, Lock, Hotel, ChevronDown, Sparkles, Rocket, Crown, Wrench } from "lucide-react";
+import { Play, Menu, X, Check, Loader2, ArrowRight, Bot, ClipboardList, CalendarCheck, Palette, Globe, BarChart3, ShoppingCart, Lock, Hotel, ChevronDown, Sparkles, Rocket, Crown, Wrench } from "lucide-react";
 import geniusLogo from "@/assets/genius.png";
 import genieHero from "@/assets/genie-mascot-new.png";
 import { supabase } from "@/integrations/supabase/client";
@@ -130,8 +130,10 @@ function getPricingFeatures(t: (en: string, it: string) => string): Record<Prici
     t("Email support", "Supporto email"),
   ];
   const freeLocked = [
-    t("Advanced Search (RAG)", "Ricerca Avanzata (RAG)"),
-    t("Document upload (PDF/Word)", "Upload documenti (PDF/Word)"),
+    t("PDF/Word upload", "Upload PDF/Word"),
+    t("Advanced Search RAG", "Ricerca Avanzata RAG"),
+    t("Ecommerce & catalog integrations", "Integrazioni ecommerce e catalogo"),
+    t("Hotel Concierge module", "Modulo Concierge Hotel"),
   ];
   const starterBase = [
     t("1 chatbot custom for your business type", "1 chatbot personalizzato per il tuo settore"),
@@ -164,22 +166,22 @@ function getPricingFeatures(t: (en: string, it: string) => string): Record<Prici
   return {
     generic: {
       free: { features: freeFeatures, locked: freeLocked },
-      starter: { features: starterBase },
+      starter: { features: starterBase, locked: [t("Advanced analytics", "Analytics avanzati"), t("Full ecommerce & catalog with real-time webhooks", "Ecommerce e catalogo completo con webhook real-time"), t("Hotel Concierge module", "Modulo Concierge Hotel")] },
       pro: { features: proBase },
     },
     booking: {
       free: { features: freeFeatures, locked: freeLocked },
-      starter: { features: starterBase },
+      starter: { features: starterBase, locked: [t("Advanced analytics", "Analytics avanzati"), t("Full ecommerce & catalog with real-time webhooks", "Ecommerce e catalogo completo con webhook real-time"), t("Hotel Concierge module", "Modulo Concierge Hotel")] },
       pro: { features: proBase },
     },
     ecommerce: {
       free: { features: freeFeatures, locked: freeLocked },
-      starter: { features: starterBase },
+      starter: { features: starterBase, locked: [t("Advanced analytics", "Analytics avanzati"), t("Full ecommerce & catalog with real-time webhooks", "Ecommerce e catalogo completo con webhook real-time"), t("Hotel Concierge module", "Modulo Concierge Hotel")] },
       pro: { features: proBase },
     },
     hospitality: {
       free: { features: freeFeatures, locked: freeLocked },
-      starter: { features: starterBase },
+      starter: { features: starterBase, locked: [t("Advanced analytics", "Analytics avanzati"), t("Full ecommerce & catalog with real-time webhooks", "Ecommerce e catalogo completo con webhook real-time"), t("Hotel Concierge module", "Modulo Concierge Hotel")] },
       pro: { features: proBase },
     },
   };
@@ -293,6 +295,9 @@ export function PricingGrid({ yearly, t, verticalId, selectedVertical = "generic
         <ul className={listClassName}>
           {features.starter.features.map((item, i) => (
             <li key={i} className="flex items-start gap-2"><Check className="w-4 h-4 text-[#F5A623] shrink-0 mt-0.5" />{item}</li>
+          ))}
+          {(features.starter.locked ?? []).map((item, i) => (
+            <li key={`lock-${i}`} className="flex items-start gap-2 text-white/30"><Lock className="w-4 h-4 shrink-0 mt-0.5" />{item}</li>
           ))}
         </ul>
 
@@ -754,7 +759,7 @@ export default function LandingPage() {
               <div className={`absolute top-0.5 w-6 h-6 rounded-full bg-white transition-transform ${yearly ? "translate-x-7" : "translate-x-0.5"}`} />
             </button>
             <span className={`text-sm ${yearly ? "text-white" : "text-white/40"}`}>{t("Yearly", "Annuale")}</span>
-            {yearly && <span className="text-xs bg-[#F5A623]/20 text-[#F5A623] px-2 py-0.5 rounded-full font-medium">-20%</span>}
+            {yearly && <span className="text-xs bg-[#F5A623]/20 text-[#F5A623] px-2 py-0.5 rounded-full font-medium">-17%</span>}
           </div>
 
           <PricingGrid yearly={yearly} t={t} selectedVertical={selectedVertical} />
