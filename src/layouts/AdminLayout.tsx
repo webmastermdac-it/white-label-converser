@@ -1,3 +1,4 @@
+import Seo from "@/components/Seo";
 import { Outlet } from "react-router-dom";
 import AdminSidebar from "@/components/AdminSidebar";
 import { AdminClientFilterProvider } from "@/contexts/AdminClientFilterContext";
@@ -25,6 +26,7 @@ const AdminLayout = () => {
 
   return (
     <AdminClientFilterProvider>
+      <Seo title="Admin | Genius Chatbot" path="/admin" noindex />
       <div className="flex min-h-screen bg-background">
         <div className="hidden md:block">
           <AdminSidebar />

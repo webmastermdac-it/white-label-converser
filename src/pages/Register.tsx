@@ -1,3 +1,4 @@
+import Seo from "@/components/Seo";
 import { useState } from "react";
 import { Navigate, Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -105,6 +106,7 @@ const Register = () => {
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center px-4 md:p-4">
+      <Seo title={lang === "it" ? "Registrati gratis | Genius Chatbot" : "Sign up free | Genius Chatbot"} description={lang === "it" ? "Crea il tuo account Genius Chatbot gratuito e attiva il tuo assistente AI in pochi minuti. Nessuna carta richiesta." : "Create your free Genius Chatbot account and launch your AI assistant in minutes. No credit card required."} path="/register" />
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-1/4 left-1/4 w-96 h-96 rounded-full bg-primary/5 blur-3xl" />
         <div className="absolute bottom-1/4 right-1/4 w-64 h-64 rounded-full bg-primary/8 blur-3xl" />

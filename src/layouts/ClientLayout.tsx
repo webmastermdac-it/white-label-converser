@@ -1,3 +1,4 @@
+import Seo from "@/components/Seo";
 import { Outlet } from "react-router-dom";
 import ClientSidebar from "@/components/ClientSidebar";
 import MobileNav from "@/components/MobileNav";
@@ -22,6 +23,7 @@ const ClientLayout = () => {
 
   return (
     <div className="flex min-h-screen bg-background">
+      <Seo title="Dashboard | Genius Chatbot" path="/dashboard" noindex />
       <div className="hidden md:block">
         <ClientSidebar />
       </div>

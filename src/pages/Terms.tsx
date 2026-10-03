@@ -1,3 +1,4 @@
+import Seo from "@/components/Seo";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useLanguage } from "@/hooks/useLanguage";
@@ -9,6 +10,7 @@ export default function Terms() {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
+      <Seo title={lang === "it" ? "Termini di Servizio | Genius Chatbot" : "Terms of Service | Genius Chatbot"} description={lang === "it" ? "Termini e condizioni d'uso di Genius Chatbot, servizio di MDAC S.r.l.: piani, pagamenti, responsabilità e disdetta." : "Terms and conditions of Genius Chatbot, a service by MDAC S.r.l.: plans, payments, liability and cancellation."} path="/terms" />
       {/* Header bar */}
       <div className="border-b border-border/50 backdrop-blur-sm bg-background/80 sticky top-0 z-10">
         <div className="max-w-[800px] mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">

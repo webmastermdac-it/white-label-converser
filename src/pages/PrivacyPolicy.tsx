@@ -1,3 +1,4 @@
+import Seo from "@/components/Seo";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useLanguage } from "@/hooks/useLanguage";
@@ -9,6 +10,7 @@ export default function PrivacyPolicy() {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
+      <Seo title={lang === "it" ? "Informativa Privacy | Genius Chatbot" : "Privacy Policy | Genius Chatbot"} description={lang === "it" ? "Come MDAC S.r.l. tratta i dati personali in Genius Chatbot: dati raccolti, finalità, conservazione e diritti GDPR." : "How MDAC S.r.l. processes personal data in Genius Chatbot: data collected, purposes, retention and GDPR rights."} path="/privacy-policy" />
       {/* Header bar */}
       <div className="border-b border-border/50 backdrop-blur-sm bg-background/80 sticky top-0 z-10">
         <div className="max-w-[800px] mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">

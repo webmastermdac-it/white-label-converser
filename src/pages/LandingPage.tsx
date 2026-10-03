@@ -27,6 +27,7 @@ import screenshotChatHistory from "@/assets/screenshots/chat-history.png";
 import screenshotCharts from "@/assets/screenshots/analytics-charts.png";
 import screenshotEcommerce from "@/assets/screenshots/ecommerce.png";
 import CookieBanner from "@/components/CookieBanner";
+import Seo, { SITE_URL } from "@/components/Seo";
 import VerticalDemoChat from "@/components/landing/VerticalDemoChat";
 import { verticals, type VerticalId } from "@/content/verticals";
 
@@ -36,6 +37,11 @@ function useFadeIn() {
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
+    const reduce = typeof window.matchMedia === "function" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (typeof IntersectionObserver === "undefined" || reduce) {
+      el.classList.add("opacity-100", "translate-y-0"); el.classList.remove("opacity-0", "translate-y-8");
+      return;
+    }
     const obs = new IntersectionObserver(
       ([e]) => { if (e.isIntersecting) { el.classList.add("opacity-100", "translate-y-0"); el.classList.remove("opacity-0", "translate-y-8"); obs.disconnect(); } },
       { threshold: 0.15 }
@@ -485,6 +491,20 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen bg-[#0F1419] text-white overflow-x-hidden" style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>
+      <Seo
+        title={t("Genius Chatbot – AI Chatbot for your website | MDAC", "Genius Chatbot – Chatbot AI per il tuo sito | MDAC")}
+        description={t("AI chatbot for ecommerce, appointments, hotels and business websites. Answers 24/7 and captures leads. Try it free.", "Chatbot AI per ecommerce, appuntamenti, hotel e siti aziendali. Risponde 24/7 e raccoglie contatti. Provalo gratis.")}
+        path="/"
+      />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify([
+        { "@context": "https://schema.org", "@type": "Organization", name: "MDAC S.r.l.", url: SITE_URL, logo: `${SITE_URL}/images/genius-icon.png`, email: "mdac@mdac.it", telephone: "+39 030 68 40 636", address: { "@type": "PostalAddress", streetAddress: "Via Padana Superiore 173/A", postalCode: "25035", addressLocality: "Ospitaletto", addressRegion: "BS", addressCountry: "IT" }, vatID: "IT04333340984" },
+        { "@context": "https://schema.org", "@type": "SoftwareApplication", name: "Genius Chatbot", applicationCategory: "BusinessApplication", operatingSystem: "Web", url: SITE_URL, publisher: { "@type": "Organization", name: "MDAC S.r.l." },
+          offers: [
+            { "@type": "Offer", name: "Free", price: "0", priceCurrency: "EUR" },
+            { "@type": "Offer", name: "Starter", price: "49", priceCurrency: "EUR", priceSpecification: { "@type": "UnitPriceSpecification", price: "49", priceCurrency: "EUR", unitText: "MONTH" } },
+            { "@type": "Offer", name: "Pro", price: "149", priceCurrency: "EUR", priceSpecification: { "@type": "UnitPriceSpecification", price: "149", priceCurrency: "EUR", unitText: "MONTH" } },
+          ] },
+      ]) }} />
       {/* ─── NAVBAR ─── */}
       <nav className={`fixed top-0 inset-x-0 z-50 transition-all duration-300 ${scrolled ? "bg-[#0F1419]/90 backdrop-blur-lg shadow-lg shadow-black/30" : "bg-transparent"}`}>
         <div className="max-w-7xl mx-auto flex items-center justify-between px-4 sm:px-6 h-16">
@@ -689,7 +709,7 @@ export default function LandingPage() {
                       </div>
                     </div>
                   </div>
-                  <img src={tab.img} alt={tab.label} className={`w-full ${tab.key === "widget" ? "lg:w-1/2 lg:mx-auto" : ""}`} />
+                  <img src={tab.img} alt={`Genius Chatbot – ${tab.label}: ${tab.desc}`} loading="lazy" width={tab.key === "widget" ? 908 : 1920} height={tab.key === "widget" ? 1310 : 1300} className={`w-full ${tab.key === "widget" ? "lg:w-1/2 lg:mx-auto" : ""}`} />
                 </div>
                 <p className="text-white/50 text-center text-sm">{tab.desc}</p>
               </div>
@@ -809,7 +829,7 @@ export default function LandingPage() {
               { src: logoOspitaletto, alt: "Comune di Ospitaletto" },
             ].map((logo) => (
               <div key={logo.alt} className="bg-white/[0.03] border border-white/10 rounded-xl flex items-center justify-center p-6 h-28 hover:border-white/20 hover:bg-white/[0.06] transition-all duration-300">
-                <img src={logo.src} alt={logo.alt} className="max-h-12 max-w-[140px] w-auto object-contain opacity-70 hover:opacity-100 transition-opacity duration-300" />
+                <img src={logo.src} alt={`Logo ${logo.alt}`} loading="lazy" width={150} height={100} className="max-h-12 max-w-[140px] w-auto object-contain opacity-70 hover:opacity-100 transition-opacity duration-300" />
               </div>
             ))}
           </div>

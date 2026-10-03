@@ -1,3 +1,4 @@
+import Seo from "@/components/Seo";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight, Bot, CalendarCheck, Check, ChevronDown, Hotel, Menu, ShoppingCart, X } from "lucide-react";
@@ -29,22 +30,6 @@ export default function VerticalLanding({ verticalId }: { verticalId: VerticalId
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  useEffect(() => {
-    if (!vertical) return;
-    document.title = vertical.seo.title[lang];
-    const description = document.querySelector('meta[name="description"]');
-    const ogTitle = document.querySelector('meta[property="og:title"]');
-    const ogDescription = document.querySelector('meta[property="og:description"]');
-    description?.setAttribute("content", vertical.seo.description[lang]);
-    ogTitle?.setAttribute("content", vertical.seo.title[lang]);
-    ogDescription?.setAttribute("content", vertical.seo.description[lang]);
-    return () => {
-      document.title = "Genius Chatbot | Assistenti AI per Ecommerce, Appuntamenti e Hotel";
-      description?.setAttribute("content", "Scegli l'assistente AI per la tua attività: vende online, fissa appuntamenti o accoglie gli ospiti. Provalo gratis in 5 minuti.");
-      ogTitle?.setAttribute("content", "Genius Chatbot | Un assistente AI per ogni attività");
-      ogDescription?.setAttribute("content", "Assistenti AI per ecommerce, appuntamenti e hotel. Si installano in 5 minuti e trasformano le conversazioni in contatti pronti.");
-    };
-  }, [lang, vertical]);
 
   if (!vertical) return null;
   const Icon = iconFor(vertical.id);
@@ -53,6 +38,7 @@ export default function VerticalLanding({ verticalId }: { verticalId: VerticalId
 
   return (
     <div className="min-h-screen overflow-x-hidden bg-[#0F1419] text-white" style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>
+      <Seo title={vertical.seo.title[lang]} description={vertical.seo.description[lang]} path={vertical.path} />
       <nav className={`fixed inset-x-0 top-0 z-50 transition-all duration-300 ${scrolled ? "bg-[#0F1419]/90 shadow-lg shadow-black/30 backdrop-blur-lg" : "bg-transparent"}`}>
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
           <Link to="/" className="flex shrink-0 items-center gap-2.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F5A623]">
