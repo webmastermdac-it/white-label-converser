@@ -253,7 +253,7 @@ export function PricingGrid({ yearly, t, verticalId, selectedVertical = "generic
           </div>
         </div>
         <Link to={verticalId ? `/register?vertical=${verticalId}` : "/register"} className="block">
-          <Button variant="outline" className="w-full border-white/20 text-[#1a1a1a] bg-white hover:bg-white/90 rounded-full h-11 font-semibold">
+          <Button variant="outline" className="h-auto min-h-11 w-full whitespace-normal rounded-full border-white/20 bg-white px-3 py-2 font-semibold leading-tight text-[#1a1a1a] hover:bg-white/90">
             {t("Start Free", "Inizia Gratis")}
           </Button>
         </Link>
@@ -303,7 +303,7 @@ export function PricingGrid({ yearly, t, verticalId, selectedVertical = "generic
           </div>
         </div>
         <Link to={verticalId ? `/register?vertical=${verticalId}` : "/register"} className="block">
-          <Button variant="outline" className="w-full border-white/20 text-[#1a1a1a] bg-white hover:bg-white/90 rounded-full h-11 font-semibold">
+          <Button variant="outline" className="h-auto min-h-11 w-full whitespace-normal rounded-full border-white/20 bg-white px-3 py-2 font-semibold leading-tight text-[#1a1a1a] hover:bg-white/90">
             {t("Try Free, Then Upgrade", "Prova Gratis, poi Upgrade")}
           </Button>
         </Link>
@@ -353,7 +353,7 @@ export function PricingGrid({ yearly, t, verticalId, selectedVertical = "generic
           </div>
         </div>
         <Link to={verticalId ? `/register?vertical=${verticalId}` : "/register"} className="block">
-          <Button className="w-full bg-[#F5A623] hover:bg-[#E09800] text-black rounded-full h-11 font-semibold">
+          <Button className="h-auto min-h-11 w-full whitespace-normal rounded-full bg-[#F5A623] px-3 py-2 font-semibold leading-tight text-black hover:bg-[#E09800]">
             {t("Try Free, Then Upgrade", "Prova Gratis, poi Upgrade")}
           </Button>
         </Link>
