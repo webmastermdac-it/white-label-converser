@@ -1,5 +1,5 @@
 export type LocalizedText = { en: string; it: string };
-export type VerticalId = "ecommerce" | "booking" | "hotel";
+export type VerticalId = "ecommerce" | "booking" | "hotel" | "general";
 
 export const DEMO_URL = "mailto:mdac@mdac.it?subject=Demo%20Genius%20Concierge";
 
@@ -8,7 +8,7 @@ export type HotelFeatureKind = "quote" | "concierge" | "requests" | "results" | 
 export interface VerticalContent {
   id: VerticalId;
   path: string;
-  icon: "cart" | "calendar" | "hotel";
+  icon: "cart" | "calendar" | "hotel" | "building";
   name: LocalizedText;
   promise: LocalizedText;
   summary: LocalizedText;
@@ -212,6 +212,46 @@ export const verticals: VerticalContent[] = [
       description: { it: "Il concierge AI per hotel risponde in ogni lingua, prepara preventivi, porta gli ospiti sul booking engine e gestisce le richieste dalle camere.", en: "The AI hotel concierge answers in every language, prepares quotes, guides guests to your booking engine and handles in-room requests." },
     },
     finalCta: { it: "La tua reception, sempre aperta.", en: "Your front desk, always open." },
+  },
+  {
+    id: "general",
+    path: "/chatbot-sito-aziendale",
+    icon: "building",
+    name: { it: "Sito aziendale / Altro", en: "Business Website / Other" },
+    promise: { it: "L'assistente che conosce la tua azienda", en: "The assistant who knows your business" },
+    summary: { it: "Per studi professionali, aziende B2B, servizi e siti vetrina: risponde ai visitatori con i contenuti del tuo sito e raccoglie i loro contatti.", en: "For professional firms, B2B companies, services and brochure sites: it answers visitors using your website content and collects their contacts." },
+    bullets: [
+      { it: "Risponde usando i contenuti del tuo sito", en: "Answers using your website content" },
+      { it: "Raccoglie i contatti dei visitatori", en: "Collects contacts from visitors" },
+      { it: "Funziona senza integrazioni obbligatorie", en: "Works without required integrations" },
+    ],
+    badges: ["B2B", "Studi professionali", "Siti vetrina"],
+    demo: {
+      user: { it: "Vi occupate anche di consulenza fiscale? Che orari avete?", en: "Do you also offer tax consulting? What are your opening hours?" },
+      assistant: { it: "Sì, lo studio segue consulenza fiscale per privati e aziende. Siamo aperti dal lunedì al venerdì, 9–18. Vuoi lasciarmi nome ed email per essere ricontattato?", en: "Yes, the firm provides tax consulting for individuals and companies. We're open Monday to Friday, 9am–6pm. Would you like to leave your name and email so we can get back to you?" },
+    },
+    benefits: [
+      { title: { it: "Risposte dai tuoi contenuti", en: "Answers from your content" }, description: { it: "Importa pagine o sitemap del sito e, nei piani che lo includono, documenti PDF e Word.", en: "Import website pages or your sitemap and, on plans that include it, PDF and Word documents." } },
+      { title: { it: "Contatti raccolti in chat", en: "Contacts collected in chat" }, description: { it: "I visitatori interessati lasciano i loro dati e li ritrovi nella dashboard.", en: "Interested visitors leave their details and you find them in your dashboard." } },
+      { title: { it: "Parla la lingua del visitatore", en: "Speaks your visitor's language" }, description: { it: "Risposte multilingua, con FAQ e istruzioni personalizzabili.", en: "Multilingual answers, with customizable FAQs and instructions." } },
+    ],
+    steps: [
+      { it: "Importa i contenuti del sito", en: "Import your website content" },
+      { it: "Personalizza FAQ e istruzioni", en: "Customize FAQs and instructions" },
+      { it: "Installa lo snippet sul sito", en: "Install the snippet on your site" },
+    ],
+    integrations: [{ it: "Qualsiasi sito web", en: "Any website" }, { it: "Calendly (opzionale)", en: "Calendly (optional)" }, { it: "Ecommerce (opzionale)", en: "Ecommerce (optional)" }],
+    integrationIntro: { it: "Si installa con uno snippet su qualsiasi sito. Nessuna integrazione obbligatoria: Calendly ed ecommerce sono opzionali.", en: "Installs with a snippet on any website. No required integrations: Calendly and ecommerce are optional." },
+    faqs: [
+      { question: { it: "Funziona sul mio sito?", en: "Does it work on my website?" }, answer: { it: "Sì, si installa incollando uno snippet nel codice del sito, su qualsiasi piattaforma.", en: "Yes, it installs by pasting a snippet into your website code, on any platform." } },
+      { question: { it: "Da dove prende le risposte?", en: "Where do the answers come from?" }, answer: { it: "Dai contenuti che gli fornisci: pagine del sito o sitemap, FAQ, istruzioni e, nei piani che li includono, documenti PDF e Word.", en: "From the content you provide: website pages or sitemap, FAQs, instructions and, on plans that include them, PDF and Word documents." } },
+      { question: { it: "Servono integrazioni?", en: "Do I need integrations?" }, answer: { it: "No. Funziona subito; Calendly ed ecommerce sono collegamenti facoltativi.", en: "No. It works right away; Calendly and ecommerce are optional connections." } },
+      { question: { it: "Posso provarlo gratis?", en: "Can I try it for free?" }, answer: { it: "Sì. Puoi iniziare gratuitamente e passare a un piano superiore quando ti serve.", en: "Yes. You can start for free and move to a higher plan when you need it." } },
+    ],
+    seo: {
+      title: { it: "Chatbot AI per sito aziendale | Genius Chatbot", en: "AI Chatbot for Business Websites | Genius Chatbot" },
+      description: { it: "Chatbot AI per studi professionali, aziende B2B e siti vetrina: risponde con i contenuti del tuo sito e raccoglie i contatti dei visitatori.", en: "AI chatbot for professional firms, B2B companies and brochure sites: answers with your website content and collects visitor contacts." },
+    },
   },
 ];
 
