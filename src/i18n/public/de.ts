@@ -433,7 +433,6 @@ const dict: Record<string, string> = {
   "Becoming a direct booking": "Umwandlung in Direktbuchung",
   "Average stay value": "Durchschnittlicher Buchungswert",
   "Portal commission": "Portal-Provision",
-  "en-US": "de-DE",
   "After-hours requests / month": "Anfragen außerhalb der Rezeptionszeiten / Monat",
   "Estimated direct bookings": "Geschätzte Direktbuchungen",
   "Estimated direct revenue": "Geschätzter direkter Umsatz",
