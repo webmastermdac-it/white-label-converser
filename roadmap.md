@@ -16,3 +16,4 @@
 - [x] Verificare le nuove pagine e le regressioni dei verticali esistenti.
 - [x] Aggiornare il Setup professionale a €570 IVA inclusa nei pagamenti e in tutti i testi visibili.
 - [x] Allineare testi e limite chatbot dei piani, aggiornare i Termini e rimuovere claim non verificabili dalla landing.
+- [ ] Aggiungere il settore Sito aziendale / Altro alla registrazione, landing, integrazioni e onboarding.

@@ -1,7 +1,3 @@
 # Architecture Rules
 
-- Client sidebar shows only universal items; per-bot settings use query-backed hub sections, and activeModule.menu renders only inside the conditional Concierge section via an href→component map.
-- Tone of voice lives in chatbot_configs.tone_of_voice/tone_preset_id (own card in ClientRAGKnowledgeBase), prepended to the chat system prompt; instructions stay free text without tone parsing.- Bot module (business_vertical) is set at creation and changed only via BotModuleCard by super_admin/adminMode; Appearance never writes it — avoids accidental module switches.
-
-- Naming: the ecommerce vertical is user-visible as "Ecommerce & Catalogo" / "Ecommerce & Catalog" (IT/EN); internal id and ?vertical=ecommerce stay unchanged.
-- Public setup sales content lives at `/setup-assistito`; authenticated CTAs deep-link to the existing Upgrade setup card, preserving purchase logic in one place.
+- Keep sector-specific menus, integrations, templates, and onboarding requirements in `src/lib/modules.ts` so the `general` sector can expose optional tools without mandatory setup steps.
