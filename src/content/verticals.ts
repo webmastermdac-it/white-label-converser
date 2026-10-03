@@ -1,4 +1,4 @@
-export type LocalizedText = { en: string; it: string };
+export type LocalizedText = { en: string; it: string; fr?: string; de?: string; es?: string; pt?: string };
 export type VerticalId = "ecommerce" | "booking" | "hotel" | "general";
 
 export const DEMO_URL = "mailto:mdac@mdac.it?subject=Demo%20Genius%20Concierge";

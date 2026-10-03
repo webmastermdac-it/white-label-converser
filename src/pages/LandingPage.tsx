@@ -424,7 +424,7 @@ export function PricingGrid({ yearly, t, verticalId, selectedVertical = "generic
 
 /* ═══════════════════════════════════════════════════════════ */
 export default function LandingPage() {
-  const { lang, setLang, t } = useLanguage();
+  const { lang, setLang, t, localized } = useLanguage();
   const [mobileMenu, setMobileMenu] = useState(false);
   const [videoOpen, setVideoOpen] = useState(false);
   const [yearly, setYearly] = useState(false);

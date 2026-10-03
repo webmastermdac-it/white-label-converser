@@ -18,7 +18,7 @@ import geniusLogo from "@/assets/genius.png";
 const iconFor = (id: VerticalId) => id === "ecommerce" ? ShoppingCart : id === "booking" ? CalendarCheck : id === "general" ? Building2 : Hotel;
 
 export default function VerticalLanding({ verticalId }: { verticalId: VerticalId }) {
-  const { lang, setLang, t } = useLanguage();
+  const { lang, setLang, t, localized } = useLanguage();
   const vertical = getVertical(verticalId);
   const [mobileMenu, setMobileMenu] = useState(false);
   const [solutionsOpen, setSolutionsOpen] = useState(false);
