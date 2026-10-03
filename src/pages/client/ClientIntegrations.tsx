@@ -122,7 +122,11 @@ const ClientIntegrations = ({ embedded = false, clientIdOverride }: { embedded?:
     return [reservationCat, ecommerceCat, bookingCat].filter((category) => category.items.length > 0);
   }, [moduleIntegrations.join("|"), isIt]);
 
-  const bannerText = moduleIntegrations.length === 0 ? null : activeModule.id === "ecommerce"
+  const bannerText = activeModule.id === "general"
+    ? (isIt
+        ? "Il tuo chatbot funziona subito su qualsiasi sito: nessuna integrazione necessaria. Calendly ed ecommerce sono opzionali."
+        : "Your chatbot works on any website right away: no integration required. Calendly and ecommerce are optional.")
+    : moduleIntegrations.length === 0 ? null : activeModule.id === "ecommerce"
     ? (isIt
         ? "Hai un ecommerce o un sito con catalogo? Collega i tuoi prodotti per far conoscere al bot prezzi e disponibilità in tempo reale."
         : "Have an online store or a product catalog? Connect your products so the bot knows prices and availability in real time.")
@@ -398,11 +402,13 @@ const ClientIntegrations = ({ embedded = false, clientIdOverride }: { embedded?:
           <p className="text-muted-foreground text-sm mt-1">
             {isIt ? "Collega i tuoi strumenti al chatbot" : "Connect your tools to the chatbot"}
           </p>
-          <p className="mt-1 text-xs text-muted-foreground">
-            <Link to="/dashboard/upgrade#setup" className="hover:text-foreground transition-colors">
-              {isIt ? "Hai bisogno di aiuto con il collegamento? Scopri il Setup professionale (€570)" : "Need help connecting? Discover the professional setup (€570)"}
-            </Link>
-          </p>
+          {activeModule.id !== "general" && (
+            <p className="mt-1 text-xs text-muted-foreground">
+              <Link to="/dashboard/upgrade#setup" className="hover:text-foreground transition-colors">
+                {isIt ? "Hai bisogno di aiuto con il collegamento? Scopri il Setup professionale (€570)" : "Need help connecting? Discover the professional setup (€570)"}
+              </Link>
+            </p>
+          )}
           {cal.botName && (
             <p className="text-xs text-muted-foreground mt-1">
               {isIt ? "Integrazioni per: " : "Integrations for: "}
@@ -454,8 +460,10 @@ const ClientIntegrations = ({ embedded = false, clientIdOverride }: { embedded?:
                   <span className="text-sm font-medium">{item.name}</span>
                   {locked ? (
                     <Badge variant="secondary" className="gap-1 text-[10px]">
-                      <Lock className="w-3 h-3" />
-                      {isIt ? "Bloccato dal piano" : "Locked by plan"}
+                      {activeModule.id !== "general" && <Lock className="w-3 h-3" />}
+                      {activeModule.id === "general"
+                        ? (isIt ? "Opzionale" : "Optional")
+                        : (isIt ? "Bloccato dal piano" : "Locked by plan")}
                     </Badge>
                   ) : connected ? (
                     <Badge className="bg-green-600 hover:bg-green-600 text-[10px]">

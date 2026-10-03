@@ -132,13 +132,13 @@ export const MODULES: Record<ModuleId, ModuleDef> = {
   },
   general: {
     id: "general",
-    name: { it: "Generale", en: "General" },
-    description: { it: "Qualsiasi altra attività", en: "Any other business" },
+    name: { it: "Sito aziendale / Altro", en: "Business Website / Other" },
+    description: { it: "Studi professionali, aziende B2B, servizi, siti vetrina", en: "Professional firms, B2B companies, services, brochure sites" },
     icon: Sparkles,
     color: "35 91% 55%",
     menu: [],
-    integrations: ["calendly"],
-    kbTemplates: [],
+    integrations: ["calendly", "woocommerce", "shopify", "prestashop", "api", "feed"],
+    kbTemplates: ["restaurant", "dentist", "law-firm", "gym", "real-estate", "web-agency", "ecommerce", "medical"],
     leadFields: [],
     kpis: [
       { key: "conversations", label: { it: "Conversazioni", en: "Conversations" } },

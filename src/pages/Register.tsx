@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
-import { Eye, EyeOff, Loader2, CalendarCheck, ShoppingBag, Hotel, ArrowLeft } from "lucide-react";
+import { Eye, EyeOff, Loader2, CalendarCheck, ShoppingBag, Hotel, Building2, ArrowLeft } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 const Register = () => {
@@ -27,12 +27,12 @@ const Register = () => {
   const [searchParams] = useSearchParams();
   const verticalParam = searchParams.get("vertical");
   const normalizedParam = verticalParam === "hospitality" ? "hotel" : verticalParam;
-  const initialVertical = (["booking", "ecommerce", "hotel"] as const).includes(
-    normalizedParam as "booking" | "ecommerce" | "hotel"
+  const initialVertical = (["booking", "ecommerce", "hotel", "general"] as const).includes(
+    normalizedParam as "booking" | "ecommerce" | "hotel" | "general"
   )
-    ? (normalizedParam as "booking" | "ecommerce" | "hotel")
+    ? (normalizedParam as "booking" | "ecommerce" | "hotel" | "general")
     : null;
-  const [vertical, setVertical] = useState<"booking" | "ecommerce" | "hotel" | null>(initialVertical);
+  const [vertical, setVertical] = useState<"booking" | "ecommerce" | "hotel" | "general" | null>(initialVertical);
 
   if (!loading && user) {
     return <Navigate to={role === "super_admin" ? "/admin" : "/dashboard"} replace />;
@@ -149,6 +149,12 @@ const Register = () => {
                   Icon: Hotel,
                   title: t("Hotels & Hospitality", "Hotel & Ospitalità"),
                   subtitle: t("Rooms, services and property information from your website", "Camere, servizi e informazioni sulla struttura dal tuo sito"),
+                },
+                {
+                  key: "general" as const,
+                  Icon: Building2,
+                  title: t("Business Website / Other", "Sito aziendale / Altro"),
+                  subtitle: t("Professional firms, B2B companies, services, brochure sites", "Studi professionali, aziende B2B, servizi, siti vetrina"),
                 },
               ].map(({ key, Icon, title, subtitle }) => (
                 <button
