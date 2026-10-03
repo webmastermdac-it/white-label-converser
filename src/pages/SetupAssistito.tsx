@@ -1,3 +1,4 @@
+import PublicLanguageSelect from "@/components/PublicLanguageSelect";
 import Seo from "@/components/Seo";
 import { useEffect } from "react";
 import { Link } from "react-router-dom";
@@ -11,9 +12,8 @@ import geniusLogo from "@/assets/genius.png";
 
 export default function SetupAssistito() {
   const { user } = useAuth();
-  const { lang, setLang, t } = useLanguage();
+  const { lang, setLang, t, localized } = useLanguage();
   const setupHref = user ? "/dashboard/upgrade#setup" : "/register?vertical=ecommerce";
-  const localized = (text: { en: string; it: string }) => t(text.en, text.it);
 
 
   const services = [
@@ -55,7 +55,7 @@ export default function SetupAssistito() {
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
           <Link to="/" className="flex items-center gap-2.5"><img src={geniusLogo} alt="Genius" className="h-9 w-9" /><span className="hidden text-lg font-bold sm:inline" style={{ fontFamily: "'Syne', sans-serif" }}>Genius <span className="text-[#F5A623]">Chatbot</span></span></Link>
           <div className="flex items-center gap-3">
-            <Button variant="outline" onClick={() => setLang(lang === "it" ? "en" : "it")} className="h-7 rounded-full border-white/20 bg-transparent px-2.5 text-xs text-white hover:border-[#F5A623] hover:bg-transparent hover:text-[#F5A623]">{lang === "it" ? "EN" : "IT"}</Button>
+            <PublicLanguageSelect className="text-white" />
             <Link to="/register?vertical=ecommerce"><Button className="h-9 rounded-full bg-[#F5A623] px-5 text-black hover:bg-[#E09800]">{t("Try free", "Prova gratis")}</Button></Link>
           </div>
         </div>

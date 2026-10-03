@@ -1,3 +1,4 @@
+import PublicLanguageSelect from "@/components/PublicLanguageSelect";
 import Seo from "@/components/Seo";
 import { useState } from "react";
 import { Navigate, Link } from "react-router-dom";
@@ -33,13 +34,14 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center px-4 md:p-4">
+    <div className="relative min-h-screen bg-background flex items-center justify-center px-4 md:p-4">
       <Seo title="Login | Genius Chatbot" path="/login" noindex />
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-1/4 left-1/4 w-96 h-96 rounded-full bg-primary/5 blur-3xl" />
         <div className="absolute bottom-1/4 right-1/4 w-64 h-64 rounded-full bg-primary/8 blur-3xl" />
       </div>
 
+      <div className="absolute right-4 top-4 z-20 text-foreground"><PublicLanguageSelect /></div>
       <div className="relative w-full max-w-md">
         <div className="text-center mb-8 animate-fade-in-up">
           <div className="inline-flex items-center justify-center w-16 h-16 max-w-[120px] rounded-2xl bg-white shadow-lg mb-4">

@@ -35,7 +35,7 @@ const BotMessagesCard = ({ chatbotId }: { chatbotId: string }) => {
   const [welcome, setWelcome] = useState(DEFAULT_WELCOME);
   const [fallback, setFallback] = useState(DEFAULT_FALLBACK);
   const [i18n, setI18n] = useState<I18n>(emptyI18n());
-  const viewLang: Lang = contentLang;
+  const viewLang: Lang = contentLang === "pt" ? "en" : contentLang;
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [regen, setRegen] = useState<Kind | null>(null);

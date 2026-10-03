@@ -1,3 +1,4 @@
+import PublicLanguageSelect from "@/components/PublicLanguageSelect";
 import Seo from "@/components/Seo";
 import { useState } from "react";
 import { Navigate, Link, useNavigate, useSearchParams } from "react-router-dom";
@@ -71,9 +72,7 @@ const Register = () => {
 
       if (data?.error === "weak_password") {
         setErrors({
-          password: lang === "it"
-            ? "Questa password è troppo comune o compare in elenchi di password rubate. Scegline una diversa."
-            : "This password is too common or appears in leaked password lists. Please choose a different one.",
+          password: t("This password is too common or appears in leaked password lists. Please choose a different one.", "Questa password è troppo comune o compare in elenchi di password rubate. Scegline una diversa."),
         });
         setIsLoading(false);
         return;
@@ -105,13 +104,14 @@ const Register = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center px-4 md:p-4">
-      <Seo title={lang === "it" ? "Registrati gratis | Genius Chatbot" : "Sign up free | Genius Chatbot"} description={lang === "it" ? "Crea il tuo account Genius Chatbot gratuito e attiva il tuo assistente AI. Nessuna carta richiesta." : "Create your free Genius Chatbot account and launch your AI assistant. No credit card required."} path="/register" />
+    <div className="relative min-h-screen bg-background flex items-center justify-center px-4 md:p-4">
+      <Seo title={t("Sign up free | Genius Chatbot", "Registrati gratis | Genius Chatbot")} description={t("Create your free Genius Chatbot account and launch your AI assistant. No credit card required.", "Crea il tuo account Genius Chatbot gratuito e attiva il tuo assistente AI. Nessuna carta richiesta.")} path="/register" />
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-1/4 left-1/4 w-96 h-96 rounded-full bg-primary/5 blur-3xl" />
         <div className="absolute bottom-1/4 right-1/4 w-64 h-64 rounded-full bg-primary/8 blur-3xl" />
       </div>
 
+      <div className="absolute right-4 top-4 z-20 text-foreground"><PublicLanguageSelect /></div>
       <div className="relative w-full max-w-md">
         <div className="text-center mb-6 animate-fade-in-up">
           <div className="inline-flex items-center justify-center w-16 h-16 max-w-[120px] rounded-2xl bg-white shadow-lg mb-4">
