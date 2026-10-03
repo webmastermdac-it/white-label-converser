@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import type { LocalizedText, VerticalContent } from "@/content/verticals";
 import { useLanguage } from "@/hooks/useLanguage";
+const NUMBER_LOCALES: Record<string, string> = { it: "it-IT", en: "en-US", fr: "fr-FR", de: "de-DE", es: "es-ES", pt: "pt-PT" };
 
 type Localize = (text: LocalizedText) => string;
 
@@ -51,7 +52,7 @@ export function HotelFeatures({ items, localized }: { items: NonNullable<Vertica
 type RoiValues = { requests: number; afterHours: number; conversion: number; stayValue: number; commission: number };
 
 export function HotelRoi({ content, localized }: { content: NonNullable<VerticalContent["roi"]>; localized: Localize }) {
-  const { t } = useLanguage();
+  const { t, contentLang } = useLanguage();
   const [values, setValues] = useState<RoiValues>({ requests: 60, afterHours: 40, conversion: 10, stayValue: 450, commission: 18 });
   const output = useMemo(() => { const afterHours = values.requests * values.afterHours / 100; const bookings = afterHours * values.conversion / 100; const revenue = bookings * values.stayValue; return { afterHours, bookings, revenue, savings: revenue * values.commission / 100 }; }, [values]);
   const fields: { key: keyof RoiValues; label: string; min: number; max: number; suffix: string }[] = [
