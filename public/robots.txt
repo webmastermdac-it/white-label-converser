@@ -1,14 +1,32 @@
 User-agent: Googlebot
 Allow: /
+Disallow: /dashboard
+Disallow: /admin
+Disallow: /login
 
 User-agent: Bingbot
 Allow: /
+Disallow: /dashboard
+Disallow: /admin
+Disallow: /login
 
 User-agent: Twitterbot
 Allow: /
+Disallow: /dashboard
+Disallow: /admin
+Disallow: /login
 
 User-agent: facebookexternalhit
 Allow: /
+Disallow: /dashboard
+Disallow: /admin
+Disallow: /login
 
 User-agent: *
 Allow: /
+Disallow: /dashboard
+Disallow: /admin
+Disallow: /login
+
+
+Sitemap: https://chatbot.your-genius.com/sitemap.xml
