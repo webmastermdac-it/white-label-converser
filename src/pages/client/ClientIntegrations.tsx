@@ -460,8 +460,10 @@ const ClientIntegrations = ({ embedded = false, clientIdOverride }: { embedded?:
                   <span className="text-sm font-medium">{item.name}</span>
                   {locked ? (
                     <Badge variant="secondary" className="gap-1 text-[10px]">
-                      <Lock className="w-3 h-3" />
-                      {isIt ? "Bloccato dal piano" : "Locked by plan"}
+                      {activeModule.id !== "general" && <Lock className="w-3 h-3" />}
+                      {activeModule.id === "general"
+                        ? (isIt ? "Opzionale" : "Optional")
+                        : (isIt ? "Bloccato dal piano" : "Locked by plan")}
                     </Badge>
                   ) : connected ? (
                     <Badge className="bg-green-600 hover:bg-green-600 text-[10px]">
