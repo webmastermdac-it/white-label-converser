@@ -367,8 +367,8 @@ export const translations = {
     it: "Passa a Pro per sbloccare tutte le funzionalità",
   },
   upgradeToProDesc: {
-    en: "Unlimited chatbots, unlimited conversations and more",
-    it: "Chatbot illimitati, conversazioni illimitate e molto altro",
+    en: "One chatbot, unlimited conversations and more",
+    it: "Un chatbot, conversazioni illimitate e molto altro",
   },
 
   // ── Client Chats ───────────────────────────────────────
@@ -833,8 +833,8 @@ export const translations = {
     it: "Supporto prioritario",
   },
   upgradeUnlimitedBots: {
-    en: "Unlimited chatbots",
-    it: "Chatbot illimitati",
+    en: "1 custom chatbot for your business type",
+    it: "1 chatbot personalizzato per il tuo settore",
   },
   upgradeUnlimitedConv: {
     en: "Unlimited conversations",

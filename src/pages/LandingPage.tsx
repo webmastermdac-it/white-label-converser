@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { useLanguage } from "@/hooks/useLanguage";
 import { Button } from "@/components/ui/button";
-import { Play, Menu, X, Check, Loader2, ArrowRight, Bot, ClipboardList, CalendarCheck, Palette, Globe, BarChart3, ShoppingCart, Lock, Hotel, ChevronDown, Sparkles, Rocket, Crown, Wrench } from "lucide-react";
+import { Play, Menu, X, Check, Loader2, ArrowRight, BookOpen, Bot, ClipboardList, CalendarCheck, Palette, Globe, BarChart3, ShoppingCart, Lock, Hotel, ChevronDown, Sparkles, Rocket, Crown, Wrench } from "lucide-react";
 import geniusLogo from "@/assets/genius.png";
 import genieHero from "@/assets/genie-mascot-new.png";
 import { supabase } from "@/integrations/supabase/client";
