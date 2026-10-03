@@ -59,7 +59,7 @@
       leadLabel: "📋 Leave your contact details",
       namePlaceholder: "Name *",
       emailPlaceholder: "Email",
-      phonePlaceholder: "Phone *",
+      phonePlaceholder: "Phone",
       contactNote: "Please provide at least email or phone",
       messagePlaceholder: "Message",
       submitBtn: "Submit request",
@@ -75,7 +75,7 @@
       leadLabel: "📋 Lascia i tuoi contatti",
       namePlaceholder: "Nome *",
       emailPlaceholder: "Email",
-      phonePlaceholder: "Telefono *",
+      phonePlaceholder: "Telefono",
       contactNote: "Inserisci almeno uno tra email e telefono",
       messagePlaceholder: "Messaggio",
       submitBtn: "Invia richiesta",
@@ -91,7 +91,7 @@
       leadLabel: "📋 Laissez vos coordonnées",
       namePlaceholder: "Nom *",
       emailPlaceholder: "Email",
-      phonePlaceholder: "Téléphone *",
+      phonePlaceholder: "Téléphone",
       contactNote: "Indiquez au moins un email ou un téléphone",
       messagePlaceholder: "Message",
       submitBtn: "Envoyer",
@@ -106,8 +106,9 @@
       placeholder: "Nachricht schreiben...",
       leadLabel: "📋 Hinterlassen Sie Ihre Daten",
       namePlaceholder: "Name *",
-      emailPlaceholder: "E-Mail *",
+      emailPlaceholder: "E-Mail",
       phonePlaceholder: "Telefon",
+      contactNote: "Bitte geben Sie mindestens eine E-Mail-Adresse oder Telefonnummer an",
       messagePlaceholder: "Nachricht",
       submitBtn: "Absenden",
       calendlyBtn: "📅 Beratung buchen",
@@ -121,8 +122,9 @@
       placeholder: "Escribe un mensaje...",
       leadLabel: "📋 Deje sus datos",
       namePlaceholder: "Nombre *",
-      emailPlaceholder: "Email *",
+      emailPlaceholder: "Email",
       phonePlaceholder: "Teléfono",
+      contactNote: "Indique al menos un email o un teléfono",
       messagePlaceholder: "Mensaje",
       submitBtn: "Enviar solicitud",
       calendlyBtn: "📅 Reservar consulta",
@@ -136,8 +138,9 @@
       placeholder: "Escreva uma mensagem...",
       leadLabel: "📋 Deixe seus dados",
       namePlaceholder: "Nome *",
-      emailPlaceholder: "Email *",
+      emailPlaceholder: "Email",
       phonePlaceholder: "Telefone",
+      contactNote: "Indique pelo menos um email ou telefone",
       messagePlaceholder: "Mensagem",
       submitBtn: "Enviar pedido",
       calendlyBtn: "📅 Agendar consulta",
@@ -155,8 +158,21 @@
   var hotelLabels = {
     en: { arrival: "Arrival", departure: "Departure", adults: "Adults", children: "Children", room: "Preferred room", anyRoom: "No preference", dateError: "Check the dates: arrival from today, departure after arrival.", bookBtn: "Check availability and book" },
     it: { arrival: "Arrivo", departure: "Partenza", adults: "Adulti", children: "Bambini", room: "Camera preferita", anyRoom: "Nessuna preferenza", dateError: "Controlla le date: arrivo da oggi, partenza dopo l'arrivo.", bookBtn: "Verifica disponibilità e prenota" },
+    fr: { arrival: "Arrivée", departure: "Départ", adults: "Adultes", children: "Enfants", room: "Chambre préférée", anyRoom: "Aucune préférence", dateError: "Vérifiez les dates : arrivée à partir d'aujourd'hui, départ après l'arrivée.", bookBtn: "Vérifier les disponibilités et réserver" },
+    de: { arrival: "Anreise", departure: "Abreise", adults: "Erwachsene", children: "Kinder", room: "Bevorzugtes Zimmer", anyRoom: "Keine Präferenz", dateError: "Prüfen Sie die Daten: Anreise ab heute, Abreise nach der Anreise.", bookBtn: "Verfügbarkeit prüfen und buchen" },
+    es: { arrival: "Llegada", departure: "Salida", adults: "Adultos", children: "Niños", room: "Habitación preferida", anyRoom: "Sin preferencia", dateError: "Compruebe las fechas: llegada a partir de hoy y salida posterior a la llegada.", bookBtn: "Comprobar disponibilidad y reservar" },
+    pt: { arrival: "Chegada", departure: "Partida", adults: "Adultos", children: "Crianças", room: "Quarto preferido", anyRoom: "Sem preferência", dateError: "Verifique as datas: chegada a partir de hoje e partida após a chegada.", bookBtn: "Verificar disponibilidade e reservar" },
   };
   var th = hotelLabels[baseLang] || hotelLabels["en"];
+  var serviceLabels = {
+    en: { messagePlaceholder: "Optional message", namePlaceholder: "Optional name", cancelBtn: "Cancel", sendBtn: "Send request", successMsg: "Request sent to reception." },
+    it: { messagePlaceholder: "Messaggio facoltativo", namePlaceholder: "Nome facoltativo", cancelBtn: "Annulla", sendBtn: "Invia richiesta", successMsg: "Richiesta inviata alla reception." },
+    fr: { messagePlaceholder: "Message facultatif", namePlaceholder: "Nom facultatif", cancelBtn: "Annuler", sendBtn: "Envoyer la demande", successMsg: "Demande envoyée à la réception." },
+    de: { messagePlaceholder: "Optionale Nachricht", namePlaceholder: "Optionaler Name", cancelBtn: "Abbrechen", sendBtn: "Anfrage senden", successMsg: "Anfrage an die Rezeption gesendet." },
+    es: { messagePlaceholder: "Mensaje opcional", namePlaceholder: "Nombre opcional", cancelBtn: "Cancelar", sendBtn: "Enviar solicitud", successMsg: "Solicitud enviada a recepción." },
+    pt: { messagePlaceholder: "Mensagem opcional", namePlaceholder: "Nome opcional", cancelBtn: "Cancelar", sendBtn: "Enviar pedido", successMsg: "Pedido enviado à receção." },
+  };
+  var ts = serviceLabels[baseLang] || serviceLabels["en"];
   var hotelBookingUrl = "";
   var hotelLeadId = "";
   function isHotel() { return !!(config && config.business_vertical === "hotel" && config.hotel); }
@@ -433,9 +449,9 @@
     }
     if (serviceCategory) {
       html += '<div class="mdac-service-form"><strong style="font-size:13px;color:#1a1a2e;">' + esc(serviceCategory) + '</strong>';
-      html += '<textarea id="mdac-service-message" rows="2" placeholder="' + (baseLang === "it" ? "Messaggio facoltativo" : "Optional message") + '"></textarea>';
-      html += '<input id="mdac-service-name" placeholder="' + (baseLang === "it" ? "Nome facoltativo" : "Optional name") + '" />';
-      html += '<div class="mdac-service-actions"><button id="mdac-service-cancel">' + (baseLang === "it" ? "Annulla" : "Cancel") + '</button><button class="primary" id="mdac-service-send"' + (serviceSending ? ' disabled' : '') + '>' + (baseLang === "it" ? "Invia richiesta" : "Send request") + '</button></div></div>';
+      html += '<textarea id="mdac-service-message" rows="2" placeholder="' + ts.messagePlaceholder + '"></textarea>';
+      html += '<input id="mdac-service-name" placeholder="' + ts.namePlaceholder + '" />';
+      html += '<div class="mdac-service-actions"><button id="mdac-service-cancel">' + ts.cancelBtn + '</button><button class="primary" id="mdac-service-send"' + (serviceSending ? ' disabled' : '') + '>' + ts.sendBtn + '</button></div></div>';
     }
 
     // Input area + footer
@@ -606,7 +622,7 @@
       body: JSON.stringify({ embed_token: EMBED_TOKEN, room: ROOM, category: serviceCategory, message: msg ? msg.value.trim() : "", guest_name: name ? name.value.trim() : "" }),
     }).then(function (response) {
       if (!response.ok) throw new Error("request_failed");
-      messages.push({ role: "assistant", content: baseLang === "it" ? "Richiesta inviata alla reception." : "Request sent to reception." });
+      messages.push({ role: "assistant", content: ts.successMsg });
       serviceCategory = "";
       serviceSending = false;
       saveMessages(messages);
