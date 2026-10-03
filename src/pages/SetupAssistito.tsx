@@ -1,3 +1,4 @@
+import Seo from "@/components/Seo";
 import { useEffect } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight, Check, Clock3, Gauge, ShieldCheck, Wrench } from "lucide-react";
@@ -14,9 +15,6 @@ export default function SetupAssistito() {
   const setupHref = user ? "/dashboard/upgrade#setup" : "/register?vertical=ecommerce";
   const localized = (text: { en: string; it: string }) => t(text.en, text.it);
 
-  useEffect(() => {
-    document.title = t("Professional chatbot setup | Genius Chatbot", "Setup professionale chatbot | Genius Chatbot");
-  }, [t]);
 
   const services = [
     { it: "Contatto e analisi delle tue esigenze", en: "Contact and analysis of your needs" },
@@ -52,6 +50,7 @@ export default function SetupAssistito() {
 
   return (
     <div className="min-h-screen overflow-x-hidden bg-[#0F1419] text-white" style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>
+      <Seo title={t("Professional chatbot setup | Genius Chatbot", "Setup professionale chatbot | Genius Chatbot")} description={t("We connect your store or catalog, configure and test your AI chatbot with you. One-off €570.", "Colleghiamo il tuo store o catalogo, configuriamo e testiamo il chatbot AI con te. €570 una tantum.")} path="/setup-assistito" />
       <header className="border-b border-white/10 bg-[#0F1419]/95">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
           <Link to="/" className="flex items-center gap-2.5"><img src={geniusLogo} alt="Genius" className="h-9 w-9" /><span className="hidden text-lg font-bold sm:inline" style={{ fontFamily: "'Syne', sans-serif" }}>Genius <span className="text-[#F5A623]">Chatbot</span></span></Link>

@@ -1,3 +1,4 @@
+import Seo from "@/components/Seo";
 import { useState } from "react";
 import { Navigate, Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -33,6 +34,7 @@ const Login = () => {
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center px-4 md:p-4">
+      <Seo title="Login | Genius Chatbot" path="/login" noindex />
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-1/4 left-1/4 w-96 h-96 rounded-full bg-primary/5 blur-3xl" />
         <div className="absolute bottom-1/4 right-1/4 w-64 h-64 rounded-full bg-primary/8 blur-3xl" />

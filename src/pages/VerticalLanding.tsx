@@ -38,6 +38,7 @@ export default function VerticalLanding({ verticalId }: { verticalId: VerticalId
 
   return (
     <div className="min-h-screen overflow-x-hidden bg-[#0F1419] text-white" style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>
+      <Seo title={vertical.seo.title[lang]} description={vertical.seo.description[lang]} path={vertical.path} />
       <nav className={`fixed inset-x-0 top-0 z-50 transition-all duration-300 ${scrolled ? "bg-[#0F1419]/90 shadow-lg shadow-black/30 backdrop-blur-lg" : "bg-transparent"}`}>
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
           <Link to="/" className="flex shrink-0 items-center gap-2.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F5A623]">
