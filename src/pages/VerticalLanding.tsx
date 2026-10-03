@@ -14,7 +14,7 @@ import { getVertical, verticals, type VerticalId } from "@/content/verticals";
 import { useLanguage } from "@/hooks/useLanguage";
 import geniusLogo from "@/assets/genius.png";
 
-const iconFor = (id: VerticalId) => id === "ecommerce" ? ShoppingCart : id === "booking" ? CalendarCheck : Hotel;
+const iconFor = (id: VerticalId) => id === "ecommerce" ? ShoppingCart : id === "booking" ? CalendarCheck : id === "general" ? Building2 : Hotel;
 
 export default function VerticalLanding({ verticalId }: { verticalId: VerticalId }) {
   const { lang, setLang, t } = useLanguage();

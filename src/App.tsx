@@ -74,6 +74,7 @@ const App = () => (
             <Route path="/chatbot-ecommerce" element={<VerticalLanding verticalId="ecommerce" />} />
             <Route path="/chatbot-appuntamenti" element={<VerticalLanding verticalId="booking" />} />
             <Route path="/concierge-hotel" element={<VerticalLanding verticalId="hotel" />} />
+            <Route path="/chatbot-sito-aziendale" element={<VerticalLanding verticalId="general" />} />
             <Route path="/setup-assistito" element={<SetupAssistito />} />
             <Route path="/c/:embed_token" element={<PublicConcierge />} />
 
