@@ -79,6 +79,7 @@ If the user seems undecided or drops the conversation without adding anything to
       welcome_message: `Ciao! Sono l'assistente virtuale IA di ${company_name}. Come posso aiutarti?`,
       notification_email: email,
       business_vertical: safeVertical,
+      vertical: safeVertical,
       ...(safeVertical === "ecommerce"
         ? { knowledge_base: locale === "it" ? ECOMMERCE_KB_IT : ECOMMERCE_KB_EN }
         : {}),
