@@ -29,7 +29,7 @@ const dict: Record<string, string> = {
   "Priority support": "Priorisierter Support",
   "🔍 Advanced Search (RAG)": "🔍 Erweiterte Suche (RAG)",
   "🛒 XML/CSV Feed (daily sync)": "🛒 XML/CSV-Feed (tägliche Synchronisierung)",
-  "Up to 100 catalog products": "Bis zu 100 Katalogprodukte",
+  "Up to 500 catalog products": "Bis zu 500 Katalogprodukte",
   "1 custom chatbot for your business type": "1 individueller Chatbot für Ihren Geschäftstyp",
   "Unlimited conversations": "Unbegrenzte Konversationen",
   "All Starter features": "Alle Starter-Funktionen",

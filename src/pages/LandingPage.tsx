@@ -150,17 +150,17 @@ function getPricingFeatures(t: (en: string, it: string) => string): Record<Prici
     t("Unlimited FAQs", "FAQ illimitate"),
     t("PDF/Word upload", "Upload PDF/Word"),
     t("Website pages and sitemap import", "Importazione pagine del sito e sitemap"),
-    t("Calendly integration for appointments", "Integrazione Calendly per gli appuntamenti"),
     t("Priority support", "Supporto prioritario"),
     t("🔍 Advanced Search (RAG)", "🔍 Ricerca Avanzata (RAG)"),
     t("🛒 XML/CSV Feed (daily sync)", "🛒 Feed XML/CSV (sync giornaliero)"),
-    t("Up to 100 catalog products", "Fino a 100 prodotti a catalogo"),
+    t("Up to 500 catalog products", "Fino a 500 prodotti a catalogo"),
   ];
   const proBase = [
     t("1 custom chatbot for your business type", "1 chatbot personalizzato per il tuo settore"),
     t("Unlimited conversations", "Conversazioni illimitate"),
     t("Unlimited leads", "Lead illimitati"),
     t("All Starter features", "Tutte le funzionalità Starter"),
+    t("Calendly integration for appointments", "Integrazione Calendly per gli appuntamenti"),
     t("🔍 Advanced Search (RAG) — highlighted", "🔍 Ricerca Avanzata (RAG) — in evidenza"),
     t("🛒 Full ecommerce & catalog (WooCommerce, Shopify, PrestaShop, API + real-time webhooks)", "🛒 Ecommerce e catalogo completo (WooCommerce, Shopify, PrestaShop, API + webhook real-time)"),
     t("Unlimited catalog products", "Prodotti a catalogo illimitati"),
@@ -202,12 +202,18 @@ export function PricingGrid({ yearly, t, verticalId, selectedVertical = "generic
   useEffect(() => {
     const el = gridRef.current;
     if (!el) return;
+    const reduce = typeof window.matchMedia === "function" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (typeof IntersectionObserver === "undefined" || reduce) {
+      setVisible(true);
+      return;
+    }
     const obs = new IntersectionObserver(
       ([e]) => { if (e.isIntersecting) { setVisible(true); obs.disconnect(); } },
-      { threshold: 0.1 }
+      { threshold: 0.05, rootMargin: "0px 0px 120px 0px" }
     );
     obs.observe(el);
-    return () => obs.disconnect();
+    const fallback = window.setTimeout(() => setVisible(true), 800);
+    return () => { obs.disconnect(); window.clearTimeout(fallback); };
   }, []);
 
   useEffect(() => {
@@ -427,6 +433,8 @@ export default function LandingPage() {
   const { lang, setLang, t, localized } = useLanguage();
   const [mobileMenu, setMobileMenu] = useState(false);
   const [videoOpen, setVideoOpen] = useState(false);
+  // Reserved for reactivating the existing player when a real demo URL is available.
+  const demoVideoUrl = "";
   const [yearly, setYearly] = useState(false);
   const [selectedVertical, setSelectedVertical] = useState<"generic" | "booking" | "ecommerce" | "hospitality">("generic");
   const [scrolled, setScrolled] = useState(false);
@@ -623,11 +631,11 @@ export default function LandingPage() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
           <h2 className="text-center text-3xl font-bold sm:text-4xl" style={{ fontFamily: "'Syne', sans-serif" }}>{t("Choose your assistant", "Scegli il tuo assistente")}</h2>
           <div className="mt-10 flex gap-2 overflow-x-auto pb-2 lg:hidden" role="tablist" aria-label={t("Choose a solution", "Scegli una soluzione")}>
-            {verticals.map((vertical) => { const Icon = verticalIcon(vertical.id); return <button key={vertical.id} role="tab" aria-selected={activeVertical === vertical.id} onClick={() => setActiveVertical(vertical.id)} className={`flex shrink-0 items-center gap-2 rounded-full border px-4 py-2.5 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F5A623] ${activeVertical === vertical.id ? "border-[#F5A623] bg-[#F5A623] text-black" : "border-white/15 bg-white/5 text-white/70"}`}><Icon className="h-4 w-4" />{localized(vertical.name)}</button>; })}
+            {verticals.map((vertical) => { const Icon = verticalIcon(vertical.id); return <button key={vertical.id} role="tab" aria-selected={activeVertical === vertical.id} onClick={() => setActiveVertical(vertical.id)} className={`flex shrink-0 items-center gap-2 whitespace-nowrap rounded-full border px-4 py-2.5 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F5A623] ${activeVertical === vertical.id ? "border-[#F5A623] bg-[#F5A623] text-black" : "border-white/15 bg-white/5 text-white/70"}`}><Icon className="h-4 w-4" />{localized(vertical.name)}</button>; })}
           </div>
           <div className="mt-6 grid items-stretch gap-8 lg:mt-12 lg:grid-cols-[minmax(0,1fr)_400px]">
             <div className="hidden grid-cols-2 gap-4 lg:grid">
-              {verticals.map((vertical) => { const Icon = verticalIcon(vertical.id); const active = activeVertical === vertical.id; return <article key={vertical.id} onMouseEnter={() => setActiveVertical(vertical.id)} className={`flex flex-col rounded-2xl border p-5 transition-all ${active ? "border-[#F5A623]/70 bg-[#F5A623]/10 shadow-lg shadow-[#F5A623]/10" : "border-white/10 bg-white/[0.03] hover:border-white/25"}`}><button onClick={() => setActiveVertical(vertical.id)} className="rounded-lg text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F5A623]" aria-pressed={active}><Icon className="mb-4 h-7 w-7 text-[#F5A623]" /><h3 className="text-lg font-bold" style={{ fontFamily: "'Syne', sans-serif" }}>{localized(vertical.name)}</h3><p className="mt-2 text-sm font-medium text-white/80">{localized(vertical.promise)}</p></button><ul className="mt-5 space-y-2.5 text-sm text-white/55">{vertical.bullets.map((bullet) => <li key={bullet.it} className="flex gap-2"><Check className="mt-0.5 h-4 w-4 shrink-0 text-[#F5A623]" />{localized(bullet)}</li>)}</ul><div className="mt-5 flex flex-wrap gap-1.5">{vertical.badges.map((badge) => { const label = typeof badge === "string" ? badge : localized(badge); return <span key={label} className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] text-white/55">{label}</span>; })}</div><div className="mt-auto grid grid-cols-2 gap-2 pt-6"><Link to={vertical.path}><Button variant="outline" className="w-full rounded-full border-white/20 bg-white text-gray-900 hover:bg-white/90">{t("Discover", "Scopri")}</Button></Link><Link to={`/register?vertical=${vertical.id}`}><Button className="w-full rounded-full bg-[#F5A623] text-black hover:bg-[#E09800]">{t("Try free", "Prova gratis")}</Button></Link></div></article>; })}
+              {verticals.map((vertical) => { const Icon = verticalIcon(vertical.id); const active = activeVertical === vertical.id; return <article key={vertical.id} onMouseEnter={() => setActiveVertical(vertical.id)} className={`flex flex-col rounded-2xl border p-5 transition-all ${active ? "border-[#F5A623]/70 bg-[#F5A623]/10 shadow-lg shadow-[#F5A623]/10" : "border-white/10 bg-white/[0.03] hover:border-white/25"}`}><button onClick={() => setActiveVertical(vertical.id)} className="rounded-lg text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F5A623]" aria-pressed={active}><Icon className="mb-4 h-7 w-7 text-[#F5A623]" /><h3 className="text-lg font-bold" style={{ fontFamily: "'Syne', sans-serif" }}>{localized(vertical.name)}</h3><p className="mt-2 text-sm font-medium text-white/80">{localized(vertical.promise)}</p></button><ul className="mt-5 space-y-2.5 text-sm text-white/55">{vertical.bullets.map((bullet) => <li key={bullet.it} className="flex gap-2"><Check className="mt-0.5 h-4 w-4 shrink-0 text-[#F5A623]" />{localized(bullet)}</li>)}</ul><div className="mt-5 flex flex-wrap gap-1.5">{vertical.badges.map((badge) => { const label = typeof badge === "string" ? badge : localized(badge); return <span key={label} className="whitespace-nowrap rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] text-white/55">{label}</span>; })}</div><div className="mt-auto grid grid-cols-2 gap-2 pt-6"><Link to={vertical.path}><Button variant="outline" className="h-auto min-h-10 w-full whitespace-normal rounded-full border-white/20 bg-white px-2 py-2 leading-tight text-gray-900 hover:bg-white/90">{t("Discover", "Scopri")}</Button></Link><Link to={`/register?vertical=${vertical.id}`}><Button className="h-auto min-h-10 w-full whitespace-normal rounded-full bg-[#F5A623] px-2 py-2 leading-tight text-black hover:bg-[#E09800]">{t("Try free", "Prova gratis")}</Button></Link></div></article>; })}
             </div>
             <div className="space-y-4 lg:hidden"><article className="rounded-2xl border border-[#F5A623]/50 bg-[#F5A623]/10 p-5"><h3 className="text-xl font-bold" style={{ fontFamily: "'Syne', sans-serif" }}>{localized(selectedVerticalContent.name)}</h3><p className="mt-2 text-sm font-medium text-white/80">{localized(selectedVerticalContent.promise)}</p><ul className="mt-4 space-y-2 text-sm text-white/60">{selectedVerticalContent.bullets.map((bullet) => <li key={bullet.it} className="flex gap-2"><Check className="mt-0.5 h-4 w-4 shrink-0 text-[#F5A623]" />{localized(bullet)}</li>)}</ul><div className="mt-5 grid grid-cols-2 gap-2"><Link to={selectedVerticalContent.path}><Button variant="outline" className="w-full rounded-full bg-white text-gray-900">{t("Discover", "Scopri")}</Button></Link><Link to={`/register?vertical=${selectedVerticalContent.id}`}><Button className="w-full rounded-full bg-[#F5A623] text-black">{t("Try free", "Prova gratis")}</Button></Link></div></article></div>
             <div className="flex items-center justify-center"><VerticalDemoChat key={selectedVerticalContent.id} vertical={selectedVerticalContent} /></div>
@@ -876,14 +884,14 @@ export default function LandingPage() {
       </footer>
 
       {/* ─── VIDEO MODAL ─── */}
-      {videoOpen && (
+      {videoOpen && demoVideoUrl && (
         <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setVideoOpen(false)}>
           <div className="relative w-full max-w-4xl aspect-video" onClick={(e) => e.stopPropagation()}>
             <button onClick={() => setVideoOpen(false)} className="absolute -top-10 right-0 text-white/60 hover:text-white">
               <X className="w-6 h-6" />
             </button>
             <iframe
-              src="https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1"
+              src={demoVideoUrl}
               className="w-full h-full rounded-xl"
               allow="autoplay; encrypted-media"
               allowFullScreen
