@@ -44,7 +44,7 @@ const dict: Record<string, string> = {
   "Full ecommerce & catalog with real-time webhooks": "Ecommerce e catálogo completos com webhooks em tempo real",
   "Try Genius with no commitment": "Experimente o Genius sem compromisso",
   "month": "mês",
-  "Prices include VAT": "Os preços incluem IVA",
+  "Prices include VAT": "Preços IVA incluído",
   "Start Free": "Começar Grátis",
   "Advanced Search (RAG)": "Pesquisa Avançada (RAG)",
   "Train your chatbot on your documents and PDFs": "Treine o seu chatbot com os seus documentos e PDFs",

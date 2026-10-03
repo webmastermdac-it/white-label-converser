@@ -164,7 +164,7 @@ const dict: Record<string, string> = {
   "We connect your store or catalog, configure and test your AI chatbot with you. One-off €570, VAT included.": "Wir binden Ihren Shop oder Katalog an, konfigurieren und testen Ihren KI-Chatbot mit Ihnen. Einmalig 570 €, inkl. MwSt.",
   "We set it up. You focus on selling.": "Wir richten es ein. Sie konzentrieren sich auf den Verkauf.",
   "We contact you, connect your store or catalog, configure the chatbot and test it together with you.": "Wir kontaktieren Sie, binden Ihren Shop oder Katalog an, konfigurieren den Chatbot und testen ihn gemeinsam mit Ihnen.",
-  "€570 one-off · VAT included": "570 € einmalig · inkl. MwSt.",
+  "€570 one-off · VAT included": "€570 einmalig · inkl. MwSt.",
   "What we do": "Was wir tun",
   "Everything you need to get started": "Alles, was Sie für den Start benötigen.",
   "Why let us do it": "Warum Sie es uns überlassen sollten",
