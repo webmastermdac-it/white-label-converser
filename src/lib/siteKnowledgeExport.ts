@@ -53,7 +53,6 @@ const PRICING: { name: string; monthly: string; yearly: string; features: Locali
       { it: "Canale Instagram DM", en: "Instagram DM channel" },
       { it: "Chiusura automatica delle chat inattive con email di riepilogo", en: "Automatic closing of inactive chats with recap email" },
       { it: "Analytics avanzati", en: "Advanced analytics" },
-      { it: "White label completo (nessun branding Genius)", en: "Complete white label (no Genius branding)" },
       { it: "Supporto dedicato", en: "Dedicated support" },
     ],
   },

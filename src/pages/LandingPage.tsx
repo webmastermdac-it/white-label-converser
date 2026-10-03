@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { useLanguage } from "@/hooks/useLanguage";
 import { Button } from "@/components/ui/button";
-import { Play, Star, Menu, X, Check, Loader2, ArrowRight, Users, BookOpen, Bot, ClipboardList, CalendarCheck, Palette, Globe, BarChart3, ShoppingCart, Lock, Hotel, ChevronDown, Sparkles, Rocket, Crown, Wrench } from "lucide-react";
+import { Play, Menu, X, Check, Loader2, ArrowRight, BookOpen, Bot, ClipboardList, CalendarCheck, Palette, Globe, BarChart3, ShoppingCart, Lock, Hotel, ChevronDown, Sparkles, Rocket, Crown, Wrench } from "lucide-react";
 import geniusLogo from "@/assets/genius.png";
 import genieHero from "@/assets/genie-mascot-new.png";
 import { supabase } from "@/integrations/supabase/client";
@@ -60,7 +60,7 @@ const featureItems = [
   { Icon: Bot, color: "38 90% 55%", en: "AI Conversations", it: "Conversazioni AI", descEn: "Trained on your business. Answers questions, handles objections, qualifies leads 24/7.", descIt: "Addestrato sul tuo business. Risponde alle domande, gestisce le obiezioni e qualifica i lead 24/7." },
   { Icon: ClipboardList, color: "199 89% 48%", en: "Lead Capture", it: "Cattura Lead", descEn: "Never lose a visitor. When the bot can't answer, it captures their contact instantly.", descIt: "Non perdere mai un visitatore. Quando il bot non può rispondere, cattura il contatto istantaneamente." },
   { Icon: CalendarCheck, color: "142 71% 45%", en: "Booking", it: "Prenotazioni", descEn: "Integrated Calendly. Visitors book appointments directly in the chat.", descIt: "Calendly integrato. I visitatori prenotano appuntamenti direttamente nella chat." },
-  { Icon: Palette, color: "340 82% 52%", en: "Full Customization", it: "Personalizzazione Totale", descEn: "Colors, avatar, tone of voice. Your chatbot, your brand. Complete white-label.", descIt: "Colori, avatar, tono di voce. Il tuo chatbot, il tuo brand. Completa white-label." },
+  { Icon: Palette, color: "340 82% 52%", en: "Full Customization", it: "Personalizzazione Totale", descEn: "Colors, avatar and tone of voice: adapt the chatbot to your brand.", descIt: "Colori, avatar e tono di voce: adatta il chatbot al tuo brand." },
   { Icon: Globe, color: "199 89% 48%", en: "Multilingual", it: "Multilingua", descEn: "Speaks English and Italian. Auto-detects visitor language.", descIt: "Parla italiano e inglese. Rileva automaticamente la lingua del visitatore." },
   { Icon: BarChart3, color: "262 83% 58%", en: "Full Dashboard", it: "Dashboard Completa", descEn: "Track leads, conversations, and conversions in real time with advanced analytics.", descIt: "Monitora lead, conversazioni e conversioni in tempo reale con analytics avanzati." },
   { Icon: ShoppingCart, color: "38 90% 55%", en: "Ecommerce & Catalog Integration", it: "Integrazione Ecommerce e Catalogo", descEn: "Connect WooCommerce, Shopify or PrestaShop. The bot knows products, prices, availability and variants in real time. Automatic sync every 24 hours.", descIt: "Connetti WooCommerce, Shopify o PrestaShop. Il bot conosce prodotti, prezzi, disponibilità e varianti in tempo reale. Sincronizzazione automatica ogni 24 ore." },
@@ -120,12 +120,14 @@ type PricingVertical = "generic" | "booking" | "ecommerce" | "hospitality";
 
 function getPricingFeatures(t: (en: string, it: string) => string): Record<PricingVertical, Record<PricingPlanId, { features: string[]; locked?: string[] }>> {
   const freeFeatures = [
-    t("1 AI chatbot on your website", "1 chatbot AI sul tuo sito"),
-    t("Monthly conversations included (see current limit in your plan)", "Conversazioni mensili incluse (vedi limite del piano)"),
-    t("Automatic lead capture", "Cattura lead automatica"),
-    t("Basic customization (colors, avatar)", "Personalizzazione base (colori, avatar)"),
-    t("Guided setup wizard", "Wizard guidato per la configurazione"),
-    t("\"Powered by Chatbot Genius\" badge shown", "Badge \"Powered by Chatbot Genius\" visibile"),
+    t("1 chatbot", "1 chatbot"),
+    t("50 conversations/month", "50 conversazioni/mese"),
+    t("10 leads/month", "10 lead/mese"),
+    t("System prompt (tone & bot role)", "Prompt di sistema (tono e ruolo del bot)"),
+    t("5 manual FAQs", "5 FAQ manuali"),
+    t("Lead capture in chat (name + email or phone)", "Raccolta contatti in chat (nome + email o telefono)"),
+    t("Multilingual replies", "Risposte multilingua"),
+    t("Email support", "Supporto email"),
   ];
   const freeLocked = [
     t("Advanced Search (RAG)", "Ricerca Avanzata (RAG)"),
@@ -138,13 +140,24 @@ function getPricingFeatures(t: (en: string, it: string) => string): Record<Prici
     t("Advanced system prompt", "Prompt di sistema avanzato"),
     t("Unlimited FAQs", "FAQ illimitate"),
     t("PDF/Word upload", "Upload PDF/Word"),
-    t("Email support", "Supporto email"),
-    t("🔍 Advanced Search (RAG) included", "🔍 Ricerca Avanzata (RAG) inclusa"),
+    t("Website pages and sitemap import", "Importazione pagine del sito e sitemap"),
+    t("Calendly integration for appointments", "Integrazione Calendly per gli appuntamenti"),
+    t("Priority support", "Supporto prioritario"),
+    t("🔍 Advanced Search (RAG)", "🔍 Ricerca Avanzata (RAG)"),
+    t("🛒 XML/CSV Feed (daily sync)", "🛒 Feed XML/CSV (sync giornaliero)"),
+    t("Up to 100 catalog products", "Fino a 100 prodotti a catalogo"),
   ];
   const proBase = [
-    t("Everything in Starter", "Tutto ciò che è incluso in Starter"),
-    t("Unlimited chatbots", "Chatbot illimitati"),
+    t("1 custom chatbot for your business type", "1 chatbot personalizzato per il tuo settore"),
     t("Unlimited conversations", "Conversazioni illimitate"),
+    t("Unlimited leads", "Lead illimitati"),
+    t("All Starter features", "Tutte le funzionalità Starter"),
+    t("🔍 Advanced Search (RAG) — highlighted", "🔍 Ricerca Avanzata (RAG) — in evidenza"),
+    t("🛒 Full ecommerce & catalog (WooCommerce, Shopify, PrestaShop, API + real-time webhooks)", "🛒 Ecommerce e catalogo completo (WooCommerce, Shopify, PrestaShop, API + webhook real-time)"),
+    t("Unlimited catalog products", "Prodotti a catalogo illimitati"),
+    t("🏨 Hotel Concierge: stay quotes, room QR codes, real-time guest requests, Results page", "🏨 Concierge Hotel: preventivi soggiorno, QR per le camere, richieste ospiti in tempo reale, pagina Risultati"),
+    t("📱 Instagram DM channel", "📱 Canale Instagram DM"),
+    t("⏱️ Auto-close inactive chats with recap email", "⏱️ Chiusura automatica chat inattive con email di riepilogo"),
     t("Advanced analytics", "Analytics avanzati"),
     t("Dedicated support", "Supporto dedicato"),
   ];
@@ -156,35 +169,17 @@ function getPricingFeatures(t: (en: string, it: string) => string): Record<Prici
     },
     booking: {
       free: { features: freeFeatures, locked: freeLocked },
-      starter: { features: [...starterBase, t("📅 Calendly integration for in-chat bookings", "📅 Integrazione Calendly per prenotazioni dirette in chat")] },
+      starter: { features: starterBase },
       pro: { features: proBase },
     },
     ecommerce: {
       free: { features: freeFeatures, locked: freeLocked },
-      starter: {
-        features: [
-          ...starterBase,
-          t("🛒 XML/CSV feed (daily sync) — up to 500 catalog products", "🛒 Feed XML/CSV (sync giornaliero) — fino a 500 prodotti a catalogo"),
-          t("Bot knows products, prices and availability", "Il bot conosce prodotti, prezzi e disponibilità"),
-        ],
-      },
-      pro: {
-        features: [
-          ...proBase,
-          t("🛒 Full ecommerce & catalog (WooCommerce, Shopify, PrestaShop, API + real-time webhooks)", "🛒 Ecommerce e catalogo completo (WooCommerce, Shopify, PrestaShop, API + webhook real-time)"),
-          t("Unlimited catalog products", "Prodotti a catalogo illimitati"),
-        ],
-      },
+      starter: { features: starterBase },
+      pro: { features: proBase },
     },
     hospitality: {
       free: { features: freeFeatures, locked: freeLocked },
-      starter: {
-        features: [
-          ...starterBase,
-          t("🍽️ Reads menus, documents and your website", "🍽️ Legge menu, documenti e il tuo sito web"),
-          t("Every request saved as a lead", "Ogni richiesta salvata come lead"),
-        ],
-      },
+      starter: { features: starterBase },
       pro: { features: proBase },
     },
   };
@@ -580,12 +575,13 @@ export default function LandingPage() {
               {lang === "en" ? <>An AI assistant for every business. <span className="text-[#F5A623]">Choose yours.</span></> : <>Un assistente AI per ogni attività. <span className="text-[#F5A623]">Scegli il tuo.</span></>}
             </h1>
             <p className="mx-auto max-w-xl text-lg leading-relaxed text-white/55 sm:text-xl md:mx-0">
-              {t("It sells, books appointments and welcomes guests. Installs in 5 minutes, speaks your customers' language and delivers ready-to-contact leads.", "Vende, fissa appuntamenti, accoglie gli ospiti. Si installa in 5 minuti, parla la lingua dei tuoi clienti e ti consegna contatti pronti.")}
+              {t("Create an AI assistant for sales, appointments or hospitality, tailored to your content and your brand.", "Crea un assistente AI per vendite, appuntamenti o ospitalità, adattato ai tuoi contenuti e al tuo brand.")}
             </p>
             <div className="flex flex-col justify-center gap-4 sm:flex-row md:justify-start">
               <Link to="/register"><Button className="h-12 rounded-full bg-[#F5A623] px-8 text-base font-semibold text-black shadow-lg shadow-[#F5A623]/20 hover:bg-[#E09800]">{t("Try free", "Prova gratis")}</Button></Link>
               <Button variant="outline" onClick={() => scrollTo("solutions")} className="h-12 rounded-full border-white/20 bg-white px-8 text-gray-900 hover:bg-white/90">{t("Choose your assistant", "Scegli il tuo assistente")}</Button>
             </div>
+            <p className="text-sm text-white/45">{t("Free plan, no credit card required.", "Piano gratuito, nessuna carta richiesta.")}</p>
           </div>
 
           <div className="relative flex w-full max-w-md flex-1 justify-center md:justify-end">
@@ -715,61 +711,6 @@ export default function LandingPage() {
             </p>
           </div>
 
-          {/* Stats */}
-          <div className="grid sm:grid-cols-3 gap-6 mt-14">
-            {[
-              { icon: <Users className="w-6 h-6 text-[#F5A623]" />, title: t("Zero Outsourcing", "Zero Outsourcing"), desc: t("We handle everything, start to finish. Our staff counts 8+ professionals with diverse skills.", "Ci occupiamo di tutto noi, dall'inizio alla fine. Il nostro staff conta +8 professionisti con competenze diverse.") },
-              { icon: <Star className="w-6 h-6 text-[#F5A623]" />, title: t("250+ Satisfied Clients", "250+ Clienti Soddisfatti"), desc: t("Since 2004 we've helped over 250 companies achieve their business goals.", "Dal 2004 a oggi abbiamo aiutato più di 250 aziende a raggiungere i propri obiettivi di business.") },
-              { icon: <BookOpen className="w-6 h-6 text-[#F5A623]" />, title: t("Continuous Learning", "Formazione Continua"), desc: t("Every day we study and apply new strategies to guarantee ever-improving results.", "Ogni giorno studiamo e applichiamo nuove strategie per garantire risultati sempre migliori.") },
-            ].map((s, i) => (
-              <div key={i} className="bg-white/[0.03] border border-white/10 rounded-2xl p-6 text-center space-y-3">
-                <div className="flex justify-center">{s.icon}</div>
-                <h3 className="font-semibold" style={{ fontFamily: "'Syne', sans-serif" }}>{s.title}</h3>
-                <p className="text-white/50 text-sm leading-relaxed">{s.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </Section>
-
-      {/* ─── TESTIMONIALS ─── */}
-      <Section className="py-20 md:py-28 bg-gradient-to-b from-transparent via-[#1A1F2E]/20 to-transparent">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6">
-          <p className="text-[#F5A623] text-sm font-semibold text-center mb-3 tracking-wider uppercase">{t("Testimonials", "Testimonianze")}</p>
-          <h2 className="text-3xl sm:text-4xl font-bold text-center mb-14" style={{ fontFamily: "'Syne', sans-serif" }}>
-            {t("What Our Clients Say", "Cosa Dicono i Nostri Clienti")}
-          </h2>
-          <div className="grid md:grid-cols-3 gap-6">
-            {[
-              {
-                name: "Marco Bianchi", company: "Studio Legale Bianchi & Associati", initials: "MB",
-                en: "In just one week, the chatbot captured more leads than our contact form did in a month. Absolutely game-changing.",
-                it: "In una sola settimana, il chatbot ha catturato più lead del nostro modulo di contatto in un mese. Assolutamente rivoluzionario."
-              },
-              {
-                name: "Giulia Rossetti", company: "Rossetti Digital Agency", initials: "GR",
-                en: "Our clients love it. We embed a Genius chatbot on every website we build now. The ROI is immediate.",
-                it: "I nostri clienti lo adorano. Ora integriamo un chatbot Genius su ogni sito che costruiamo. Il ROI è immediato."
-              },
-              {
-                name: "Andrea Colombo", company: "Colombo Consulting S.r.l.", initials: "AC",
-                en: "Setup took literally 5 minutes. The AI handles questions I didn't even think visitors would ask.",
-                it: "La configurazione ha richiesto letteralmente 5 minuti. L'AI gestisce domande che non avrei mai immaginato i visitatori potessero fare."
-              },
-            ].map((review, i) => (
-              <div key={i} className="bg-white/[0.03] border border-white/10 rounded-2xl p-6 space-y-4">
-                <div className="text-3xl text-[#F5A623]/60">"</div>
-                <p className="text-white/70 text-sm leading-relaxed">{t(review.en, review.it)}</p>
-                <div className="flex items-center gap-3 pt-2">
-                  <div className="w-10 h-10 rounded-full bg-[#F5A623]/20 text-[#F5A623] flex items-center justify-center text-sm font-bold">{review.initials}</div>
-                  <div>
-                    <p className="font-semibold text-sm">{review.name}</p>
-                    <p className="text-white/40 text-xs">{review.company}</p>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
         </div>
       </Section>
 
@@ -830,8 +771,8 @@ export default function LandingPage() {
           </h2>
           <p className="text-white/50 text-center mb-14 max-w-2xl mx-auto">
             {t(
-              "Every day we work to grow SMEs and companies online. Over the years we've helped hundreds of entrepreneurs achieve their business goals.",
-              "Ogni giorno lavoriamo per far crescere online PMI e aziende. Negli anni abbiamo aiutato centinaia di imprenditori e aziende a raggiungere i propri obiettivi di business."
+              "A selection of organizations featured in our agency portfolio.",
+              "Una selezione di organizzazioni presenti nel portfolio della nostra agenzia."
             )}
           </p>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
@@ -862,9 +803,9 @@ export default function LandingPage() {
       {/* ─── FINAL CTA ─── */}
       <Section className="py-20 md:py-28">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 text-center space-y-6">
-          <p className="text-[#F5A623] text-sm font-semibold tracking-wider uppercase">{t("Setup in 5 minutes", "Configurazione in 5 minuti")}</p>
+          <p className="text-[#F5A623] text-sm font-semibold tracking-wider uppercase">{t("Start free", "Inizia gratis")}</p>
           <h2 className="text-3xl sm:text-4xl font-bold" style={{ fontFamily: "'Syne', sans-serif" }}>
-            {lang === "en" ? <>Ready to Never Lose <span className="text-[#F5A623]">a Lead Again?</span></> : <>Pronto a Non Perdere <span className="text-[#F5A623]">Mai Più un Lead?</span></>}
+            {lang === "en" ? <>Create your <span className="text-[#F5A623]">AI assistant.</span></> : <>Crea il tuo <span className="text-[#F5A623]">assistente AI.</span></>}
           </h2>
           <p className="text-white/50 max-w-lg mx-auto">
             {t("Start your free trial today — no credit card required.", "Inizia la prova gratuita oggi — nessuna carta di credito richiesta.")}

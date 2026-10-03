@@ -35,7 +35,7 @@ export default function Terms() {
           </h1>
         </div>
         <p className="text-sm text-muted-foreground mb-10 ml-[52px]">
-          {lang === "it" ? "Ultima modifica: Febbraio 2025" : "Last updated: February 2025"}
+          {lang === "it" ? "Ultima modifica: Ottobre 2026" : "Last updated: October 2026"}
         </p>
 
         {lang === "it" ? (
@@ -45,8 +45,12 @@ export default function Terms() {
             </Section>
             <Section title="2. Piani e Pagamenti">
               <p>Il servizio è disponibile con i seguenti piani di abbonamento:</p>
-              <ul><li><strong>Starter</strong> — €49/mese: 1 chatbot, 500 conversazioni/mese, cattura lead, personalizzazione base, supporto email</li><li><strong>Pro</strong> — €149/mese: chatbot illimitati, conversazioni illimitate, integrazioni avanzate, supporto prioritario, analytics avanzati</li></ul>
-              <p>Sono disponibili anche piani annuali con sconto. I pagamenti vengono elaborati tramite Stripe. L'abbonamento si rinnova automaticamente alla scadenza del periodo selezionato.</p>
+              <ul>
+                <li><strong>Free</strong> — €0: 1 chatbot, 50 conversazioni/mese, 10 lead/mese, prompt di sistema (tono e ruolo del bot), 5 FAQ manuali, raccolta contatti in chat, risposte multilingua, supporto email e branding “Free Chatbot Genius” nel widget.</li>
+                <li><strong>Starter</strong> — €49/mese o €490/anno: 1 chatbot, 500 conversazioni/mese, lead illimitati, prompt di sistema avanzato, FAQ illimitate, upload PDF/Word, importazione di pagine del sito e sitemap, integrazione Calendly, supporto prioritario, Ricerca Avanzata (RAG), feed XML/CSV con sincronizzazione giornaliera, fino a 100 prodotti a catalogo e branding “Chatbot Genius” nel widget.</li>
+                <li><strong>Pro</strong> — €149/mese o €1490/anno: 1 chatbot personalizzato per il settore, conversazioni e lead illimitati, tutte le funzionalità Starter, Ricerca Avanzata (RAG) in evidenza, ecommerce e catalogo completo con WooCommerce, Shopify, PrestaShop, API e webhook in tempo reale, prodotti a catalogo illimitati, Concierge Hotel, Instagram DM, chiusura automatica delle chat inattive con email di riepilogo, analytics avanzati, supporto dedicato e branding “Chatbot Genius” nel widget.</li>
+              </ul>
+              <p>Il piano Free può essere modificato o sospeso con un preavviso ragionevole. Gli abbonamenti si rinnovano automaticamente e possono essere disdetti dal portale o dalla dashboard. I pagamenti vengono elaborati tramite Stripe.</p>
             </Section>
             <Section title="3. Obblighi dell'Utente">
               <p>L'utente si impegna a:</p>
@@ -75,8 +79,12 @@ export default function Terms() {
             </Section>
             <Section title="2. Plans and Payments">
               <p>The service is available with the following subscription plans:</p>
-              <ul><li><strong>Starter</strong> — €49/month: 1 chatbot, 500 conversations/month, lead capture, basic customization, email support</li><li><strong>Pro</strong> — €149/month: unlimited chatbots, unlimited conversations, advanced integrations, priority support, advanced analytics</li></ul>
-              <p>Annual plans with discounts are also available. Payments are processed through Stripe. Subscriptions automatically renew at the end of the selected period.</p>
+              <ul>
+                <li><strong>Free</strong> — €0: 1 chatbot, 50 conversations/month, 10 leads/month, system prompt (tone and bot role), 5 manual FAQs, in-chat lead capture, multilingual replies, email support and “Free Chatbot Genius” branding in the widget.</li>
+                <li><strong>Starter</strong> — €49/month or €490/year: 1 chatbot, 500 conversations/month, unlimited leads, advanced system prompt, unlimited FAQs, PDF/Word upload, website page and sitemap import, Calendly integration, priority support, Advanced Search (RAG), daily XML/CSV feed sync, up to 100 catalog products and “Chatbot Genius” branding in the widget.</li>
+                <li><strong>Pro</strong> — €149/month or €1490/year: 1 custom chatbot for the business type, unlimited conversations and leads, all Starter features, highlighted Advanced Search (RAG), full ecommerce and catalog with WooCommerce, Shopify, PrestaShop, API and real-time webhooks, unlimited catalog products, Hotel Concierge, Instagram DM, automatic closing of inactive chats with recap email, advanced analytics, dedicated support and “Chatbot Genius” branding in the widget.</li>
+              </ul>
+              <p>The Free plan may be changed or suspended with reasonable notice. Subscriptions renew automatically and can be cancelled through the portal or dashboard. Payments are processed through Stripe.</p>
             </Section>
             <Section title="3. User Obligations">
               <p>The user agrees to:</p>
