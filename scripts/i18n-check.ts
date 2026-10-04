@@ -45,11 +45,11 @@ const add = (en: string | undefined, file: string) => {
 const BRANDS = ["Genius Chatbot", "MDAC", "Calendly", "Stripe", "WooCommerce", "Shopify", "PrestaShop", "Instagram", "Concierge"];
 const extract = (value: string, pattern: RegExp) => [...value.matchAll(pattern)].map((match) => match[0]).sort();
 // Times are localized freely (3:30 pm -> 15h30 / 15:30 Uhr, 9am–6pm -> de 9h à 18h): strip them before comparing numbers.
+const SUFFIX = String.raw`(?:Uhr|h|am|pm|a\.m\.|p\.m\.|de la madrugada|de la mañana|de la tarde|da manhã|da tarde|du matin|du soir|nachts|morgens)`;
 const TIME_PATTERNS = [
-  /\b\d{1,2}(?:[:.h]\d{2})?\s*(?:h|am|pm|a\.m\.|p\.m\.)?\s*(?:–|-|bis|à|a|às|to)\s*\d{1,2}(?:[:.h]\d{2})?\s*(?:Uhr|h|am|pm|a\.m\.|p\.m\.)(?![A-Za-z])/gi,
-  /\b\d{1,2}\s*(?:–|-|bis|à|a|às|to)\s*\d{1,2}[:h]\d{2}(?![A-Za-z\d])/gi,
-  /\b\d{1,2}[:h]\d{2}(?:\s*(?:Uhr|h|am|pm|a\.m\.|p\.m\.))?(?![A-Za-z\d])/gi,
-  /\b\d{1,2}\s*(?:Uhr|h|am|pm|a\.m\.|p\.m\.)(?![A-Za-z])/gi,
+  /(?<![\d:.,])\d{1,2}[:h]\d{2}(?:\s*(?:Uhr|h|am|pm|a\.m\.|p\.m\.))?(?![\p{L}\d])/giu,
+  new RegExp(String.raw`(?<![\d:.,])\d{1,2}\s*(?:h|am|pm)?\s*(?:–|-|bis|à|a|às|to)\s*\d{1,2}\s*${SUFFIX}(?![\p{L}])`, "giu"),
+  new RegExp(String.raw`(?<![\d:.,])\d{1,2}\s*${SUFFIX}(?![\p{L}])`, "giu"),
 ];
 const stripTimes = (value: string) => TIME_PATTERNS.reduce((acc, re) => acc.replace(re, " "), value);
 const extractNumbers = (value: string) => extract(stripTimes(value), /\d+(?:[.,]\d+|[ \u00a0\u202f]\d{3}(?!\d))*/g).map((token) => {
