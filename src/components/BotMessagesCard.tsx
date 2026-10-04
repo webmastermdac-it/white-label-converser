@@ -11,7 +11,7 @@ import { Loader2, Save, Sparkles } from "lucide-react";
 const DEFAULT_WELCOME = "Ciao! Sono un assistente virtuale basato su intelligenza artificiale. Come posso aiutarti?";
 const DEFAULT_FALLBACK = "Non ho questa informazione, ma posso metterti in contatto con un nostro consulente!";
 
-const TARGETS = ["en", "fr", "de", "es"] as const;
+const TARGETS = ["en", "fr", "de", "es", "pt"] as const;
 type Target = (typeof TARGETS)[number];
 type Lang = "it" | Target;
 type Kind = "welcome" | "fallback";
@@ -24,6 +24,7 @@ const LANG_OPTIONS: { value: AppLang; flag: string; label: string }[] = [
   { value: "fr", flag: "🇫🇷", label: "Français" },
   { value: "de", flag: "🇩🇪", label: "Deutsch" },
   { value: "es", flag: "🇪🇸", label: "Español" },
+  { value: "pt", flag: "🇵🇹", label: "Português" },
 ];
 
 const emptyI18n = (): I18n => ({ welcome: {}, fallback: {} });
@@ -35,7 +36,7 @@ const BotMessagesCard = ({ chatbotId }: { chatbotId: string }) => {
   const [welcome, setWelcome] = useState(DEFAULT_WELCOME);
   const [fallback, setFallback] = useState(DEFAULT_FALLBACK);
   const [i18n, setI18n] = useState<I18n>(emptyI18n());
-  const viewLang: Lang = contentLang === "pt" ? "en" : contentLang;
+  const viewLang: Lang = contentLang;
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [regen, setRegen] = useState<Kind | null>(null);

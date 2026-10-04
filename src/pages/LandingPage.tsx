@@ -163,7 +163,7 @@ function getPricingFeatures(t: (en: string, it: string) => string): Record<Prici
     t("Calendly integration for appointments", "Integrazione Calendly per gli appuntamenti"),
     t("🔍 Advanced Search (RAG) — highlighted", "🔍 Ricerca Avanzata (RAG) — in evidenza"),
     t("🛒 Full ecommerce & catalog (WooCommerce, Shopify, PrestaShop, API + real-time webhooks)", "🛒 Ecommerce e catalogo completo (WooCommerce, Shopify, PrestaShop, API + webhook real-time)"),
-    t("Unlimited catalog products", "Prodotti a catalogo illimitati"),
+    t("Up to 100,000 catalog products", "Fino a 100.000 prodotti a catalogo"),
     t("🏨 Hotel Concierge: stay quotes, room QR codes, real-time guest requests, Results page", "🏨 Concierge Hotel: preventivi soggiorno, QR per le camere, richieste ospiti in tempo reale, pagina Risultati"),
     t("📱 Instagram DM channel", "📱 Canale Instagram DM"),
     t("⏱️ Auto-close inactive chats with recap email", "⏱️ Chiusura automatica chat inattive con email di riepilogo"),

@@ -264,7 +264,7 @@ const ClientUpgrade = () => {
         isIt ? "Integrazione Calendly per gli appuntamenti" : "Calendly integration for appointments",
         isIt ? "🔍 Ricerca Avanzata (RAG) — in evidenza" : "🔍 Advanced Search (RAG) — highlighted",
         isIt ? "🛒 Ecommerce e catalogo completo (WooCommerce, Shopify, PrestaShop, API + webhook real-time)" : "🛒 Full ecommerce & catalog (WooCommerce, Shopify, PrestaShop, API + real-time webhooks)",
-        isIt ? "Prodotti a catalogo illimitati" : "Unlimited catalog products",
+        isIt ? "Fino a 100.000 prodotti a catalogo" : "Up to 100,000 catalog products",
         isIt ? "🏨 Concierge Hotel: preventivi soggiorno, QR per le camere, richieste ospiti in tempo reale, pagina Risultati" : "🏨 Hotel Concierge: stay quotes, room QR codes, real-time guest requests, Results page",
         isIt ? "📱 Canale Instagram DM" : "📱 Instagram DM channel",
         isIt ? "⏱️ Chiusura automatica chat inattive con email di riepilogo" : "⏱️ Auto-close inactive chats with recap email",
