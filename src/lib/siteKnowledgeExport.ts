@@ -48,7 +48,7 @@ const PRICING: { name: string; monthly: string; yearly: string; features: Locali
       { it: "Conversazioni e lead illimitati", en: "Unlimited conversations and leads" },
       { it: "Integrazione Calendly per gli appuntamenti", en: "Calendly integration for appointments" },
       { it: "Ricerca Avanzata (RAG) con priorità", en: "Advanced Search (RAG) with priority" },
-      { it: "Ecommerce e catalogo completo: WooCommerce, Shopify, PrestaShop, API e webhook in tempo reale, prodotti a catalogo illimitati", en: "Full ecommerce & catalog: WooCommerce, Shopify, PrestaShop, API and real-time webhooks, unlimited catalog products" },
+      { it: "Ecommerce e catalogo completo: WooCommerce, Shopify, PrestaShop, API e webhook in tempo reale, fino a 100.000 prodotti a catalogo", en: "Full ecommerce & catalog: WooCommerce, Shopify, PrestaShop, API and real-time webhooks, up to 100,000 catalog products" },
       { it: "Modulo Concierge Hotel: preventivi soggiorno, link al booking engine, QR per le camere, richieste degli ospiti in tempo reale e pagina Risultati", en: "Hotel Concierge module: stay quotes, booking engine link, room QR codes, real-time guest requests and Results page" },
       { it: "Canale Instagram DM", en: "Instagram DM channel" },
       { it: "Chiusura automatica delle chat inattive con email di riepilogo", en: "Automatic closing of inactive chats with recap email" },

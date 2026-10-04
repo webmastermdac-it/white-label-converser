@@ -44,8 +44,16 @@ const add = (en: string | undefined, file: string) => {
 
 const BRANDS = ["Genius Chatbot", "MDAC", "Calendly", "Stripe", "WooCommerce", "Shopify", "PrestaShop", "Instagram", "Concierge"];
 const extract = (value: string, pattern: RegExp) => [...value.matchAll(pattern)].map((match) => match[0]).sort();
-const extractNumbers = (value: string) => extract(value, /\d+(?:[.,]\d+)*/g).map((token) => {
-  const compact = token.replace(/(?<=\d)[.,](?=\d{3}(?:\D|$))/g, "");
+// Times are localized freely (3:30 pm -> 15h30 / 15:30 Uhr, 9am–6pm -> de 9h à 18h): strip them before comparing numbers.
+const TIME_PATTERNS = [
+  /\b\d{1,2}(?:[:.h]\d{2})?\s*(?:h|am|pm|a\.m\.|p\.m\.)?\s*(?:–|-|bis|à|a|às|to)\s*\d{1,2}(?:[:.h]\d{2})?\s*(?:Uhr|h|am|pm|a\.m\.|p\.m\.)(?![A-Za-z])/gi,
+  /\b\d{1,2}\s*(?:–|-|bis|à|a|às|to)\s*\d{1,2}[:h]\d{2}(?![A-Za-z\d])/gi,
+  /\b\d{1,2}[:h]\d{2}(?:\s*(?:Uhr|h|am|pm|a\.m\.|p\.m\.))?(?![A-Za-z\d])/gi,
+  /\b\d{1,2}\s*(?:Uhr|h|am|pm|a\.m\.|p\.m\.)(?![A-Za-z])/gi,
+];
+const stripTimes = (value: string) => TIME_PATTERNS.reduce((acc, re) => acc.replace(re, " "), value);
+const extractNumbers = (value: string) => extract(stripTimes(value), /\d+(?:[.,]\d+|[ \u00a0\u202f]\d{3}(?!\d))*/g).map((token) => {
+  const compact = token.replace(/(?<=\d)[.,\u00a0\u202f ](?=\d{3}(?:\D|$))/g, "");
   return compact.replace(",", ".");
 }).sort();
 const sameTokens = (left: string[], right: string[]) => JSON.stringify(left) === JSON.stringify(right);

@@ -6,11 +6,11 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const LANGS = ["en", "fr", "de", "es"] as const;
+const LANGS = ["en", "fr", "de", "es", "pt"] as const;
 const Body = z.object({
   welcome: z.string().max(2000),
   fallback: z.string().max(2000),
-  targets: z.array(z.enum(LANGS)).min(1).max(4),
+  targets: z.array(z.enum(LANGS)).min(1).max(5),
 });
 
 function json(b: unknown, s = 200) {
@@ -33,7 +33,7 @@ Deno.serve(async (req) => {
     const { welcome, fallback, targets } = parsed.data;
 
     const system =
-      "You are a professional translator. Translate the given Italian chatbot messages into each requested language. " +
+      "You are a professional translator. Translate the given Italian chatbot messages into each requested language (pt = European Portuguese, pt-PT). " +
       "Keep the same tone, emojis and approximate length. Translate only, no comments. " +
       'Reply ONLY with JSON: {"<lang>": {"welcome": "...", "fallback": "..."}} for each requested language code.';
     const user = JSON.stringify({ languages: targets, welcome, fallback });
