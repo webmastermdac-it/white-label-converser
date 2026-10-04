@@ -43,6 +43,12 @@ Deno.serve(async (req) => {
   if (error) return json({ error: "Server error" }, 500);
   if (!data) return json({ error: "Not found" }, 404);
   const { business_vertical, hotel_profile, ...base } = data as any;
+  // Calendly link only for plans that include it (plan_configs.calendly_integration)
+  if (base.calendly_url) {
+    const { data: cl } = await admin.from("clients").select("plan").eq("id", base.client_id).single();
+    const { data: pc } = await admin.from("plan_configs").select("calendly_integration").eq("plan_name", cl?.plan || "free").single();
+    if (!pc?.calendly_integration) base.calendly_url = null;
+  }
   // Extra fields ONLY for hotel bots — other modules get exactly the previous payload
   if (business_vertical === "hotel") {
     const hp = hotel_profile || {};
