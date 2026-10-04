@@ -265,6 +265,45 @@ function extractMainContent(html: string): string {
   return text;
 }
 
+/** Reads same-host page URLs from the site's sitemap.xml (supports sitemap indexes). */
+async function extractSitemapLinks(baseUrl: string): Promise<{ url: string; title: string }[] > {
+  const origin = new URL(baseUrl).origin;
+  const baseHostname = new URL(baseUrl).hostname;
+  const seen = new Set<string>();
+  const links: { url: string; title: string }[] = [];
+
+  async function readSitemap(sitemapUrl: string, depth: number) {
+    if (depth > 2 || links.length >= 100) return;
+    try {
+      const res = await fetch(sitemapUrl, {
+        headers: { "User-Agent": "Mozilla/5.0 (compatible; GeniusBot/1.0)" },
+        signal: AbortSignal.timeout(8000),
+      });
+      if (!res.ok) return;
+      const xml = await res.text();
+      const locs = [...xml.matchAll(/<loc>\s*([^<]+?)\s*<\/loc>/gi)].map((m) => m[1]);
+      for (const loc of locs) {
+        if (links.length >= 100) break;
+        try {
+          const u = new URL(loc);
+          if (u.hostname !== baseHostname) continue;
+          if (loc.endsWith(".xml")) {
+            if (depth < 2) await readSitemap(loc, depth + 1);
+            continue;
+          }
+          const href = u.href;
+          if (seen.has(href)) continue;
+          seen.add(href);
+          links.push({ url: href, title: href });
+        } catch { /* skip */ }
+      }
+    } catch { /* skip */ }
+  }
+
+  await readSitemap(`${origin}/sitemap.xml`, 0);
+  return links;
+}
+
 function extractLinks(html: string, baseUrl: string): { url: string; title: string }[] {
   const linkRegex = /<a\s+[^>]*href=["']([^"'#]+)["'][^>]*>([\s\S]*?)<\/a>/gi;
   const seen = new Set<string>();
