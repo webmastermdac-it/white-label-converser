@@ -62,7 +62,12 @@ async function analyzeSite(url: string) {
     mainContent = [rendered, structured].filter((part) => !isThinContent(part)).join("\n\n") || mainContent;
   }
 
-  const level1Links = extractLinks(html1, formattedUrl);
+  let level1Links = extractLinks(html1, formattedUrl);
+
+  // SPA shells often expose no <a href> in the raw HTML: fall back to sitemap.xml.
+  if (level1Links.length === 0) {
+    level1Links = await extractSitemapLinks(formattedUrl);
+  }
 
   visited.add(formattedUrl);
   for (const link of level1Links) {
