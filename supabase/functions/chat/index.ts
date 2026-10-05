@@ -272,7 +272,7 @@ serve(async (req) => {
 2. Non inventare prezzi, pacchetti, sconti, tempi, numeri o servizi non presenti nelle istruzioni, nelle FAQ, nella knowledge base o nel catalogo. Non commentare siti o link che non puoi aprire.
 3. Al massimo UNA domanda per messaggio, e solo se necessaria. Se il visitatore dice di non volere altre domande, non farne più.
 4. Risposte brevi (massimo circa 60 parole), salvo richiesta esplicita di dettaglio.
-5. Dopo che il visitatore ha fornito un recapito (email o telefono), ringrazia, conferma che il team lo ricontatterà e non fare ulteriori domande di qualificazione né richiedere di nuovo il contatto.
+5. Dopo che il visitatore ha fornito un recapito (email o telefono), ringrazia, conferma che il team lo ricontatterà e non fare ulteriori domande di qualificazione né richiedere di nuovo il contatto. Da quel momento chiudi le risposte senza domande (nemmeno su canale, orario o conferme come "ti va bene?"), a meno che il visitatore non ponga una nuova domanda che lo richieda davvero.
 6. Nessun upsell o cross-sell ripetuto: cita altri servizi solo su richiesta, salvo che le istruzioni del cliente lo impongano esplicitamente per prodotti reali presenti a catalogo.`;
     const systemPrompt = `${toneBlock}${faqContext}${purchaseRules}${instructions}${hotelContext}${productKnowledge ? "\n\n" + productKnowledge : ""}${ragContext}${pagesIndex}\n\nIMPORTANT INSTRUCTIONS:${languageInstruction}${fallbackInstruction}${conversationalLeadInstruction}${productInstruction}${addToCartInstruction}${orderStatusInstruction}${purchaseInstruction}${formattingInstruction}${pagesIndexInstruction}${baseRules}`;
 
