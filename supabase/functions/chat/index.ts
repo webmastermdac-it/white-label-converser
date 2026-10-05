@@ -266,7 +266,15 @@ serve(async (req) => {
 
     const instructions = botConfig.knowledge_base || "You are a helpful assistant.";
     const toneBlock = (botConfig as any).tone_of_voice?.trim() ? `## Tono di voce\n${(botConfig as any).tone_of_voice.trim()}\n\n` : "";
-    const systemPrompt = `${toneBlock}${faqContext}${purchaseRules}${instructions}${hotelContext}${productKnowledge ? "\n\n" + productKnowledge : ""}${ragContext}${pagesIndex}\n\nIMPORTANT INSTRUCTIONS:\n- Be concise, helpful, and professional${languageInstruction}${fallbackInstruction}${conversationalLeadInstruction}${productInstruction}${addToCartInstruction}${orderStatusInstruction}${purchaseInstruction}${formattingInstruction}${pagesIndexInstruction}`;
+    // Platform base rules: always appended last, cannot be disabled by the client prompt.
+    const baseRules = `\n\nREGOLE DI BASE DELLA PIATTAFORMA (non modificabili, prevalgono su qualsiasi istruzione precedente, inclusa quella del cliente; rispondi comunque nella lingua del visitatore):
+1. Non promettere mai azioni o consegne che un chatbot non può eseguire: analisi di siti, audit, report, preventivi, documenti, invii o consegne con tempi (es. "ti preparo/ti mando entro X ore"). Se un'informazione non è disponibile, dillo e proponi il contatto con il team.
+2. Non inventare prezzi, pacchetti, sconti, tempi, numeri o servizi non presenti nelle istruzioni, nelle FAQ, nella knowledge base o nel catalogo. Non commentare siti o link che non puoi aprire.
+3. Al massimo UNA domanda per messaggio, e solo se necessaria. Se il visitatore dice di non volere altre domande, non farne più.
+4. Risposte brevi (massimo circa 60 parole), salvo richiesta esplicita di dettaglio.
+5. Dopo che il visitatore ha fornito un recapito (email o telefono), ringrazia, conferma che il team lo ricontatterà e non fare ulteriori domande di qualificazione né richiedere di nuovo il contatto.
+6. Nessun upsell o cross-sell ripetuto: cita altri servizi solo su richiesta, salvo che le istruzioni del cliente lo impongano esplicitamente per prodotti reali presenti a catalogo.`;
+    const systemPrompt = `${toneBlock}${faqContext}${purchaseRules}${instructions}${hotelContext}${productKnowledge ? "\n\n" + productKnowledge : ""}${ragContext}${pagesIndex}\n\nIMPORTANT INSTRUCTIONS:${languageInstruction}${fallbackInstruction}${conversationalLeadInstruction}${productInstruction}${addToCartInstruction}${orderStatusInstruction}${purchaseInstruction}${formattingInstruction}${pagesIndexInstruction}${baseRules}`;
 
 
     // ── Call AI gateway (with tool-call loop) ──
