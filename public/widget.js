@@ -23,6 +23,8 @@
       .replace(/^\d+\. (.+)$/gm, '<li>$1</li>')
       .replace(/(<li>[\s\S]*?<\/li>)/g, '<ul>$1</ul>')
       .replace(/<\/ul>\s*<ul>/g, '')
+      // markdown images ![alt](https://url) → <img> (solo https)
+      .replace(/!\[([^\]]*)\]\((https:\/\/[^\s)"']+)\)/g, '<img class="mdac-img" src="$2" alt="$1" loading="lazy">')
       // markdown links [testo](url) → bottone
       .replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a class="mdac-cta" href="$2" target="_blank" rel="noopener noreferrer">$1</a>')
       // url nude (non già dentro un tag <a>)
@@ -296,6 +298,7 @@
 .mdac-msg-avatar{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;}\
 .mdac-bubble strong{font-weight:700;}\
 .mdac-bubble em{font-style:italic;}\
+.mdac-bubble img.mdac-img{display:block;max-width:100%;height:auto;border-radius:10px;margin-top:6px;}\
 .mdac-bubble ul,.mdac-bubble ol{margin:4px 0 4px 16px;padding:0;}\
 .mdac-bubble li{margin:2px 0;list-style:disc;}\
 .mdac-bubble ol li{list-style:decimal;}\
