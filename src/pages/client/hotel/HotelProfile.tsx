@@ -419,11 +419,11 @@ const ImageField = ({ value, onChange, clientId, tl }: { value: string; onChange
 };
 
 /** Merge imported items by name (case-insensitive, trimmed): fill only empty fields of existing ones, append new ones. */
-export function mergeByName<T extends { id: string; name: string }>(current: T[], incoming: T[]): T[] {
+export function mergeByName<T extends { id: string; name: string }>(current: T[] | undefined, incoming: T[] | undefined): T[] {
   const key = (x: { name: string }) => x.name.trim().toLowerCase();
   const empty = (x: unknown) => x === "" || x == null || (Array.isArray(x) && !x.length);
-  const out = current.map((x) => ({ ...x }));
-  for (const item of incoming) {
+  const out = (current || []).map((x) => ({ ...x }));
+  for (const item of incoming || []) {
     if (!item.name?.trim()) continue;
     const ex = out.find((x) => key(x) === key(item));
     if (!ex) { out.push(item); continue; }
