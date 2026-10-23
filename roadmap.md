@@ -18,3 +18,4 @@
 - [x] Allineare testi e limite chatbot dei piani, aggiornare i Termini e rimuovere claim non verificabili dalla landing.
 - [x] Aggiungere il settore Sito aziendale / Altro alla registrazione, landing, integrazioni e onboarding.
 - [x] Nascondere la demo segnaposto e allineare Calendly, limite prodotti, disdetta e controlli i18n pubblici.
+- [x] Aggiungere il pulsante "Torna al chatbot" in cima al Profilo struttura (client e admin).
