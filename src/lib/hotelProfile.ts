@@ -3,16 +3,16 @@ export type GuideCategory = "ristorante" | "attrazione" | "trasporti" | "spiaggi
 
 export interface HotelRoom {
   id: string; name: string; description: string; max_adults: number | null; max_children: number | null;
-  size_m2: number | null; beds: string; amenities: string[]; price_from: number | null; image_url: string; url: string;
+  size_m2: number | null; beds: string; amenities: string[]; price_from: number | null; image_url: string; url: string; url_en: string;
 }
-export interface HotelService { id: string; name: string; description: string; hours: string; price: string; included: boolean; url: string }
-export interface HotelPage { id: string; name: string; url: string }
+export interface HotelService { id: string; name: string; description: string; hours: string; price: string; included: boolean; url: string; url_en: string }
+export interface HotelPage { id: string; name: string; url: string; url_en: string }
 export interface HotelGuideItem { id: string; category: GuideCategory; name: string; description: string; distance: string; link: string }
 
 export interface HotelProfile {
   property: {
     name: string; type: PropertyType; stars: number | null; address: string; phone: string; email: string;
-    checkin_from: string; checkin_to: string; checkout_until: string; reception_hours: string; reception_open: string; reception_close: string; languages: string[]; website: string;
+    checkin_from: string; checkin_to: string; checkout_until: string; reception_hours: string; reception_open: string; reception_close: string; languages: string[]; website: string; website_en: string;
   };
   rooms: HotelRoom[];
   services: HotelService[];
@@ -34,10 +34,10 @@ const PT: PropertyType[] = ["hotel", "bnb", "resort", "agriturismo", "appartamen
 const GC: GuideCategory[] = ["ristorante", "attrazione", "trasporti", "spiaggia", "shopping", "altro"];
 
 export function emptyRoom(): HotelRoom {
-  return { id: uid(), name: "", description: "", max_adults: 2, max_children: 0, size_m2: null, beds: "", amenities: [], price_from: null, image_url: "", url: "" };
+  return { id: uid(), name: "", description: "", max_adults: 2, max_children: 0, size_m2: null, beds: "", amenities: [], price_from: null, image_url: "", url: "", url_en: "" };
 }
-export function emptyService(): HotelService { return { id: uid(), name: "", description: "", hours: "", price: "", included: false, url: "" }; }
-export function emptyPage(): HotelPage { return { id: uid(), name: "", url: "" }; }
+export function emptyService(): HotelService { return { id: uid(), name: "", description: "", hours: "", price: "", included: false, url: "", url_en: "" }; }
+export function emptyPage(): HotelPage { return { id: uid(), name: "", url: "", url_en: "" }; }
 export function emptyGuide(): HotelGuideItem { return { id: uid(), category: "ristorante", name: "", description: "", distance: "", link: "" }; }
 
 /** Normalizes any stored/AI JSON into a complete HotelProfile */
@@ -48,15 +48,15 @@ export function normalizeHotelProfile(raw: any): HotelProfile {
     property: {
       name: s(p.name), type: PT.includes(p.type) ? p.type : "hotel", stars: n(p.stars) || null, address: s(p.address),
       phone: s(p.phone), email: s(p.email), checkin_from: s(p.checkin_from), checkin_to: s(p.checkin_to),
-      checkout_until: s(p.checkout_until), reception_hours: s(p.reception_hours), reception_open: s(p.reception_open) || "08:00", reception_close: s(p.reception_close) || "20:00", languages: arr(p.languages), website: s(p.website),
+      checkout_until: s(p.checkout_until), reception_hours: s(p.reception_hours), reception_open: s(p.reception_open) || "08:00", reception_close: s(p.reception_close) || "20:00", languages: arr(p.languages), website: s(p.website), website_en: s(p.website_en),
     },
     rooms: (Array.isArray(r.rooms) ? r.rooms : []).map((x: any) => ({
       id: s(x?.id) || uid(), name: s(x?.name), description: s(x?.description), max_adults: n(x?.max_adults),
       max_children: n(x?.max_children), size_m2: n(x?.size_m2), beds: s(x?.beds), amenities: arr(x?.amenities),
-      price_from: n(x?.price_from), image_url: s(x?.image_url), url: s(x?.url),
+      price_from: n(x?.price_from), image_url: s(x?.image_url), url: s(x?.url), url_en: s(x?.url_en),
     })),
     services: (Array.isArray(r.services) ? r.services : []).map((x: any) => ({
-      id: s(x?.id) || uid(), name: s(x?.name), description: s(x?.description), hours: s(x?.hours), price: s(x?.price), included: !!x?.included, url: s(x?.url),
+      id: s(x?.id) || uid(), name: s(x?.name), description: s(x?.description), hours: s(x?.hours), price: s(x?.price), included: !!x?.included, url: s(x?.url), url_en: s(x?.url_en),
     })),
     policies: {
       cancellation: s(po.cancellation), children: s(po.children), pets: s(po.pets), late_checkout: s(po.late_checkout),
@@ -66,7 +66,7 @@ export function normalizeHotelProfile(raw: any): HotelProfile {
       id: s(x?.id) || uid(), category: GC.includes(x?.category) ? x.category : "altro", name: s(x?.name),
       description: s(x?.description), distance: s(x?.distance), link: s(x?.link),
     })),
-    pages: (Array.isArray(r.pages) ? r.pages : []).map((x: any) => ({ id: s(x?.id) || uid(), name: s(x?.name), url: s(x?.url) })),
+    pages: (Array.isArray(r.pages) ? r.pages : []).map((x: any) => ({ id: s(x?.id) || uid(), name: s(x?.name), url: s(x?.url), url_en: s(x?.url_en) })),
     booking: {
       engine_url_template: s(b.engine_url_template), date_format: b.date_format === "DD/MM/YYYY" ? "DD/MM/YYYY" : "YYYY-MM-DD",
       phone_booking: s(b.phone_booking), email_booking: s(b.email_booking),

@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { buildHotelContext } from "./hotelContext.ts";
+import { baseLangOf, resolveReplyLang } from "./language.ts";
 import {
   fetchBrandSettings, newLeadEmail, newLeadSubject, fetchCustomTemplate,
   renderCustomTemplate, replaceSubjectVars, resolveClientOwnerLocale,
@@ -173,7 +174,9 @@ serve(async (req) => {
       ? `\n\nYou have access to the store's updated product catalog (see PRODOTTI PIÙ RILEVANTI first, then the full catalog).\nWhen users ask about products you MUST use this catalog and always report, when available:\n- the exact product NAME\n- the PRICE (always with 2 decimals and currency)\n- the AVAILABILITY (in stock / out of stock, with quantity if present)\n- a short summary of the product DESCRIPTION\n- the CATEGORY the product belongs to\n- the product LINK if present\nAlso read technical attributes contained in the name or description (e.g. SPF/protection factor, volume in ml, ingredients, size, colour, skin type) and use them to advise the visitor: compare products on those attributes and explain the practical difference (for example: the higher the SPF, the stronger the sun protection — SPF 50 protects more than SPF 30).\nIf the exact requested product is missing, suggest the closest alternatives from the same category instead of saying you have no information.\nIf a product is out of stock, say so and propose similar available products.\nNever invent products, prices, availability or attributes that are not in the catalog.`
       : "";
 
-    const languageInstruction = `\n\nIMPORTANT LANGUAGE RULE:\nThe visitor is using language code: ${lang}\nYou MUST always respond in the same language the visitor is writing in, regardless of the language of the knowledge base.\nAdapt naturally to any language the visitor uses.\nThe only exception: if the visitor explicitly asks you to switch to a different language, do so.`;
+    const baseLang = baseLangOf(lang);
+    const replyLang = resolveReplyLang(lang);
+    const languageInstruction = `\n\nIMPORTANT LANGUAGE RULE:\nThe visitor's browser language is ${lang}. Reply in ${replyLang} unless the visitor writes in a different language or explicitly asks to switch; in that case follow the visitor. If the language is not supported, reply in English. The knowledge base language does not matter.`;
 
     const fallbackInstruction = conversationalLead
       ? `\n\nFALLBACK RULE:\nWhen you don't know the answer or are uncertain, you must:\n1. Write a fallback message in the SAME language the visitor is using.\n2. The concept to convey is: "${fallbackConcept}" — translate and adapt this naturally.\n3. Never make up information not provided in your knowledge base.\n4. Do NOT use the fallback when the product catalog contains relevant or similar products — answer with those instead.\n5. Never use any [TRIGGER_LEAD_FORM] marker.`
@@ -262,7 +265,7 @@ serve(async (req) => {
 
     // ── Hotel concierge (only for business_vertical = "hotel") ──
     const hotelContext = botConfig.business_vertical === "hotel"
-      ? buildHotelContext((botConfig as any).hotel_profile, conversationalLead, safeRoom)
+      ? buildHotelContext((botConfig as any).hotel_profile, conversationalLead, safeRoom, baseLang)
       : "";
 
     const instructions = botConfig.knowledge_base || "You are a helpful assistant.";
