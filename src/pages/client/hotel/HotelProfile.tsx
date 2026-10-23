@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { FunctionsHttpError } from "@supabase/supabase-js";
 import { useAuth } from "@/contexts/AuthContext";
@@ -16,7 +16,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Building2, Check, Copy, GripVertical, Loader2, Plus, Trash2, Wand2, ExternalLink, Upload } from "lucide-react";
+import { ArrowLeft, Building2, Check, Copy, GripVertical, Loader2, Plus, Trash2, Wand2, ExternalLink, Upload } from "lucide-react";
 import {
   normalizeHotelProfile, emptyRoom, emptyService, emptyGuide, uid,
   type HotelProfile as HP,
