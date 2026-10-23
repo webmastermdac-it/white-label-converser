@@ -13,12 +13,15 @@ const KEYWORDS = /(camer|room|suite|contatt|contact|serviz|service|prezz|price|d
 
 const PROMPT = `Sei un assistente che estrae dati di una struttura ricettiva dal testo del suo sito.
 Rispondi SOLO con un oggetto JSON con questa struttura (ometti o lascia stringa vuota ciò che non trovi, NON inventare nulla):
-{"property":{"name":"","type":"hotel|bnb|resort|agriturismo|appartamenti","stars":0,"address":"","phone":"","email":"","checkin_from":"HH:MM","checkin_to":"HH:MM","checkout_until":"HH:MM","reception_hours":"","languages":[]},
-"rooms":[{"name":"","description":"","max_adults":0,"max_children":0,"size_m2":0,"beds":"","amenities":[],"price_from":0,"image_url":""}],
-"services":[{"name":"","description":"","hours":"","price":"","included":false}],
+{"property":{"name":"","type":"hotel|bnb|resort|agriturismo|appartamenti","stars":0,"address":"","phone":"","email":"","checkin_from":"HH:MM","checkin_to":"HH:MM","checkout_until":"HH:MM","reception_hours":"","languages":[],"website":""},
+"rooms":[{"name":"","description":"","max_adults":0,"max_children":0,"size_m2":0,"beds":"","amenities":[],"price_from":0,"image_url":"","url":""}],
+"services":[{"name":"","description":"","hours":"","price":"","included":false,"url":""}],
 "policies":{"cancellation":"","children":"","pets":"","late_checkout":"","early_checkin":"","city_tax":"","payment_methods":"","parking":""},
-"local_guide":[{"category":"ristorante|attrazione|trasporti|spiaggia|shopping|altro","name":"","description":"","distance":"","link":""}]}
-Usa la lingua del sito. Massimo 15 camere, 20 servizi, 15 voci guida.`;
+"local_guide":[{"category":"ristorante|attrazione|trasporti|spiaggia|shopping|altro","name":"","description":"","distance":"","link":""}],
+"pages":[{"name":"","url":""}]}
+Gli URL ("url" di camere e servizi, "url" di pages) vanno scelti SOLO dalla lista LINK REALI DEL SITO, per corrispondenza certa di nome/slug con la camera o il servizio; se non c'è una corrispondenza certa lascia stringa vuota. Non inventare MAI URL e non modificarli.
+"pages" contiene le pagine principali del sito trovate nella lista (camere, servizi, contatti, ristorante, spa, offerte...), con nome breve e URL esatto. Imposta "website" sull'URL del sito principale.
+Usa la lingua del sito. Massimo 15 camere, 20 servizi, 15 voci guida, 15 pagine.`;
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
@@ -52,9 +55,24 @@ Deno.serve(async (req) => {
     }).then((r) => r.ok ? r.json() : Promise.reject(new Error(`scrape ${r.status}`)));
 
     const home = await call({ mode: "analyze", url: bot.site_url });
-    const extra = (home.links || []).filter((l: { url: string; title: string }) => KEYWORDS.test(l.url + " " + l.title)).slice(0, 6).map((l: { url: string }) => l.url);
+    const base = new URL(bot.site_url);
+    const host = base.hostname.replace(/^www\./, "");
+    const seen = new Set<string>();
+    const realLinks: { url: string; title: string }[] = [];
+    for (const l of (home.links || []) as { url: string; title?: string }[]) {
+      try {
+        const u = new URL(l.url, base); u.hash = "";
+        if (!/^https?:$/.test(u.protocol) || u.hostname.replace(/^www\./, "") !== host) continue;
+        const abs = u.toString();
+        if (seen.has(abs)) continue;
+        seen.add(abs); realLinks.push({ url: abs, title: (l.title || "").trim() });
+        if (realLinks.length >= 150) break;
+      } catch { /* skip invalid */ }
+    }
+    const extra = realLinks.filter((l) => KEYWORDS.test(l.url + " " + l.title)).slice(0, 8).map((l) => l.url);
     const more = extra.length ? await call({ mode: "scrape", urls: extra }).catch(() => ({ contents: [] })) : { contents: [] };
     const text = [home.content || "", ...(more.contents || [])].join("\n\n").slice(0, 45000);
+    const linksBlock = `LINK REALI DEL SITO (sito principale: ${base.origin}/):\n` + (realLinks.length ? realLinks.map((l) => `- ${l.title || "-"}: ${l.url}`).join("\n") : "(nessuno)");
     if (!text.trim()) return json({ error: "empty_site" }, 422);
 
     const key = Deno.env.get("LOVABLE_API_KEY");
@@ -65,7 +83,7 @@ Deno.serve(async (req) => {
       body: JSON.stringify({
         model: "openai/gpt-5-mini",
         response_format: { type: "json_object" },
-        messages: [{ role: "system", content: PROMPT }, { role: "user", content: text }],
+        messages: [{ role: "system", content: PROMPT }, { role: "user", content: `${linksBlock}\n\nTESTO DEL SITO:\n${text}` }],
       }),
     });
     if (!ai.ok) {
