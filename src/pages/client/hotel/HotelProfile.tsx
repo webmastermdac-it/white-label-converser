@@ -32,6 +32,7 @@ const HotelProfile = ({ botIdOverride }: { botIdOverride?: string } = {}) => {
   const botId = botIdOverride ?? activeBotId;
   const { canUseConciergeRequests } = usePlanConfig();
   const navigate = useNavigate();
+  const { pathname } = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
   const [hp, setHp] = useState<HP | null>(null);
   const [embedToken, setEmbedToken] = useState("");
@@ -122,6 +123,7 @@ const HotelProfile = ({ botIdOverride }: { botIdOverride?: string } = {}) => {
 
   return (
     <div className="p-4 md:p-6 space-y-4 animate-fade-in-up">
+      <Link to={`${pathname.startsWith("/admin") ? "/admin" : "/dashboard"}/bots/${botId}`} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"><ArrowLeft className="h-4 w-4" />{tl("Torna al chatbot", "Back to chatbot")}</Link>
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-2">
           <Building2 className="w-6 h-6 text-primary" />
