@@ -20,3 +20,4 @@
 - [x] Nascondere la demo segnaposto e allineare Calendly, limite prodotti, disdetta e controlli i18n pubblici.
 - [x] Aggiungere il pulsante "Torna al chatbot" in cima al Profilo struttura (client e admin).
 - [x] Lingua di risposta del chatbot dal browser (fallback EN) e link hotel IT/EN per lingua visitatore.
+- [ ] Correggere la raccolta e il matching dei link nell’import hotel, mostrare diagnostica in anteprima, verificare test e deploy.
