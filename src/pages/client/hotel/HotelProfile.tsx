@@ -18,7 +18,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { toast } from "sonner";
 import { ArrowLeft, Building2, Check, Copy, GripVertical, Loader2, Plus, Trash2, Wand2, ExternalLink, Upload } from "lucide-react";
 import {
-  normalizeHotelProfile, emptyRoom, emptyService, emptyGuide, uid,
+  normalizeHotelProfile, emptyRoom, emptyService, emptyGuide, emptyPage, uid,
   type HotelProfile as HP,
 } from "@/lib/hotelProfile";
 
@@ -97,9 +97,10 @@ const HotelProfile = ({ botIdOverride }: { botIdOverride?: string } = {}) => {
       ...d,
       property: Object.fromEntries(Object.entries(d.property).map(([k, v]) => [k, pick(v, (proposal.property as any)[k])])) as HP["property"],
       policies: Object.fromEntries(Object.entries(d.policies).map(([k, v]) => [k, pick(v, (proposal.policies as any)[k])])) as HP["policies"],
-      rooms: [...d.rooms, ...proposal.rooms.filter((r) => r.name)],
-      services: [...d.services, ...proposal.services.filter((r) => r.name)],
-      local_guide: [...d.local_guide, ...proposal.local_guide.filter((r) => r.name)],
+      rooms: mergeByName(d.rooms, proposal.rooms),
+      services: mergeByName(d.services, proposal.services),
+      local_guide: mergeByName(d.local_guide, proposal.local_guide),
+      pages: mergeByName(d.pages, proposal.pages),
     }));
     setProposal(null);
     toast.success(tl("Dati importati", "Data imported"));
@@ -117,7 +118,7 @@ const HotelProfile = ({ botIdOverride }: { botIdOverride?: string } = {}) => {
 
   const tabs = [
     ["property", tl("Struttura", "Property")], ["rooms", tl("Camere", "Rooms")], ["services", tl("Servizi", "Services")],
-    ["policies", "Policy"], ["guide", tl("Guida locale", "Local guide")],
+    ["policies", "Policy"], ["guide", tl("Guida locale", "Local guide")], ["pages", tl("Pagine", "Pages")],
     ["reviews", tl("Recensioni", "Reviews")], ["qr", "QR"],
   ];
 
@@ -175,6 +176,7 @@ const HotelProfile = ({ botIdOverride }: { botIdOverride?: string } = {}) => {
               <F label={tl("Lingue parlate (separate da virgola)", "Languages spoken (comma separated)")}>
                 <CsvInput value={hp.property.languages} onChange={(v) => setP("languages", v)} placeholder="Italiano, English" />
               </F>
+              <F label={tl("Sito web", "Website")}><Input value={hp.property.website} onChange={(e) => setP("website", e.target.value)} placeholder="https://" /></F>
             </Grid>
             {hint}
           </Section>
@@ -196,6 +198,7 @@ const HotelProfile = ({ botIdOverride }: { botIdOverride?: string } = {}) => {
                   <CsvInput value={r.amenities} onChange={(v) => set({ amenities: v })} placeholder="Wi-Fi, A/C, TV" />
                 </F>
                 <F label={tl("Descrizione", "Description")} full><Textarea rows={2} value={r.description} onChange={(e) => set({ description: e.target.value })} /></F>
+                <F label={tl("Link pagina", "Page link")} full><Input value={r.url} onChange={(e) => set({ url: e.target.value })} placeholder="https://" /></F>
                 <F label={tl("Immagine", "Image")} full><ImageField value={r.image_url} onChange={(v) => set({ image_url: v })} clientId={clientId} tl={tl} /></F>
               </Grid>
             )}
@@ -213,6 +216,7 @@ const HotelProfile = ({ botIdOverride }: { botIdOverride?: string } = {}) => {
                 <F label={tl("Orari", "Hours")}><Input value={r.hours} onChange={(e) => set({ hours: e.target.value })} /></F>
                 <F label={tl("Prezzo", "Price")}><Input value={r.price} disabled={r.included} onChange={(e) => set({ price: e.target.value })} /></F>
                 <div className="flex items-center gap-2 pt-6"><Switch checked={r.included} onCheckedChange={(v) => set({ included: v })} /><Label>{tl("Incluso nel prezzo", "Included in price")}</Label></div>
+                <F label={tl("Link pagina", "Page link")} full><Input value={r.url} onChange={(e) => set({ url: e.target.value })} placeholder="https://" /></F>
                 <F label={tl("Descrizione", "Description")} full><Textarea rows={2} value={r.description} onChange={(e) => set({ description: e.target.value })} /></F>
               </Grid>
             )}
@@ -259,6 +263,20 @@ const HotelProfile = ({ botIdOverride }: { botIdOverride?: string } = {}) => {
                 <F label={tl("Distanza", "Distance")}><Input value={r.distance} onChange={(e) => set({ distance: e.target.value })} placeholder="5 min a piedi" /></F>
                 <F label="Link"><Input value={r.link} onChange={(e) => set({ link: e.target.value })} placeholder="https://" /></F>
                 <F label={tl("Descrizione", "Description")} full><Textarea rows={2} value={r.description} onChange={(e) => set({ description: e.target.value })} /></F>
+              </Grid>
+            )}
+          />
+          {hint}
+        </TabsContent>
+
+        <TabsContent value="pages" className="space-y-4">
+          <CardList
+            items={hp.pages} tl={tl} addLabel={tl("Aggiungi pagina", "Add page")}
+            onChange={(pages) => update((d) => ({ ...d, pages }))} create={emptyPage}
+            render={(r, set) => (
+              <Grid>
+                <F label={tl("Nome", "Name")}><Input value={r.name} onChange={(e) => set({ name: e.target.value })} placeholder={tl("Camere, Contatti, Spa…", "Rooms, Contacts, Spa…")} /></F>
+                <F label="Link"><Input value={r.url} onChange={(e) => set({ url: e.target.value })} placeholder="https://" /></F>
               </Grid>
             )}
           />
@@ -396,10 +414,24 @@ const ImageField = ({ value, onChange, clientId, tl }: { value: string; onChange
   );
 };
 
+/** Merge imported items by name (case-insensitive, trimmed): fill only empty fields of existing ones, append new ones. */
+export function mergeByName<T extends { id: string; name: string }>(current: T[], incoming: T[]): T[] {
+  const key = (x: { name: string }) => x.name.trim().toLowerCase();
+  const empty = (x: unknown) => x === "" || x == null || (Array.isArray(x) && !x.length);
+  const out = current.map((x) => ({ ...x }));
+  for (const item of incoming) {
+    if (!item.name?.trim()) continue;
+    const ex = out.find((x) => key(x) === key(item));
+    if (!ex) { out.push(item); continue; }
+    for (const [k, v] of Object.entries(item)) if (k !== "id" && empty((ex as any)[k]) && !empty(v)) (ex as any)[k] = v;
+  }
+  return out;
+}
+
 const ImportPreview = ({ p, tl }: { p: HP; tl: (a: string, b: string) => string }) => {
   const rows = Object.entries(p.property).filter(([, v]) => v !== "" && v != null && !(Array.isArray(v) && !v.length));
   const pol = Object.entries(p.policies).filter(([, v]) => v);
-  const empty = !rows.length && !pol.length && !p.rooms.length && !p.services.length && !p.local_guide.length;
+  const empty = !rows.length && !pol.length && !p.rooms.length && !p.services.length && !p.local_guide.length && !p.pages.length;
   if (empty) return <p className="text-sm text-muted-foreground">{tl("Nessun dato trovato sul sito.", "No data found on the site.")}</p>;
   return (
     <div className="space-y-3 text-sm">
@@ -408,6 +440,7 @@ const ImportPreview = ({ p, tl }: { p: HP; tl: (a: string, b: string) => string 
       {p.services.length > 0 && <div><p className="font-medium mb-1">{tl("Servizi", "Services")} ({p.services.length})</p><p className="text-muted-foreground">{p.services.map((r) => r.name).join(" · ")}</p></div>}
       {pol.length > 0 && <div><p className="font-medium mb-1">Policy</p>{pol.map(([k, v]) => <p key={k} className="text-muted-foreground"><span className="text-foreground">{k}:</span> {v}</p>)}</div>}
       {p.local_guide.length > 0 && <div><p className="font-medium mb-1">{tl("Guida locale", "Local guide")} ({p.local_guide.length})</p><p className="text-muted-foreground">{p.local_guide.map((r) => r.name).join(" · ")}</p></div>}
+      {p.pages.length > 0 && <div><p className="font-medium mb-1">{tl("Pagine", "Pages")} ({p.pages.length})</p><p className="text-muted-foreground">{p.pages.map((r) => r.name).join(" · ")}</p></div>}
     </div>
   );
 };
