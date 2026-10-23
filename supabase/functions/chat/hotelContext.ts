@@ -22,16 +22,22 @@ export function buildHotelContext(raw: any, conversationalLead: boolean, room = 
 
   const rooms = (Array.isArray(hp.rooms) ? hp.rooms : []).filter((r: any) => v(r?.name));
   if (rooms.length) {
-    sections.push("ROOMS\n" + rooms.map((r: any) => {
+    const roomLines = rooms.map((r: any) => {
       const cap = [r.max_adults ? `${r.max_adults} adults` : "", r.max_children ? `${r.max_children} children` : ""].filter(Boolean).join(" + ");
       const bits = [
         cap && `max ${cap}`, v(r.beds) && `beds: ${v(r.beds)}`, r.size_m2 ? `${r.size_m2} m²` : "",
         r.price_from ? `price from €${r.price_from}/night` : "",
         Array.isArray(r.amenities) && r.amenities.length ? `amenities: ${r.amenities.join(", ")}` : "",
         v(r.url) && `page: ${v(r.url)}`, v(r.url_en) && `page_en: ${v(r.url_en)}`,
+        v(r.image_url) && `photo: ${v(r.image_url)}`,
       ].filter(Boolean).join("; ");
       return `- ${v(r.name)}${bits ? ` (${bits})` : ""}${v(r.description) ? `: ${v(r.description)}` : ""}`;
-    }).join("\n") + "\n");
+    });
+    const hasPhotos = rooms.some((r: any) => v(r?.image_url));
+    const photoRule = hasPhotos
+      ? "PHOTOS: se l'ospite chiede foto/immagini/come è fatta una camera, rispondi con UNA frase breve e inserisci l'immagine in markdown nel formato ![Nome camera](URL), usando ESATTAMENTE l'URL indicato in 'photo' per quella camera. Non inventare mai URL. Se la camera non ha 'photo', di' che non hai una foto disponibile e proponi di contattare la reception. Se chiede foto di più camere, mostra al massimo 3 immagini. Questa regola ha priorità sul limite di parole e su eventuali regole di formattazione che vietano markdown.\n"
+      : "";
+    sections.push("ROOMS\n" + roomLines.join("\n") + "\n" + photoRule);
   }
 
   const services = (Array.isArray(hp.services) ? hp.services : []).filter((x: any) => v(x?.name));
