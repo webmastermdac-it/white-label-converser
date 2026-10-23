@@ -19,3 +19,4 @@
 - [x] Aggiungere il settore Sito aziendale / Altro alla registrazione, landing, integrazioni e onboarding.
 - [x] Nascondere la demo segnaposto e allineare Calendly, limite prodotti, disdetta e controlli i18n pubblici.
 - [x] Aggiungere il pulsante "Torna al chatbot" in cima al Profilo struttura (client e admin).
+- [x] Lingua di risposta del chatbot dal browser (fallback EN) e link hotel IT/EN per lingua visitatore.

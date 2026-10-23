@@ -9,18 +9,20 @@ const json = (b: unknown, s = 200) =>
   new Response(JSON.stringify(b), { status: s, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
 const Body = z.object({ bot_id: z.string().uuid() });
+const isEnLink = (u: URL) => /^\/en(\/|$|[-_])/i.test(u.pathname) || /^en\./i.test(u.hostname) || /^en(-|$)/i.test(u.searchParams.get("lang") || "");
 const KEYWORDS = /(camer|room|suite|contatt|contact|serviz|service|prezz|price|dove|where|about|chi-siamo|policy|condizion|faq|colazion|breakfast|spa|ristorante|restaurant)/i;
 
 const PROMPT = `Sei un assistente che estrae dati di una struttura ricettiva dal testo del suo sito.
 Rispondi SOLO con un oggetto JSON con questa struttura (ometti o lascia stringa vuota ciò che non trovi, NON inventare nulla):
-{"property":{"name":"","type":"hotel|bnb|resort|agriturismo|appartamenti","stars":0,"address":"","phone":"","email":"","checkin_from":"HH:MM","checkin_to":"HH:MM","checkout_until":"HH:MM","reception_hours":"","languages":[],"website":""},
-"rooms":[{"name":"","description":"","max_adults":0,"max_children":0,"size_m2":0,"beds":"","amenities":[],"price_from":0,"image_url":"","url":""}],
-"services":[{"name":"","description":"","hours":"","price":"","included":false,"url":""}],
+{"property":{"name":"","type":"hotel|bnb|resort|agriturismo|appartamenti","stars":0,"address":"","phone":"","email":"","checkin_from":"HH:MM","checkin_to":"HH:MM","checkout_until":"HH:MM","reception_hours":"","languages":[],"website":"","website_en":""},
+"rooms":[{"name":"","description":"","max_adults":0,"max_children":0,"size_m2":0,"beds":"","amenities":[],"price_from":0,"image_url":"","url":"","url_en":""}],
+"services":[{"name":"","description":"","hours":"","price":"","included":false,"url":"","url_en":""}],
 "policies":{"cancellation":"","children":"","pets":"","late_checkout":"","early_checkin":"","city_tax":"","payment_methods":"","parking":""},
 "local_guide":[{"category":"ristorante|attrazione|trasporti|spiaggia|shopping|altro","name":"","description":"","distance":"","link":""}],
-"pages":[{"name":"","url":""}]}
+"pages":[{"name":"","url":"","url_en":""}]}
 Gli URL ("url" di camere e servizi, "url" di pages) vanno scelti SOLO dalla lista LINK REALI DEL SITO, per corrispondenza certa di nome/slug con la camera o il servizio; se non c'è una corrispondenza certa lascia stringa vuota. Non inventare MAI URL e non modificarli.
 "pages" contiene le pagine principali del sito trovate nella lista (camere, servizi, contatti, ristorante, spa, offerte...), con nome breve e URL esatto. Imposta "website" sull'URL del sito principale.
+Nella lista i link marcati [EN] sono versioni inglesi: per ogni camera/servizio/pagina metti in "url" il link italiano/di default e in "url_en" l'equivalente inglese marcato [EN]; "website_en" è la home inglese. Se non esiste l'equivalente EN nella lista lascia "url_en" vuoto. Mai inventare link.
 Usa la lingua del sito. Massimo 15 camere, 20 servizi, 15 voci guida, 15 pagine.`;
 
 Deno.serve(async (req) => {
@@ -58,21 +60,21 @@ Deno.serve(async (req) => {
     const base = new URL(bot.site_url);
     const host = base.hostname.replace(/^www\./, "");
     const seen = new Set<string>();
-    const realLinks: { url: string; title: string }[] = [];
+    const realLinks: { url: string; title: string; en: boolean }[] = [];
     for (const l of (home.links || []) as { url: string; title?: string }[]) {
       try {
         const u = new URL(l.url, base); u.hash = "";
         if (!/^https?:$/.test(u.protocol) || u.hostname.replace(/^www\./, "") !== host) continue;
         const abs = u.toString();
         if (seen.has(abs)) continue;
-        seen.add(abs); realLinks.push({ url: abs, title: (l.title || "").trim() });
+        seen.add(abs); realLinks.push({ url: abs, title: (l.title || "").trim(), en: isEnLink(u) });
         if (realLinks.length >= 150) break;
       } catch { /* skip invalid */ }
     }
     const extra = realLinks.filter((l) => KEYWORDS.test(l.url + " " + l.title)).slice(0, 8).map((l) => l.url);
     const more = extra.length ? await call({ mode: "scrape", urls: extra }).catch(() => ({ contents: [] })) : { contents: [] };
     const text = [home.content || "", ...(more.contents || [])].join("\n\n").slice(0, 45000);
-    const linksBlock = `LINK REALI DEL SITO (sito principale: ${base.origin}/):\n` + (realLinks.length ? realLinks.map((l) => `- ${l.title || "-"}: ${l.url}`).join("\n") : "(nessuno)");
+    const linksBlock = `LINK REALI DEL SITO (sito principale: ${base.origin}/):\n` + (realLinks.length ? realLinks.map((l) => `- ${l.en ? "[EN] " : ""}${l.title || "-"}: ${l.url}`).join("\n") : "(nessuno)");
     if (!text.trim()) return json({ error: "empty_site" }, 422);
 
     const key = Deno.env.get("LOVABLE_API_KEY");

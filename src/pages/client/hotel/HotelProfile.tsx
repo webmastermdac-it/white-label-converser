@@ -177,6 +177,7 @@ const HotelProfile = ({ botIdOverride }: { botIdOverride?: string } = {}) => {
                 <CsvInput value={hp.property.languages} onChange={(v) => setP("languages", v)} placeholder="Italiano, English" />
               </F>
               <F label={tl("Sito web", "Website")}><Input value={hp.property.website} onChange={(e) => setP("website", e.target.value)} placeholder="https://" /></F>
+              <F label={tl("Sito web (EN)", "Website (EN)")}><Input value={hp.property.website_en} onChange={(e) => setP("website_en", e.target.value)} placeholder="https://" /></F>
             </Grid>
             {hint}
           </Section>
@@ -199,6 +200,7 @@ const HotelProfile = ({ botIdOverride }: { botIdOverride?: string } = {}) => {
                 </F>
                 <F label={tl("Descrizione", "Description")} full><Textarea rows={2} value={r.description} onChange={(e) => set({ description: e.target.value })} /></F>
                 <F label={tl("Link pagina", "Page link")} full><Input value={r.url} onChange={(e) => set({ url: e.target.value })} placeholder="https://" /></F>
+                <F label={tl("Link pagina (EN)", "Page link (EN)")} full><Input value={r.url_en} onChange={(e) => set({ url_en: e.target.value })} placeholder="https://" /></F>
                 <F label={tl("Immagine", "Image")} full><ImageField value={r.image_url} onChange={(v) => set({ image_url: v })} clientId={clientId} tl={tl} /></F>
               </Grid>
             )}
@@ -217,6 +219,7 @@ const HotelProfile = ({ botIdOverride }: { botIdOverride?: string } = {}) => {
                 <F label={tl("Prezzo", "Price")}><Input value={r.price} disabled={r.included} onChange={(e) => set({ price: e.target.value })} /></F>
                 <div className="flex items-center gap-2 pt-6"><Switch checked={r.included} onCheckedChange={(v) => set({ included: v })} /><Label>{tl("Incluso nel prezzo", "Included in price")}</Label></div>
                 <F label={tl("Link pagina", "Page link")} full><Input value={r.url} onChange={(e) => set({ url: e.target.value })} placeholder="https://" /></F>
+                <F label={tl("Link pagina (EN)", "Page link (EN)")} full><Input value={r.url_en} onChange={(e) => set({ url_en: e.target.value })} placeholder="https://" /></F>
                 <F label={tl("Descrizione", "Description")} full><Textarea rows={2} value={r.description} onChange={(e) => set({ description: e.target.value })} /></F>
               </Grid>
             )}
@@ -277,6 +280,7 @@ const HotelProfile = ({ botIdOverride }: { botIdOverride?: string } = {}) => {
               <Grid>
                 <F label={tl("Nome", "Name")}><Input value={r.name} onChange={(e) => set({ name: e.target.value })} placeholder={tl("Camere, Contatti, Spa…", "Rooms, Contacts, Spa…")} /></F>
                 <F label="Link"><Input value={r.url} onChange={(e) => set({ url: e.target.value })} placeholder="https://" /></F>
+                <F label={tl("Link pagina (EN)", "Page link (EN)")}><Input value={r.url_en} onChange={(e) => set({ url_en: e.target.value })} placeholder="https://" /></F>
               </Grid>
             )}
           />
