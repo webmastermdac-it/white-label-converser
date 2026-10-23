@@ -23,6 +23,7 @@ import {
 } from "@/lib/hotelProfile";
 
 type Status = "idle" | "saving" | "saved" | "error";
+type ImportDiagnostics = { links_found: number; en_links_found: number; rooms_with_url: number; rooms_total: number };
 
 const HotelProfile = ({ botIdOverride }: { botIdOverride?: string } = {}) => {
   const { lang } = useLanguage();
@@ -76,10 +77,12 @@ const HotelProfile = ({ botIdOverride }: { botIdOverride?: string } = {}) => {
   // ── Import from site ──
   const [importing, setImporting] = useState(false);
   const [proposal, setProposal] = useState<HP | null>(null);
+  const [importDiagnostics, setImportDiagnostics] = useState<ImportDiagnostics | null>(null);
   const runImport = async () => {
     if (!botId) return;
     if (!siteUrl) { toast.error(tl("Imposta prima l'URL del sito nelle Impostazioni bot", "Set the site URL in bot settings first")); return; }
     setImporting(true);
+    setImportDiagnostics(null);
     const { data, error } = await supabase.functions.invoke("hotel-profile-import", { body: { bot_id: botId } });
     setImporting(false);
     if (error) {
@@ -89,6 +92,7 @@ const HotelProfile = ({ botIdOverride }: { botIdOverride?: string } = {}) => {
       return;
     }
     setProposal(normalizeHotelProfile(data?.proposal));
+    setImportDiagnostics(data?.diagnostics || null);
   };
   const applyImport = () => {
     if (!proposal || !hp) return;
@@ -313,7 +317,7 @@ const HotelProfile = ({ botIdOverride }: { botIdOverride?: string } = {}) => {
       <Dialog open={!!proposal} onOpenChange={(o) => !o && setProposal(null)}>
         <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
           <DialogHeader><DialogTitle>{tl("Anteprima dati trovati sul sito", "Preview of data found on the site")}</DialogTitle></DialogHeader>
-          {proposal && <ImportPreview p={proposal} tl={tl} />}
+          {proposal && <ImportPreview p={proposal} diagnostics={importDiagnostics} tl={tl} />}
           <p className="text-xs text-muted-foreground">{tl("I campi già compilati non vengono sovrascritti se il sito non riporta quel dato. Camere, servizi e luoghi vengono aggiunti a quelli esistenti.", "Filled fields are kept when the site has no value. Rooms, services and places are added to the existing ones.")}</p>
           <DialogFooter>
             <Button variant="ghost" onClick={() => setProposal(null)}>{tl("Annulla", "Cancel")}</Button>
@@ -432,13 +436,14 @@ export function mergeByName<T extends { id: string; name: string }>(current: T[]
   return out;
 }
 
-const ImportPreview = ({ p, tl }: { p: HP; tl: (a: string, b: string) => string }) => {
+const ImportPreview = ({ p, diagnostics, tl }: { p: HP; diagnostics: ImportDiagnostics | null; tl: (a: string, b: string) => string }) => {
   const rows = Object.entries(p.property).filter(([, v]) => v !== "" && v != null && !(Array.isArray(v) && !v.length));
   const pol = Object.entries(p.policies).filter(([, v]) => v);
   const empty = !rows.length && !pol.length && !p.rooms.length && !p.services.length && !p.local_guide.length && !p.pages.length;
   if (empty) return <p className="text-sm text-muted-foreground">{tl("Nessun dato trovato sul sito.", "No data found on the site.")}</p>;
   return (
     <div className="space-y-3 text-sm">
+      {diagnostics && <p className="text-xs text-muted-foreground">{tl("Link trovati", "Links found")}: {diagnostics.links_found} (EN: {diagnostics.en_links_found}) — {tl("camere con link", "rooms with links")}: {diagnostics.rooms_with_url}/{diagnostics.rooms_total}</p>}
       {rows.length > 0 && <div><p className="font-medium mb-1">{tl("Struttura", "Property")}</p>{rows.map(([k, v]) => <p key={k} className="text-muted-foreground"><span className="text-foreground">{k}:</span> {Array.isArray(v) ? v.join(", ") : String(v)}</p>)}</div>}
       {p.rooms.length > 0 && <div><p className="font-medium mb-1">{tl("Camere", "Rooms")} ({p.rooms.length})</p><p className="text-muted-foreground">{p.rooms.map((r) => r.name).join(" · ")}</p></div>}
       {p.services.length > 0 && <div><p className="font-medium mb-1">{tl("Servizi", "Services")} ({p.services.length})</p><p className="text-muted-foreground">{p.services.map((r) => r.name).join(" · ")}</p></div>}
