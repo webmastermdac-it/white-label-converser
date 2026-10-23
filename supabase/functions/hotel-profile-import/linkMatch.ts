@@ -23,7 +23,8 @@ export function matchLink(name: string, links: SiteLink[]): string {
     const values = [segment(new URL(link.url)), normalizeLinkName(link.title)];
     const exact = values.some((v) => v === normalized);
     const partial = values.some((v) => Math.min(v.length, normalized.length) >= 4 && (v.includes(normalized) || normalized.includes(v)));
-    return exact || partial ? [{ link, exact, relevant: /\/(camer|room|suite|servizi|service)/i.test(path), length: path.length }] : [];
+    const directories = path.slice(0, path.lastIndexOf("/"));
+    return exact || partial ? [{ link, exact, relevant: /\/(camer|room|suite|servizi|service)/i.test(directories), length: path.length }] : [];
   });
   candidates.sort((a, b) => Number(b.exact) - Number(a.exact) || Number(b.relevant) - Number(a.relevant) || a.length - b.length || a.link.url.localeCompare(b.link.url));
   return candidates[0]?.link.url || "";
