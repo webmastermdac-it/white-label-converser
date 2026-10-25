@@ -27,8 +27,9 @@ vi.mock("@/integrations/supabase/client", () => ({ supabase: {
 } }));
 
 import HotelRequests from "@/pages/client/hotel/HotelRequests";
-afterEach(cleanup);
+afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
 it("saves staffing hours while retaining the latest other profile keys", async () => {
+  vi.stubGlobal("ResizeObserver", class { observe() {} unobserve() {} disconnect() {} });
   render(<MemoryRouter><HotelRequests /></MemoryRouter>);
   const save = await screen.findByRole("button", { name: "Salva" });
   await waitFor(() => expect(save).toBeEnabled());
