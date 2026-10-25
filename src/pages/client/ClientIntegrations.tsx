@@ -15,7 +15,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import {
   Plug, Lock, Loader2, RefreshCw, CheckCircle2, XCircle, Clock,
   Settings2, FileText, CalendarDays, ShoppingBag, Store, ShoppingCart, Sparkles, X, ArrowUpCircle, ArrowLeft,
-  ChevronDown, History, CalendarCheck,
+  ChevronDown, History, CalendarCheck, Instagram,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import ProductCatalogList from "@/components/ecommerce/ProductCatalogList";
@@ -429,12 +429,6 @@ const ClientIntegrations = ({ embedded = false, clientIdOverride }: { embedded?:
           <button onClick={dismissBanner} className="text-muted-foreground hover:text-foreground">
             <X className="w-4 h-4" />
           </button>
-        </div>
-      )}
-
-      {moduleIntegrations.length === 0 && (
-        <div className="rounded-xl border border-border bg-card p-6 text-sm text-muted-foreground">
-          <p>{isIt ? "Nessuna integrazione disponibile per il tuo modulo." : "No integrations are available for your module."}</p>
         </div>
       )}
 

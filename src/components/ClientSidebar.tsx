@@ -4,11 +4,14 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/hooks/useLanguage";
 import { usePlanConfig } from "@/hooks/usePlanConfig";
 import { useActiveModule } from "@/hooks/useActiveModule";
+import { useOpenServiceRequests } from "@/hooks/useOpenServiceRequests";
+import { playNotice, SERVICE_REQUEST_SOUND_KEY } from "@/lib/playNotice";
+import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   LayoutDashboard, MessageSquare,
-  ChevronLeft, ChevronRight, Bot, LogOut, Inbox, ArrowUpCircle, BarChart3, Plug, Instagram, Settings
+  ChevronLeft, ChevronRight, Bot, LogOut, Inbox, ArrowUpCircle, BarChart3, Plug, Settings, ConciergeBell, Volume2, VolumeX
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import ThemeSelector from "@/components/ThemeSelector";
@@ -16,6 +19,8 @@ import LanguageMenu from "@/components/LanguageMenu";
 
 const ClientSidebar = () => {
   const [collapsed, setCollapsed] = useState(false);
+  const [sound, setSound] = useState(() => localStorage.getItem(SERVICE_REQUEST_SOUND_KEY) === "true");
+  const { count: openRequests, enabled: requestsEnabled } = useOpenServiceRequests();
   const { user, signOut, role } = useAuth();
   const { lang, t } = useLanguage();
   const { canUseEcommerce, canUseCalendly, config: planConfig } = usePlanConfig();
@@ -34,7 +39,16 @@ const ClientSidebar = () => {
         icon: Settings,
       };
 
+  const toggleSound = (next: boolean) => {
+    setSound(next);
+    localStorage.setItem(SERVICE_REQUEST_SOUND_KEY, String(next));
+    if (next) playNotice();
+  };
+
   const dataNav = [
+    ...(requestsEnabled
+      ? [{ label: tl("Richieste ospiti", "Guest requests"), href: "/dashboard/hotel/requests", icon: ConciergeBell, badge: openRequests }]
+      : []),
     { label: t("overview"), href: "/dashboard", icon: LayoutDashboard, end: true },
     { label: t("leads"), href: "/dashboard/leads", icon: Inbox },
     { label: t("chatHistory"), href: "/dashboard/chats", icon: MessageSquare },
@@ -43,10 +57,7 @@ const ClientSidebar = () => {
 
   const configNav = [
     botItem,
-    ...(activeModule.integrations.length > 0
-      ? [{ label: tl("Integrazioni", "Integrations"), href: "/dashboard/integrations", icon: Plug }]
-      : []),
-    { label: "Instagram", href: "/dashboard/instagram", icon: Instagram },
+    { label: tl("Integrazioni", "Integrations"), href: "/dashboard/integrations", icon: Plug },
     { label: "Upgrade", href: "/dashboard/upgrade", icon: ArrowUpCircle },
   ];
 
@@ -72,7 +83,7 @@ const ClientSidebar = () => {
       >
         <item.icon className="w-4 h-4 flex-shrink-0" />
         {!collapsed && <span>{item.label}</span>}
-        {!!item.badge && <span className={cn("ml-auto min-w-5 h-5 px-1 rounded-full bg-primary text-primary-foreground text-[11px] grid place-items-center", collapsed && "absolute translate-x-3 -translate-y-3")}>{item.badge > 99 ? "99+" : item.badge}</span>}
+        {!!item.badge && item.badge > 0 && <span className={cn("ml-auto min-w-5 h-5 px-1 rounded-full bg-primary text-primary-foreground text-[11px] grid place-items-center", collapsed && "absolute translate-x-3 -translate-y-3")}>{item.badge > 99 ? "99+" : item.badge}</span>}
       </NavLink>
     );
 
@@ -129,7 +140,7 @@ const ClientSidebar = () => {
 
 
       <nav className="px-2 py-2.5 space-y-0.5 overflow-y-auto">
-        <GroupLabel>{isIt ? "Dati" : "Data"}</GroupLabel>
+        <GroupLabel>{requestsEnabled ? tl("Operatività", "Operations") : isIt ? "Dati" : "Data"}</GroupLabel>
         {dataNav.map(renderItem)}
       </nav>
 
@@ -141,6 +152,35 @@ const ClientSidebar = () => {
       </nav>
 
       <div className="p-3 border-t border-sidebar-border space-y-2">
+        {requestsEnabled && (collapsed ? (
+          <TooltipProvider delayDuration={200}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={() => toggleSound(!sound)}
+                  aria-label={tl("Suono richieste", "Request sound")}
+                  className="w-full flex justify-center p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-sidebar-accent"
+                >
+                  {sound ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="right">
+                {tl("Suono richieste", "Request sound")}: {sound ? tl("attivo", "on") : tl("disattivato", "off")}
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        ) : (
+          <div className="px-2.5 py-1.5">
+            <label className="flex items-center gap-2 text-xs font-medium text-sidebar-foreground cursor-pointer">
+              {sound ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
+              <span className="flex-1">{tl("Suono richieste", "Request sound")}</span>
+              <Switch checked={sound} onCheckedChange={toggleSound} />
+            </label>
+            <p className="mt-0.5 pl-6 text-[10px] text-muted-foreground">
+              {sound ? tl("Attivo su tutte le pagine", "On across all pages") : tl("Disattivato", "Off")}
+            </p>
+          </div>
+        ))}
         {!collapsed && (
           <>
             <ThemeSelector />
