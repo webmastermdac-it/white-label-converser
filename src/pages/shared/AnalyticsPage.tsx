@@ -16,7 +16,10 @@ import {
   LineChart, Line, BarChart, Bar, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
 } from "recharts";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useActiveModule } from "@/hooks/useActiveModule";
+import HotelResults from "@/pages/client/hotel/HotelResults";
 
 interface AnalyticsPageProps {
   isAdmin?: boolean;
@@ -44,7 +47,7 @@ interface Lead {
 
 type PresetKey = "today" | "7d" | "30d" | "3m" | "year";
 
-const AnalyticsPage: React.FC<AnalyticsPageProps> = ({ isAdmin = false }) => {
+const AnalyticsContent: React.FC<AnalyticsPageProps> = ({ isAdmin = false }) => {
   const { clientId, role } = useAuth();
   const { lang } = useLanguage();
   const { canUseAdvancedAnalytics } = usePlanConfig();
@@ -576,6 +579,28 @@ const AnalyticsPage: React.FC<AnalyticsPageProps> = ({ isAdmin = false }) => {
         )}
       </div>
     </div>
+  );
+};
+
+const AnalyticsPage: React.FC<AnalyticsPageProps> = ({ isAdmin = false }) => {
+  const { role } = useAuth();
+  const { lang } = useLanguage();
+  const { module } = useActiveModule();
+  const [params, setParams] = useSearchParams();
+  const tl = (it: string, en: string) => (lang === "it" ? it : en);
+  if (isAdmin || role === "super_admin" || module.id !== "hotel") return <AnalyticsContent isAdmin={isAdmin} />;
+  const tab = params.get("tab") === "leads" ? "leads" : "results";
+  return (
+    <Tabs value={tab} onValueChange={(v) => setParams((p) => { p.set("tab", v); return p; }, { replace: true })}>
+      <div className="px-4 pt-4 md:px-6 md:pt-6">
+        <TabsList>
+          <TabsTrigger value="results">{tl("Risultati concierge", "Concierge results")}</TabsTrigger>
+          <TabsTrigger value="leads">{tl("Conversazioni e lead", "Conversations and leads")}</TabsTrigger>
+        </TabsList>
+      </div>
+      <TabsContent value="results" className="mt-0"><HotelResults /></TabsContent>
+      <TabsContent value="leads" className="mt-0"><AnalyticsContent isAdmin={false} /></TabsContent>
+    </Tabs>
   );
 };
 

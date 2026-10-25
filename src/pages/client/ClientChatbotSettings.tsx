@@ -26,12 +26,10 @@ import {
 import { getModule } from "@/lib/modules";
 import HotelProfile from "@/pages/client/hotel/HotelProfile";
 import HotelRequests from "@/pages/client/hotel/HotelRequests";
-import HotelResults from "@/pages/client/hotel/HotelResults";
 
 const MODULE_PAGE_COMPONENTS: Record<string, React.ComponentType<{ botIdOverride?: string }>> = {
   "/dashboard/hotel/profile": HotelProfile,
   "/dashboard/hotel/requests": HotelRequests,
-  "/dashboard/hotel/results": HotelResults,
 };
 
 type SettingsSection = "install" | "general" | "appearance" | "tone" | "knowledge" | "leads" | "preview" | "concierge";
