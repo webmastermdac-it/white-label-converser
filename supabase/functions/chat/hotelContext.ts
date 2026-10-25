@@ -19,6 +19,9 @@ export function buildHotelContext(raw: any, conversationalLead: boolean, room = 
     line("Check-out by", p.checkout_until) + line("Reception hours", p.reception_hours) +
     line("Languages spoken", Array.isArray(p.languages) ? p.languages.join(", ") : "");
   if (s) sections.push(`PROPERTY\n${s}`);
+  if (hp.service_hours?.enabled) {
+    sections.push(`Il personale gestisce le richieste dalle ${v(hp.service_hours.start) || "08:00"} alle ${v(hp.service_hours.end) || "20:00"}. Dopo aver registrato una richiesta fuori da questo orario, avvisa l'ospite che verrà gestita a partire dalle ${v(hp.service_hours.start) || "08:00"}; se è urgente (es. problema in camera) suggerisci di chiamare la reception.\n`);
+  }
 
   const rooms = (Array.isArray(hp.rooms) ? hp.rooms : []).filter((r: any) => v(r?.name));
   if (rooms.length) {

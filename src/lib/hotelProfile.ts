@@ -1,3 +1,5 @@
+import { normalizeServiceHours, type ServiceHours } from "@/lib/serviceHours";
+
 export type PropertyType = "hotel" | "bnb" | "resort" | "agriturismo" | "appartamenti";
 export type GuideCategory = "ristorante" | "attrazione" | "trasporti" | "spiaggia" | "shopping" | "altro";
 
@@ -10,6 +12,7 @@ export interface HotelPage { id: string; name: string; url: string; url_en: stri
 export interface HotelGuideItem { id: string; category: GuideCategory; name: string; description: string; distance: string; link: string }
 
 export interface HotelProfile {
+  service_hours: ServiceHours;
   property: {
     name: string; type: PropertyType; stars: number | null; address: string; phone: string; email: string;
     checkin_from: string; checkin_to: string; checkout_until: string; reception_hours: string; reception_open: string; reception_close: string; languages: string[]; website: string; website_en: string;
@@ -45,6 +48,7 @@ export function normalizeHotelProfile(raw: any): HotelProfile {
   const r = raw && typeof raw === "object" ? raw : {};
   const p = r.property || {}, po = r.policies || {}, b = r.booking || {}, rv = r.reviews || {};
   return {
+    service_hours: normalizeServiceHours(r.service_hours),
     property: {
       name: s(p.name), type: PT.includes(p.type) ? p.type : "hotel", stars: n(p.stars) || null, address: s(p.address),
       phone: s(p.phone), email: s(p.email), checkin_from: s(p.checkin_from), checkin_to: s(p.checkin_to),
