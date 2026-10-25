@@ -36,8 +36,10 @@ vi.mock("@/integrations/supabase/client", () => ({
 import { useOpenServiceRequests } from "@/hooks/useOpenServiceRequests";
 import RequestAlertLamp, { SERVICE_REQUEST_LAMP_KEY, useRequestLampPreference } from "@/components/hotel/RequestAlertLamp";
 
+let observed: { count: number; urgent: boolean; enabled: boolean };
 function LampHarness() {
   const { count, urgent, enabled } = useOpenServiceRequests();
+  observed = { count, urgent, enabled };
   const { lampEnabled } = useRequestLampPreference();
   return <MemoryRouter><RequestAlertLamp count={count} urgent={urgent} visible={enabled && lampEnabled && count > 0} /></MemoryRouter>;
 }
@@ -50,23 +52,16 @@ afterEach(cleanup);
 describe("Hotel request lamp", () => {
   it("changes from ordinary to urgent for Problema in camera and switches off at zero", async () => {
     state.rows = [{ id: "1", category: "Asciugamani" }];
-    const hook = renderHook(useOpenServiceRequests);
     render(<LampHarness />);
-    await waitFor(() => expect(hook.result.current).toMatchObject({ count: 1, urgent: false }));
+    await waitFor(() => expect(observed).toMatchObject({ count: 1, urgent: false }));
     await screen.findByRole("status");
     state.rows.push({ id: "2", category: "Problema in camera" });
     act(() => state.handlers.INSERT());
-    act(() => hook.rerender());
-    // Both consumers subscribe in this test; trigger each one's reload via remounting the hook.
-    hook.unmount();
-    const urgentHook = renderHook(useOpenServiceRequests);
-    await waitFor(() => expect(urgentHook.result.current).toMatchObject({ count: 2, urgent: true }));
+    await waitFor(() => expect(observed).toMatchObject({ count: 2, urgent: true }));
     expect(await screen.findByRole("status")).toBeInTheDocument();
-    cleanup();
     state.rows = [];
-    render(<LampHarness />);
-    const emptyHook = renderHook(useOpenServiceRequests);
-    await waitFor(() => expect(emptyHook.result.current).toMatchObject({ count: 0, urgent: false }));
+    act(() => state.handlers.UPDATE());
+    await waitFor(() => expect(observed).toMatchObject({ count: 0, urgent: false }));
     expect(screen.queryByRole("status")).not.toBeInTheDocument();
   });
 
