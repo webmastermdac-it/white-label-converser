@@ -1,5 +1,5 @@
 import {
-  ShoppingBag, CalendarCheck, Hotel, Sparkles, Building2, ConciergeBell, TrendingUp,
+  ShoppingBag, CalendarCheck, Hotel, Sparkles, Building2, ConciergeBell,
   type LucideIcon,
 } from "lucide-react";
 
