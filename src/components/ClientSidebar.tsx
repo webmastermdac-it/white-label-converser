@@ -4,23 +4,26 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/hooks/useLanguage";
 import { usePlanConfig } from "@/hooks/usePlanConfig";
 import { useActiveModule } from "@/hooks/useActiveModule";
-import { useOpenServiceRequests } from "@/hooks/useOpenServiceRequests";
 import { playNotice, SERVICE_REQUEST_SOUND_KEY } from "@/lib/playNotice";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   LayoutDashboard, MessageSquare,
-  ChevronLeft, ChevronRight, Bot, LogOut, Inbox, ArrowUpCircle, BarChart3, Plug, Settings, ConciergeBell, Volume2, VolumeX
+  ChevronLeft, ChevronRight, Bot, LogOut, Inbox, ArrowUpCircle, BarChart3, Plug, Settings, ConciergeBell, Volume2, VolumeX, Lightbulb
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import ThemeSelector from "@/components/ThemeSelector";
 import LanguageMenu from "@/components/LanguageMenu";
 
-const ClientSidebar = () => {
+const ClientSidebar = ({ openRequests, requestsEnabled, lampEnabled, onLampChange }: {
+  openRequests: number;
+  requestsEnabled: boolean;
+  lampEnabled: boolean;
+  onLampChange: (next: boolean) => void;
+}) => {
   const [collapsed, setCollapsed] = useState(false);
   const [sound, setSound] = useState(() => localStorage.getItem(SERVICE_REQUEST_SOUND_KEY) === "true");
-  const { count: openRequests, enabled: requestsEnabled } = useOpenServiceRequests();
   const { user, signOut, role } = useAuth();
   const { lang, t } = useLanguage();
   const { canUseEcommerce, canUseCalendly, config: planConfig } = usePlanConfig();
@@ -179,6 +182,27 @@ const ClientSidebar = () => {
             <p className="mt-0.5 pl-6 text-[10px] text-muted-foreground">
               {sound ? tl("Attivo su tutte le pagine", "On across all pages") : tl("Disattivato", "Off")}
             </p>
+          </div>
+        ))}
+        {requestsEnabled && (collapsed ? (
+          <TooltipProvider delayDuration={200}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="ghost" size="sm" onClick={() => onLampChange(!lampEnabled)} aria-label={tl("Lampada di segnalazione", "Alert lamp")} aria-pressed={lampEnabled} className={cn("w-full px-0", lampEnabled ? "text-primary" : "text-muted-foreground")}>
+                  <Lightbulb className="w-4 h-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="right">{tl("Lampada di segnalazione", "Alert lamp")}: {lampEnabled ? tl("attiva", "on") : tl("disattivata", "off")}</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        ) : (
+          <div className="px-2.5 py-1.5">
+            <label className="flex items-center gap-2 text-xs font-medium text-sidebar-foreground cursor-pointer">
+              <Lightbulb className="w-4 h-4 shrink-0" />
+              <span className="flex-1 min-w-0">{tl("Lampada di segnalazione", "Alert lamp")}</span>
+              <Switch checked={lampEnabled} onCheckedChange={onLampChange} className="shrink-0" />
+            </label>
+            <p className="mt-0.5 pl-6 text-[10px] text-muted-foreground">{lampEnabled ? tl("Bordo e fascia sullo schermo", "Screen border and banner") : tl("Disattivata", "Off")}</p>
           </div>
         ))}
         {!collapsed && (
