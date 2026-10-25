@@ -1,5 +1,5 @@
 # Roadmap
-- [ ] Aggiungere orario di presidio hotel, salvataggio preservando il profilo, avvisi temporizzati e contesto concierge; verificare test e build.
+- [x] Aggiungere orario di presidio hotel, salvataggio preservando il profilo, avvisi temporizzati e contesto concierge; 32 test e build verificati, chat deployata.
 - [x] Aggiungere e verificare la lampada hotel persistente, urgenza e interruttore condiviso (test e prova visiva isolata desktop/mobile).
 
 - [x] Estendere i contenuti verticali opzionali e completare i testi Hotel IT/EN.
