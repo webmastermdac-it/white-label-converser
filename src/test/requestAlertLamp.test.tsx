@@ -90,4 +90,17 @@ describe("Hotel request lamp", () => {
     const { result } = renderHook(useOpenServiceRequests);
     await waitFor(() => expect(result.current).toMatchObject({ count: 1001, urgent: true }));
   });
+  it("keeps the request count but silences INSERT outside service hours", async () => {
+    localStorage.setItem("test-sound", "true");
+    let staffed = false;
+    const { result, rerender } = renderHook(() => useOpenServiceRequests(() => staffed));
+    state.rows = [{ id: "1", category: "Problema in camera" }];
+    act(() => state.handlers.INSERT());
+    await waitFor(() => expect(result.current.count).toBe(1));
+    expect(state.playNotice).not.toHaveBeenCalled();
+    staffed = true;
+    rerender();
+    act(() => state.handlers.INSERT());
+    expect(state.playNotice).toHaveBeenCalledTimes(1);
+  });
 });
