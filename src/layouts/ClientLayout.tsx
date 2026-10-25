@@ -1,4 +1,8 @@
 import Seo from "@/components/Seo";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useActiveModule } from "@/hooks/useActiveModule";
+import { DEFAULT_SERVICE_HOURS, SERVICE_HOURS_CHANGED_EVENT, normalizeServiceHours, isWithinServiceHours } from "@/lib/serviceHours";
 import { Outlet } from "react-router-dom";
 import ClientSidebar from "@/components/ClientSidebar";
 import MobileNav from "@/components/MobileNav";
@@ -12,9 +16,32 @@ import {
 
 const ClientLayout = () => {
   const { t } = useLanguage();
-  const { count, urgent, enabled } = useOpenServiceRequests();
+  const { botId, module } = useActiveModule();
+  const [hoursState, setHoursState] = useState({ botId: "", hours: DEFAULT_SERVICE_HOURS });
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(new Date()), 60000);
+    return () => window.clearInterval(timer);
+  }, []);
+  useEffect(() => {
+    if (!botId || module.id !== "hotel") return;
+    let active = true;
+    const load = async () => {
+      const { data } = await supabase.from("chatbot_configs").select("hotel_profile").eq("id", botId).maybeSingle();
+      if (active && data) {
+        const profile = data.hotel_profile as { service_hours?: unknown } | null;
+        setHoursState({ botId, hours: normalizeServiceHours(profile?.service_hours) });
+      }
+    };
+    void load();
+    window.addEventListener(SERVICE_HOURS_CHANGED_EVENT, load);
+    return () => { active = false; window.removeEventListener(SERVICE_HOURS_CHANGED_EVENT, load); };
+  }, [botId, module.id]);
+  const hoursLoaded = module.id !== "hotel" || hoursState.botId === botId;
+  const withinHours = hoursLoaded && isWithinServiceHours(hoursState.hours, now);
+  const { count, urgent, enabled } = useOpenServiceRequests(() => hoursLoaded && isWithinServiceHours(hoursState.hours, new Date()));
   const { lampEnabled, toggleLamp } = useRequestLampPreference();
-  const lampVisible = enabled && lampEnabled && count > 0;
+  const lampVisible = enabled && lampEnabled && count > 0 && withinHours;
 
   const clientNav = [
     { label: t("overview"), href: "/dashboard", icon: LayoutDashboard, end: true },

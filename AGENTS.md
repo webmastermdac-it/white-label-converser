@@ -4,3 +4,4 @@
 - Public-site extra languages (fr/de/es/pt) live in `src/i18n/public/*.ts` keyed by the English source; `t()`/`localized()` fall back to English, and `npm run i18n:check` must report zero missing or technically altered strings.
 - Hotel import link matching lives in a pure helper within the edge function and only returns discovered site URLs, so deterministic matching is testable without network or AI.
 - ClientLayout owns the guest-request subscription and lamp preference, passing state to the sidebar and lamp to avoid duplicate notification sounds.
+- Service-hour checks use a pure local-device-time helper; request-hour saves merge the latest hotel_profile JSON and normalization preserves these settings.

@@ -1,11 +1,13 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useActiveModule } from "@/hooks/useActiveModule";
 import { usePlanConfig } from "@/hooks/usePlanConfig";
 import { playNotice, SERVICE_REQUEST_SOUND_KEY } from "@/lib/playNotice";
 
 /** Open service requests of the active hotel bot, live via Realtime. */
-export function useOpenServiceRequests() {
+export function useOpenServiceRequests(canPlaySound: () => boolean = () => true) {
+  const soundAllowed = useRef(canPlaySound);
+  soundAllowed.current = canPlaySound;
   const { botId, module } = useActiveModule();
   const { canUseConciergeRequests } = usePlanConfig();
   const [count, setCount] = useState(0);
@@ -37,7 +39,7 @@ export function useOpenServiceRequests() {
     const channel = supabase.channel(`sidebar-requests-${botId}`)
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "service_requests", filter: `bot_id=eq.${botId}` }, () => {
         void load();
-        if (localStorage.getItem(SERVICE_REQUEST_SOUND_KEY) === "true") playNotice();
+        if (soundAllowed.current() && localStorage.getItem(SERVICE_REQUEST_SOUND_KEY) === "true") playNotice();
       })
       .on("postgres_changes", { event: "UPDATE", schema: "public", table: "service_requests", filter: `bot_id=eq.${botId}` }, () => { void load(); })
       .subscribe();

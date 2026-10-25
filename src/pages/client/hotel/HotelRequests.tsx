@@ -7,6 +7,10 @@ import { useActiveModule } from "@/hooks/useActiveModule";
 import { useLanguage } from "@/hooks/useLanguage";
 import { usePlanConfig } from "@/hooks/usePlanConfig";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
+import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
+import { DEFAULT_SERVICE_HOURS, SERVICE_HOURS_CHANGED_EVENT, normalizeServiceHours } from "@/lib/serviceHours";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 type RequestStatus = "open" | "in_progress" | "done";
@@ -27,6 +31,43 @@ const HotelRequests = ({ botIdOverride }: { botIdOverride?: string } = {}) => {
   const [highlighted, setHighlighted] = useState<Set<string>>(new Set());
   const [now, setNow] = useState(Date.now());
   const timers = useRef<number[]>([]);
+  const [hours, setHours] = useState(DEFAULT_SERVICE_HOURS);
+  const [hoursLoaded, setHoursLoaded] = useState(false);
+  const [savingHours, setSavingHours] = useState(false);
+
+  useEffect(() => {
+    setHoursLoaded(false);
+    setHours(DEFAULT_SERVICE_HOURS);
+    if (!botId || !canUseConciergeRequests) return;
+    let active = true;
+    supabase.from("chatbot_configs").select("hotel_profile").eq("id", botId).maybeSingle().then(({ data, error }) => {
+      if (!active) return;
+      if (error) { toast.error(tl("Caricamento orario non riuscito", "Could not load service hours")); return; }
+      if (!data) return;
+      const profile = data.hotel_profile as { service_hours?: unknown } | null;
+      setHours(normalizeServiceHours(profile?.service_hours));
+      setHoursLoaded(true);
+    });
+    return () => { active = false; };
+  }, [botId, canUseConciergeRequests]);
+
+  const saveHours = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!botId || !hoursLoaded) return;
+    setSavingHours(true);
+    try {
+      // Read the current JSON before merging so other profile sections are preserved.
+      const { data, error } = await supabase.from("chatbot_configs").select("hotel_profile").eq("id", botId).maybeSingle();
+      if (error || !data) throw error || new Error("Missing profile");
+      const profile = data.hotel_profile && typeof data.hotel_profile === "object" && !Array.isArray(data.hotel_profile) ? data.hotel_profile : {};
+      const { error: saveError } = await supabase.from("chatbot_configs").update({ hotel_profile: { ...profile, service_hours: { ...hours } } }).eq("id", botId);
+      if (saveError) throw saveError;
+      window.dispatchEvent(new Event(SERVICE_HOURS_CHANGED_EVENT));
+      toast.success(tl("Orario salvato", "Service hours saved"));
+    } catch {
+      toast.error(tl("Salvataggio non riuscito", "Save failed"));
+    } finally { setSavingHours(false); }
+  };
 
   useEffect(() => {
     const id = window.setInterval(() => setNow(Date.now()), 60000);
@@ -78,6 +119,18 @@ const HotelRequests = ({ botIdOverride }: { botIdOverride?: string } = {}) => {
       <div><h1 className="text-2xl font-bold">{tl("Richieste ospiti", "Guest requests")}</h1><p className="text-sm text-muted-foreground">{tl("Aggiornate in tempo reale", "Updated in real time")}</p></div>
       <Select value={room} onValueChange={setRoom}><SelectTrigger className="w-48"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">{tl("Tutte le camere", "All rooms")}</SelectItem>{rooms.map((r) => <SelectItem key={r} value={r}>{tl("Camera", "Room")} {r}</SelectItem>)}</SelectContent></Select>
     </div>
+    <form onSubmit={saveHours} className="border border-border rounded-lg p-3 space-y-2">
+      <div className="flex flex-wrap items-center gap-3">
+        <label className="flex items-center gap-2 text-sm font-semibold">
+          <Switch checked={hours.enabled} disabled={!hoursLoaded || savingHours} onCheckedChange={(enabled) => setHours((h) => ({ ...h, enabled }))} />
+          {tl("Orario di presidio", "Service hours")}
+        </label>
+        <label className="flex items-center gap-2 text-xs text-muted-foreground">{tl("Dalle", "From")}<Input type="time" required value={hours.start} disabled={!hoursLoaded || savingHours} onChange={(e) => setHours((h) => ({ ...h, start: e.target.value }))} className="w-28 h-8" /></label>
+        <label className="flex items-center gap-2 text-xs text-muted-foreground">{tl("Alle", "Until")}<Input type="time" required value={hours.end} disabled={!hoursLoaded || savingHours} onChange={(e) => setHours((h) => ({ ...h, end: e.target.value }))} className="w-28 h-8" /></label>
+        <Button type="submit" size="sm" disabled={!hoursLoaded || savingHours}>{savingHours && <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" />}{tl("Salva", "Save")}</Button>
+      </div>
+      <p className="text-xs text-muted-foreground">{tl("Fuori orario lampada e suono restano spenti; le richieste restano in elenco e il badge resta visibile.", "Outside service hours the lamp and sound stay off; requests remain listed and the badge stays visible.")}</p>
+    </form>
     <div className="flex flex-wrap gap-2" role="tablist">
       {statuses.map((s) => <button key={s} role="tab" aria-selected={tab === s} onClick={() => setTab(s)} className={cn("rounded-full px-4 py-1.5 text-sm font-medium border transition-colors", tab === s ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground hover:text-foreground")}>{tabLabel(s)} ({filtered.filter((r) => r.status === s).length})</button>)}
     </div>
