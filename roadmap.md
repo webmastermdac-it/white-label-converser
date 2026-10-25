@@ -1,5 +1,5 @@
 # Roadmap
-- [ ] Aggiungere e verificare la lampada hotel persistente, urgenza e interruttore condiviso.
+- [x] Aggiungere e verificare la lampada hotel persistente, urgenza e interruttore condiviso (test e prova visiva isolata desktop/mobile).
 
 - [x] Estendere i contenuti verticali opzionali e completare i testi Hotel IT/EN.
 - [x] Creare demo, sezioni visuali e calcolatore ROI dedicati all'Hotel.
