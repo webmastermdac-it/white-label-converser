@@ -107,7 +107,6 @@ export const MODULES: Record<ModuleId, ModuleDef> = {
     color: "150 70% 45%",
     menu: [
       { key: "hotel-profile", label: { it: "Profilo struttura", en: "Property profile" }, href: "/dashboard/hotel/profile", icon: Building2 },
-      { key: "hotel-requests", label: { it: "Richieste ospiti", en: "Guest requests" }, href: "/dashboard/hotel/requests", icon: ConciergeBell },
       { key: "hotel-results", label: { it: "Risultati", en: "Results" }, href: "/dashboard/hotel/results", icon: TrendingUp },
     ],
     integrations: ["hotel_booking"],
