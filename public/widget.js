@@ -251,6 +251,39 @@
 
   var shadow = host.attachShadow({ mode: "closed" });
 
+  function isMobileFullscreen() {
+    return FULLSCREEN && window.matchMedia("(max-width:768px)").matches;
+  }
+
+  function syncFullscreenHeight() {
+    if (!FULLSCREEN) return;
+    var panel = shadow.getElementById("mdac-panel");
+    if (!panel) return;
+    if (isMobileFullscreen() && window.visualViewport) {
+      panel.style.height = window.visualViewport.height + "px";
+    } else {
+      panel.style.removeProperty("height");
+    }
+  }
+
+  function scrollMobileConfirmation() {
+    if (!isMobileFullscreen()) return;
+    function scroll() {
+      var messagesEl = shadow.getElementById("mdac-messages");
+      if (messagesEl) messagesEl.scrollTop = messagesEl.scrollHeight;
+    }
+    scroll();
+    window.requestAnimationFrame(scroll);
+  }
+
+  if (FULLSCREEN) {
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener("resize", syncFullscreenHeight);
+      window.visualViewport.addEventListener("scroll", syncFullscreenHeight);
+    }
+    window.addEventListener("resize", syncFullscreenHeight);
+  }
+
   // ── Styles ──────────────────────────────────────────────
   function hexToRgb(hex) {
     var h = String(hex || "").replace("#", "");
@@ -341,6 +374,14 @@
 .mdac-success{text-align:center;padding:16px;font-size:13px;color:#16a34a;font-weight:500;}\
 @media(max-width:768px){\
 .mdac-panel{width:100%;height:" + (FULLSCREEN ? "100%" : "70vh") + ";bottom:0;left:0;right:0;border-radius:" + (FULLSCREEN ? "0" : "16px 16px 0 0") + ";}\
+.mdac-panel.mdac-fullscreen{height:100%;height:100dvh;}\
+.mdac-fullscreen .mdac-messages{flex:1;min-height:0;}\
+.mdac-fullscreen .mdac-input-area,.mdac-fullscreen .mdac-footer{flex-shrink:0;}\
+.mdac-fullscreen .mdac-quick-replies{flex-wrap:wrap;flex-shrink:0;max-height:32vh;overflow-x:hidden;overflow-y:auto;scrollbar-width:auto;}\
+.mdac-fullscreen .mdac-quick-replies::-webkit-scrollbar{display:block;}\
+.mdac-fullscreen .mdac-quick{min-height:36px;max-width:100%;white-space:normal;overflow-wrap:anywhere;}\
+.mdac-fullscreen .mdac-service-form{padding:10px;gap:6px;flex-shrink:0;max-height:45%;overflow-y:auto;}\
+.mdac-fullscreen.mdac-service-open .mdac-footer{display:none;}\
 .mdac-launcher{bottom:16px;" + (cfg.launcher_position === "bottom-left" ? "left:16px;" : "right:16px;") + "width:54px;height:54px;font-size:24px;}\
 }\
 ";
@@ -369,7 +410,7 @@
 
 
     // Panel
-    html += '<div class="mdac-panel' + (isOpen ? ' open' : '') + (FULLSCREEN ? ' mdac-fullscreen' : '') + '" id="mdac-panel">';
+    html += '<div class="mdac-panel' + (isOpen ? ' open' : '') + (FULLSCREEN ? ' mdac-fullscreen' : '') + (FULLSCREEN && serviceCategory ? ' mdac-service-open' : '') + '" id="mdac-panel">';
 
     // Header
     html += '<div class="mdac-header">';
@@ -489,7 +530,7 @@
     if (sendBtn) sendBtn.onclick = sendMessage;
     if (inputEl) {
       inputEl.onkeydown = function (e) { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); } };
-      if (isOpen && !isLoading) setTimeout(function () { inputEl.focus(); }, 50);
+      if (isOpen && !isLoading && !isMobileFullscreen()) setTimeout(function () { inputEl.focus(); }, 50);
     }
     if (leadSubmitBtn) leadSubmitBtn.onclick = submitLead;
     if (calendlyBtn) calendlyBtn.onclick = function () { window.open(config.calendly_url, "_blank"); };
@@ -509,6 +550,7 @@
         }
       }
     }
+    syncFullscreenHeight();
   }
 
   // ── API calls ───────────────────────────────────────────
@@ -617,6 +659,10 @@
     if (!serviceCategory || serviceSending) return;
     var msg = shadow.getElementById("mdac-service-message");
     var name = shadow.getElementById("mdac-service-name");
+    if (isMobileFullscreen()) {
+      var activeField = shadow.activeElement;
+      if (activeField && activeField.blur) activeField.blur();
+    }
     serviceSending = true;
     render();
     fetch(SUPABASE_URL + "/functions/v1/create-service-request", {
@@ -630,6 +676,7 @@
       serviceSending = false;
       saveMessages(messages);
       render();
+      scrollMobileConfirmation();
     }).catch(function () {
       serviceSending = false;
       messages.push({ role: "assistant", content: t.errorMsg });
