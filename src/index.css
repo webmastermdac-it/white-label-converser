@@ -56,6 +56,10 @@
     --glow-primary: 38 90% 55%;
     --success: 142 71% 45%;
     --warning: 38 92% 50%;
+    --request-lamp-warning: #f59e0b;
+    --request-lamp-urgent: #dc2626;
+    --request-lamp-foreground: #ffffff;
+    --request-lamp-shadow: inset 0 0 0 6px var(--request-lamp-color), inset 0 0 22px 8px var(--request-lamp-color);
   }
 
   /* ── Light theme ── */
@@ -243,3 +247,12 @@
 
 .typing-dot:nth-child(2) { animation-delay: 0.2s; }
 .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+.request-lamp { --request-lamp-color: var(--request-lamp-warning); }
+.request-lamp-urgent { --request-lamp-color: var(--request-lamp-urgent); }
+.request-lamp-frame { box-shadow: var(--request-lamp-shadow); animation: request-lamp-pulse 2s ease-in-out infinite; }
+.request-lamp-band { background: var(--request-lamp-color); color: var(--request-lamp-foreground); }
+.request-lamp-layout aside { top: 36px; height: calc(100dvh - 36px); }
+.request-lamp-layout > .fixed.top-0 { top: 36px; }
+@keyframes request-lamp-pulse { 0%, 100% { opacity: 0.65; } 50% { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .request-lamp-frame { animation: none; opacity: 1; } }

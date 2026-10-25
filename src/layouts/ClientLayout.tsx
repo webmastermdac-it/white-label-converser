@@ -2,6 +2,9 @@ import Seo from "@/components/Seo";
 import { Outlet } from "react-router-dom";
 import ClientSidebar from "@/components/ClientSidebar";
 import MobileNav from "@/components/MobileNav";
+import RequestAlertLamp, { useRequestLampPreference } from "@/components/hotel/RequestAlertLamp";
+import { useOpenServiceRequests } from "@/hooks/useOpenServiceRequests";
+import { cn } from "@/lib/utils";
 import { useLanguage } from "@/hooks/useLanguage";
 import {
   LayoutDashboard, Inbox, MessageSquare, Bot, ArrowUpCircle, BarChart3, Store, Plug
@@ -9,6 +12,9 @@ import {
 
 const ClientLayout = () => {
   const { t } = useLanguage();
+  const { count, urgent, enabled } = useOpenServiceRequests();
+  const { lampEnabled, toggleLamp } = useRequestLampPreference();
+  const lampVisible = enabled && lampEnabled && count > 0;
 
   const clientNav = [
     { label: t("overview"), href: "/dashboard", icon: LayoutDashboard, end: true },
@@ -22,10 +28,11 @@ const ClientLayout = () => {
   ];
 
   return (
-    <div className="flex min-h-screen bg-background">
+    <div className={cn("flex min-h-screen bg-background", lampVisible && "request-lamp-layout pt-9")}>
+      <RequestAlertLamp count={count} urgent={urgent} visible={lampVisible} />
       <Seo title="Dashboard | Genius Chatbot" path="/dashboard" noindex />
       <div className="hidden md:block">
-        <ClientSidebar />
+        <ClientSidebar openRequests={count} requestsEnabled={enabled} lampEnabled={lampEnabled} onLampChange={toggleLamp} />
       </div>
       <MobileNav items={clientNav} subtitle={t("clientPortal")} />
       <main className="flex-1 overflow-auto pt-14 md:pt-0">
