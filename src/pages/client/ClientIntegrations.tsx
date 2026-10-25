@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useLanguage } from "@/hooks/useLanguage";
 import { usePlanConfig } from "@/hooks/usePlanConfig";
+import { usePlan } from "@/hooks/usePlan";
 import { useEcommerceIntegration, type Platform } from "@/hooks/useEcommerceIntegration";
 import { useCalendlyIntegration } from "@/hooks/useCalendlyIntegration";
 import { useActiveModule } from "@/hooks/useActiveModule";
@@ -15,7 +16,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import {
   Plug, Lock, Loader2, RefreshCw, CheckCircle2, XCircle, Clock,
   Settings2, FileText, CalendarDays, ShoppingBag, Store, ShoppingCart, Sparkles, X, ArrowUpCircle, ArrowLeft,
-  ChevronDown, History, CalendarCheck,
+  ChevronDown, History, CalendarCheck, Instagram,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import ProductCatalogList from "@/components/ecommerce/ProductCatalogList";
@@ -64,10 +65,19 @@ const ClientIntegrations = ({ embedded = false, clientIdOverride }: { embedded?:
   const { lang } = useLanguage();
   const isIt = lang === "it";
   const navigate = useNavigate();
-  const { canUseCalendly, canUseEcommerce, loading: planLoading } = usePlanConfig();
+  const { canUseCalendly, canUseEcommerce, loading: planLoading, config: planConfig } = usePlanConfig();
   const eco = useEcommerceIntegration(clientIdOverride);
   const cal = useCalendlyIntegration(clientIdOverride);
   const { module: activeModule, botId: activeBotId } = useActiveModule();
+  const { plan: currentPlan } = usePlan();
+  const hasInstagram = currentPlan === "pro" || !!(planConfig as any)?.instagram_integration;
+  const [instagram, setInstagram] = useState<{ connected: boolean; username: string | null }>({ connected: false, username: null });
+  useEffect(() => {
+    if (!activeBotId) { setInstagram({ connected: false, username: null }); return; }
+    supabase.from("chatbot_configs").select("instagram_connected, instagram_username").eq("id", activeBotId).maybeSingle().then(({ data }) => {
+      setInstagram({ connected: !!(data as any)?.instagram_connected, username: (data as any)?.instagram_username ?? null });
+    });
+  }, [activeBotId]);
   const [hotelEngineUrl, setHotelEngineUrl] = useState("");
   useEffect(() => {
     if (!activeBotId || activeModule.id !== "hotel") { setHotelEngineUrl(""); return; }
@@ -432,12 +442,6 @@ const ClientIntegrations = ({ embedded = false, clientIdOverride }: { embedded?:
         </div>
       )}
 
-      {moduleIntegrations.length === 0 && (
-        <div className="rounded-xl border border-border bg-card p-6 text-sm text-muted-foreground">
-          <p>{isIt ? "Nessuna integrazione disponibile per il tuo modulo." : "No integrations are available for your module."}</p>
-        </div>
-      )}
-
       {categories.map((cat) => (
         <section key={cat.key} className="space-y-3">
           <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">{cat.title}</h2>
@@ -480,6 +484,29 @@ const ClientIntegrations = ({ embedded = false, clientIdOverride }: { embedded?:
           </div>
         </section>
       ))}
+
+      <section className="space-y-3">
+        <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">{isIt ? "Canali" : "Channels"}</h2>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+          <Link to="/dashboard/instagram" className="rounded-xl border border-border bg-card p-4 text-left space-y-3 hover:border-primary/50 transition-colors">
+            <div className="flex items-start justify-between gap-2">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center">
+                <Instagram className="w-5 h-5 text-white" />
+              </div>
+              {!hasInstagram && <Badge variant="secondary">Pro</Badge>}
+            </div>
+            <div>
+              <p className="font-semibold text-sm text-foreground">Instagram DM</p>
+              <p className="text-xs text-muted-foreground mt-0.5">{isIt ? "Risposte automatiche ai messaggi diretti" : "Automatic replies to direct messages"}</p>
+            </div>
+            {instagram.connected ? (
+              <p className="text-xs text-primary flex items-center gap-1"><CheckCircle2 className="w-3.5 h-3.5" />{isIt ? "Collegato" : "Connected"}{instagram.username ? ` @${instagram.username}` : ""}</p>
+            ) : (
+              <span className="inline-flex h-8 items-center rounded-md border border-border px-3 text-xs font-medium">{isIt ? "Collega" : "Connect"}</span>
+            )}
+          </Link>
+        </div>
+      </section>
 
       {activeModule.id === "ecommerce" && eco.configId && eco.savedPlatform && canUseEcommerce && (
         <section className="space-y-3">

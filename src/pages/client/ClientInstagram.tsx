@@ -17,13 +17,21 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Instagram, CheckCircle2, ArrowUpCircle, Loader2, Link as LinkIcon, AlertTriangle } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
+import { useLanguage } from "@/hooks/useLanguage";
+import { ArrowLeft } from "lucide-react";
 
 const ClientInstagram = () => {
   const { clientId } = useAuth();
   const { config: planConfig, loading: planLoading } = usePlanConfig();
   const { plan } = usePlan();
   const navigate = useNavigate();
+  const { lang } = useLanguage();
+  const backLink = (
+    <Button asChild variant="ghost" size="sm" className="mb-2 -ml-2">
+      <Link to="/dashboard/integrations"><ArrowLeft className="w-4 h-4 mr-1" />{lang === "it" ? "Torna alle integrazioni" : "Back to integrations"}</Link>
+    </Button>
+  );
 
   const [bots, setBots] = useState<any[]>([]);
   const [selectedBotId, setSelectedBotId] = useState<string>("");
@@ -133,6 +141,7 @@ const ClientInstagram = () => {
   if (!hasAccess) {
     return (
       <div className="p-6 max-w-3xl mx-auto">
+        {backLink}
         <Card className="border-primary/20">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -164,6 +173,7 @@ const ClientInstagram = () => {
 
   return (
     <div className="p-6 max-w-5xl mx-auto space-y-6">
+      <div>{backLink}</div>
       <div className="flex items-center gap-3">
         <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center">
           <Instagram className="w-6 h-6 text-white" />
