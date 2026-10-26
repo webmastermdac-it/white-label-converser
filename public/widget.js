@@ -207,7 +207,7 @@
     if (!marker) return null;
     try { return validStay(JSON.parse(marker[1])); } catch (e) { return null; }
   }
-  function hideStay(text) { return text.replace(/\[STAY_SUMMARY:[\s\S]*$/, ""); }
+  function hideStay(text) { return canShowStay() ? text.replace(/\[STAY_SUMMARY:[\s\S]*$/, "") : text; }
   function stayCard(stay, index) {
     var rooms = config.hotel.rooms || [], room = null;
     for (var i = 0; i < rooms.length; i++) if (rooms[i].id === stay.room_id) room = rooms[i];
@@ -625,6 +625,7 @@
       if (!stay) return;
       activeStay = index;
       stayDraft = { "mdac-h-in": stay.check_in, "mdac-h-out": stay.check_out, "mdac-h-ad": String(stay.adults), "mdac-h-ch": String(stay.children), "mdac-h-room": stay.room_id };
+      Object.keys(stayDraft).forEach(function (id) { var el = shadow.getElementById(id); if (el) el.value = stayDraft[id]; });
       showLeadForm = true;
       render();
       var form = shadow.getElementById("mdac-lead-form");

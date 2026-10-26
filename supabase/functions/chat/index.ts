@@ -266,7 +266,7 @@ serve(async (req) => {
       ? buildHotelContext((botConfig as any).hotel_profile, conversationalLead, safeRoom, baseLang)
       : "";
     const staySummaryEnabled = botConfig.business_vertical === "hotel" && !safeRoom && !conversationalLead;
-    if (hotelContext) {
+    if (hotelContext && staySummaryEnabled) {
       // The shared hotel context stays untouched; extend only this chat prompt.
       const hp = (botConfig as any).hotel_profile || {};
       const roomStart = hotelContext.indexOf("ROOMS\n");
