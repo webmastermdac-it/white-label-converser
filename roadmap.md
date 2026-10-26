@@ -24,3 +24,4 @@
 - [x] Lingua di risposta del chatbot dal browser (fallback EN) e link hotel IT/EN per lingua visitatore.
 - [x] Correggere la raccolta e il matching dei link nell’import hotel, mostrare diagnostica in anteprima, verificare test e deploy.
 - [ ] Verificare l’import hotel completo su un bot reale: in attesa di accesso autenticato nella preview.
+- [x] Hotel: contatti sempre in chat, card riepilogo per tutti i bot hotel, invio alla reception senza form (attach_to_session)

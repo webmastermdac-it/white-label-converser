@@ -78,7 +78,9 @@ serve(async (req) => {
     const ragAllowed = plan !== "free";
 
     // ── Conversational lead capture: has this session already produced a lead? ──
-    const conversationalLead = (botConfig as any).lead_form_mode === "conversational" && !(botConfig.business_vertical === "hotel" && safeRoom);
+    const isHotelStandard = botConfig.business_vertical === "hotel" && !safeRoom;
+    // Hotel standard bots always collect contacts conversationally, whatever lead_form_mode is saved.
+    const conversationalLead = isHotelStandard || ((botConfig as any).lead_form_mode === "conversational" && !(botConfig.business_vertical === "hotel" && safeRoom));
     let leadAlreadyCaptured = false;
     if (conversationalLead && session_token) {
       const { data: sessionRow } = await supabase
@@ -263,9 +265,9 @@ serve(async (req) => {
 
     // ── Hotel concierge (only for business_vertical = "hotel") ──
     let hotelContext = botConfig.business_vertical === "hotel"
-      ? buildHotelContext((botConfig as any).hotel_profile, conversationalLead, safeRoom, baseLang)
+      ? buildHotelContext((botConfig as any).hotel_profile, conversationalLead && !isHotelStandard, safeRoom, baseLang)
       : "";
-    const staySummaryEnabled = botConfig.business_vertical === "hotel" && !safeRoom && !conversationalLead;
+    const staySummaryEnabled = isHotelStandard;
     if (hotelContext && staySummaryEnabled) {
       // The shared hotel context stays untouched; extend only this chat prompt.
       const hp = (botConfig as any).hotel_profile || {};
@@ -285,7 +287,7 @@ serve(async (req) => {
       if (staySummaryEnabled) {
         hotelContext = hotelContext.replace(
           "If the guest asks about availability or a quote, first ask naturally (if not already given) for arrival and departure dates and the number of adults and children, then append the marker [TRIGGER_LEAD_FORM] on its own final line so they can send the stay request.",
-          `Quando l'ospite chiede un soggiorno o disponibilità, raccogli, se mancanti, date di arrivo e partenza, adulti e bambini (al massimo una domanda per messaggio). Quando hai tutti questi dati, scrivi una frase breve che presenta un riepilogo della richiesta, non una conferma né un prezzo finale; non usare la parola "preventivo". Aggiungi sull'ultima riga [STAY_SUMMARY:{"check_in":"YYYY-MM-DD","check_out":"YYYY-MM-DD","adults":N,"children":N,"room_id":"<id camera del profilo o stringa vuota>"}]. Usa le date ISO reali, partenza dopo arrivo, arrivo non precedente a oggi (${new Date().toISOString().slice(0, 10)}), adulti 1-30 e bambini 0-30. La durata in notti determina la partenza se l'arrivo è noto. Usa solo room_id presenti nel profilo, oppure stringa vuota se non è stata scelta una camera. In questo caso non emettere [TRIGGER_LEAD_FORM]. Il riepilogo non invia nulla: l'ospite può inviare la richiesta con il pulsante della card.`
+          `Quando l'ospite chiede un soggiorno o disponibilità, raccogli, se mancanti, date di arrivo e partenza, adulti e bambini (al massimo una domanda per messaggio). Quando hai tutti questi dati, scrivi una frase breve che presenta un riepilogo della richiesta, non una conferma né un prezzo finale; non usare la parola "preventivo". Aggiungi sull'ultima riga [STAY_SUMMARY:{"check_in":"YYYY-MM-DD","check_out":"YYYY-MM-DD","adults":N,"children":N,"room_id":"<id camera del profilo o stringa vuota>"}]. Usa le date ISO reali, partenza dopo arrivo, arrivo non precedente a oggi (${new Date().toISOString().slice(0, 10)}), adulti 1-30 e bambini 0-30. La durata in notti determina la partenza se l'arrivo è noto. Usa solo room_id presenti nel profilo, oppure stringa vuota se non è stata scelta una camera. Non emettere mai [TRIGGER_LEAD_FORM]. Il riepilogo non invia nulla: l'ospite può inviare la richiesta con il pulsante della card. ${leadAlreadyCaptured ? "I contatti dell'ospite sono già stati raccolti: non richiederli." : "Non emettere [STAY_SUMMARY] finché non hai raccolto nome ed email o telefono: se mancano, chiedili prima (una domanda per messaggio, come da raccolta contatti conversazionale), poi raccogli date, adulti e bambini. Se l'ospite li ha già dati in questa conversazione, non richiederli."} Continua comunque a rispondere liberamente a qualsiasi altra domanda (servizi, zona, camere): la raccolta contatti non blocca la conversazione.`
         );
       }
     }

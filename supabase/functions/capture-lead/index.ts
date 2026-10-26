@@ -27,6 +27,56 @@ serve(async (req) => {
     const message = body.message || lead.message || "";
     const transcript = body.transcript || [];
 
+    // ── Hotel: attach a stay request to the lead already collected in chat (no new lead) ──
+    if (body.attach_to_session === true) {
+      const J = (b: unknown, status = 200) => new Response(JSON.stringify(b), { status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      if (typeof embed_token !== "string" || typeof session_token !== "string" || !session_token) return J({ error: "Invalid request" }, 400);
+      const { data: bot } = await supabase.from("chatbot_configs").select("*").eq("embed_token", embed_token).maybeSingle();
+      if (!bot || bot.business_vertical !== "hotel") return J({ error: "Invalid embed token" }, 401);
+      const b = body.booking && typeof body.booking === "object" ? body.booking : {};
+      const iso = /^\d{4}-\d{2}-\d{2}$/;
+      const ci = String(b.check_in || ""), co = String(b.check_out || "");
+      if (!iso.test(ci) || !iso.test(co) || co <= ci || ci < new Date(Date.now() - 86400000).toISOString().slice(0, 10)) return J({ error: "Invalid dates" }, 400);
+      const { data: sess } = await supabase.from("chat_sessions").select("started_at, lead_captured, bot_id").eq("session_token", session_token).maybeSingle();
+      if (!sess || !sess.lead_captured || (sess.bot_id && sess.bot_id !== bot.id)) return J({ error: "no_lead" }, 404);
+      const { data: existing } = await supabase.from("leads").select("*")
+        .eq("bot_id", bot.id).gte("created_at", sess.started_at)
+        .order("created_at", { ascending: false }).limit(1).maybeSingle();
+      if (!existing) return J({ error: "no_lead" }, 404);
+      const sends = Number((existing.booking as any)?.sends) || 0;
+      if (sends >= 3) return J({ error: "rate_limited" }, 429);
+      const rooms = Array.isArray(bot.hotel_profile?.rooms) ? bot.hotel_profile.rooms : [];
+      const room = b.room_id ? rooms.find((r: any) => r?.id === b.room_id) : null;
+      const stay = {
+        check_in: ci, check_out: co,
+        adults: Math.min(Math.max(parseInt(b.adults) || 1, 1), 30),
+        children: Math.min(Math.max(parseInt(b.children) || 0, 0), 30),
+        room_id: room?.id || null, room_name: room?.name || null,
+      };
+      const { error: upErr } = await supabase.from("leads").update({ booking: { ...stay, sends: sends + 1 }, source: "hotel_quote" }).eq("id", existing.id);
+      if (upErr) throw upErr;
+      if (bot.email_notifications_enabled && bot.notification_email) {
+        const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
+        if (RESEND_API_KEY) {
+          try {
+            const brand = await fetchBrandSettings(supabase);
+            const ownerLocale = await resolveClientOwnerLocale(supabase, bot.client_id);
+            const html = newLeadEmail(brand, {
+              botName: bot.name, visitorName: existing.name, visitorEmail: existing.email,
+              phone: existing.phone || "", message: existing.message || "", sourceUrl: source_url || existing.source_url || "",
+              language: lang, transcript: (existing.transcript as any) || [], dashboardUrl: "https://white-label-converser.lovable.app/dashboard/leads", booking: stay as any,
+            }, ownerLocale);
+            await fetch("https://api.resend.com/emails", {
+              method: "POST",
+              headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+              body: JSON.stringify({ from: `${brand.app_name} <noreply@chatbot.your-genius.com>`, to: [bot.notification_email], subject: hotelLeadSubject(stay as any, ownerLocale), html }),
+            });
+          } catch (e) { console.error("attach email error:", e); }
+        }
+      }
+      return J({ success: true, lead_id: existing.id, attached: true });
+    }
+
     if (!name || String(name).trim() === "") {
       return new Response(JSON.stringify({ error: "Name is required" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" }
