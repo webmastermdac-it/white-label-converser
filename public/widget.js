@@ -176,17 +176,19 @@
   };
   var ts = serviceLabels[baseLang] || serviceLabels["en"];
   var stayLabels = {
-    it: { label: "RIEPILOGO SOGGIORNO", nights: "notti", night: "notte", room: "Camera", guests: "Ospiti", adults: "adulti", adult: "adulto", children: "bambini", child: "bambino", included: "incluso", breakfastIncluded: "inclusa", parking: "Parcheggio", send: "Invia richiesta alla reception", sent: "Richiesta inviata ✓", from: "Da € {price} a notte (indicativo)" },
-    en: { label: "STAY SUMMARY", nights: "nights", night: "night", room: "Room", guests: "Guests", adults: "adults", adult: "adult", children: "children", child: "child", included: "included", breakfastIncluded: "included", parking: "Parking", send: "Send request to reception", sent: "Request sent ✓", from: "From € {price} per night (indicative)" },
-    fr: { label: "RÉCAPITULATIF DU SÉJOUR", nights: "nuits", night: "nuit", room: "Chambre", guests: "Voyageurs", adults: "adultes", adult: "adulte", children: "enfants", child: "enfant", included: "inclus", breakfastIncluded: "inclus", parking: "Parking", send: "Envoyer la demande à la réception", sent: "Demande envoyée ✓", from: "À partir de {price} € par nuit (indicatif)" },
-    de: { label: "AUFENTHALTSÜBERSICHT", nights: "Nächte", night: "Nacht", room: "Zimmer", guests: "Gäste", adults: "Erwachsene", adult: "Erwachsener", children: "Kinder", child: "Kind", included: "inklusive", breakfastIncluded: "inklusive", parking: "Parkplatz", send: "Anfrage an die Rezeption senden", sent: "Anfrage gesendet ✓", from: "Ab {price} € pro Nacht (unverbindlich)" },
-    es: { label: "RESUMEN DE LA ESTANCIA", nights: "noches", night: "noche", room: "Habitación", guests: "Huéspedes", adults: "adultos", adult: "adulto", children: "niños", child: "niño", included: "incluido", breakfastIncluded: "incluido", parking: "Aparcamiento", send: "Enviar solicitud a recepción", sent: "Solicitud enviada ✓", from: "Desde {price} € por noche (orientativo)" },
-    pt: { label: "RESUMO DA ESTADIA", nights: "noites", night: "noite", room: "Quarto", guests: "Hóspedes", adults: "adultos", adult: "adulto", children: "crianças", child: "criança", included: "incluído", breakfastIncluded: "incluído", parking: "Estacionamento", send: "Enviar pedido à receção", sent: "Pedido enviado ✓", from: "Desde {price} € por noite (indicativo)" }
+    it: { label: "RIEPILOGO SOGGIORNO", nights: "notti", night: "notte", room: "Camera", guests: "Ospiti", adults: "adulti", adult: "adulto", children: "bambini", child: "bambino", included: "incluso", breakfastIncluded: "inclusa", parking: "Parcheggio", send: "Invia richiesta alla reception", sent: "Richiesta inviata ✓", from: "Da € {price} a notte (indicativo)", confirm: "Richiesta inviata alla reception, ti ricontatteremo a breve." },
+    en: { label: "STAY SUMMARY", nights: "nights", night: "night", room: "Room", guests: "Guests", adults: "adults", adult: "adult", children: "children", child: "child", included: "included", breakfastIncluded: "included", parking: "Parking", send: "Send request to reception", sent: "Request sent ✓", from: "From € {price} per night (indicative)", confirm: "Request sent to reception, we will get back to you shortly." },
+    fr: { label: "RÉCAPITULATIF DU SÉJOUR", nights: "nuits", night: "nuit", room: "Chambre", guests: "Voyageurs", adults: "adultes", adult: "adulte", children: "enfants", child: "enfant", included: "inclus", breakfastIncluded: "inclus", parking: "Parking", send: "Envoyer la demande à la réception", sent: "Demande envoyée ✓", from: "À partir de {price} € par nuit (indicatif)", confirm: "Demande envoyée à la réception, nous vous recontacterons rapidement." },
+    de: { label: "AUFENTHALTSÜBERSICHT", nights: "Nächte", night: "Nacht", room: "Zimmer", guests: "Gäste", adults: "Erwachsene", adult: "Erwachsener", children: "Kinder", child: "Kind", included: "inklusive", breakfastIncluded: "inklusive", parking: "Parkplatz", send: "Anfrage an die Rezeption senden", sent: "Anfrage gesendet ✓", from: "Ab {price} € pro Nacht (unverbindlich)", confirm: "Anfrage an die Rezeption gesendet, wir melden uns in Kürze bei Ihnen." },
+    es: { label: "RESUMEN DE LA ESTANCIA", nights: "noches", night: "noche", room: "Habitación", guests: "Huéspedes", adults: "adultos", adult: "adulto", children: "niños", child: "niño", included: "incluido", breakfastIncluded: "incluido", parking: "Aparcamiento", send: "Enviar solicitud a recepción", sent: "Solicitud enviada ✓", from: "Desde {price} € por noche (orientativo)", confirm: "Solicitud enviada a recepción, te contactaremos en breve." },
+    pt: { label: "RESUMO DA ESTADIA", nights: "noites", night: "noite", room: "Quarto", guests: "Hóspedes", adults: "adultos", adult: "adulto", children: "crianças", child: "criança", included: "incluído", breakfastIncluded: "incluído", parking: "Estacionamento", send: "Enviar pedido à receção", sent: "Pedido enviado ✓", from: "Desde {price} € por noite (indicativo)", confirm: "Pedido enviado à receção, entraremos em contacto em breve." }
   };
   var st = stayLabels[baseLang] || stayLabels["en"];
   var activeStay = -1;
   var stayDraft = null;
-  function canShowStay() { return isHotel() && !ROOM && !FULLSCREEN && config.lead_form_mode !== "conversational"; }
+  function canShowStay() { return isHotel() && !ROOM && !FULLSCREEN; }
+  // Hotel standard bots never open the lead form on their own (contacts are collected in chat).
+  function noAutoForm() { return canShowStay(); }
   function validStay(raw) {
     if (!raw || typeof raw !== "object") return null;
     function iso(value) {
@@ -623,6 +625,40 @@
       var index = parseInt(this.getAttribute("data-stay"), 10);
       var stay = messages[index] && validStay(messages[index].stay);
       if (!stay) return;
+      var btn = this;
+      if (btn.disabled) return;
+      btn.disabled = true;
+      var rooms = config.hotel.rooms || [], roomName = "";
+      for (var ri = 0; ri < rooms.length; ri++) if (rooms[ri].id === stay.room_id) roomName = rooms[ri].name;
+      var booking = { check_in: stay.check_in, check_out: stay.check_out, adults: stay.adults, children: stay.children, room_id: stay.room_id || null, room_name: roomName || null };
+      function openForm() {
+        activeStay = index;
+        stayDraft = { "mdac-h-in": stay.check_in, "mdac-h-out": stay.check_out, "mdac-h-ad": String(stay.adults), "mdac-h-ch": String(stay.children), "mdac-h-room": stay.room_id };
+        showLeadForm = true;
+        render();
+        Object.keys(stayDraft).forEach(function (id) { var el = shadow.getElementById(id); if (el) el.value = stayDraft[id]; });
+        var form = shadow.getElementById("mdac-lead-form");
+        if (form) form.scrollIntoView({ block: "nearest" });
+      }
+      fetch(SUPABASE_URL + "/functions/v1/capture-lead", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ embed_token: EMBED_TOKEN, session_token: sessionToken, booking: booking, attach_to_session: true, language: widgetLang, source_url: window.location.href }),
+      })
+        .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, d: d }; }); })
+        .then(function (res) {
+          if (!res.ok || !res.d || !res.d.success) { openForm(); return; }
+          if (res.d.lead_id) hotelLeadId = String(res.d.lead_id);
+          hotelBookingUrl = buildHotelUrl(booking);
+          messages[index].stay.sent = true;
+          messages.push({ role: "assistant", content: st.confirm });
+          leadSent = true;
+          showLeadForm = false;
+          saveMessages(messages);
+          render();
+        })
+        .catch(function () { openForm(); });
+      return;
       activeStay = index;
       stayDraft = { "mdac-h-in": stay.check_in, "mdac-h-out": stay.check_out, "mdac-h-ad": String(stay.adults), "mdac-h-ch": String(stay.children), "mdac-h-room": stay.room_id };
       Object.keys(stayDraft).forEach(function (id) { var el = shadow.getElementById(id); if (el) el.value = stayDraft[id]; });
@@ -677,7 +713,7 @@
 
     messages.push({ role: "user", content: text });
     userMessageCount++;
-    if (!ROOM && config && config.lead_form_mode === "after_messages" && !leadSent &&
+    if (!ROOM && !noAutoForm() && config && config.lead_form_mode === "after_messages" && !leadSent &&
         userMessageCount >= (config.lead_form_message_count || 3)) {
       showLeadForm = true;
     }
@@ -720,7 +756,7 @@
               var stay = readStay(fullText);
               if (stay) { messages[botIdx].stay = stay; showLeadForm = false; }
               if (ROOM) submitChatServiceRequest(fullText);
-               if (!ROOM && !stay && fullText.indexOf("[TRIGGER_LEAD_FORM]") !== -1) showLeadForm = true;
+               if (!ROOM && !noAutoForm() && !stay && fullText.indexOf("[TRIGGER_LEAD_FORM]") !== -1) showLeadForm = true;
               saveMessages(messages);
               render();
               return;
@@ -760,14 +796,14 @@
         if (stay) { botMessage.stay = stay; showLeadForm = false; }
         messages.push(botMessage);
         if (ROOM) submitChatServiceRequest(data.message || "");
-         if (!ROOM && !stay && data.trigger_lead_form) showLeadForm = true;
+         if (!ROOM && !noAutoForm() && !stay && data.trigger_lead_form) showLeadForm = true;
         saveMessages(messages);
         isLoading = false;
         render();
       });
     })
     .catch(function(err) {
-       if (!ROOM && err && err.error === "plan_limit") {
+       if (!ROOM && !noAutoForm() && err && err.error === "plan_limit") {
         showLeadForm = true;
       }
       messages.push({ role: "assistant", content: t.errorMsg });
@@ -924,7 +960,7 @@
       config = data;
 
       // Lead form timing: show immediately if configured
-       if (!ROOM && config.lead_form_mode === "immediate" && !leadSent) {
+       if (!ROOM && !noAutoForm() && config.lead_form_mode === "immediate" && !leadSent) {
         showLeadForm = true;
       }
 
@@ -962,7 +998,7 @@
         for (var mi = 0; mi < messages.length; mi++) {
           if (messages[mi] && messages[mi].role === "user") userMessageCount++;
         }
-         if (!ROOM && config.lead_form_mode === "after_messages" && !leadSent &&
+         if (!ROOM && !noAutoForm() && config.lead_form_mode === "after_messages" && !leadSent &&
             userMessageCount >= (config.lead_form_message_count || 3)) {
           showLeadForm = true;
         }
