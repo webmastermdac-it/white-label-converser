@@ -1,10 +1,7 @@
+import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { createClient } from "npm:@supabase/supabase-js@2";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-};
+
 
 // Only the fields actually read by public/widget.js
 const FIELDS =
@@ -56,7 +53,7 @@ Deno.serve(async (req) => {
     const { data: plan } = await admin.from("plan_configs").select("concierge_requests").eq("plan_name", client?.plan || "free").single();
     const rooms = (Array.isArray(hp.rooms) ? hp.rooms : [])
       .filter((r: any) => r && r.id && r.name)
-      .map((r: any) => ({ id: String(r.id), name: String(r.name) }));
+      .map((r: any) => ({ id: String(r.id), name: String(r.name), price_from: typeof r.price_from === "number" && Number.isFinite(r.price_from) && r.price_from >= 0 ? r.price_from : null }));
     const { client_id: _clientId, ...safeBase } = base as any;
     const defaultQuickReplies = ["Pulizia/asciugamani", "Late check-out", "Taxi/transfer", "Ristorante", "Problema in camera", "Altro"];
     const configuredQuickReplies = Array.isArray(hp.in_stay_quick_replies)
@@ -68,6 +65,8 @@ Deno.serve(async (req) => {
       hotel: {
         property_name: hp.property?.name || base.name,
         rooms,
+        services: (Array.isArray(hp.services) ? hp.services : []).filter((x: any) => x && x.name && x.included === true).map((x: any) => ({ name: String(x.name), included: true })),
+        policies: { parking: typeof hp.policies?.parking === "string" ? hp.policies.parking : "" },
         engine_url_template: hp.booking?.engine_url_template || "",
         date_format: hp.booking?.date_format === "DD/MM/YYYY" ? "DD/MM/YYYY" : "YYYY-MM-DD",
         concierge_requests: !!plan?.concierge_requests,

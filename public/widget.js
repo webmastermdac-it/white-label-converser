@@ -175,6 +175,60 @@
     pt: { messagePlaceholder: "Mensagem opcional", namePlaceholder: "Nome opcional", cancelBtn: "Cancelar", sendBtn: "Enviar pedido", successMsg: "Pedido enviado à receção." },
   };
   var ts = serviceLabels[baseLang] || serviceLabels["en"];
+  var stayLabels = {
+    it: { label: "RIEPILOGO SOGGIORNO", nights: "notti", night: "notte", room: "Camera", guests: "Ospiti", adults: "adulti", adult: "adulto", children: "bambini", child: "bambino", included: "incluso", breakfastIncluded: "inclusa", parking: "Parcheggio", send: "Invia richiesta alla reception", sent: "Richiesta inviata ✓", from: "Da € {price} a notte (indicativo)" },
+    en: { label: "STAY SUMMARY", nights: "nights", night: "night", room: "Room", guests: "Guests", adults: "adults", adult: "adult", children: "children", child: "child", included: "included", breakfastIncluded: "included", parking: "Parking", send: "Send request to reception", sent: "Request sent ✓", from: "From € {price} per night (indicative)" },
+    fr: { label: "RÉCAPITULATIF DU SÉJOUR", nights: "nuits", night: "nuit", room: "Chambre", guests: "Voyageurs", adults: "adultes", adult: "adulte", children: "enfants", child: "enfant", included: "inclus", breakfastIncluded: "inclus", parking: "Parking", send: "Envoyer la demande à la réception", sent: "Demande envoyée ✓", from: "À partir de {price} € par nuit (indicatif)" },
+    de: { label: "AUFENTHALTSÜBERSICHT", nights: "Nächte", night: "Nacht", room: "Zimmer", guests: "Gäste", adults: "Erwachsene", adult: "Erwachsener", children: "Kinder", child: "Kind", included: "inklusive", breakfastIncluded: "inklusive", parking: "Parkplatz", send: "Anfrage an die Rezeption senden", sent: "Anfrage gesendet ✓", from: "Ab {price} € pro Nacht (unverbindlich)" },
+    es: { label: "RESUMEN DE LA ESTANCIA", nights: "noches", night: "noche", room: "Habitación", guests: "Huéspedes", adults: "adultos", adult: "adulto", children: "niños", child: "niño", included: "incluido", breakfastIncluded: "incluido", parking: "Aparcamiento", send: "Enviar solicitud a recepción", sent: "Solicitud enviada ✓", from: "Desde {price} € por noche (orientativo)" },
+    pt: { label: "RESUMO DA ESTADIA", nights: "noites", night: "noite", room: "Quarto", guests: "Hóspedes", adults: "adultos", adult: "adulto", children: "crianças", child: "criança", included: "incluído", breakfastIncluded: "incluído", parking: "Estacionamento", send: "Enviar pedido à receção", sent: "Pedido enviado ✓", from: "Desde {price} € por noite (indicativo)" }
+  };
+  var st = stayLabels[baseLang] || stayLabels["en"];
+  var activeStay = -1;
+  var stayDraft = null;
+  function canShowStay() { return isHotel() && !ROOM && !FULLSCREEN && config.lead_form_mode !== "conversational"; }
+  function validStay(raw) {
+    if (!raw || typeof raw !== "object") return null;
+    function iso(value) {
+      if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+      var d = new Date(value + "T00:00:00Z");
+      return !isNaN(d.getTime()) && d.toISOString().slice(0, 10) === value;
+    }
+    if (!iso(raw.check_in) || !iso(raw.check_out) || raw.check_in < todayIso() || raw.check_out <= raw.check_in) return null;
+    if (typeof raw.adults !== "number" || raw.adults % 1 || raw.adults < 1 || raw.adults > 30 || typeof raw.children !== "number" || raw.children % 1 || raw.children < 0 || raw.children > 30) return null;
+    var roomId = "";
+    var rooms = config.hotel.rooms || [];
+    for (var i = 0; i < rooms.length; i++) if (rooms[i].id === raw.room_id) roomId = rooms[i].id;
+    return { check_in: raw.check_in, check_out: raw.check_out, adults: raw.adults, children: raw.children, room_id: roomId };
+  }
+  function readStay(text) {
+    if (!canShowStay()) return null;
+    var marker = /\[STAY_SUMMARY:(\{[\s\S]*?\})\]/.exec(text);
+    if (!marker) return null;
+    try { return validStay(JSON.parse(marker[1])); } catch (e) { return null; }
+  }
+  function hideStay(text) { return canShowStay() ? text.replace(/\[STAY_SUMMARY:[\s\S]*$/, "") : text; }
+  function stayCard(stay, index) {
+    var rooms = config.hotel.rooms || [], room = null;
+    for (var i = 0; i < rooms.length; i++) if (rooms[i].id === stay.room_id) room = rooms[i];
+    var nights = Math.round((Date.parse(stay.check_out + "T00:00:00Z") - Date.parse(stay.check_in + "T00:00:00Z")) / 86400000);
+    function day(iso) { var p = iso.split("-"); return p[2] + "/" + p[1]; }
+    function row(label, value) { return '<div class="mdac-stay-row"><span>' + esc(label) + '</span><strong>' + esc(value) + '</strong></div>'; }
+    var html = '<div class="mdac-stay"><small>' + esc(st.label) + '</small><h3>' + nights + ' ' + esc(nights === 1 ? st.night : st.nights) + ' · ' + day(stay.check_in) + ' → ' + day(stay.check_out) + '</h3>';
+    html += row(st.room, room ? room.name : th.anyRoom);
+    html += row(st.guests, stay.adults + ' ' + (stay.adults === 1 ? st.adult : st.adults) + ' + ' + stay.children + ' ' + (stay.children === 1 ? st.child : st.children));
+    var services = config.hotel.services || [], hasParking = false;
+    for (var j = 0; j < services.length; j++) {
+      if (services[j].included !== true || !services[j].name) continue;
+      if (/parchegg|parking|parkplatz|aparcamiento|estacionamento/i.test(services[j].name)) hasParking = true;
+      html += row(services[j].name, /colazione/i.test(services[j].name) ? st.breakfastIncluded : st.included);
+    }
+    var parking = (config.hotel.policies && config.hotel.policies.parking) || "";
+    if (!hasParking && /\b(inclus[oaie]|included|inclusive|inklusive|kostenlos|gratuit[oaes]*|free|gr[aá]tis|inclu[ií]d[oa])\b/i.test(parking) && !/\b(non|not|nicht|no|n[aã]o|pas|extra|pagamento|paid|payant)\b/i.test(parking)) html += row(st.parking, st.included);
+    if (room && typeof room.price_from === "number" && isFinite(room.price_from) && room.price_from > 0) html += '<p class="mdac-stay-price">' + esc(st.from.replace('{price}', room.price_from.toLocaleString(stayLabels[baseLang] ? baseLang : 'en'))) + '</p>';
+    html += '<button class="mdac-lead-btn" data-stay="' + index + '"' + (stay.sent || leadSent ? ' disabled' : '') + '>' + esc(stay.sent ? st.sent : st.send) + '</button></div>';
+    return html;
+  }
   var hotelBookingUrl = "";
   var hotelLeadId = "";
   function isHotel() { return !!(config && config.business_vertical === "hotel" && config.hotel); }
@@ -339,6 +393,13 @@
 .mdac-bubble ol li{list-style:decimal;}\
 .mdac-cta{display:inline-flex;align-items:center;gap:6px;margin-top:8px;padding:9px 14px;border-radius:10px;background:" + pc + ";color:#fff !important;font-size:13px;font-weight:600;text-decoration:none !important;cursor:pointer;}\
 .mdac-cta:hover{opacity:.9;}\
+.mdac-stay{align-self:flex-start;margin-left:34px;width:calc(88% - 34px);padding:12px;border:1px solid #e5e7eb;border-radius:10px;background:#fff;color:#1a1a2e;font-size:12px;}\
+.mdac-stay small{display:block;font-size:10px;color:#6b7280;}\
+.mdac-stay h3{font-size:14px;line-height:1.4;margin:5px 0 10px;}\
+.mdac-stay-row{display:flex;justify-content:space-between;gap:10px;border-top:1px dashed #e5e7eb;padding:8px 0;}\
+.mdac-stay-row strong{text-align:right;font-weight:600;overflow-wrap:anywhere;}\
+.mdac-stay-price{font-size:11px;color:#6b7280;margin:4px 0 10px;}\
+.mdac-stay .mdac-lead-btn{width:100%;white-space:normal;line-height:1.4;}\
 .mdac-msg.bot .mdac-msg-avatar{background:#e5e7eb;}\
 .mdac-msg.user .mdac-msg-avatar{background:" + pc + ";color:#fff;font-size:12px;}\
 .mdac-typing{display:flex;gap:4px;padding:10px 14px;}\
@@ -402,6 +463,17 @@
   function render() {
     if (!config) return;
 
+    if (canShowStay() && activeStay >= 0) {
+      if (leadSent && messages[activeStay] && messages[activeStay].stay && !messages[activeStay].stay.sent) {
+        messages[activeStay].stay.sent = true;
+        saveMessages(messages);
+        stayDraft = null;
+      } else if (stayDraft && shadow.getElementById("mdac-h-in")) {
+        ["mdac-h-in", "mdac-h-out", "mdac-h-ad", "mdac-h-ch", "mdac-h-room", "mdac-lead-name", "mdac-lead-email", "mdac-lead-phone", "mdac-lead-message"].forEach(function (id) {
+          var el = shadow.getElementById(id); if (el) stayDraft[id] = el.value;
+        });
+      }
+    }
     var pc = config.primary_color || "#F59E0B";
     var avatar = config.avatar || "genie";
     var isGenie = avatar === "genie";
@@ -448,6 +520,7 @@
         html += '<div class="mdac-msg-avatar">👤</div>';
       }
       html += '</div>';
+      if (m.role === 'assistant' && m.stay && canShowStay()) html += stayCard(m.stay, i);
     }
 
     // Typing indicator
@@ -544,6 +617,20 @@
       if (isOpen && !isLoading && !isMobileFullscreen()) setTimeout(function () { inputEl.focus(); }, 50);
     }
     if (leadSubmitBtn) leadSubmitBtn.onclick = submitLead;
+    var stayBtns = shadow.querySelectorAll("[data-stay]");
+    for (var sb = 0; sb < stayBtns.length; sb++) stayBtns[sb].onclick = function () {
+      if (!canShowStay() || leadSent) return;
+      var index = parseInt(this.getAttribute("data-stay"), 10);
+      var stay = messages[index] && validStay(messages[index].stay);
+      if (!stay) return;
+      activeStay = index;
+      stayDraft = { "mdac-h-in": stay.check_in, "mdac-h-out": stay.check_out, "mdac-h-ad": String(stay.adults), "mdac-h-ch": String(stay.children), "mdac-h-room": stay.room_id };
+      Object.keys(stayDraft).forEach(function (id) { var el = shadow.getElementById(id); if (el) el.value = stayDraft[id]; });
+      showLeadForm = true;
+      render();
+      var form = shadow.getElementById("mdac-lead-form");
+      if (form) form.scrollIntoView({ block: "nearest" });
+    };
     if (calendlyBtn) calendlyBtn.onclick = function () { window.open(config.calendly_url, "_blank"); };
     for (var qb = 0; qb < quickBtns.length; qb++) quickBtns[qb].onclick = function () { serviceCategory = this.getAttribute("data-category") || ""; render(); };
     if (serviceCancel) serviceCancel.onclick = function () { serviceCategory = ""; serviceDraft = { message: "", name: "" }; render(); };
@@ -564,6 +651,10 @@
 
     // Scroll to bottom
     if (messagesEl) messagesEl.scrollTop = messagesEl.scrollHeight;
+
+    if (canShowStay() && stayDraft && showLeadForm && !leadSent) {
+      Object.keys(stayDraft).forEach(function (id) { var el = shadow.getElementById(id); if (el) el.value = stayDraft[id]; });
+    }
 
     // Pre-fill lead message
     if (showLeadForm && !leadSent) {
@@ -624,10 +715,12 @@
         function read() {
           reader.read().then(function(result) {
             if (result.done) {
-              var clean = fullText.replace("[TRIGGER_LEAD_FORM]", "").replace(/\[LEAD_DATA:\{[\s\S]*?\}\]/g, "").replace(/\[SERVICE_REQUEST:[\s\S]*$/, "").trim();
+              var clean = hideStay(fullText).replace("[TRIGGER_LEAD_FORM]", "").replace(/\[LEAD_DATA:\{[\s\S]*?\}\]/g, "").replace(/\[SERVICE_REQUEST:[\s\S]*$/, "").trim();
               messages[botIdx] = { role: "assistant", content: clean || t.errorReply };
+              var stay = readStay(fullText);
+              if (stay) { messages[botIdx].stay = stay; showLeadForm = false; }
               if (ROOM) submitChatServiceRequest(fullText);
-               if (!ROOM && fullText.indexOf("[TRIGGER_LEAD_FORM]") !== -1) showLeadForm = true;
+               if (!ROOM && !stay && fullText.indexOf("[TRIGGER_LEAD_FORM]") !== -1) showLeadForm = true;
               saveMessages(messages);
               render();
               return;
@@ -643,14 +736,14 @@
                 var delta = (parsed.choices && parsed.choices[0] && parsed.choices[0].delta && parsed.choices[0].delta.content) || "";
                 if (delta) {
                   fullText += delta;
-                  messages[botIdx] = { role: "assistant", content: fullText.replace("[TRIGGER_LEAD_FORM]", "").replace(/\[LEAD_DATA:\{[\s\S]*?\}\]/g, "").replace(/\[SERVICE_REQUEST:[\s\S]*$/, "").trim() };
+                  messages[botIdx] = { role: "assistant", content: hideStay(fullText).replace("[TRIGGER_LEAD_FORM]", "").replace(/\[LEAD_DATA:\{[\s\S]*?\}\]/g, "").replace(/\[SERVICE_REQUEST:[\s\S]*$/, "").trim() };
                   render();
                 }
               } catch(e) {}
             }
             read();
           }).catch(function() {
-            messages[botIdx] = { role: "assistant", content: fullText.replace("[TRIGGER_LEAD_FORM]", "").replace(/\[LEAD_DATA:\{[\s\S]*?\}\]/g, "").replace(/\[SERVICE_REQUEST:[\s\S]*$/, "").trim() || t.errorMsg };
+            messages[botIdx] = { role: "assistant", content: hideStay(fullText).replace("[TRIGGER_LEAD_FORM]", "").replace(/\[LEAD_DATA:\{[\s\S]*?\}\]/g, "").replace(/\[SERVICE_REQUEST:[\s\S]*$/, "").trim() || t.errorMsg };
             saveMessages(messages);
             isLoading = false;
             render();
@@ -661,10 +754,13 @@
       }
       // Fallback: non-streaming JSON response
       return response.json().then(function(data) {
-        var botMsg = (data.message || t.errorReply).replace(/\[SERVICE_REQUEST:[\s\S]*$/, "").trim() || t.errorReply;
-        messages.push({ role: "assistant", content: botMsg });
+        var botMsg = hideStay(data.message || t.errorReply).replace(/\[SERVICE_REQUEST:[\s\S]*$/, "").trim() || t.errorReply;
+        var botMessage = { role: "assistant", content: botMsg };
+        var stay = readStay(data.message || "");
+        if (stay) { botMessage.stay = stay; showLeadForm = false; }
+        messages.push(botMessage);
         if (ROOM) submitChatServiceRequest(data.message || "");
-         if (!ROOM && data.trigger_lead_form) showLeadForm = true;
+         if (!ROOM && !stay && data.trigger_lead_form) showLeadForm = true;
         saveMessages(messages);
         isLoading = false;
         render();
