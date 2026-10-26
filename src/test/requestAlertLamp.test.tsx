@@ -114,7 +114,7 @@ describe("Hotel request lamp", () => {
   });
   it("shows the new request immediately, before the reload completes", async () => {
     const { result } = renderHook(() => useOpenServiceRequests(() => true));
-    act(() => state.handlers.INSERT({ new: { category: "Taxi", room: "12" } }));
+    act(() => (state.handlers.INSERT as (p: unknown) => void)({ new: { category: "Taxi", room: "12" } }));
     expect(result.current.count).toBeGreaterThanOrEqual(1);
   });
 });

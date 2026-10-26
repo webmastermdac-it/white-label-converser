@@ -3,7 +3,7 @@ export const SERVICE_REQUEST_SOUND_KEY = "genius-service-request-sound";
 let sharedCtx: AudioContext | null = null;
 
 const getCtx = (): AudioContext | null => {
-  const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+  const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
   if (!AudioCtx) return null;
   if (!sharedCtx || sharedCtx.state === "closed") sharedCtx = new AudioCtx();
   return sharedCtx;
