@@ -7,6 +7,7 @@ import { Outlet } from "react-router-dom";
 import ClientSidebar from "@/components/ClientSidebar";
 import MobileNav from "@/components/MobileNav";
 import RequestAlertLamp, { useRequestLampPreference } from "@/components/hotel/RequestAlertLamp";
+import { installAudioUnlock } from "@/lib/playNotice";
 import { useOpenServiceRequests } from "@/hooks/useOpenServiceRequests";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/hooks/useLanguage";
@@ -19,6 +20,7 @@ const ClientLayout = () => {
   const { botId, module } = useActiveModule();
   const [hoursState, setHoursState] = useState({ botId: "", hours: DEFAULT_SERVICE_HOURS });
   const [now, setNow] = useState(() => new Date());
+  useEffect(() => installAudioUnlock(), []);
   useEffect(() => {
     const timer = window.setInterval(() => setNow(new Date()), 60000);
     return () => window.clearInterval(timer);

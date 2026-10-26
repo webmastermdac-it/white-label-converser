@@ -12,7 +12,8 @@ const state = vi.hoisted(() => ({
 vi.mock("@/hooks/useActiveModule", () => ({ useActiveModule: () => ({ botId: "hotel-1", module: { id: state.module } }) }));
 vi.mock("@/hooks/usePlanConfig", () => ({ usePlanConfig: () => ({ canUseConciergeRequests: state.allowed }) }));
 vi.mock("@/hooks/useLanguage", () => ({ useLanguage: () => ({ lang: "it" }) }));
-vi.mock("@/lib/playNotice", () => ({ playNotice: state.playNotice, SERVICE_REQUEST_SOUND_KEY: "test-sound" }));
+vi.mock("@/lib/playNotice", () => ({ playNotice: state.playNotice, SERVICE_REQUEST_SOUND_KEY: "test-sound", soundEnabled: () => localStorage.getItem("test-sound") !== "false", installAudioUnlock: () => () => {} }));
+vi.mock("sonner", () => ({ toast: { info: vi.fn(), success: vi.fn(), error: vi.fn() } }));
 vi.mock("@/integrations/supabase/client", () => ({
   supabase: {
     from: () => {
@@ -102,5 +103,18 @@ describe("Hotel request lamp", () => {
     rerender();
     act(() => state.handlers.INSERT());
     expect(state.playNotice).toHaveBeenCalledTimes(1);
+  });
+  it("plays the sound by default and not when explicitly switched off", async () => {
+    renderHook(() => useOpenServiceRequests(() => true));
+    act(() => state.handlers.INSERT());
+    expect(state.playNotice).toHaveBeenCalledTimes(1);
+    localStorage.setItem("test-sound", "false");
+    act(() => state.handlers.INSERT());
+    expect(state.playNotice).toHaveBeenCalledTimes(1);
+  });
+  it("shows the new request immediately, before the reload completes", async () => {
+    const { result } = renderHook(() => useOpenServiceRequests(() => true));
+    act(() => state.handlers.INSERT({ new: { category: "Taxi", room: "12" } }));
+    expect(result.current.count).toBeGreaterThanOrEqual(1);
   });
 });

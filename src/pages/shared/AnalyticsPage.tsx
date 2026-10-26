@@ -175,7 +175,8 @@ const AnalyticsContent: React.FC<AnalyticsPageProps> = ({ isAdmin = false }) => 
       setPrevChatsCount(cr.count || 0);
       setPrevLeadsCount(lr.count || 0);
       const prevMsgs = (cr.data || []).map((c: any) => Array.isArray(c.messages) ? c.messages.length : 0);
-      setPrevAvgMessages(prevMsgs.length > 0 ? prevMsgs.reduce((a: number, b: number) => a + b, 0) / prevMsgs.length : 0);
+      // Shown as a whole number rounded up (e.g. 4.2 → 5), like the current period
+      setPrevAvgMessages(prevMsgs.length > 0 ? Math.ceil(prevMsgs.reduce((a: number, b: number) => a + b, 0) / prevMsgs.length) : 0);
     };
     fetchPrev();
   }, [dateFrom, dateTo, clientId, isAdmin, selectedClient]);
@@ -186,7 +187,8 @@ const AnalyticsContent: React.FC<AnalyticsPageProps> = ({ isAdmin = false }) => 
   const convRate = totalConv > 0 ? ((totalLeads / totalConv) * 100) : 0;
   const avgMessages = useMemo(() => {
     const counts = filteredChats.map(c => Array.isArray(c.messages) ? c.messages.length : 0);
-    return counts.length > 0 ? counts.reduce((a, b) => a + b, 0) / counts.length : 0;
+    // Whole number rounded up (e.g. 4.2 → 5): a fractional message count is not meaningful
+    return counts.length > 0 ? Math.ceil(counts.reduce((a, b) => a + b, 0) / counts.length) : 0;
   }, [filteredChats]);
 
   const prevConvRate = prevChatsCount > 0 ? ((prevLeadsCount / prevChatsCount) * 100) : 0;

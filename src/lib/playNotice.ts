@@ -1,16 +1,53 @@
 export const SERVICE_REQUEST_SOUND_KEY = "genius-service-request-sound";
 
-export const playNotice = () => {
+let sharedCtx: AudioContext | null = null;
+
+const getCtx = (): AudioContext | null => {
   const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
-  if (!AudioCtx) return;
-  const ctx = new AudioCtx();
+  if (!AudioCtx) return null;
+  if (!sharedCtx || sharedCtx.state === "closed") sharedCtx = new AudioCtx();
+  return sharedCtx;
+};
+
+/**
+ * Browsers (especially iOS/Android) keep audio suspended until a user gesture.
+ * Call once at app start: the first tap/click/key unlocks the shared context so
+ * later sounds triggered by Realtime events (no gesture) can actually play.
+ */
+export const installAudioUnlock = () => {
+  const unlock = () => {
+    try { void getCtx()?.resume(); } catch { /* ignore */ }
+    if (sharedCtx?.state === "running") {
+      ["pointerdown", "touchstart", "keydown", "click"].forEach((e) => window.removeEventListener(e, unlock, true));
+    }
+  };
+  ["pointerdown", "touchstart", "keydown", "click"].forEach((e) => window.addEventListener(e, unlock, true));
+  return () => ["pointerdown", "touchstart", "keydown", "click"].forEach((e) => window.removeEventListener(e, unlock, true));
+};
+
+const beep = (ctx: AudioContext, start: number) => {
   const osc = ctx.createOscillator();
   const gain = ctx.createGain();
   osc.connect(gain);
   gain.connect(ctx.destination);
   osc.frequency.value = 880;
-  gain.gain.setValueAtTime(0.08, ctx.currentTime);
-  gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.25);
-  osc.start();
-  osc.stop(ctx.currentTime + 0.25);
+  gain.gain.setValueAtTime(0.2, start);
+  gain.gain.exponentialRampToValueAtTime(0.001, start + 0.3);
+  osc.start(start);
+  osc.stop(start + 0.3);
+};
+
+export const playNotice = () => {
+  try {
+    const ctx = getCtx();
+    if (!ctx) return;
+    const run = () => { beep(ctx, ctx.currentTime); beep(ctx, ctx.currentTime + 0.4); };
+    if (ctx.state === "suspended") void ctx.resume().then(run).catch(() => {});
+    else run();
+  } catch { /* audio not available */ }
+};
+
+/** Sound is on unless the user explicitly switched it off. */
+export const soundEnabled = () => {
+  try { return localStorage.getItem(SERVICE_REQUEST_SOUND_KEY) !== "false"; } catch { return true; }
 };
