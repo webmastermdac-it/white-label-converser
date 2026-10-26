@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { useLanguage } from "@/hooks/useLanguage";
+import { useLanguage, tx } from "@/hooks/useLanguage";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import {
@@ -19,7 +19,6 @@ const AdminSidebar = () => {
   const { user, signOut } = useAuth();
   const { lang, t } = useLanguage();
   const navigate = useNavigate();
-  const isIt = lang === "it";
   const [paidSetups, setPaidSetups] = useState(0);
 
   useEffect(() => {
@@ -42,7 +41,7 @@ const AdminSidebar = () => {
   const configNav = [
     { label: t("clients"), href: "/admin/clients", icon: Users },
     { label: "Setup", href: "/admin/setup", icon: Wrench, badge: paidSetups },
-    { label: isIt ? "I miei Bot" : "My Bots", href: "/admin/bots", icon: Bot },
+    { label: tx("My Bots", "I miei Bot"), href: "/admin/bots", icon: Bot },
     { label: "Piani", href: "/admin/plans", icon: CreditCard },
     { label: "E-commerce e Catalogo", href: "/admin/ecommerce", icon: Store },
     { label: "Email & Notifiche", href: "/admin/email-templates", icon: Mail },
@@ -143,7 +142,7 @@ const AdminSidebar = () => {
 
       {/* Data nav */}
       <nav className="px-2 py-3 space-y-1 overflow-y-auto">
-        <GroupLabel>{isIt ? "Dati" : "Data"}</GroupLabel>
+        <GroupLabel>{tx("Data", "Dati")}</GroupLabel>
         {dataNav.map(renderItem)}
       </nav>
 
@@ -151,7 +150,7 @@ const AdminSidebar = () => {
 
       {/* Config nav */}
       <nav className="flex-1 px-2 py-3 space-y-1 overflow-y-auto">
-        <GroupLabel>{isIt ? "Configurazione" : "Configuration"}</GroupLabel>
+        <GroupLabel>{tx("Configuration", "Configurazione")}</GroupLabel>
         {configNav.map(renderItem)}
       </nav>
 

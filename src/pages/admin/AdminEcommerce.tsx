@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { useLanguage } from "@/hooks/useLanguage";
+import { useLanguage, tx, appLocale } from "@/hooks/useLanguage";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,7 +11,6 @@ import { Store, RefreshCw, Loader2 } from "lucide-react";
 
 const AdminEcommerce = () => {
   const { lang } = useLanguage();
-  const isIt = lang === "it";
   const [configs, setConfigs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [syncingAll, setSyncingAll] = useState(false);
@@ -62,8 +61,8 @@ const AdminEcommerce = () => {
       } catch { errors++; }
     }
     toast({
-      title: isIt ? "Sincronizzazione completata" : "Sync completed",
-      description: isIt ? `${success} riuscite, ${errors} errori` : `${success} succeeded, ${errors} errors`,
+      title: tx("Sync completed", "Sincronizzazione completata"),
+      description: tx("{0} succeeded, {1} errors", "{0} riuscite, {1} errori", [success, errors]),
     });
     setSyncingAll(false);
     loadConfigs();
@@ -85,12 +84,12 @@ const AdminEcommerce = () => {
             <Store className="w-6 h-6" /> E-commerce e Catalogo
           </h1>
           <p className="text-muted-foreground text-sm mt-1">
-            {isIt ? "Panoramica integrazioni ecommerce di tutti i clienti" : "Overview of all client ecommerce integrations"}
+            {tx("Overview of all client ecommerce integrations", "Panoramica integrazioni ecommerce di tutti i clienti")}
           </p>
         </div>
         <Button onClick={handleSyncAll} disabled={syncingAll}>
           <RefreshCw className={`w-4 h-4 mr-2 ${syncingAll ? "animate-spin" : ""}`} />
-          {isIt ? "Sincronizza tutti" : "Sync all"}
+          {tx("Sync all", "Sincronizza tutti")}
         </Button>
       </div>
 
@@ -98,7 +97,7 @@ const AdminEcommerce = () => {
         <Select value={platformFilter} onValueChange={setPlatformFilter}>
           <SelectTrigger className="w-[160px]"><SelectValue placeholder="Platform" /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">{isIt ? "Tutte" : "All"}</SelectItem>
+            <SelectItem value="all">{tx("All", "Tutte")}</SelectItem>
             <SelectItem value="woocommerce">WooCommerce</SelectItem>
             <SelectItem value="shopify">Shopify</SelectItem>
             <SelectItem value="prestashop">PrestaShop</SelectItem>
@@ -109,7 +108,7 @@ const AdminEcommerce = () => {
         <Select value={statusFilter} onValueChange={setStatusFilter}>
           <SelectTrigger className="w-[160px]"><SelectValue placeholder="Status" /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">{isIt ? "Tutti" : "All"}</SelectItem>
+            <SelectItem value="all">{tx("All", "Tutti")}</SelectItem>
             <SelectItem value="success">Success</SelectItem>
             <SelectItem value="error">Error</SelectItem>
             <SelectItem value="idle">Idle</SelectItem>
@@ -122,12 +121,12 @@ const AdminEcommerce = () => {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>{isIt ? "Cliente" : "Client"}</TableHead>
-                <TableHead>{isIt ? "Piattaforma" : "Platform"}</TableHead>
-                <TableHead>{isIt ? "Prodotti" : "Products"}</TableHead>
-                <TableHead>{isIt ? "Ultima sync" : "Last sync"}</TableHead>
-                <TableHead>{isIt ? "Stato" : "Status"}</TableHead>
-                <TableHead>{isIt ? "Azioni" : "Actions"}</TableHead>
+                <TableHead>{tx("Client", "Cliente")}</TableHead>
+                <TableHead>{tx("Platform", "Piattaforma")}</TableHead>
+                <TableHead>{tx("Products", "Prodotti")}</TableHead>
+                <TableHead>{tx("Last sync", "Ultima sync")}</TableHead>
+                <TableHead>{tx("Status", "Stato")}</TableHead>
+                <TableHead>{tx("Actions", "Azioni")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -142,7 +141,7 @@ const AdminEcommerce = () => {
                   <TableCell><Badge variant="outline">{c.platform}</Badge></TableCell>
                   <TableCell>{productCounts[c.client_id] ?? "..."}</TableCell>
                   <TableCell className="text-xs text-muted-foreground">
-                    {c.last_sync_at ? new Date(c.last_sync_at).toLocaleString(isIt ? "it-IT" : "en-US") : "-"}
+                    {c.last_sync_at ? new Date(c.last_sync_at).toLocaleString(appLocale()) : "-"}
                   </TableCell>
                   <TableCell>
                     <Badge variant={c.sync_status === "success" ? "default" : c.sync_status === "error" ? "destructive" : "secondary"}
@@ -156,7 +155,7 @@ const AdminEcommerce = () => {
                       onClick={async () => {
                         try {
                           await supabase.functions.invoke("sync-products", { body: { client_id: c.client_id } });
-                          toast({ title: isIt ? "Sincronizzato!" : "Synced!" });
+                          toast({ title: tx("Synced!", "Sincronizzato!") });
                           loadConfigs();
                         } catch (e: any) {
                           toast({ title: "Error", description: e.message, variant: "destructive" });
@@ -171,7 +170,7 @@ const AdminEcommerce = () => {
               {filtered.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
-                    {isIt ? "Nessuna integrazione ecommerce configurata" : "No ecommerce integrations configured"}
+                    {tx("No ecommerce integrations configured", "Nessuna integrazione ecommerce configurata")}
                   </TableCell>
                 </TableRow>
               )}

@@ -18,7 +18,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Instagram, CheckCircle2, ArrowUpCircle, Loader2, Link as LinkIcon, AlertTriangle } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { useNavigate, Link } from "react-router-dom";
-import { useLanguage } from "@/hooks/useLanguage";
+import { useLanguage, tx, appLocale } from "@/hooks/useLanguage";
 import { ArrowLeft } from "lucide-react";
 
 const ClientInstagram = () => {
@@ -29,7 +29,7 @@ const ClientInstagram = () => {
   const { lang } = useLanguage();
   const backLink = (
     <Button asChild variant="ghost" size="sm" className="mb-2 -ml-2">
-      <Link to="/dashboard/integrations"><ArrowLeft className="w-4 h-4 mr-1" />{lang === "it" ? "Torna alle integrazioni" : "Back to integrations"}</Link>
+      <Link to="/dashboard/integrations"><ArrowLeft className="w-4 h-4 mr-1" />{tx("Back to integrations", "Torna alle integrazioni")}</Link>
     </Button>
   );
 
@@ -93,7 +93,7 @@ const ClientInstagram = () => {
 
   const handleConnectManual = async () => {
     if (!selectedBotId || !manualToken || !manualPageId) {
-      toast({ title: "Compila tutti i campi", variant: "destructive" });
+      toast({ title: tx("Fill in all fields", "Compila tutti i campi"), variant: "destructive" });
       return;
     }
     setConnecting(true);
@@ -108,10 +108,10 @@ const ClientInstagram = () => {
     });
     setConnecting(false);
     if (error || (data as any)?.error) {
-      toast({ title: "Connessione fallita", description: (data as any)?.error || error?.message, variant: "destructive" });
+      toast({ title: tx("Connection failed", "Connessione fallita"), description: (data as any)?.error || error?.message, variant: "destructive" });
       return;
     }
-    toast({ title: "Instagram collegato!" });
+    toast({ title: tx("Instagram connected!", "Instagram collegato!") });
     setManualToken(""); setManualPageId(""); setManualUsername("");
     loadBots();
   };
@@ -121,10 +121,10 @@ const ClientInstagram = () => {
       body: { bot_id: selectedBotId },
     });
     if (error) {
-      toast({ title: "Errore", variant: "destructive" });
+      toast({ title: tx("Error", "Errore"), variant: "destructive" });
       return;
     }
-    toast({ title: "Instagram disconnesso" });
+    toast({ title: tx("Instagram disconnected", "Instagram disconnesso") });
     loadBots();
   };
 
@@ -146,22 +146,22 @@ const ClientInstagram = () => {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Instagram className="w-6 h-6 text-pink-500" />
-              Integrazione Instagram DM
+              {tx("Instagram DM integration", "Integrazione Instagram DM")}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="text-muted-foreground">
-              Connetti il tuo profilo Instagram Business e fai rispondere il chatbot ai DM 24/7.
+              {tx("Connect your Instagram Business profile and let the chatbot answer DMs 24/7.", "Connetti il tuo profilo Instagram Business e fai rispondere il chatbot ai DM 24/7.")}
             </p>
             <div className="p-4 rounded-lg border border-primary/30 bg-primary/5 flex items-start gap-3">
               <ArrowUpCircle className="w-5 h-5 text-primary mt-0.5" />
               <div>
-                <p className="font-semibold">Funzionalità disponibile sul piano Pro</p>
-                <p className="text-sm text-muted-foreground">Passa a Pro per attivare Instagram DM.</p>
+                <p className="font-semibold">{tx("Feature available on the Pro plan", "Funzionalità disponibile sul piano Pro")}</p>
+                <p className="text-sm text-muted-foreground">{tx("Upgrade to Pro to enable Instagram DM.", "Passa a Pro per attivare Instagram DM.")}</p>
               </div>
             </div>
             <Button onClick={() => navigate("/dashboard/upgrade")}>
-              <ArrowUpCircle className="w-4 h-4 mr-2" /> Passa a Pro
+              <ArrowUpCircle className="w-4 h-4 mr-2" /> {tx("Upgrade to Pro", "Passa a Pro")}
             </Button>
           </CardContent>
         </Card>
@@ -179,15 +179,15 @@ const ClientInstagram = () => {
           <Instagram className="w-6 h-6 text-white" />
         </div>
         <div>
-          <h1 className="text-2xl font-bold">Integrazione Instagram DM</h1>
-          <p className="text-sm text-muted-foreground">Risposte automatiche AI ai messaggi Instagram</p>
+          <h1 className="text-2xl font-bold">{tx("Instagram DM integration", "Integrazione Instagram DM")}</h1>
+          <p className="text-sm text-muted-foreground">{tx("Automatic AI replies to Instagram messages", "Risposte automatiche AI ai messaggi Instagram")}</p>
         </div>
       </div>
 
       {bots.length > 1 && (
         <Card>
           <CardContent className="pt-6">
-            <Label>Seleziona chatbot</Label>
+            <Label>{tx("Select chatbot", "Seleziona chatbot")}</Label>
             <Select value={selectedBotId} onValueChange={setSelectedBotId}>
               <SelectTrigger className="mt-2"><SelectValue /></SelectTrigger>
               <SelectContent>
@@ -200,21 +200,21 @@ const ClientInstagram = () => {
 
       {!isConnected ? (
         <Card>
-          <CardHeader><CardTitle>Connetti Instagram</CardTitle></CardHeader>
+          <CardHeader><CardTitle>{tx("Connect Instagram", "Connetti Instagram")}</CardTitle></CardHeader>
           <CardContent className="space-y-5">
             <div className="space-y-2 text-sm">
-              <div className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-green-500" /> Profilo Instagram Business o Creator</div>
-              <div className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-green-500" /> Pagina Facebook collegata all'account</div>
-              <div className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-green-500" /> App Meta con permessi messaging</div>
+              <div className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-green-500" /> {tx("Instagram Business or Creator profile", "Profilo Instagram Business o Creator")}</div>
+              <div className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-green-500" /> {tx("Facebook Page linked to the account", "Pagina Facebook collegata all'account")}</div>
+              <div className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-green-500" /> {tx("Meta app with messaging permissions", "App Meta con permessi messaging")}</div>
             </div>
 
             <div className="p-4 rounded-lg border border-amber-500/30 bg-amber-500/5 flex items-start gap-2 text-sm">
               <AlertTriangle className="w-4 h-4 text-amber-500 mt-0.5" />
-              <span>Richiede approvazione App Meta per la produzione. Per testing, inserisci manualmente il Page Access Token e l'Instagram Business Account ID generati dal tuo Meta App.</span>
+              <span>{tx("Production use requires Meta app approval. For testing, manually enter the Page Access Token and the Instagram Business Account ID generated by your Meta app.", "Richiede approvazione App Meta per la produzione. Per testing, inserisci manualmente il Page Access Token e l'Instagram Business Account ID generati dal tuo Meta App.")}</span>
             </div>
 
             <div className="space-y-3 pt-2 border-t">
-              <p className="font-semibold text-sm">Connessione manuale</p>
+              <p className="font-semibold text-sm">{tx("Manual connection", "Connessione manuale")}</p>
               <div>
                 <Label>Page Access Token (long-lived)</Label>
                 <Input value={manualToken} onChange={(e) => setManualToken(e.target.value)} placeholder="EAAG..." />
@@ -224,12 +224,12 @@ const ClientInstagram = () => {
                 <Input value={manualPageId} onChange={(e) => setManualPageId(e.target.value)} placeholder="178414... " />
               </div>
               <div>
-                <Label>Username Instagram (opzionale)</Label>
-                <Input value={manualUsername} onChange={(e) => setManualUsername(e.target.value)} placeholder="@miobrand" />
+                <Label>{tx("Instagram username (optional)", "Username Instagram (opzionale)")}</Label>
+                <Input value={manualUsername} onChange={(e) => setManualUsername(e.target.value)} placeholder={tx("@mybrand", "@miobrand")} />
               </div>
               <Button onClick={handleConnectManual} disabled={connecting}>
                 {connecting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <LinkIcon className="w-4 h-4 mr-2" />}
-                Connetti Instagram
+                {tx("Connect Instagram", "Connetti Instagram")}
               </Button>
             </div>
           </CardContent>
@@ -240,21 +240,21 @@ const ClientInstagram = () => {
             <CardHeader>
               <div className="flex items-center justify-between">
                 <CardTitle className="flex items-center gap-2">
-                  <Badge className="bg-green-600">Connesso</Badge>
+                  <Badge className="bg-green-600">{tx("Connected", "Connesso")}</Badge>
                   <span>@{bot.instagram_username}</span>
                 </CardTitle>
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
-                    <Button variant="destructive" size="sm">Disconnetti</Button>
+                    <Button variant="destructive" size="sm">{tx("Disconnect", "Disconnetti")}</Button>
                   </AlertDialogTrigger>
                   <AlertDialogContent>
                     <AlertDialogHeader>
-                      <AlertDialogTitle>Disconnettere Instagram?</AlertDialogTitle>
-                      <AlertDialogDescription>Il bot smetterà di rispondere ai DM.</AlertDialogDescription>
+                      <AlertDialogTitle>{tx("Disconnect Instagram?", "Disconnettere Instagram?")}</AlertDialogTitle>
+                      <AlertDialogDescription>{tx("The bot will stop replying to DMs.", "Il bot smetterà di rispondere ai DM.")}</AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                      <AlertDialogCancel>Annulla</AlertDialogCancel>
-                      <AlertDialogAction onClick={handleDisconnect}>Disconnetti</AlertDialogAction>
+                      <AlertDialogCancel>{tx("Cancel", "Annulla")}</AlertDialogCancel>
+                      <AlertDialogAction onClick={handleDisconnect}>{tx("Disconnect", "Disconnetti")}</AlertDialogAction>
                     </AlertDialogFooter>
                   </AlertDialogContent>
                 </AlertDialog>
@@ -262,12 +262,12 @@ const ClientInstagram = () => {
             </CardHeader>
             <CardContent className="space-y-4">
               <p className="text-sm text-muted-foreground">
-                Connesso il {bot.instagram_connected_at ? new Date(bot.instagram_connected_at).toLocaleString("it-IT") : "-"}
+                {tx("Connected on {0}", "Connesso il {0}", [bot.instagram_connected_at ? new Date(bot.instagram_connected_at).toLocaleString(appLocale()) : "-"])}
               </p>
               <div className="flex items-center justify-between p-3 rounded-lg border">
                 <div>
-                  <Label className="font-semibold">Risposte automatiche</Label>
-                  <p className="text-xs text-muted-foreground">Il bot risponde ai DM in arrivo</p>
+                  <Label className="font-semibold">{tx("Automatic replies", "Risposte automatiche")}</Label>
+                  <p className="text-xs text-muted-foreground">{tx("The bot replies to incoming DMs", "Il bot risponde ai DM in arrivo")}</p>
                 </div>
                 <Switch checked={!!bot.is_active} onCheckedChange={toggleActive} />
               </div>
@@ -275,24 +275,24 @@ const ClientInstagram = () => {
           </Card>
 
           <div className="grid grid-cols-3 gap-4">
-            <Card><CardContent className="pt-6"><p className="text-xs text-muted-foreground">Oggi</p><p className="text-2xl font-bold">{stats.today}</p></CardContent></Card>
-            <Card><CardContent className="pt-6"><p className="text-xs text-muted-foreground">Ultimi 7 giorni</p><p className="text-2xl font-bold">{stats.week}</p></CardContent></Card>
-            <Card><CardContent className="pt-6"><p className="text-xs text-muted-foreground">Totale</p><p className="text-2xl font-bold">{stats.total}</p></CardContent></Card>
+            <Card><CardContent className="pt-6"><p className="text-xs text-muted-foreground">{tx("Today", "Oggi")}</p><p className="text-2xl font-bold">{stats.today}</p></CardContent></Card>
+            <Card><CardContent className="pt-6"><p className="text-xs text-muted-foreground">{tx("Last 7 days", "Ultimi 7 giorni")}</p><p className="text-2xl font-bold">{stats.week}</p></CardContent></Card>
+            <Card><CardContent className="pt-6"><p className="text-xs text-muted-foreground">{tx("Total", "Totale")}</p><p className="text-2xl font-bold">{stats.total}</p></CardContent></Card>
           </div>
 
           <Card>
-            <CardHeader><CardTitle>Ultimi messaggi Instagram</CardTitle></CardHeader>
+            <CardHeader><CardTitle>{tx("Latest Instagram messages", "Ultimi messaggi Instagram")}</CardTitle></CardHeader>
             <CardContent>
               {messages.length === 0 ? (
-                <p className="text-sm text-muted-foreground">Nessun messaggio ancora.</p>
+                <p className="text-sm text-muted-foreground">{tx("No messages yet.", "Nessun messaggio ancora.")}</p>
               ) : (
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Mittente</TableHead>
-                      <TableHead>Direzione</TableHead>
-                      <TableHead>Messaggio</TableHead>
-                      <TableHead>Data</TableHead>
+                      <TableHead>{tx("Sender", "Mittente")}</TableHead>
+                      <TableHead>{tx("Direction", "Direzione")}</TableHead>
+                      <TableHead>{tx("Message", "Messaggio")}</TableHead>
+                      <TableHead>{tx("Date", "Data")}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -301,11 +301,11 @@ const ClientInstagram = () => {
                         <TableCell className="font-mono text-xs">{m.instagram_sender_username || m.instagram_sender_id}</TableCell>
                         <TableCell>
                           <Badge variant={m.direction === "inbound" ? "secondary" : "default"}>
-                            {m.direction === "inbound" ? "ricevuto" : "bot"}
+                            {m.direction === "inbound" ? tx("received", "ricevuto") : "bot"}
                           </Badge>
                         </TableCell>
                         <TableCell className="max-w-md truncate">{m.message}</TableCell>
-                        <TableCell className="text-xs text-muted-foreground">{new Date(m.created_at).toLocaleString("it-IT")}</TableCell>
+                        <TableCell className="text-xs text-muted-foreground">{new Date(m.created_at).toLocaleString(appLocale())}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>

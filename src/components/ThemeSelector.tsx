@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Sun, Moon, Monitor } from "lucide-react";
 import { useTheme } from "@/hooks/useTheme";
 import { cn } from "@/lib/utils";
+import { tx } from "@/hooks/useLanguage";
 
 interface ThemeSelectorProps {
   collapsed?: boolean;
@@ -54,7 +55,7 @@ const ThemeSelector = ({ collapsed = false }: ThemeSelectorProps) => {
       ref={containerRef}
       className="flex items-center gap-0.5 p-0.5 rounded-lg bg-secondary/60 w-full"
       role="radiogroup"
-      aria-label="Theme"
+      aria-label={tx("Theme", "Tema")}
     >
       {options.map(({ value, icon: Icon, label }) => (
         <button

@@ -4,7 +4,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Input } from "@/components/ui/input";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useAdminClientFilter, AdminClient } from "@/contexts/AdminClientFilterContext";
-import { useLanguage } from "@/hooks/useLanguage";
+import { useLanguage, tx } from "@/hooks/useLanguage";
 import { cn } from "@/lib/utils";
 
 const PLAN_ORDER: { key: string; label: string }[] = [
@@ -16,11 +16,10 @@ const PLAN_ORDER: { key: string; label: string }[] = [
 const AccountSwitcher = ({ collapsed = false }: { collapsed?: boolean }) => {
   const { selectedClientId, setSelectedClientId, selectedClient, clients } = useAdminClientFilter();
   const { lang } = useLanguage();
-  const isIt = lang === "it";
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
 
-  const allLabel = isIt ? "Tutti gli account" : "All accounts";
+  const allLabel = tx("All accounts", "Tutti gli account");
   const currentLabel = selectedClient?.name || allLabel;
   const initial = (selectedClient?.name || allLabel).charAt(0).toUpperCase();
 
@@ -57,7 +56,7 @@ const AccountSwitcher = ({ collapsed = false }: { collapsed?: boolean }) => {
           <span className="flex-1 min-w-0 text-left">
             <span className="block text-xs font-medium text-foreground truncate">{currentLabel}</span>
             <span className="block text-[10px] text-muted-foreground truncate capitalize">
-              {selectedClient ? selectedClient.plan : isIt ? "Vista aggregata" : "Aggregated view"}
+              {selectedClient ? selectedClient.plan : tx("Aggregated view", "Vista aggregata")}
             </span>
           </span>
           <ChevronsUpDown className="w-3.5 h-3.5 flex-shrink-0 text-muted-foreground" />
@@ -88,7 +87,7 @@ const AccountSwitcher = ({ collapsed = false }: { collapsed?: boolean }) => {
               autoFocus
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder={isIt ? "Cerca account..." : "Search accounts..."}
+              placeholder={tx("Search accounts...", "Cerca account...")}
               className="pl-8 h-8 text-xs bg-secondary border-border"
             />
           </div>
@@ -126,7 +125,7 @@ const AccountSwitcher = ({ collapsed = false }: { collapsed?: boolean }) => {
 
           {grouped.length === 0 && (
             <p className="px-3 py-4 text-xs text-muted-foreground text-center">
-              {isIt ? "Nessun account trovato" : "No accounts found"}
+              {tx("No accounts found", "Nessun account trovato")}
             </p>
           )}
         </div>

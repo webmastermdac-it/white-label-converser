@@ -184,7 +184,7 @@ const AdminLeads = () => {
               <div className="flex items-center justify-between pt-1">
                 <p className="text-xs text-muted-foreground">📅 {new Date(lead.created_at).toLocaleString()}</p>
                 {lead.transcript && lead.transcript.length > 0 && (
-                  <button className="text-xs text-primary hover:underline min-h-[44px] flex items-center">{t("viewTranscript", "Vedi trascrizione")}</button>
+                  <button className="text-xs text-primary hover:underline min-h-[44px] flex items-center">{t("View transcript", "Vedi trascrizione")}</button>
                 )}
               </div>
             </div>

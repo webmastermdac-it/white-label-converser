@@ -2,6 +2,7 @@ import { useState, useCallback, useContext, createContext, type ReactNode } from
 import { translations, type TranslationKey } from "@/i18n/translations";
 import React from "react";
 import { publicDictionaries } from "@/i18n/public";
+import { appDictionaries } from "@/i18n/app";
 
 export type AppLang = "it" | "en" | "de" | "fr" | "es" | "pt";
 export const APP_LANGS: AppLang[] = ["it", "en", "fr", "de", "es", "pt"];
@@ -10,7 +11,27 @@ export const APP_LANGS: AppLang[] = ["it", "en", "fr", "de", "es", "pt"];
 export function translateFromEnglish(en: string, contentLang: AppLang, it?: string): string {
   if (contentLang === "it") return it ?? en;
   if (contentLang === "en") return en;
-  return publicDictionaries[contentLang][en] || en;
+  return publicDictionaries[contentLang][en] || appDictionaries[contentLang][en] || en;
+}
+
+const LOCALES: Record<AppLang, string> = { it: "it-IT", en: "en-GB", fr: "fr-FR", de: "de-DE", es: "es-ES", pt: "pt-PT" };
+
+// Active language, kept in sync by LanguageProvider so plain helpers (toasts, constants built at render) can translate.
+let currentLang: AppLang = typeof window !== "undefined" ? detectLang() : "en";
+
+/** Current UI language outside React hooks. */
+export const getAppLang = (): AppLang => currentLang;
+
+/** BCP-47 locale for dates/numbers in the current UI language. */
+export const appLocale = (): string => LOCALES[currentLang];
+
+/**
+ * Translate a back-office string: English source + Italian version, other languages from the dictionaries.
+ * Optional positional values replace {0}, {1}… in the chosen text.
+ */
+export function tx(en: string, it: string, vars?: ReadonlyArray<unknown>): string {
+  const out = translateFromEnglish(en, currentLang, it);
+  return vars ? out.replace(/\{(\d+)\}/g, (m, i) => (Number(i) < vars.length ? String(vars[Number(i)]) : m)) : out;
 }
 
 export type LocalizedValue = { en: string; it: string } & Partial<Record<"fr" | "de" | "es" | "pt", string>>;
@@ -37,10 +58,13 @@ const LanguageContext = createContext<LanguageContextType | null>(null);
 export function LanguageProvider({ children }: { children: ReactNode }) {
   const [contentLang, setContentLang] = useState<AppLang>(detectLang);
   const lang: Lang = contentLang === "it" ? "it" : "en";
+  currentLang = contentLang;
 
   const setLang = useCallback((l: AppLang) => {
     localStorage.setItem("genius-lang", l);
+    currentLang = l;
     setContentLang(l);
+    document.documentElement.lang = l;
   }, []);
 
   const t = useCallback((enOrKey: string, it?: string) => {

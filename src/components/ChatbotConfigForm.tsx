@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Save, Bot, Palette, MessageSquare, Zap, Mail, SendHorizonal } from "lucide-react";
-import { useLanguage } from "@/hooks/useLanguage";
+import { useLanguage, tx } from "@/hooks/useLanguage";
 
 interface Config {
   id?: string;
@@ -174,7 +174,7 @@ const ChatbotConfigForm: React.FC<ChatbotConfigFormProps> = ({ clientId, chatbot
       toast({ title: t("saved"), description: t("configUpdated") });
       onSaved?.();
     } catch (err: any) {
-      toast({ title: "Error", description: err.message, variant: "destructive" });
+      toast({ title: tx("Error", "Errore"), description: err.message, variant: "destructive" });
     }
     setSaving(false);
   };
@@ -263,7 +263,7 @@ const ChatbotConfigForm: React.FC<ChatbotConfigFormProps> = ({ clientId, chatbot
 
           {config.avatar === GENIE_FULL_AVATAR && (
             <div className="space-y-2">
-              <Label>{lang === "it" ? "Colore del cerchio" : "Circle color"}</Label>
+              <Label>{tx("Circle color", "Colore del cerchio")}</Label>
               <div className="flex items-center gap-3">
                 <input
                   type="color"
@@ -302,7 +302,7 @@ const ChatbotConfigForm: React.FC<ChatbotConfigFormProps> = ({ clientId, chatbot
                   </span>
                 </span>
                 <p className="text-xs text-muted-foreground">
-                  {lang === "it" ? "Anteprima del pulsante chat con bagliore pulsante." : "Chat launcher preview with pulsing glow."}
+                  {tx("Chat launcher preview with pulsing glow.", "Anteprima del pulsante chat con bagliore pulsante.")}
                 </p>
               </div>
             </div>
@@ -322,12 +322,8 @@ const ChatbotConfigForm: React.FC<ChatbotConfigFormProps> = ({ clientId, chatbot
                   }`}
                 >
                   {pos === "bottom-left"
-                    ? lang === "it"
-                      ? "In basso a sinistra"
-                      : "Bottom left"
-                    : lang === "it"
-                      ? "In basso a destra"
-                      : "Bottom right"}
+                    ? tx("Bottom left", "In basso a sinistra")
+                    : tx("Bottom right", "In basso a destra")}
                 </button>
               ))}
             </div>
@@ -416,12 +412,10 @@ const ChatbotConfigForm: React.FC<ChatbotConfigFormProps> = ({ clientId, chatbot
           <div className="flex items-center justify-between p-4 bg-secondary rounded-xl">
             <div className="pr-4">
               <p className="text-sm font-medium text-foreground">
-                {lang === "it" ? "Invia una mail per ogni nuova chat" : "Send an email for every new chat"}
+                {tx("Send an email for every new chat", "Invia una mail per ogni nuova chat")}
               </p>
               <p className="text-xs text-muted-foreground">
-                {lang === "it"
-                  ? "Riceverai un riepilogo (numero di messaggi, durata) quando una chat viene chiusa per inattività"
-                  : "You'll get a recap (message count, duration) when a chat is closed due to inactivity"}
+                {tx("You'll get a recap (message count, duration) when a chat is closed due to inactivity", "Riceverai un riepilogo (numero di messaggi, durata) quando una chat viene chiusa per inattività")}
               </p>
             </div>
             <Switch
@@ -456,15 +450,15 @@ const ChatbotConfigForm: React.FC<ChatbotConfigFormProps> = ({ clientId, chatbot
                   });
                   if (error) throw error;
                   if (data?.error) throw new Error(data.error);
-                  toast({ title: "✅ Email di test inviata!", description: `Controlla ${config.notification_email}` });
+                  toast({ title: tx("✅ Test email sent!", "✅ Email di test inviata!"), description: `Controlla ${config.notification_email}` });
                 } catch (err: any) {
-                  toast({ title: "Errore invio email", description: err.message, variant: "destructive" });
+                  toast({ title: tx("Email sending error", "Errore invio email"), description: err.message, variant: "destructive" });
                 }
                 setSendingTest(false);
               }}
             >
               {sendingTest ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <SendHorizonal className="w-4 h-4 mr-2" />}
-              Invia email di test
+              {tx("Send test email", "Invia email di test")}
             </Button>
           )}
         </div>

@@ -1,9 +1,9 @@
-import { useLanguage } from "@/hooks/useLanguage";
+import { useLanguage, tx } from "@/hooks/useLanguage";
 import { Building2, ConciergeBell } from "lucide-react";
 
 const HotelPlaceholder = ({ kind }: { kind: "profile" | "requests" }) => {
   const { lang } = useLanguage();
-  const tl = (it: string, en: string) => (lang === "it" ? it : en);
+  const tl = (it: string, en: string) => tx(en, it);
   const Icon = kind === "profile" ? Building2 : ConciergeBell;
   const title = kind === "profile" ? tl("Profilo struttura", "Property profile") : tl("Richieste ospiti", "Guest requests");
   return (

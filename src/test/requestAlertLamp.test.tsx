@@ -11,7 +11,7 @@ const state = vi.hoisted(() => ({
 }));
 vi.mock("@/hooks/useActiveModule", () => ({ useActiveModule: () => ({ botId: "hotel-1", module: { id: state.module } }) }));
 vi.mock("@/hooks/usePlanConfig", () => ({ usePlanConfig: () => ({ canUseConciergeRequests: state.allowed }) }));
-vi.mock("@/hooks/useLanguage", () => ({ useLanguage: () => ({ lang: "it" }) }));
+vi.mock("@/hooks/useLanguage", () => ({ useLanguage: () => ({ lang: "it", contentLang: "it" }), tx: (_en: string, it: string, vars?: unknown[]) => (vars ? it.replace(/\{(\d+)\}/g, (_m, i) => String(vars[Number(i)])) : it), appLocale: () => "it-IT", getAppLang: () => "it" }));
 vi.mock("@/lib/playNotice", () => ({ playNotice: state.playNotice, SERVICE_REQUEST_SOUND_KEY: "test-sound" }));
 vi.mock("@/integrations/supabase/client", () => ({
   supabase: {

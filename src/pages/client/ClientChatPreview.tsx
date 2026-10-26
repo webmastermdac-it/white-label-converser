@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { useLanguage } from "@/hooks/useLanguage";
+import { useLanguage, tx } from "@/hooks/useLanguage";
 import { useWidgetUrl } from "@/hooks/useWidgetUrl";
 import { Loader2, Bot, RefreshCw, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -94,7 +94,7 @@ try {
             srcDoc={iframeSrcDoc}
             className="w-full h-full border-0"
             style={{ minHeight: 550 }}
-            title="Widget Preview"
+            title={tx("Widget Preview", "Anteprima widget")}
             sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
           />
         </div>

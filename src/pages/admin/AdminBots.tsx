@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { useLanguage } from "@/hooks/useLanguage";
+import { useLanguage, tx } from "@/hooks/useLanguage";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Bot, Globe, Loader2, Settings } from "lucide-react";
@@ -20,7 +20,7 @@ const AdminBots = () => {
   const { lang } = useLanguage();
   const [bots, setBots] = useState<AdminBotRow[]>([]);
   const [loading, setLoading] = useState(true);
-  const tl = (it: string, en: string) => lang === "it" ? it : en;
+  const tl = (it: string, en: string) => tx(en, it);
 
   useEffect(() => {
     const loadBots = async () => {

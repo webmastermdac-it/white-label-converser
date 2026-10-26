@@ -1,6 +1,9 @@
 /**
- * i18n check for the PUBLIC site (fr, de, es, pt dictionaries).
- * Extracts English source strings from public pages:
+ * i18n check for the PUBLIC site and the BACK-OFFICE dashboard (fr, de, es, pt dictionaries).
+ * Public pages are checked against src/i18n/public; every other page/component against
+ * src/i18n/app (public entries count too, since lookups fall back between them).
+ * Extracts English source strings:
+ *  - tx("English", "Italiano", vars?) calls (first argument) and tl("Italiano", "English") calls (second argument)
  *  - t("English", "Italiano") / t("English") calls (first argument)
  *  - t("translationKey") calls resolved through src/i18n/translations.ts
  *  - object literals with string `en` + `it` properties (e.g. { en, it } content)
@@ -14,6 +17,7 @@ import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { translations } from "../src/i18n/translations";
 import { publicDictionaries } from "../src/i18n/public";
+import { appDictionaries } from "../src/i18n/app";
 
 const PUBLIC_SOURCES = [
   "src/pages/LandingPage.tsx",
@@ -30,15 +34,21 @@ const PUBLIC_SOURCES = [
   "src/components/landing",
 ];
 
+// Back-office: everything else under src, except shadcn primitives, generated types, tests and the dictionaries themselves.
+const APP_EXCLUDE = [/^src\/components\/ui\//, /^src\/integrations\//, /^src\/test\//, /^src\/i18n\//, /^src\/lib\/siteKnowledgeExport\.ts$/,
+  // MDAC-internal super-admin area: Italian/English only.
+  /^src\/pages\/admin\//, /^src\/components\/admin\//, /^src\/components\/AdminSidebar\.tsx$/, /^src\/layouts\/AdminLayout\.tsx$/];
+
 function listFiles(path: string): string[] {
   if (statSync(path).isDirectory()) return readdirSync(path).flatMap((f) => listFiles(join(path, f)));
   return /\.(tsx?|jsx?)$/.test(path) ? [path] : [];
 }
 
-const strings = new Map<string, string>(); // en -> first file
+const publicStrings = new Map<string, string>(); // en -> first file
+const appStrings = new Map<string, string>();
 const textOf = (n: ts.Node | undefined) =>
   n && (ts.isStringLiteral(n) || ts.isNoSubstitutionTemplateLiteral(n)) ? n.text : undefined;
-const add = (en: string | undefined, file: string) => {
+const addTo = (strings: Map<string, string>) => (en: string | undefined, file: string) => {
   if (en && en.trim() && /[A-Za-z]/.test(en) && !/^[a-z]{2}-[A-Z]{2}$/.test(en) && !strings.has(en)) strings.set(en, file);
 };
 
@@ -89,55 +99,77 @@ function technicalIssues(source: string, translated: string): string[] {
   return [...new Set(issues)];
 }
 
-for (const file of PUBLIC_SOURCES.flatMap(listFiles)) {
-  const src = ts.createSourceFile(file, readFileSync(file, "utf8"), ts.ScriptTarget.Latest, true);
-  const visit = (node: ts.Node) => {
-    if (ts.isCallExpression(node) && ts.isIdentifier(node.expression) && node.expression.text === "t") {
-      const first = textOf(node.arguments[0]);
-      if (first !== undefined) {
-        const entry = node.arguments.length === 1 ? (translations as Record<string, { en: string }>)[first] : undefined;
-        add(entry ? entry.en : first, file);
+function collect(files: string[], add: (en: string | undefined, file: string) => void) {
+  for (const file of files) {
+    const src = ts.createSourceFile(file, readFileSync(file, "utf8"), ts.ScriptTarget.Latest, true);
+    const visit = (node: ts.Node) => {
+      if (ts.isCallExpression(node) && ts.isIdentifier(node.expression)) {
+        const fn = node.expression.text;
+        if (fn === "t") {
+          const first = textOf(node.arguments[0]);
+          if (first !== undefined) {
+            const entry = node.arguments.length === 1 ? (translations as Record<string, { en: string }>)[first] : undefined;
+            add(entry ? entry.en : first, file);
+          }
+        }
+        if (fn === "tx") add(textOf(node.arguments[0]), file);
+        if (fn === "tl" && node.arguments.length >= 2) add(textOf(node.arguments[1]), file);
       }
-    }
-    if (ts.isObjectLiteralExpression(node)) {
-      const props = new Map<string, string | undefined>();
-      for (const p of node.properties) {
-        if (ts.isPropertyAssignment(p) && (ts.isIdentifier(p.name) || ts.isStringLiteral(p.name))) props.set(p.name.text, textOf(p.initializer));
+      if (ts.isObjectLiteralExpression(node)) {
+        const props = new Map<string, string | undefined>();
+        for (const p of node.properties) {
+          if (ts.isPropertyAssignment(p) && (ts.isIdentifier(p.name) || ts.isStringLiteral(p.name))) props.set(p.name.text, textOf(p.initializer));
+        }
+        if (props.has("en") && props.has("it")) add(props.get("en"), file);
       }
-      if (props.has("en") && props.has("it")) add(props.get("en"), file);
-    }
-    ts.forEachChild(node, visit);
-  };
-  visit(src);
+      ts.forEachChild(node, visit);
+    };
+    visit(src);
+  }
 }
 
+const publicFiles = PUBLIC_SOURCES.flatMap(listFiles);
+collect(publicFiles, addTo(publicStrings));
+const publicSet = new Set(publicFiles);
+const appFiles = listFiles("src").filter((f) => !publicSet.has(f) && !APP_EXCLUDE.some((re) => re.test(f)));
+collect(appFiles, addTo(appStrings));
+// Shared dashboard labels in translations.ts are looked up dynamically too.
+for (const entry of Object.values(translations as Record<string, { en: string }>)) addTo(appStrings)(entry.en, "src/i18n/translations.ts");
+
+type Lang = "fr" | "de" | "es" | "pt";
+const LANGS: Lang[] = ["fr", "de", "es", "pt"];
 const missing: Record<string, string[]> = {};
 const invalid: Record<string, { source: string; issues: string[] }[]> = {};
-for (const [lang, dict] of Object.entries(publicDictionaries)) {
-  missing[lang] = [...strings.keys()].filter((en) => !dict[en]);
-  invalid[lang] = Object.entries(dict).flatMap(([source, translated]) => {
-    const issues = technicalIssues(source, translated);
-    return issues.length ? [{ source, issues }] : [];
-  });
+const sources: Record<string, string> = {};
+for (const lang of LANGS) {
+  missing[`public.${lang}`] = [...publicStrings.keys()].filter((en) => !publicDictionaries[lang][en]);
+  missing[`app.${lang}`] = [...appStrings.keys()].filter((en) => !appDictionaries[lang][en] && !publicDictionaries[lang][en]);
+  for (const [scope, dict] of [["public", publicDictionaries[lang]], ["app", appDictionaries[lang]]] as const) {
+    invalid[`${scope}.${lang}`] = Object.entries(dict).flatMap(([source, translated]) => {
+      const issues = technicalIssues(source, translated);
+      return issues.length ? [{ source, issues }] : [];
+    });
+  }
 }
+for (const [en, file] of [...publicStrings, ...appStrings]) sources[en] ??= file;
 
 if (process.argv.includes("--json")) {
-  console.log(JSON.stringify({ missing, invalid }, null, 2));
+  console.log(JSON.stringify({ missing, invalid, sources }, null, 2));
 } else {
-  console.log(`Public strings found: ${strings.size}`);
+  console.log(`Public strings found: ${publicStrings.size} · Back-office strings found: ${appStrings.size}`);
   let total = 0;
-  for (const [lang, list] of Object.entries(missing)) {
+  for (const [scope, list] of Object.entries(missing)) {
     total += list.length;
-    console.log(`${lang}: ${list.length} missing`);
-    for (const en of list.slice(0, 15)) console.log(`   - ${JSON.stringify(en)}  (${strings.get(en)})`);
+    console.log(`${scope}: ${list.length} missing`);
+    for (const en of list.slice(0, 15)) console.log(`   - ${JSON.stringify(en)}  (${sources[en]})`);
     if (list.length > 15) console.log(`   ... and ${list.length - 15} more`);
   }
-  for (const [lang, list] of Object.entries(invalid)) {
+  for (const [scope, list] of Object.entries(invalid)) {
     total += list.length;
-    console.log(`${lang}: ${list.length} altered technical strings`);
+    console.log(`${scope}: ${list.length} altered technical strings`);
     for (const item of list.slice(0, 15)) console.log(`   - ${JSON.stringify(item.source)}: ${item.issues.join(", ")}`);
     if (list.length > 15) console.log(`   ... and ${list.length - 15} more`);
   }
   if (total > 0) process.exit(1);
-  console.log("All public strings translated; technical tokens preserved.");
+  console.log("All public and back-office strings translated; technical tokens preserved.");
 }

@@ -3,7 +3,7 @@ import ClientRAGKnowledgeBase from "@/pages/client/ClientRAGKnowledgeBase";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { useLanguage } from "@/hooks/useLanguage";
+import { useLanguage, tx } from "@/hooks/useLanguage";
 import { Loader2, RefreshCw } from "lucide-react";
 import { buildSiteKnowledgeText, SITE_KNOWLEDGE_SOURCE_NAME } from "@/lib/siteKnowledgeExport";
 
@@ -17,7 +17,7 @@ const PLATFORM_CLIENT_ID = "00000000-0000-0000-0000-000000000001";
 const AdminPlatformKB = () => {
   const { toast } = useToast();
   const { lang } = useLanguage();
-  const tl = (it: string, en: string) => (lang === "it" ? it : en);
+  const tl = (it: string, en: string) => tx(en, it);
   const [syncing, setSyncing] = useState(false);
 
   const syncSiteContent = async () => {

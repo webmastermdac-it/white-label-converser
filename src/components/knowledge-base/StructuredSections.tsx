@@ -10,6 +10,7 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { ChevronDown, Plus, Table2, Trash2 } from "lucide-react";
+import { tx } from "@/hooks/useLanguage";
 
 interface Props {
   sections: KBSections;
@@ -150,7 +151,7 @@ const ToneReferenceTable = () => {
       <CollapsibleTrigger className="flex items-center justify-between w-full p-3 rounded-xl bg-secondary hover:bg-accent transition-colors text-left">
         <span className="flex items-center gap-2 text-xs font-medium text-foreground">
           <Table2 className="w-3.5 h-3.5 text-primary" />
-          Confronta tutti i toni
+          {tx("Compare all tones", "Confronta tutti i toni")}
         </span>
         <ChevronDown className={`w-3.5 h-3.5 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`} />
       </CollapsibleTrigger>
@@ -161,10 +162,10 @@ const ToneReferenceTable = () => {
               <table className="w-full min-w-[600px] text-xs">
                 <thead>
                   <tr className="bg-secondary/60 text-left">
-                    <th className="px-2.5 py-2 font-medium text-foreground whitespace-nowrap">Tono</th>
-                    <th className="px-2.5 py-2 font-medium text-foreground">Caratteristiche principali</th>
-                    <th className="px-2.5 py-2 font-medium text-foreground whitespace-nowrap">Archetipi associati</th>
-                    <th className="px-2.5 py-2 font-medium text-foreground">Esempio pratico</th>
+                    <th className="px-2.5 py-2 font-medium text-foreground whitespace-nowrap">{tx("Tone", "Tono")}</th>
+                    <th className="px-2.5 py-2 font-medium text-foreground">{tx("Main traits", "Caratteristiche principali")}</th>
+                    <th className="px-2.5 py-2 font-medium text-foreground whitespace-nowrap">{tx("Related archetypes", "Archetipi associati")}</th>
+                    <th className="px-2.5 py-2 font-medium text-foreground">{tx("Practical example", "Esempio pratico")}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -184,8 +185,8 @@ const ToneReferenceTable = () => {
               {TONE_PRESETS.map((preset) => (
                 <div key={preset.id} className="rounded-lg border border-border p-2.5 space-y-1">
                   <p className="text-xs font-medium text-foreground">{preset.fullName}</p>
-                  <p className="text-[11px] text-muted-foreground"><span className="font-medium text-foreground">Caratteristiche: </span>{preset.characteristics}</p>
-                  <p className="text-[11px] text-muted-foreground"><span className="font-medium text-foreground">Archetipi: </span>{preset.archetypes}</p>
+                  <p className="text-[11px] text-muted-foreground"><span className="font-medium text-foreground">{tx("Traits:", "Caratteristiche:")} </span>{preset.characteristics}</p>
+                  <p className="text-[11px] text-muted-foreground"><span className="font-medium text-foreground">{tx("Archetypes:", "Archetipi:")} </span>{preset.archetypes}</p>
                   <p className="text-[11px] text-muted-foreground italic">“{preset.example}”</p>
                 </div>
               ))}
@@ -311,7 +312,7 @@ const StructuredSections: React.FC<Props> = ({ sections, onChange, onBlurSave })
                     value={faq.answer}
                     onChange={(e) => updateFaq(i, "answer", e.target.value)}
                     onBlur={onBlurSave}
-                    placeholder="Risposta..."
+                    placeholder={tx("Answer...", "Risposta...")}
                     rows={2}
                     className="bg-secondary border-border resize-none text-sm"
                   />
@@ -328,7 +329,7 @@ const StructuredSections: React.FC<Props> = ({ sections, onChange, onBlurSave })
             </div>
           ))}
           <Button variant="outline" size="sm" onClick={addFaq} className="w-full">
-            <Plus className="w-4 h-4 mr-1" /> Aggiungi Domanda
+            <Plus className="w-4 h-4 mr-1" /> {tx("Add question", "Aggiungi domanda")}
           </Button>
         </CollapsibleContent>
       </Collapsible>

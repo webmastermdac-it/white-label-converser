@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useLanguage } from "@/hooks/useLanguage";
+import { useLanguage, tx, appLocale } from "@/hooks/useLanguage";
 import { usePlanConfig } from "@/hooks/usePlanConfig";
 import { usePlan } from "@/hooks/usePlan";
 import { useEcommerceIntegration, type Platform } from "@/hooks/useEcommerceIntegration";
@@ -62,7 +62,7 @@ const BOOKING_LABELS = [
 const BANNER_KEY = "integrations_banner_dismissed";
 
 const ClientIntegrations = ({ embedded = false, clientIdOverride }: { embedded?: boolean; clientIdOverride?: string | null }) => {
-  const { lang } = useLanguage();
+  const { lang, contentLang } = useLanguage();
   const isIt = lang === "it";
   const navigate = useNavigate();
   const { canUseCalendly, canUseEcommerce, loading: planLoading, config: planConfig } = usePlanConfig();
@@ -116,39 +116,31 @@ const ClientIntegrations = ({ embedded = false, clientIdOverride }: { embedded?:
   const categories = useMemo(() => {
     const ecommerceCat = {
       key: "ecommerce",
-      title: isIt ? "Ecommerce & Catalogo" : "Ecommerce & Catalog",
+      title: tx("Ecommerce & Catalog", "Ecommerce & Catalogo"),
       items: ECOMMERCE_INTEGRATIONS.filter((item) => moduleIntegrations.includes(item.id)),
     };
     const bookingCat = {
       key: "booking",
-      title: isIt ? "Appuntamenti" : "Appointments",
+      title: tx("Appointments", "Appuntamenti"),
       items: APPOINTMENT_INTEGRATIONS.filter((item) => moduleIntegrations.includes(item.id)),
     };
     const reservationCat = {
       key: "reservations",
-      title: isIt ? "Prenotazioni" : "Reservations",
+      title: tx("Reservations", "Prenotazioni"),
       items: RESERVATION_INTEGRATIONS.filter((item) => moduleIntegrations.includes(item.id)),
     };
     return [reservationCat, ecommerceCat, bookingCat].filter((category) => category.items.length > 0);
-  }, [moduleIntegrations.join("|"), isIt]);
+  }, [moduleIntegrations.join("|"), contentLang]);
 
   const bannerText = activeModule.id === "general"
-    ? (isIt
-        ? "Il tuo chatbot funziona subito su qualsiasi sito: nessuna integrazione necessaria. Calendly ed ecommerce sono opzionali."
-        : "Your chatbot works on any website right away: no integration required. Calendly and ecommerce are optional.")
+    ? (tx("Your chatbot works on any website right away: no integration required. Calendly and ecommerce are optional.", "Il tuo chatbot funziona subito su qualsiasi sito: nessuna integrazione necessaria. Calendly ed ecommerce sono opzionali."))
     : moduleIntegrations.length === 0 ? null : activeModule.id === "ecommerce"
-    ? (isIt
-        ? "Hai un ecommerce o un sito con catalogo? Collega i tuoi prodotti per far conoscere al bot prezzi e disponibilità in tempo reale."
-        : "Have an online store or a product catalog? Connect your products so the bot knows prices and availability in real time.")
+    ? (tx("Have an online store or a product catalog? Connect your products so the bot knows prices and availability in real time.", "Hai un ecommerce o un sito con catalogo? Collega i tuoi prodotti per far conoscere al bot prezzi e disponibilità in tempo reale."))
     : activeModule.id === "booking"
 
-      ? (isIt
-          ? "Offri servizi su appuntamento? Collega Calendly per far prenotare i clienti direttamente in chat."
-          : "Offering appointment-based services? Connect Calendly so customers can book right in the chat.")
+      ? (tx("Offering appointment-based services? Connect Calendly so customers can book right in the chat.", "Offri servizi su appuntamento? Collega Calendly per far prenotare i clienti direttamente in chat."))
       : activeModule.id === "hotel"
-      ? (isIt
-          ? "Gestisci un hotel? Inserisci qui il link del tuo booking engine: il bot lo proporrà con le date già compilate a chi vuole prenotare."
-          : "Running a hotel? Add your booking engine link here: the bot will offer it with dates pre-filled to anyone who wants to book.")
+      ? (tx("Running a hotel? Add your booking engine link here: the bot will offer it with dates pre-filled to anyone who wants to book.", "Gestisci un hotel? Inserisci qui il link del tuo booking engine: il bot lo proporrà con le date già compilate a chi vuole prenotare."))
       : null;
 
   if (planLoading || eco.loading || cal.loading) {
@@ -176,7 +168,7 @@ const ClientIntegrations = ({ embedded = false, clientIdOverride }: { embedded?:
           className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
-          {isIt ? "Torna alle integrazioni" : "Back to integrations"}
+          {tx("Back to integrations", "Torna alle integrazioni")}
         </button>
 
         <div className="flex items-center gap-3">
@@ -189,7 +181,7 @@ const ClientIntegrations = ({ embedded = false, clientIdOverride }: { embedded?:
           <div>
             <h1 className="text-xl font-bold" style={{ fontFamily: "Syne, sans-serif" }}>{activeDef.name}</h1>
             <p className="text-sm text-muted-foreground">
-              {isIt ? "Configura questa integrazione" : "Configure this integration"}
+              {tx("Configure this integration", "Configura questa integrazione")}
             </p>
           </div>
         </div>
@@ -199,13 +191,11 @@ const ClientIntegrations = ({ embedded = false, clientIdOverride }: { embedded?:
             <div className="text-center space-y-4">
               <Lock className="w-8 h-8 mx-auto text-muted-foreground" />
               <p className="text-sm text-muted-foreground">
-                {isIt
-                  ? `Questa integrazione è disponibile dal piano ${activeLocked === "starter" ? "Starter" : "Pro"}.`
-                  : `This integration is available from the ${activeLocked === "starter" ? "Starter" : "Pro"} plan.`}
+                {tx("This integration is available from the {0} plan.", "Questa integrazione è disponibile dal piano {0}.", [activeLocked === "starter" ? "Starter" : "Pro"])}
               </p>
               <Button onClick={() => navigate("/dashboard/upgrade")} className="w-full">
                 <ArrowUpCircle className="w-4 h-4 mr-2" />
-                {isIt ? "Sblocca con" : "Unlock with"} {activeLocked === "starter" ? "Starter" : "Pro"}
+                {tx("Unlock with", "Sblocca con")} {activeLocked === "starter" ? "Starter" : "Pro"}
               </Button>
             </div>
           ) : openId === "hotel_booking" ? (
@@ -213,7 +203,7 @@ const ClientIntegrations = ({ embedded = false, clientIdOverride }: { embedded?:
           ) : openId === "booking_link" ? (
             <div className="space-y-5">
               <div className="space-y-2">
-                <Label>{isIt ? "URL del sistema di prenotazione" : "Booking system URL"}</Label>
+                <Label>{tx("Booking system URL", "URL del sistema di prenotazione")}</Label>
                 <Input
                   placeholder="https://www.thefork.it/ristorante/..."
                   value={cal.calendlyUrl}
@@ -221,17 +211,17 @@ const ClientIntegrations = ({ embedded = false, clientIdOverride }: { embedded?:
                 />
                 {cal.calendlyUrl && !cal.calendlyUrl.trim().startsWith("https://") && (
                   <p className="text-xs text-destructive">
-                    {isIt ? "L'indirizzo deve iniziare con https://" : "The URL must start with https://"}
+                    {tx("The URL must start with https://", "L'indirizzo deve iniziare con https://")}
                   </p>
                 )}
               </div>
               <div className="space-y-2">
-                <Label>{isIt ? "Testo del pulsante" : "Button text"}</Label>
+                <Label>{tx("Button text", "Testo del pulsante")}</Label>
                 <Select value={cal.bookingButtonLabel || BOOKING_LABELS[2].it} onValueChange={cal.setBookingButtonLabel}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     {BOOKING_LABELS.map((l) => (
-                      <SelectItem key={l.it} value={l.it}>{isIt ? l.it : l.en}</SelectItem>
+                      <SelectItem key={l.it} value={l.it}>{tx(l.en, l.it)}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -242,46 +232,44 @@ const ClientIntegrations = ({ embedded = false, clientIdOverride }: { embedded?:
                 className="w-full"
               >
                 {cal.saving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                {isIt ? "Salva" : "Save"}
+                {tx("Save", "Salva")}
               </Button>
             </div>
           ) : openId === "calendly" ? (
             <div className="space-y-5">
               <div className="space-y-2">
-                <Label>{isIt ? "URL Calendly" : "Calendly URL"}</Label>
+                <Label>{tx("Calendly URL", "URL Calendly")}</Label>
                 <Input
                   placeholder="https://calendly.com/tuonome/30min"
                   value={cal.calendlyUrl}
                   onChange={(e) => cal.setCalendlyUrl(e.target.value)}
                 />
                 <p className="text-xs text-muted-foreground">
-                  {isIt
-                    ? "Il bot proporrà la prenotazione quando non sa rispondere o quando l'utente chiede un appuntamento."
-                    : "The bot offers booking when it can't answer or when the user asks for an appointment."}
+                  {tx("The bot offers booking when it can't answer or when the user asks for an appointment.", "Il bot proporrà la prenotazione quando non sa rispondere o quando l'utente chiede un appuntamento.")}
                 </p>
               </div>
 
               <div className="space-y-2">
                 <Label className="text-xs text-muted-foreground">
-                  {isIt ? "Anteprima pulsante prenotazione" : "Booking button preview"}
+                  {tx("Booking button preview", "Anteprima pulsante prenotazione")}
                 </Label>
                 <div className="p-4 rounded-xl border border-border bg-muted/30 space-y-2">
                   <p className="text-xs text-muted-foreground">
-                    {isIt ? "Preferisci parlare con noi?" : "Prefer to talk to us?"}
+                    {tx("Prefer to talk to us?", "Preferisci parlare con noi?")}
                   </p>
                   <span
                     className="inline-flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium text-white"
                     style={{ backgroundColor: cal.primaryColor }}
                   >
                     <CalendarDays className="w-3.5 h-3.5" />
-                    {isIt ? "Prenota una chiamata" : "Book a call"}
+                    {tx("Book a call", "Prenota una chiamata")}
                   </span>
                 </div>
               </div>
 
               <Button onClick={() => cal.save()} disabled={cal.saving} className="w-full">
                 {cal.saving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                {isIt ? "Salva" : "Save"}
+                {tx("Save", "Salva")}
               </Button>
             </div>
           ) : (
@@ -301,7 +289,7 @@ const ClientIntegrations = ({ embedded = false, clientIdOverride }: { embedded?:
                     <div>
                       <Label>Storefront Access Token</Label>
                       <Input type="password" value={eco.storefrontToken} onChange={e => eco.setStorefrontToken(e.target.value)} />
-                      <p className="text-xs text-muted-foreground mt-1">{isIt ? "Necessario per creare acquisti reali dal chatbot: Shopify Admin → App → Sviluppa app → API Storefront → genera lo Storefront access token" : "Required for real purchases from the chatbot: Shopify Admin → Apps → Develop apps → Storefront API → generate the Storefront access token"}</p>
+                      <p className="text-xs text-muted-foreground mt-1">{tx("Required for real purchases from the chatbot: Shopify Admin → Apps → Develop apps → Storefront API → generate the Storefront access token", "Necessario per creare acquisti reali dal chatbot: Shopify Admin → App → Sviluppa app → API Storefront → genera lo Storefront access token")}</p>
                     </div>
                   </>
                 )}
@@ -314,14 +302,14 @@ const ClientIntegrations = ({ embedded = false, clientIdOverride }: { embedded?:
                 {openId === "api" && (
                   <>
                     <div><Label>Endpoint URL</Label><Input placeholder="https://api.miostore.it/products" value={eco.storeUrl} onChange={e => eco.setStoreUrl(e.target.value)} /></div>
-                    <div><Label>Bearer Token ({isIt ? "opzionale" : "optional"})</Label><Input type="password" value={eco.apiKey} onChange={e => eco.setApiKey(e.target.value)} /></div>
+                    <div><Label>Bearer Token ({tx("optional", "opzionale")})</Label><Input type="password" value={eco.apiKey} onChange={e => eco.setApiKey(e.target.value)} /></div>
                   </>
                 )}
                 {openId === "feed" && (
                   <>
                     <div><Label>Feed URL</Label><Input placeholder="https://miostore.it/feed/products.xml" value={eco.feedUrl} onChange={e => eco.setFeedUrl(e.target.value)} /></div>
                     <div>
-                      <Label>{isIt ? "Formato" : "Format"}</Label>
+                      <Label>{tx("Format", "Formato")}</Label>
                       <Select value={eco.feedFormat} onValueChange={eco.setFeedFormat}>
                         <SelectTrigger><SelectValue /></SelectTrigger>
                         <SelectContent>
@@ -338,12 +326,12 @@ const ClientIntegrations = ({ embedded = false, clientIdOverride }: { embedded?:
 
               <Button onClick={() => eco.save(openId as Platform)} disabled={eco.saving} className="w-full">
                 {eco.saving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                {isIt ? "Salva configurazione" : "Save configuration"}
+                {tx("Save configuration", "Salva configurazione")}
               </Button>
 
               {eco.configId && eco.savedPlatform === openId && (
                 <div className="space-y-4 pt-2 border-t border-border">
-                  <h3 className="text-sm font-semibold">{isIt ? "Sincronizzazione" : "Synchronization"}</h3>
+                  <h3 className="text-sm font-semibold">{tx("Synchronization", "Sincronizzazione")}</h3>
 
                   <div className="flex items-start gap-3 p-4 rounded-lg bg-muted/50">
                     {eco.syncStatus === "success" && <CheckCircle2 className="w-5 h-5 text-green-500 shrink-0" />}
@@ -352,38 +340,34 @@ const ClientIntegrations = ({ embedded = false, clientIdOverride }: { embedded?:
                     {eco.syncStatus === "idle" && <Clock className="w-5 h-5 text-muted-foreground shrink-0" />}
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium break-words">
-                        {eco.syncStatus === "success" && (isIt ? `Ultima sync: ${eco.lastSyncAt ? new Date(eco.lastSyncAt).toLocaleString("it-IT") : "-"}` : `Last sync: ${eco.lastSyncAt ? new Date(eco.lastSyncAt).toLocaleString() : "-"}`)}
-                        {eco.syncStatus === "error" && (isIt ? `Errore: ${eco.syncError}` : `Error: ${eco.syncError}`)}
-                        {eco.syncStatus === "syncing" && (isIt ? "Sincronizzazione in corso..." : "Syncing...")}
-                        {eco.syncStatus === "idle" && (isIt ? "Nessuna sincronizzazione effettuata" : "No sync performed yet")}
+                        {eco.syncStatus === "success" && (tx("Last sync: {0}", "Ultima sync: {0}", [eco.lastSyncAt ? new Date(eco.lastSyncAt).toLocaleString(appLocale()) : "-"]))}
+                        {eco.syncStatus === "error" && (tx("Error: {0}", "Errore: {0}", [eco.syncError]))}
+                        {eco.syncStatus === "syncing" && (tx("Syncing...", "Sincronizzazione in corso..."))}
+                        {eco.syncStatus === "idle" && (tx("No sync performed yet", "Nessuna sincronizzazione effettuata"))}
                       </p>
                       <p className="text-xs text-muted-foreground mt-1">
-                        📦 {isIt ? `Prodotti sincronizzati: ${eco.productCount}` : `Synced products: ${eco.productCount}`}
+                        📦 {tx("Synced products: {0}", "Prodotti sincronizzati: {0}", [eco.productCount])}
                       </p>
                     </div>
                   </div>
 
                   <Button onClick={eco.sync} disabled={eco.syncing} variant="outline" className="w-full">
                     <RefreshCw className={`w-4 h-4 mr-2 ${eco.syncing ? "animate-spin" : ""}`} />
-                    {isIt ? "Sincronizza ora" : "Sync now"}
+                    {tx("Sync now", "Sincronizza ora")}
                   </Button>
                   <p className="text-xs text-muted-foreground text-center">
                     {eco.maxProducts === -1
-                      ? (isIt ? "Prodotti illimitati" : "Unlimited products")
-                      : (isIt
-                          ? `${eco.productCount} / ${eco.maxProducts} prodotti sincronizzati`
-                          : `${eco.productCount} / ${eco.maxProducts} products synced`)}
+                      ? (tx("Unlimited products", "Prodotti illimitati"))
+                      : (tx("{0} / {1} products synced", "{0} / {1} prodotti sincronizzati", [eco.productCount, eco.maxProducts]))}
                   </p>
 
                   <div className="flex items-start justify-between gap-4 p-4 rounded-lg bg-muted/30">
                     <div className="space-y-1">
                       <Label className="text-sm font-medium">
-                        {isIt ? "Sincronizzazione automatica" : "Automatic synchronization"}
+                        {tx("Automatic synchronization", "Sincronizzazione automatica")}
                       </Label>
                       <p className="text-xs text-muted-foreground">
-                        {isIt
-                          ? "Se attiva, il catalogo viene riallineato automaticamente ogni 6 ore."
-                          : "When enabled, the catalog is refreshed automatically every 6 hours."}
+                        {tx("When enabled, the catalog is refreshed automatically every 6 hours.", "Se attiva, il catalogo viene riallineato automaticamente ogni 6 ore.")}
                       </p>
                     </div>
                     <Switch
@@ -407,24 +391,24 @@ const ClientIntegrations = ({ embedded = false, clientIdOverride }: { embedded?:
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2" style={{ fontFamily: "Syne, sans-serif" }}>
             <Plug className="w-6 h-6 text-primary" />
-            {isIt ? "Integrazioni" : "Integrations"}
+            {tx("Integrations", "Integrazioni")}
           </h1>
           <p className="text-muted-foreground text-sm mt-1">
-            {isIt ? "Collega i tuoi strumenti al chatbot" : "Connect your tools to the chatbot"}
+            {tx("Connect your tools to the chatbot", "Collega i tuoi strumenti al chatbot")}
           </p>
           {activeModule.id !== "general" && (
             <p className="mt-1 text-xs text-muted-foreground">
               <Link to="/dashboard/upgrade#setup" className="hover:text-foreground transition-colors">
-                {isIt ? "Hai bisogno di aiuto con il collegamento? Scopri il Setup professionale (€570, IVA inclusa)" : "Need help connecting? Discover the professional setup (€570, VAT included)"}
+                {tx("Need help connecting? Discover the professional setup (€570, VAT included)", "Hai bisogno di aiuto con il collegamento? Scopri il Setup professionale (€570, IVA inclusa)")}
               </Link>
             </p>
           )}
           {cal.botName && (
             <p className="text-xs text-muted-foreground mt-1">
-              {isIt ? "Integrazioni per: " : "Integrations for: "}
+              {tx("Integrations for: ", "Integrazioni per: ")}
               <span className="text-foreground font-medium">{cal.botName}</span>
               {" · "}
-              {isIt ? activeModule.name.it : activeModule.name.en}
+              {tx(activeModule.name.en, activeModule.name.it)}
             </p>
           )}
 
@@ -466,16 +450,16 @@ const ClientIntegrations = ({ embedded = false, clientIdOverride }: { embedded?:
                     <Badge variant="secondary" className="gap-1 text-[10px]">
                       {activeModule.id !== "general" && <Lock className="w-3 h-3" />}
                       {activeModule.id === "general"
-                        ? (isIt ? "Opzionale" : "Optional")
-                        : (isIt ? "Bloccato dal piano" : "Locked by plan")}
+                        ? (tx("Optional", "Opzionale"))
+                        : (tx("Locked by plan", "Bloccato dal piano"))}
                     </Badge>
                   ) : connected ? (
                     <Badge className="bg-green-600 hover:bg-green-600 text-[10px]">
-                      {isIt ? "Connesso" : "Connected"}
+                      {tx("Connected", "Connesso")}
                     </Badge>
                   ) : (
                     <Badge variant="secondary" className="text-[10px]">
-                      {isIt ? "Non connesso" : "Not connected"}
+                      {tx("Not connected", "Non connesso")}
                     </Badge>
                   )}
                 </button>
@@ -486,7 +470,7 @@ const ClientIntegrations = ({ embedded = false, clientIdOverride }: { embedded?:
       ))}
 
       <section className="space-y-3">
-        <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">{isIt ? "Canali" : "Channels"}</h2>
+        <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">{tx("Channels", "Canali")}</h2>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
           <Link to="/dashboard/instagram" className="rounded-xl border border-border bg-card p-4 text-left space-y-3 hover:border-primary/50 transition-colors">
             <div className="flex items-start justify-between gap-2">
@@ -497,12 +481,12 @@ const ClientIntegrations = ({ embedded = false, clientIdOverride }: { embedded?:
             </div>
             <div>
               <p className="font-semibold text-sm text-foreground">Instagram DM</p>
-              <p className="text-xs text-muted-foreground mt-0.5">{isIt ? "Risposte automatiche ai messaggi diretti" : "Automatic replies to direct messages"}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">{tx("Automatic replies to direct messages", "Risposte automatiche ai messaggi diretti")}</p>
             </div>
             {instagram.connected ? (
-              <p className="text-xs text-primary flex items-center gap-1"><CheckCircle2 className="w-3.5 h-3.5" />{isIt ? "Collegato" : "Connected"}{instagram.username ? ` @${instagram.username}` : ""}</p>
+              <p className="text-xs text-primary flex items-center gap-1"><CheckCircle2 className="w-3.5 h-3.5" />{tx("Connected", "Collegato")}{instagram.username ? ` @${instagram.username}` : ""}</p>
             ) : (
-              <span className="inline-flex h-8 items-center rounded-md border border-border px-3 text-xs font-medium">{isIt ? "Collega" : "Connect"}</span>
+              <span className="inline-flex h-8 items-center rounded-md border border-border px-3 text-xs font-medium">{tx("Connect", "Collega")}</span>
             )}
           </Link>
         </div>
@@ -511,7 +495,7 @@ const ClientIntegrations = ({ embedded = false, clientIdOverride }: { embedded?:
       {activeModule.id === "ecommerce" && eco.configId && eco.savedPlatform && canUseEcommerce && (
         <section className="space-y-3">
           <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-            {isIt ? "Sincronizzazione catalogo" : "Catalog synchronization"}
+            {tx("Catalog synchronization", "Sincronizzazione catalogo")}
           </h2>
           <div className="glass rounded-xl p-5 space-y-4 max-w-2xl">
             <div className="flex items-start gap-3">
@@ -521,14 +505,14 @@ const ClientIntegrations = ({ embedded = false, clientIdOverride }: { embedded?:
               {eco.syncStatus === "idle" && <Clock className="w-5 h-5 text-muted-foreground shrink-0" />}
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium break-words">
-                  {eco.syncStatus === "success" && (isIt ? `Ultima sync: ${eco.lastSyncAt ? new Date(eco.lastSyncAt).toLocaleString("it-IT") : "-"}` : `Last sync: ${eco.lastSyncAt ? new Date(eco.lastSyncAt).toLocaleString() : "-"}`)}
-                  {eco.syncStatus === "error" && (isIt ? `Errore: ${eco.syncError}` : `Error: ${eco.syncError}`)}
-                  {eco.syncStatus === "syncing" && (isIt ? "Sincronizzazione in corso..." : "Syncing...")}
-                  {eco.syncStatus === "idle" && (isIt ? "Nessuna sincronizzazione effettuata" : "No sync performed yet")}
+                  {eco.syncStatus === "success" && (tx("Last sync: {0}", "Ultima sync: {0}", [eco.lastSyncAt ? new Date(eco.lastSyncAt).toLocaleString(appLocale()) : "-"]))}
+                  {eco.syncStatus === "error" && (tx("Error: {0}", "Errore: {0}", [eco.syncError]))}
+                  {eco.syncStatus === "syncing" && (tx("Syncing...", "Sincronizzazione in corso..."))}
+                  {eco.syncStatus === "idle" && (tx("No sync performed yet", "Nessuna sincronizzazione effettuata"))}
                 </p>
                 <p className="text-xs text-muted-foreground mt-1">
                   📦 {eco.maxProducts === -1
-                    ? (isIt ? `${eco.productCount} prodotti (illimitati)` : `${eco.productCount} products (unlimited)`)
+                    ? (tx("{0} products (unlimited)", "{0} prodotti (illimitati)", [eco.productCount]))
                     : `${eco.productCount} / ${eco.maxProducts}`}
                 </p>
               </div>
@@ -538,20 +522,20 @@ const ClientIntegrations = ({ embedded = false, clientIdOverride }: { embedded?:
               <CollapsibleTrigger className="group flex w-full items-center justify-between rounded-lg px-1 py-2 text-xs font-medium text-muted-foreground hover:text-foreground">
                 <span className="flex items-center gap-2">
                   <History className="w-3.5 h-3.5" />
-                  {isIt ? "Cronologia sincronizzazioni" : "Sync history"}
+                  {tx("Sync history", "Cronologia sincronizzazioni")}
                 </span>
                 <ChevronDown className="w-3.5 h-3.5 transition-transform group-data-[state=open]:rotate-180" />
               </CollapsibleTrigger>
               <CollapsibleContent className="pt-1 space-y-2">
                 {eco.syncHistory.length === 0 && (
                   <p className="text-xs text-muted-foreground">
-                    {isIt ? "Nessuna sincronizzazione registrata" : "No sync recorded yet"}
+                    {tx("No sync recorded yet", "Nessuna sincronizzazione registrata")}
                   </p>
                 )}
                 {eco.syncHistory.map((log: any, i: number) => (
                   <div key={i} className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-muted/30 px-3 py-2">
                     <span className="text-xs text-muted-foreground">
-                      {log.started_at ? new Date(log.started_at).toLocaleString(isIt ? "it-IT" : undefined) : "-"}
+                      {log.started_at ? new Date(log.started_at).toLocaleString(appLocale()) : "-"}
                     </span>
                     <div className="flex items-center gap-3">
                       <span className="text-xs text-muted-foreground">
@@ -579,18 +563,16 @@ const ClientIntegrations = ({ embedded = false, clientIdOverride }: { embedded?:
 
             <Button onClick={eco.sync} disabled={eco.syncing} variant="outline" className="w-full">
               <RefreshCw className={`w-4 h-4 mr-2 ${eco.syncing ? "animate-spin" : ""}`} />
-              {isIt ? "Sincronizza ora" : "Sync now"}
+              {tx("Sync now", "Sincronizza ora")}
             </Button>
 
             <div className="flex items-start justify-between gap-4 p-4 rounded-lg bg-muted/30">
               <div className="space-y-1">
                 <Label className="text-sm font-medium">
-                  {isIt ? "Sincronizzazione automatica" : "Automatic synchronization"}
+                  {tx("Automatic synchronization", "Sincronizzazione automatica")}
                 </Label>
                 <p className="text-xs text-muted-foreground">
-                  {isIt
-                    ? "Se attiva, il catalogo viene riallineato automaticamente ogni 6 ore."
-                    : "When enabled, the catalog is refreshed automatically every 6 hours."}
+                  {tx("When enabled, the catalog is refreshed automatically every 6 hours.", "Se attiva, il catalogo viene riallineato automaticamente ogni 6 ore.")}
                 </p>
               </div>
               <Switch
@@ -602,7 +584,7 @@ const ClientIntegrations = ({ embedded = false, clientIdOverride }: { embedded?:
           </div>
 
           <div className="glass rounded-xl p-5 space-y-4">
-            <h3 className="text-sm font-semibold">{isIt ? "Prodotti sincronizzati" : "Synced products"}</h3>
+            <h3 className="text-sm font-semibold">{tx("Synced products", "Prodotti sincronizzati")}</h3>
             <ProductCatalogList refreshKey={eco.productCount} />
           </div>
         </section>
@@ -613,11 +595,11 @@ const ClientIntegrations = ({ embedded = false, clientIdOverride }: { embedded?:
 
       {moduleIntegrations.length > 0 && <section className="space-y-3">
         <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-2">
-          {isIt ? "Altro" : "More"}
-          <Badge variant="secondary" className="text-[10px]">{isIt ? "Prossimamente" : "Coming soon"}</Badge>
+          {tx("More", "Altro")}
+          <Badge variant="secondary" className="text-[10px]">{tx("Coming soon", "Prossimamente")}</Badge>
         </h2>
         <div className="p-6 rounded-xl border border-dashed border-border text-sm text-muted-foreground">
-          {isIt ? "Nuovi connettori in arrivo." : "New connectors coming soon."}
+          {tx("New connectors coming soon.", "Nuovi connettori in arrivo.")}
         </div>
       </section>}
 

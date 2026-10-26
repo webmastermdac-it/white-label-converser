@@ -4,7 +4,7 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pi
 import { ArrowDownRight, ArrowUpRight, Loader2, MessageSquare, FileText, MousePointerClick, Euro, Moon, TrendingUp } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useActiveModule } from "@/hooks/useActiveModule";
-import { useLanguage } from "@/hooks/useLanguage";
+import { useLanguage, tx, appLocale } from "@/hooks/useLanguage";
 import { normalizeHotelProfile, type HotelProfile } from "@/lib/hotelProfile";
 import { Button } from "@/components/ui/button";
 
@@ -35,8 +35,8 @@ function quoteValue(b: any, hp: HotelProfile) {
 const pctChange = (cur: number, prev: number) => (prev === 0 ? (cur > 0 ? null : 0) : Math.round(((cur - prev) / prev) * 100));
 
 const HotelResults = ({ botIdOverride }: { botIdOverride?: string } = {}) => {
-  const { lang } = useLanguage();
-  const tl = (it: string, en: string) => (lang === "it" ? it : en);
+  const { contentLang } = useLanguage();
+  const tl = (it: string, en: string) => tx(en, it);
   const { botId: activeBotId } = useActiveModule();
   const botId = botIdOverride ?? activeBotId;
   const [days, setDays] = useState(30);
@@ -90,7 +90,7 @@ const HotelResults = ({ botIdOverride }: { botIdOverride?: string } = {}) => {
       const d = daily[romeDay.format(new Date(x.started_at))];
       if (d) isOutOfHours(x.started_at, open, close) ? d.out++ : d.in++;
     });
-    const langNames = new Intl.DisplayNames([lang], { type: "language" });
+    const langNames = new Intl.DisplayNames([contentLang], { type: "language" });
     const langCount: Record<string, number> = {};
     S.cur.forEach((x) => { const c = (x.language || "?").slice(0, 2).toLowerCase(); langCount[c] = (langCount[c] || 0) + 1; });
     const langs = Object.entries(langCount).sort((a, b) => b[1] - a[1]).map(([c, v]) => {
@@ -102,7 +102,7 @@ const HotelResults = ({ botIdOverride }: { botIdOverride?: string } = {}) => {
     const cats = Object.entries(catCount).sort((a, b) => b[1] - a[1]).map(([name, value]) => ({ name, value }));
     const resolved = R.cur.filter((x) => x.resolved_at);
     const avgRes = resolved.length ? Math.round(resolved.reduce((a, x) => a + (new Date(x.resolved_at!).getTime() - new Date(x.created_at).getTime()), 0) / resolved.length / 60000) : null;
-    const monthFmt = new Intl.DateTimeFormat(lang, { month: "short", year: "2-digit" });
+    const monthFmt = new Intl.DateTimeFormat(contentLang, { month: "short", year: "2-digit" });
     const monthCount: Record<string, { name: string; value: number }> = {};
     L.cur.forEach((x) => {
       const ci = x.booking?.check_in; if (!ci) return;
@@ -118,20 +118,17 @@ const HotelResults = ({ botIdOverride }: { botIdOverride?: string } = {}) => {
       value: [val(L.cur), val(L.prev)], ooh: [ooh(S.cur), ooh(S.prev)],
       daily: Object.values(daily), langs, cats, avgRes, months, requests: R.cur.length,
     };
-  }, [sessions, leads, events, reqs, hp, days, lang]);
+  }, [sessions, leads, events, reqs, hp, days, contentLang]);
 
   const hasData = stats.conv[0] + stats.quotes[0] + stats.clicks[0] + stats.requests > 0;
-  const eur = (n: number) => new Intl.NumberFormat(lang === "it" ? "it-IT" : "en-GB", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(n);
+  const eur = (n: number) => new Intl.NumberFormat(appLocale(), { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(n);
 
-  const summary = tl(
-    `In ${days} giorni il concierge ha gestito ${stats.conv[0]} conversazioni, ${stats.ooh[0]}% fuori orario, e ha portato ${stats.clicks[0]} ospiti sul tuo booking engine.`,
-    `In ${days} days the concierge handled ${stats.conv[0]} conversations, ${stats.ooh[0]}% outside reception hours, and sent ${stats.clicks[0]} guests to your booking engine.`,
-  );
+  const summary = tx("In {0} days the concierge handled {1} conversations, {2}% outside reception hours, and sent {3} guests to your booking engine.", "In {0} giorni il concierge ha gestito {1} conversazioni, {2}% fuori orario, e ha portato {3} ospiti sul tuo booking engine.", [days, stats.conv[0], stats.ooh[0], stats.clicks[0]]);
 
   const kpis = [
     { icon: MessageSquare, label: tl("Conversazioni", "Conversations"), v: stats.conv, fmt: String },
     { icon: FileText, label: tl("Preventivi richiesti", "Quotes requested"), v: stats.quotes, fmt: String },
-    { icon: MousePointerClick, label: tl("Clic \"Verifica disponibilità\"", "\"Check availability\" clicks"), v: stats.clicks, fmt: String, sub: tl(`${stats.clickRate[0]}% dei preventivi`, `${stats.clickRate[0]}% of quotes`) },
+    { icon: MousePointerClick, label: tl("Clic \"Verifica disponibilità\"", "\"Check availability\" clicks"), v: stats.clicks, fmt: String, sub: tx("{0}% of quotes", "{0}% dei preventivi", [stats.clickRate[0]]) },
     { icon: Euro, label: tl("Valore preventivi", "Quote value"), v: stats.value, fmt: eur, sub: tl("stima", "estimate") },
     { icon: Moon, label: tl("Fuori orario reception", "Outside reception hours"), v: stats.ooh, fmt: (n: number) => `${n}%`, sub: `${hp.property.reception_open}–${hp.property.reception_close}` },
   ];
@@ -154,7 +151,7 @@ const HotelResults = ({ botIdOverride }: { botIdOverride?: string } = {}) => {
         </div>
         <div className="flex gap-2">
           {[7, 30, 90].map((d) => (
-            <Button key={d} size="sm" variant={days === d ? "default" : "outline"} onClick={() => setDays(d)}>{tl(`${d} giorni`, `${d} days`)}</Button>
+            <Button key={d} size="sm" variant={days === d ? "default" : "outline"} onClick={() => setDays(d)}>{tx("{0} days", "{0} giorni", [d])}</Button>
           ))}
         </div>
       </div>

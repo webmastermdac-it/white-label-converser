@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useLanguage } from "@/hooks/useLanguage";
+import { useLanguage, tx } from "@/hooks/useLanguage";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -27,7 +27,6 @@ const plans = ["starter", "pro", "enterprise"];
 const AdminClients = () => {
   const { toast } = useToast();
   const { t, lang } = useLanguage();
-  const isIt = lang === "it";
   const [clients, setClients] = useState<Client[]>([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
@@ -133,10 +132,10 @@ const AdminClients = () => {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>{isIt ? "Tipo di bot" : "Bot type"}</Label>
+                <Label>{tx("Bot type", "Tipo di bot")}</Label>
                 <Select value={form.business_vertical} onValueChange={(v) => setForm({ ...form, business_vertical: v })}>
                   <SelectTrigger className="bg-secondary border-border">
-                    <SelectValue placeholder={isIt ? "Tipo di bot" : "Bot type"} />
+                    <SelectValue placeholder={tx("Bot type", "Tipo di bot")} />
                   </SelectTrigger>
                   <SelectContent className="bg-card border-border">
                     {MODULE_IDS.map((id) => (

@@ -8,7 +8,7 @@ const state = vi.hoisted(() => ({
 }));
 vi.mock("@/hooks/useActiveModule", () => ({ useActiveModule: () => ({ botId: "hotel-1" }) }));
 vi.mock("@/hooks/usePlanConfig", () => ({ usePlanConfig: () => ({ canUseConciergeRequests: true, loading: false }) }));
-vi.mock("@/hooks/useLanguage", () => ({ useLanguage: () => ({ lang: "it" }) }));
+vi.mock("@/hooks/useLanguage", () => ({ useLanguage: () => ({ lang: "it", contentLang: "it" }), tx: (_en: string, it: string, vars?: unknown[]) => (vars ? it.replace(/\{(\d+)\}/g, (_m, i) => String(vars[Number(i)])) : it), appLocale: () => "it-IT", getAppLang: () => "it" }));
 vi.mock("@/integrations/supabase/client", () => ({ supabase: {
   from: () => {
     const query = {

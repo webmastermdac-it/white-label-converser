@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { useLanguage } from "@/hooks/useLanguage";
+import { useLanguage, tx } from "@/hooks/useLanguage";
 import { usePlanConfig } from "@/hooks/usePlanConfig";
 import { toast } from "@/hooks/use-toast";
 
@@ -17,7 +17,6 @@ export function useEcommerceIntegration(clientIdOverride?: string | null) {
   const clientId = clientIdOverride ?? authClientId;
   const { lang } = useLanguage();
   const { config: planConfig } = usePlanConfig();
-  const isIt = lang === "it";
 
   const [platform, setPlatform] = useState<Platform>("woocommerce");
   const [storeUrl, setStoreUrl] = useState("");
@@ -117,7 +116,7 @@ export function useEcommerceIntegration(clientIdOverride?: string | null) {
         if (data) setConfigId((data as any).id);
         setSavedPlatform(record.platform);
       }
-      toast({ title: isIt ? "Configurazione salvata!" : "Configuration saved!" });
+      toast({ title: tx("Configuration saved!", "Configurazione salvata!") });
     } catch (e: any) {
       toast({ title: "Error", description: e.message, variant: "destructive" });
     }
@@ -150,10 +149,8 @@ export function useEcommerceIntegration(clientIdOverride?: string | null) {
       setLastSyncAt(new Date().toISOString());
       setSyncError(null);
       toast({
-        title: isIt ? "Sincronizzazione completata" : "Sync completed",
-        description: isIt
-          ? `${data.synced} aggiunti, ${data.updated} aggiornati, ${data.removed} rimossi`
-          : `${data.synced} added, ${data.updated} updated, ${data.removed} removed`,
+        title: tx("Sync completed", "Sincronizzazione completata"),
+        description: tx("{0} added, {1} updated, {2} removed", "{0} aggiunti, {1} aggiornati, {2} rimossi", [data.synced, data.updated, data.removed]),
       });
       loadProductCount();
       loadSyncHistory();
@@ -186,11 +183,11 @@ export function useEcommerceIntegration(clientIdOverride?: string | null) {
     }
     toast({
       title: checked
-        ? (isIt ? "Sincronizzazione automatica attiva" : "Automatic sync enabled")
-        : (isIt ? "Sincronizzazione automatica disattivata" : "Automatic sync disabled"),
+        ? (tx("Automatic sync enabled", "Sincronizzazione automatica attiva"))
+        : (tx("Automatic sync disabled", "Sincronizzazione automatica disattivata")),
       description: checked
-        ? (isIt ? "Il catalogo verrà aggiornato ogni 6 ore." : "The catalog will refresh every 6 hours.")
-        : (isIt ? "Potrai sempre sincronizzare manualmente." : "You can still sync manually."),
+        ? (tx("The catalog will refresh every 6 hours.", "Il catalogo verrà aggiornato ogni 6 ore."))
+        : (tx("You can still sync manually.", "Potrai sempre sincronizzare manualmente.")),
     });
   };
 

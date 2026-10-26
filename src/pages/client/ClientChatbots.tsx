@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { useLanguage } from "@/hooks/useLanguage";
+import { useLanguage, tx } from "@/hooks/useLanguage";
 import { usePlanConfig } from "@/hooks/usePlanConfig";
 import { useWidgetUrl } from "@/hooks/useWidgetUrl";
 import { useNavigate } from "react-router-dom";
@@ -45,7 +45,7 @@ const ClientChatbots = () => {
   const [newModule, setNewModule] = useState<ModuleId | null>(null);
   const [creating, setCreating] = useState(false);
 
-  const tl = (it: string, en: string) => lang === "it" ? it : en;
+  const tl = (it: string, en: string) => tx(en, it);
 
   const fetchBots = async () => {
     if (!clientId) return;
@@ -108,7 +108,7 @@ const ClientChatbots = () => {
       setNewModule(null);
       navigate(`/dashboard/bots/${data.id}`);
     } catch (err: any) {
-      toast({ title: "Error", description: err.message, variant: "destructive" });
+      toast({ title: tx("Error", "Errore"), description: err.message, variant: "destructive" });
     }
     setCreating(false);
   };
@@ -125,13 +125,13 @@ const ClientChatbots = () => {
   };
 
   const handleDelete = async (bot: ChatbotCard) => {
-    if (!confirm(tl(`Eliminare il chatbot "${bot.name}" e tutti i dati associati?`, `Delete chatbot "${bot.name}" and all associated data?`))) return;
+    if (!confirm(tx("Delete chatbot \"{0}\" and all associated data?", "Eliminare il chatbot \"{0}\" e tutti i dati associati?", [bot.name]))) return;
     try {
       await supabase.from("chatbot_configs").delete().eq("id", bot.id);
       toast({ title: "✅", description: tl("Chatbot eliminato", "Chatbot deleted") });
       fetchBots();
     } catch (err: any) {
-      toast({ title: "Error", description: err.message, variant: "destructive" });
+      toast({ title: tx("Error", "Errore"), description: err.message, variant: "destructive" });
     }
   };
 
