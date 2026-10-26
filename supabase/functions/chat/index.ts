@@ -1,3 +1,4 @@
+import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { buildHotelContext } from "./hotelContext.ts";
@@ -7,10 +8,7 @@ import {
   renderCustomTemplate, replaceSubjectVars, resolveClientOwnerLocale,
 } from "../_shared/email-template.ts";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
-};
+
 
 const MODEL_MAP: Record<string, string> = {
   "gpt-4o-mini": "openai/gpt-5-mini",
@@ -264,9 +262,33 @@ serve(async (req) => {
         : "";
 
     // ── Hotel concierge (only for business_vertical = "hotel") ──
-    const hotelContext = botConfig.business_vertical === "hotel"
+    let hotelContext = botConfig.business_vertical === "hotel"
       ? buildHotelContext((botConfig as any).hotel_profile, conversationalLead, safeRoom, baseLang)
       : "";
+    const staySummaryEnabled = botConfig.business_vertical === "hotel" && !safeRoom && !conversationalLead;
+    if (hotelContext) {
+      // The shared hotel context stays untouched; extend only this chat prompt.
+      const hp = (botConfig as any).hotel_profile || {};
+      const roomStart = hotelContext.indexOf("ROOMS\n");
+      if (roomStart !== -1) {
+        const roomEnd = hotelContext.indexOf("\n\n", roomStart);
+        const end = roomEnd === -1 ? hotelContext.length : roomEnd;
+        const roomBlock = hotelContext.slice(roomStart, end).split("\n").map((line: string) => {
+          const r = (Array.isArray(hp.rooms) ? hp.rooms : []).find((x: any) => {
+            const name = String(x?.name || "").trim();
+            return name && (line === `- ${name}` || line.startsWith(`- ${name}:`) || line.startsWith(`- ${name} (`));
+          });
+          return r?.id ? `${line} [room_id: ${String(r.id)}]` : line;
+        }).join("\n");
+        hotelContext = hotelContext.slice(0, roomStart) + roomBlock + hotelContext.slice(end);
+      }
+      if (staySummaryEnabled) {
+        hotelContext = hotelContext.replace(
+          "If the guest asks about availability or a quote, first ask naturally (if not already given) for arrival and departure dates and the number of adults and children, then append the marker [TRIGGER_LEAD_FORM] on its own final line so they can send the stay request.",
+          `Quando l'ospite chiede un soggiorno o disponibilità, raccogli, se mancanti, date di arrivo e partenza, adulti e bambini (al massimo una domanda per messaggio). Quando hai tutti questi dati, scrivi una frase breve che presenta un riepilogo della richiesta, non una conferma né un prezzo finale; non usare la parola "preventivo". Aggiungi sull'ultima riga [STAY_SUMMARY:{"check_in":"YYYY-MM-DD","check_out":"YYYY-MM-DD","adults":N,"children":N,"room_id":"<id camera del profilo o stringa vuota>"}]. Usa le date ISO reali, partenza dopo arrivo, arrivo non precedente a oggi (${new Date().toISOString().slice(0, 10)}), adulti 1-30 e bambini 0-30. La durata in notti determina la partenza se l'arrivo è noto. Usa solo room_id presenti nel profilo, oppure stringa vuota se non è stata scelta una camera. In questo caso non emettere [TRIGGER_LEAD_FORM]. Il riepilogo non invia nulla: l'ospite può inviare la richiesta con il pulsante della card.`
+        );
+      }
+    }
 
     const instructions = botConfig.knowledge_base || "You are a helpful assistant.";
     const toneBlock = (botConfig as any).tone_of_voice?.trim() ? `## Tono di voce\n${(botConfig as any).tone_of_voice.trim()}\n\n` : "";
@@ -352,6 +374,7 @@ serve(async (req) => {
         .replace("[TRIGGER_LEAD_FORM]", "")
         .replace(/\[LEAD_DATA:\{[\s\S]*?\}\]/g, "")
         .replace(/\[SERVICE_REQUEST:\{[\s\S]*?\}\]/g, "")
+        .replace(/\[STAY_SUMMARY:\{[\s\S]*?\}\]/g, "")
         .replace(/\[ADD_TO_CART:.*?\]/g, "");
 
     async function postProcess(fullMessage: string) {
@@ -436,14 +459,15 @@ serve(async (req) => {
       }
 
       const cleanMessage = stripMarkers(fullMessage).trim() + cartLinkMarkdown;
-      const triggerLead = !conversationalLead && fullMessage.indexOf("[TRIGGER_LEAD_FORM]") !== -1;
+      const stayMarker = staySummaryEnabled ? (fullMessage.match(/\[STAY_SUMMARY:\{[\s\S]*?\}\]/)?.[0] || "") : "";
+      const triggerLead = !conversationalLead && !stayMarker && fullMessage.indexOf("[TRIGGER_LEAD_FORM]") !== -1;
 
       // Save session in background
       if (session_token) {
         saveSession(supabase, session_token, botConfig, [...messages, { role: "assistant", content: cleanMessage }], source_url, lang, conversationalLead && leadAlreadyCaptured);
       }
 
-      return { cleanMessage, triggerLead };
+      return { cleanMessage, triggerLead, stayMarker };
     }
 
     // ══════════════════════════════════════════════════════
@@ -511,7 +535,7 @@ serve(async (req) => {
 
             console.log(`[chat] ⏱ AI call (stream complete): ${Date.now() - tAi}ms`);
 
-            const { cleanMessage } = await postProcess(acc);
+            const { cleanMessage, triggerLead, stayMarker } = await postProcess(acc);
             if (cleanMessage.startsWith(sent)) {
               const tail = cleanMessage.slice(sent.length);
               if (tail) controller.enqueue(sseChunk(tail));
@@ -519,9 +543,10 @@ serve(async (req) => {
               controller.enqueue(sseChunk(cleanMessage.slice(stripMarkers(acc).trim().length)));
             }
             // Preserve the lead-form trigger: the widget detects this marker in the stream
-            if (!conversationalLead && acc.indexOf("[TRIGGER_LEAD_FORM]") !== -1) {
+            if (triggerLead) {
               controller.enqueue(sseChunk("[TRIGGER_LEAD_FORM]"));
             }
+            if (stayMarker) controller.enqueue(sseChunk(stayMarker));
             controller.enqueue(encoder.encode("data: [DONE]\n\n"));
             console.log(`[chat] ⏱ total request: ${Date.now() - tStart}ms`);
           } catch (streamErr) {
@@ -586,11 +611,11 @@ serve(async (req) => {
     console.log(`[chat] ⏱ AI call (non-streaming, incl. tools): ${Date.now() - tAi}ms`);
 
     const fullMessage = aiMessage?.content || "";
-    const { cleanMessage, triggerLead } = await postProcess(fullMessage);
+    const { cleanMessage, triggerLead, stayMarker } = await postProcess(fullMessage);
     console.log(`[chat] ⏱ total request: ${Date.now() - tStart}ms`);
 
     return jsonResp({
-      message: cleanMessage,
+      message: cleanMessage + (stayMarker ? "\n" + stayMarker : ""),
       source: (faqSource || responseSource) as ResponseSource,
       trigger_lead_form: triggerLead,
     });
