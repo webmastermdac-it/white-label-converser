@@ -4,7 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage, tx } from "@/hooks/useLanguage";
 import { usePlanConfig } from "@/hooks/usePlanConfig";
 import { useActiveModule } from "@/hooks/useActiveModule";
-import { playNotice, SERVICE_REQUEST_SOUND_KEY } from "@/lib/playNotice";
+import { playNotice, soundEnabled, SERVICE_REQUEST_SOUND_KEY } from "@/lib/playNotice";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -23,7 +23,7 @@ const ClientSidebar = ({ openRequests, requestsEnabled, lampEnabled, onLampChang
   onLampChange: (next: boolean) => void;
 }) => {
   const [collapsed, setCollapsed] = useState(false);
-  const [sound, setSound] = useState(() => localStorage.getItem(SERVICE_REQUEST_SOUND_KEY) === "true");
+  const [sound, setSound] = useState(() => soundEnabled());
   const { user, signOut, role } = useAuth();
   const { lang, t } = useLanguage();
   const { canUseEcommerce, canUseCalendly, config: planConfig } = usePlanConfig();

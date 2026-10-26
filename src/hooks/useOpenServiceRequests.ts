@@ -2,7 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useActiveModule } from "@/hooks/useActiveModule";
 import { usePlanConfig } from "@/hooks/usePlanConfig";
-import { playNotice, SERVICE_REQUEST_SOUND_KEY } from "@/lib/playNotice";
+import { toast } from "sonner";
+import { playNotice, soundEnabled } from "@/lib/playNotice";
 
 /** Open service requests of the active hotel bot, live via Realtime. */
 export function useOpenServiceRequests(canPlaySound: () => boolean = () => true) {
@@ -37,13 +38,22 @@ export function useOpenServiceRequests(canPlaySound: () => boolean = () => true)
     };
     void load();
     const channel = supabase.channel(`sidebar-requests-${botId}`)
-      .on("postgres_changes", { event: "INSERT", schema: "public", table: "service_requests", filter: `bot_id=eq.${botId}` }, () => {
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "service_requests", filter: `bot_id=eq.${botId}` }, (payload) => {
+        const row = (payload?.new ?? {}) as { category?: string; room?: string | null };
+        // Show it right away; load() below reconciles with the database.
+        setCount((c) => c + 1);
+        if (/^problema/i.test((row.category || "").trim())) setUrgent(true);
+        toast.info(`${row.category || "Nuova richiesta"}${row.room ? ` · ${row.room}` : ""}`, { description: "Nuova richiesta da un ospite" });
         void load();
-        if (soundAllowed.current() && localStorage.getItem(SERVICE_REQUEST_SOUND_KEY) === "true") playNotice();
+        if (soundAllowed.current() && soundEnabled()) playNotice();
       })
       .on("postgres_changes", { event: "UPDATE", schema: "public", table: "service_requests", filter: `bot_id=eq.${botId}` }, () => { void load(); })
       .subscribe();
-    return () => { active = false; void supabase.removeChannel(channel); };
+    // Safety net: if the realtime connection silently drops, still catch up.
+    const poll = window.setInterval(() => { if (document.visibilityState === "visible") void load(); }, 30000);
+    const onVisible = () => { if (document.visibilityState === "visible") void load(); };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => { active = false; window.clearInterval(poll); document.removeEventListener("visibilitychange", onVisible); void supabase.removeChannel(channel); };
   }, [botId, enabled]);
 
   return { count, urgent, enabled };
