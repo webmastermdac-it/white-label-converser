@@ -9,7 +9,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Lock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useLanguage } from "@/hooks/useLanguage";
+import { useLanguage, tx } from "@/hooks/useLanguage";
 
 interface UpgradeModalProps {
   open: boolean;
@@ -21,22 +21,17 @@ interface UpgradeModalProps {
 export function UpgradeModal({ open, onClose, requiredPlan = "starter", variant = "default" }: UpgradeModalProps) {
   const navigate = useNavigate();
   const { lang } = useLanguage();
-  const isIt = lang === "it";
   const planLabel = requiredPlan === "pro" ? "Pro" : "Starter";
 
   const isRag = variant === "rag";
 
   const title = isRag
     ? "🔒 Funzionalità Premium"
-    : isIt ? "Funzionalità non disponibile" : "Feature not available";
+    : tx("Feature not available", "Funzionalità non disponibile");
 
   const description = isRag
-    ? (isIt
-        ? `La Ricerca Avanzata (RAG) e il caricamento documenti sono disponibili con il piano ${planLabel}. Passa a ${planLabel} per addestrare il tuo chatbot sui tuoi documenti aziendali.`
-        : `Advanced Search (RAG) and document upload are available on the ${planLabel} plan. Upgrade to ${planLabel} to train your chatbot on your business documents.`)
-    : (isIt
-        ? `Questa funzione è disponibile dal piano ${planLabel}. Fai upgrade per sbloccarla.`
-        : `This feature is available on the ${planLabel} plan. Upgrade to unlock it.`);
+    ? (tx("Advanced Search (RAG) and document upload are available on the {0} plan. Upgrade to {0} to train your chatbot on your business documents.", "La Ricerca Avanzata (RAG) e il caricamento documenti sono disponibili con il piano {0}. Passa a {0} per addestrare il tuo chatbot sui tuoi documenti aziendali.", [planLabel]))
+    : (tx("This feature is available on the {0} plan. Upgrade to unlock it.", "Questa funzione è disponibile dal piano {0}. Fai upgrade per sbloccarla.", [planLabel]));
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
@@ -60,7 +55,7 @@ export function UpgradeModal({ open, onClose, requiredPlan = "starter", variant 
               navigate("/dashboard/upgrade");
             }}
           >
-            {isIt ? `Passa a ${planLabel} →` : `Upgrade to ${planLabel} →`}
+            {tx("Upgrade to {0} →", "Passa a {0} →", [planLabel])}
           </Button>
           <Button
             variant="outline"
@@ -70,10 +65,10 @@ export function UpgradeModal({ open, onClose, requiredPlan = "starter", variant 
               navigate("/dashboard/upgrade");
             }}
           >
-            {isIt ? "Scopri tutti i piani →" : "See all plans →"}
+            {tx("See all plans →", "Scopri tutti i piani →")}
           </Button>
           <Button variant="ghost" className="w-full" onClick={onClose}>
-            {isIt ? "Non ora" : "Not now"}
+            {tx("Not now", "Non ora")}
           </Button>
         </DialogFooter>
       </DialogContent>

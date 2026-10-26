@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { FunctionsHttpError } from "@supabase/supabase-js";
 import { useAuth } from "@/contexts/AuthContext";
-import { useLanguage } from "@/hooks/useLanguage";
+import { useLanguage, tx } from "@/hooks/useLanguage";
 import { usePlan } from "@/hooks/usePlan";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -53,7 +53,7 @@ const SetupServiceCard = ({ isIt }: { isIt: boolean }) => {
       const t = setTimeout(loadStatus, 4000);
       setTimeout(() => clearTimeout(t), 5000);
     } else if (s === "cancel") {
-      toast({ title: isIt ? "Pagamento annullato, nessun addebito." : "Payment cancelled, no charge made." });
+      toast({ title: tx("Payment cancelled, no charge made.", "Pagamento annullato, nessun addebito.") });
     }
     const next = new URLSearchParams(searchParams);
     next.delete("setup");
@@ -62,16 +62,16 @@ const SetupServiceCard = ({ isIt }: { isIt: boolean }) => {
   }, []);
 
   const statusMessages: Record<string, string> = {
-    paid: isIt ? "Pagamento ricevuto. Ti contatteremo a breve al numero indicato." : "Payment received. We'll contact you shortly at the number provided.",
-    contacted: isIt ? "Ti abbiamo contattato: controlla la tua email/telefono." : "We've contacted you: check your email/phone.",
-    in_progress: isIt ? "Il tuo setup è in lavorazione." : "Your setup is in progress.",
-    completed: isIt ? "Setup completato. Grazie!" : "Setup completed. Thank you!",
+    paid: tx("Payment received. We'll contact you shortly at the number provided.", "Pagamento ricevuto. Ti contatteremo a breve al numero indicato."),
+    contacted: tx("We've contacted you: check your email/phone.", "Ti abbiamo contattato: controlla la tua email/telefono."),
+    in_progress: tx("Your setup is in progress.", "Il tuo setup è in lavorazione."),
+    completed: tx("Setup completed. Thank you!", "Setup completato. Grazie!"),
   };
 
   const submit = async () => {
     const p = phone.trim();
     if (p.length < 6) {
-      setPhoneError(isIt ? "Inserisci un numero di telefono valido (minimo 6 caratteri)." : "Enter a valid phone number (at least 6 characters).");
+      setPhoneError(tx("Enter a valid phone number (at least 6 characters).", "Inserisci un numero di telefono valido (minimo 6 caratteri)."));
       return;
     }
     setPhoneError(null);
@@ -89,36 +89,38 @@ const SetupServiceCard = ({ isIt }: { isIt: boolean }) => {
       }
       if (data?.url) window.location.href = data.url;
     } catch (err: any) {
-      toast({ title: isIt ? "Impossibile avviare il pagamento" : "Unable to start payment", description: err.message, variant: "destructive" });
+      toast({ title: tx("Unable to start payment", "Impossibile avviare il pagamento"), description: err.message, variant: "destructive" });
     } finally {
       setLoading(false);
     }
   };
 
-  const items = isIt
-    ? ["Contatto e analisi delle tue esigenze", "Installazione del widget sul tuo sito", "Configurazione di prompt, FAQ e knowledge base", "Test insieme a te", "Consigli su tone of voice e utilizzo"]
-    : ["Contact and analysis of your needs", "Widget installation on your website", "Prompt, FAQ and knowledge base setup", "Testing together with you", "Tips on tone of voice and usage"];
+  const items = [
+    tx("Contact and analysis of your needs", "Contatto e analisi delle tue esigenze"),
+    tx("Widget installation on your website", "Installazione del widget sul tuo sito"),
+    tx("Prompt, FAQ and knowledge base setup", "Configurazione di prompt, FAQ e knowledge base"),
+    tx("Testing together with you", "Test insieme a te"),
+    tx("Tips on tone of voice and usage", "Consigli su tone of voice e utilizzo"),
+  ];
 
   return (
     <div id="setup" className="glass scroll-mt-6 rounded-2xl p-6 border border-dashed border-primary/40">
       {justPaid && (
         <div className="mb-4 flex items-center gap-2 rounded-lg border border-primary/40 bg-primary/10 p-3 text-sm text-foreground">
           <CheckCircle2 className="w-4 h-4 text-primary shrink-0" />
-          {isIt ? "Grazie! Pagamento ricevuto, ti contatteremo a breve." : "Thank you! Payment received, we'll contact you shortly."}
+          {tx("Thank you! Payment received, we'll contact you shortly.", "Grazie! Pagamento ricevuto, ti contatteremo a breve.")}
         </div>
       )}
       <div className="grid gap-6 md:grid-cols-2">
         <div className="space-y-3">
           <div className="flex items-center gap-2 flex-wrap">
             <Wrench className="w-5 h-5 text-primary" />
-            <h2 className="text-xl font-bold text-foreground">{isIt ? "Setup professionale" : "Professional setup"}</h2>
-            <Badge variant="outline">{isIt ? "Facoltativo" : "Optional"}</Badge>
+            <h2 className="text-xl font-bold text-foreground">{tx("Professional setup", "Setup professionale")}</h2>
+            <Badge variant="outline">{tx("Optional", "Facoltativo")}</Badge>
           </div>
-          <p className="text-lg font-semibold text-primary">{isIt ? "€570 una tantum · IVA inclusa" : "€570 one-off · VAT included"}</p>
+          <p className="text-lg font-semibold text-primary">{tx("€570 one-off · VAT included", "€570 una tantum · IVA inclusa")}</p>
           <p className="text-sm text-muted-foreground">
-            {isIt
-              ? "Vuoi essere sicuro di partire con una configurazione ottimizzata e professionale? Ti contattiamo, installiamo il chatbot, lo configuriamo e lo testiamo insieme a te. Ti diamo anche consigli su tone of voice e su come farlo rendere al meglio. Se preferisci, puoi configurarlo da solo in autonomia."
-              : "Want to be sure you start with an optimized, professional setup? We contact you, install the chatbot, configure it and test it together with you. We also give you tips on tone of voice and how to get the most out of it. If you prefer, you can set it up yourself."}
+            {tx("Want to be sure you start with an optimized, professional setup? We contact you, install the chatbot, configure it and test it together with you. We also give you tips on tone of voice and how to get the most out of it. If you prefer, you can set it up yourself.", "Vuoi essere sicuro di partire con una configurazione ottimizzata e professionale? Ti contattiamo, installiamo il chatbot, lo configuriamo e lo testiamo insieme a te. Ti diamo anche consigli su tone of voice e su come farlo rendere al meglio. Se preferisci, puoi configurarlo da solo in autonomia.")}
           </p>
           <ul className="space-y-1.5 text-sm">
             {items.map((f) => (
@@ -127,7 +129,7 @@ const SetupServiceCard = ({ isIt }: { isIt: boolean }) => {
               </li>
             ))}
           </ul>
-          <p className="text-xs text-muted-foreground">{isIt ? "Disponibile con qualsiasi piano, anche Free." : "Available with any plan, including Free."}</p>
+          <p className="text-xs text-muted-foreground">{tx("Available with any plan, including Free.", "Disponibile con qualsiasi piano, anche Free.")}</p>
         </div>
 
         <div className="space-y-3">
@@ -139,7 +141,7 @@ const SetupServiceCard = ({ isIt }: { isIt: boolean }) => {
           ) : (
             <>
               <div>
-                <label className="text-sm text-muted-foreground block mb-1">{isIt ? "Telefono *" : "Phone *"}</label>
+                <label className="text-sm text-muted-foreground block mb-1">{tx("Phone *", "Telefono *")}</label>
                 <Input
                   type="tel"
                   value={phone}
@@ -152,19 +154,19 @@ const SetupServiceCard = ({ isIt }: { isIt: boolean }) => {
                 {phoneError && <p className="text-xs text-destructive mt-1">{phoneError}</p>}
               </div>
               <div>
-                <label className="text-sm text-muted-foreground block mb-1">{isIt ? "Note (facoltative)" : "Notes (optional)"}</label>
+                <label className="text-sm text-muted-foreground block mb-1">{tx("Notes (optional)", "Note (facoltative)")}</label>
                 <Textarea
                   value={notes}
                   onChange={(e) => setNotes(e.target.value.slice(0, 1000))}
                   maxLength={1000}
                   rows={4}
-                  placeholder={isIt ? "Sito web, orari in cui preferisci essere contattato, richieste particolari" : "Website, preferred contact hours, special requests"}
+                  placeholder={tx("Website, preferred contact hours, special requests", "Sito web, orari in cui preferisci essere contattato, richieste particolari")}
                   className="bg-secondary border-border text-base"
                 />
                 <p className="text-xs text-muted-foreground text-right mt-1">{notes.length}/1000</p>
               </div>
               <Button className="w-full gradient-primary text-white border-0" onClick={submit} disabled={loading}>
-                {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : (isIt ? "Richiedi il setup" : "Request setup")}
+                {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : (tx("Request setup", "Richiedi il setup"))}
               </Button>
             </>
           )}
@@ -209,19 +211,19 @@ const ClientUpgrade = () => {
       price: { month: "0", year: "0" },
       features: [
         "1 chatbot",
-        isIt ? "50 conversazioni/mese" : "50 conversations/month",
-        isIt ? "10 lead/mese" : "10 leads/month",
-        isIt ? "Prompt di sistema (tono e ruolo del bot)" : "System prompt (tone & bot role)",
-        isIt ? "5 FAQ manuali" : "5 manual FAQs",
-        isIt ? "Raccolta contatti in chat (nome + email o telefono)" : "Lead capture in chat (name + email or phone)",
-        isIt ? "Risposte multilingua" : "Multilingual replies",
-        isIt ? "Supporto email" : "Email support",
+        tx("50 conversations/month", "50 conversazioni/mese"),
+        tx("10 leads/month", "10 lead/mese"),
+        tx("System prompt (tone & bot role)", "Prompt di sistema (tono e ruolo del bot)"),
+        tx("5 manual FAQs", "5 FAQ manuali"),
+        tx("Lead capture in chat (name + email or phone)", "Raccolta contatti in chat (nome + email o telefono)"),
+        tx("Multilingual replies", "Risposte multilingua"),
+        tx("Email support", "Supporto email"),
       ],
       lockedFeatures: [
-        isIt ? "Upload PDF/Word" : "PDF/Word upload",
-        isIt ? "Ricerca Avanzata RAG" : "Advanced Search RAG",
-        isIt ? "Integrazioni ecommerce e catalogo" : "Ecommerce & catalog integrations",
-        isIt ? "Modulo Concierge Hotel" : "Hotel Concierge module",
+        tx("PDF/Word upload", "Upload PDF/Word"),
+        tx("Advanced Search RAG", "Ricerca Avanzata RAG"),
+        tx("Ecommerce & catalog integrations", "Integrazioni ecommerce e catalogo"),
+        tx("Hotel Concierge module", "Modulo Concierge Hotel"),
       ],
       rag: "locked" as const,
       brandingFooter: "Free Chatbot Genius",
@@ -232,21 +234,21 @@ const ClientUpgrade = () => {
       price: { month: "49", year: "490" },
       features: [
         "1 chatbot",
-        isIt ? "500 conversazioni/mese" : "500 conversations/month",
-        isIt ? "Lead illimitati" : "Unlimited leads",
-        isIt ? "Prompt di sistema avanzato" : "Advanced system prompt",
-        isIt ? "FAQ illimitate" : "Unlimited FAQs",
-        isIt ? "Upload PDF/Word" : "PDF/Word upload",
-        isIt ? "Importazione pagine del sito e sitemap" : "Website pages and sitemap import",
-        isIt ? "Supporto prioritario" : "Priority support",
-        isIt ? "🔍 Ricerca Avanzata (RAG)" : "🔍 Advanced Search (RAG)",
-        isIt ? "🛒 Feed XML/CSV (sync giornaliero)" : "🛒 XML/CSV Feed (daily sync)",
-        isIt ? "Fino a 500 prodotti a catalogo" : "Up to 500 catalog products",
+        tx("500 conversations/month", "500 conversazioni/mese"),
+        tx("Unlimited leads", "Lead illimitati"),
+        tx("Advanced system prompt", "Prompt di sistema avanzato"),
+        tx("Unlimited FAQs", "FAQ illimitate"),
+        tx("PDF/Word upload", "Upload PDF/Word"),
+        tx("Website pages and sitemap import", "Importazione pagine del sito e sitemap"),
+        tx("Priority support", "Supporto prioritario"),
+        tx("🔍 Advanced Search (RAG)", "🔍 Ricerca Avanzata (RAG)"),
+        tx("🛒 XML/CSV Feed (daily sync)", "🛒 Feed XML/CSV (sync giornaliero)"),
+        tx("Up to 500 catalog products", "Fino a 500 prodotti a catalogo"),
       ],
       lockedFeatures: [
-        isIt ? "Analytics avanzati" : "Advanced analytics",
-        isIt ? "Ecommerce e catalogo completo con webhook real-time" : "Full ecommerce & catalog with real-time webhooks",
-        isIt ? "Modulo Concierge Hotel" : "Hotel Concierge module",
+        tx("Advanced analytics", "Analytics avanzati"),
+        tx("Full ecommerce & catalog with real-time webhooks", "Ecommerce e catalogo completo con webhook real-time"),
+        tx("Hotel Concierge module", "Modulo Concierge Hotel"),
       ],
       rag: "included" as const,
       brandingFooter: "Chatbot Genius",
@@ -257,19 +259,19 @@ const ClientUpgrade = () => {
       popular: true,
       price: { month: "149", year: "1490" },
       features: [
-        isIt ? "1 chatbot personalizzato per il tuo settore" : "1 custom chatbot for your business type",
-        isIt ? "Conversazioni illimitate" : "Unlimited conversations",
-        isIt ? "Lead illimitati" : "Unlimited leads",
-        isIt ? "Tutte le funzionalità Starter" : "All Starter features",
-        isIt ? "Integrazione Calendly per gli appuntamenti" : "Calendly integration for appointments",
-        isIt ? "🔍 Ricerca Avanzata (RAG) — in evidenza" : "🔍 Advanced Search (RAG) — highlighted",
-        isIt ? "🛒 Ecommerce e catalogo completo (WooCommerce, Shopify, PrestaShop, API + webhook real-time)" : "🛒 Full ecommerce & catalog (WooCommerce, Shopify, PrestaShop, API + real-time webhooks)",
-        isIt ? "Fino a 100.000 prodotti a catalogo" : "Up to 100,000 catalog products",
-        isIt ? "🏨 Concierge Hotel: preventivi soggiorno, QR per le camere, richieste ospiti in tempo reale, pagina Risultati" : "🏨 Hotel Concierge: stay quotes, room QR codes, real-time guest requests, Results page",
-        isIt ? "📱 Canale Instagram DM" : "📱 Instagram DM channel",
-        isIt ? "⏱️ Chiusura automatica chat inattive con email di riepilogo" : "⏱️ Auto-close inactive chats with recap email",
-        isIt ? "Analytics avanzati" : "Advanced analytics",
-        isIt ? "Supporto dedicato" : "Dedicated support",
+        tx("1 custom chatbot for your business type", "1 chatbot personalizzato per il tuo settore"),
+        tx("Unlimited conversations", "Conversazioni illimitate"),
+        tx("Unlimited leads", "Lead illimitati"),
+        tx("All Starter features", "Tutte le funzionalità Starter"),
+        tx("Calendly integration for appointments", "Integrazione Calendly per gli appuntamenti"),
+        tx("🔍 Advanced Search (RAG) — highlighted", "🔍 Ricerca Avanzata (RAG) — in evidenza"),
+        tx("🛒 Full ecommerce & catalog (WooCommerce, Shopify, PrestaShop, API + real-time webhooks)", "🛒 Ecommerce e catalogo completo (WooCommerce, Shopify, PrestaShop, API + webhook real-time)"),
+        tx("Up to 100,000 catalog products", "Fino a 100.000 prodotti a catalogo"),
+        tx("🏨 Hotel Concierge: stay quotes, room QR codes, real-time guest requests, Results page", "🏨 Concierge Hotel: preventivi soggiorno, QR per le camere, richieste ospiti in tempo reale, pagina Risultati"),
+        tx("📱 Instagram DM channel", "📱 Canale Instagram DM"),
+        tx("⏱️ Auto-close inactive chats with recap email", "⏱️ Chiusura automatica chat inattive con email di riepilogo"),
+        tx("Advanced analytics", "Analytics avanzati"),
+        tx("Dedicated support", "Supporto dedicato"),
       ],
       lockedFeatures: [],
       rag: "highlighted" as const,
@@ -282,17 +284,17 @@ const ClientUpgrade = () => {
     <div className="p-4 md:p-6 space-y-6 animate-fade-in-up">
       <div>
         <h1 className="text-2xl font-bold text-foreground" style={{ fontFamily: "Syne, sans-serif" }}>
-          {isIt ? "Scegli il tuo piano" : "Choose your plan"}
+          {tx("Choose your plan", "Scegli il tuo piano")}
         </h1>
         <p className="text-muted-foreground text-sm mt-1">
-          {isIt ? "Inizia gratis, passa a un piano superiore quando sei pronto." : "Start free, upgrade when you're ready."}
+          {tx("Start free, upgrade when you're ready.", "Inizia gratis, passa a un piano superiore quando sei pronto.")}
         </p>
       </div>
 
       {/* Toggle */}
       <div className="flex items-center justify-center gap-3">
         <span className={`text-sm ${!yearly ? "text-foreground" : "text-muted-foreground"}`}>
-          {isIt ? "Mensile" : "Monthly"}
+          {tx("Monthly", "Mensile")}
         </span>
         <button
           onClick={() => setYearly(!yearly)}
@@ -301,7 +303,7 @@ const ClientUpgrade = () => {
           <div className={`absolute top-0.5 w-6 h-6 rounded-full bg-white transition-transform ${yearly ? "translate-x-7" : "translate-x-0.5"}`} />
         </button>
         <span className={`text-sm ${yearly ? "text-foreground" : "text-muted-foreground"}`}>
-          {isIt ? "Annuale" : "Yearly"}
+          {tx("Yearly", "Annuale")}
         </span>
         {yearly && <span className="text-xs bg-primary/20 text-primary px-2 py-0.5 rounded-full font-medium">-17%</span>}
       </div>
@@ -323,12 +325,12 @@ const ClientUpgrade = () => {
             >
               {isCurrent && (
                 <div className="absolute -top-3 left-4 bg-primary text-white text-xs font-bold px-3 py-1 rounded-full">
-                  {isIt ? "Piano attuale" : "Current plan"}
+                  {tx("Current plan", "Piano attuale")}
                 </div>
               )}
               {plan.popular && !isCurrent && (
                 <div className="absolute -top-3 right-4 bg-primary text-white text-xs font-bold px-3 py-1 rounded-full">
-                  {isIt ? "Più Popolare" : "Most Popular"}
+                  {tx("Most Popular", "Più Popolare")}
                 </div>
               )}
 
@@ -341,9 +343,9 @@ const ClientUpgrade = () => {
                     €{yearly ? plan.price.year : plan.price.month}
                   </span>
                   <span className="text-muted-foreground text-sm">
-                    /{yearly ? (isIt ? "anno" : "year") : (isIt ? "mese" : "month")}
+                    /{yearly ? (tx("year", "anno")) : (tx("month", "mese"))}
                   </span>
-                  <p className="mt-1 text-xs text-muted-foreground">{isIt ? "Prezzi IVA inclusa" : "Prices include VAT"}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">{tx("Prices include VAT", "Prezzi IVA inclusa")}</p>
                 </div>
               </div>
 
@@ -368,19 +370,19 @@ const ClientUpgrade = () => {
                   <span className={`text-xs font-semibold uppercase tracking-wider ${
                     plan.rag === "locked" ? "text-muted-foreground/50" : plan.rag === "highlighted" ? "text-primary" : "text-primary/70"
                   }`}>
-                    🔍 {isIt ? "Ricerca Avanzata (RAG)" : "Advanced Search (RAG)"}
+                    🔍 {tx("Advanced Search (RAG)", "Ricerca Avanzata (RAG)")}
                   </span>
-                  <p style={{ fontSize: '11px', color: '#888888', marginTop: '2px' }}>{isIt ? "Addestra il chatbot sui tuoi documenti e PDF" : "Train your chatbot on your documents and PDFs"}</p>
+                  <p style={{ fontSize: '11px', color: '#888888', marginTop: '2px' }}>{tx("Train your chatbot on your documents and PDFs", "Addestra il chatbot sui tuoi documenti e PDF")}</p>
                 </div>
                 {plan.rag === "locked" ? (
                   <div className="flex items-center gap-2 text-muted-foreground/50 text-sm">
                     <Lock className="w-4 h-4 shrink-0" />
-                    <span>{isIt ? "Bloccato – fai upgrade" : "Locked – upgrade to unlock"}</span>
+                    <span>{tx("Locked – upgrade to unlock", "Bloccato – fai upgrade")}</span>
                   </div>
                 ) : (
                   <div className={`flex items-center gap-2 text-sm ${plan.rag === "highlighted" ? "text-primary font-medium" : "text-primary"}`}>
                     <Check className="w-4 h-4 shrink-0" />
-                    <span>{plan.rag === "highlighted" ? (isIt ? "Incluso + Priorità" : "Included + Priority") : (isIt ? "Incluso" : "Included")}</span>
+                    <span>{plan.rag === "highlighted" ? (tx("Included + Priority", "Incluso + Priorità")) : (tx("Included", "Incluso"))}</span>
                   </div>
                 )}
               </div>
@@ -394,21 +396,21 @@ const ClientUpgrade = () => {
                   {checkoutLoading?.startsWith(plan.id) ? (
                     <Loader2 className="w-4 h-4 animate-spin" />
                   ) : (
-                    `${isIt ? "Passa a" : "Upgrade to"} ${plan.name}`
+                    `${tx("Upgrade to", "Passa a")} ${plan.name}`
                   )}
                 </Button>
               ) : isCurrent ? (
                 <Button variant="outline" className="w-full" disabled>
-                  {isIt ? "Piano attuale" : "Current plan"}
+                  {tx("Current plan", "Piano attuale")}
                 </Button>
               ) : (
                 <Button variant="outline" className="w-full" disabled>
-                  {plan.id === "free" ? (isIt ? "Incluso" : "Included") : `${isIt ? "Passa a" : "Upgrade to"} ${plan.name}`}
+                  {plan.id === "free" ? (tx("Included", "Incluso")) : `${tx("Upgrade to", "Passa a")} ${plan.name}`}
                 </Button>
               )}
               {plan.id !== "free" && (
                 <p className="text-xs text-muted-foreground text-center -mt-2">
-                  {isIt ? "Hai un codice sconto? Potrai inserirlo al passaggio successivo." : "Have a discount code? You'll be able to enter it on the next step."}
+                  {tx("Have a discount code? You'll be able to enter it on the next step.", "Hai un codice sconto? Potrai inserirlo al passaggio successivo.")}
                 </p>
               )}
 

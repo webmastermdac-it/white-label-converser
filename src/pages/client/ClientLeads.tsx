@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { useLanguage } from "@/hooks/useLanguage";
+import { useLanguage, tx, appLocale } from "@/hooks/useLanguage";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
@@ -37,7 +37,7 @@ interface Lead {
 const ClientLeads = () => {
   const { clientId } = useAuth();
   const { t, lang } = useLanguage();
-  const tl = (it: string, en: string) => (lang === "it" ? it : en);
+  const tl = (it: string, en: string) => tx(en, it);
   const { module: activeModule } = useActiveModule();
   const isHotel = activeModule.id === "hotel";
   const [monthFilter, setMonthFilter] = useState("all");
@@ -87,7 +87,7 @@ const ClientLeads = () => {
   const arrivalMonths = isHotel
     ? Array.from(new Set(leads.map((l) => (l.booking?.check_in || "").slice(0, 7)).filter(Boolean))).sort()
     : [];
-  const monthLabel = (ym: string) => new Date(`${ym}-01T00:00:00`).toLocaleDateString(lang === "it" ? "it-IT" : "en-GB", { month: "long", year: "numeric" });
+  const monthLabel = (ym: string) => new Date(`${ym}-01T00:00:00`).toLocaleDateString(appLocale(), { month: "long", year: "numeric" });
 
   return (
     <div className="p-4 md:p-6 space-y-4 md:space-y-6 animate-fade-in-up">
@@ -220,7 +220,7 @@ const ClientLeads = () => {
               <div className="flex items-center justify-between pt-1">
                 <p className="text-xs text-muted-foreground">📅 {new Date(lead.created_at).toLocaleString()}</p>
                 {lead.transcript && lead.transcript.length > 0 && (
-                  <button className="text-xs text-primary hover:underline min-h-[44px] flex items-center">{t("viewTranscript", "Vedi trascrizione")}</button>
+                  <button className="text-xs text-primary hover:underline min-h-[44px] flex items-center">{t("View transcript", "Vedi trascrizione")}</button>
                 )}
               </div>
             </div>

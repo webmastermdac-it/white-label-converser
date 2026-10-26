@@ -4,7 +4,7 @@ import { CheckCircle2, ConciergeBell, Loader2, Play, RotateCcw } from "lucide-re
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useActiveModule } from "@/hooks/useActiveModule";
-import { useLanguage } from "@/hooks/useLanguage";
+import { useLanguage, tx, appLocale } from "@/hooks/useLanguage";
 import { usePlanConfig } from "@/hooks/usePlanConfig";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -19,7 +19,7 @@ const statuses: RequestStatus[] = ["open", "in_progress", "done"];
 
 const HotelRequests = ({ botIdOverride }: { botIdOverride?: string } = {}) => {
   const { lang } = useLanguage();
-  const tl = (it: string, en: string) => lang === "it" ? it : en;
+  const tl = (it: string, en: string) => tx(en, it);
   const { botId: activeBotId } = useActiveModule();
   const botId = botIdOverride ?? activeBotId;
   const { canUseConciergeRequests, loading: planLoading } = usePlanConfig();
@@ -158,14 +158,13 @@ const HotelRequests = ({ botIdOverride }: { botIdOverride?: string } = {}) => {
   </div>;
 };
 
-const timeAgo = (minutes: number, lang: string) => {
-  const it = lang === "it";
-  if (minutes < 1) return it ? "adesso" : "just now";
-  if (minutes < 60) return it ? `${minutes} min fa` : `${minutes} min ago`;
+const timeAgo = (minutes: number, _lang?: string) => {
+  const rtf = new Intl.RelativeTimeFormat(appLocale(), { numeric: "auto", style: "short" });
+  if (minutes < 1) return rtf.format(0, "minute");
+  if (minutes < 60) return rtf.format(-minutes, "minute");
   const h = Math.floor(minutes / 60);
-  if (h < 24) return it ? `${h} h fa` : `${h} h ago`;
-  const d = Math.floor(h / 24);
-  return it ? `${d} g fa` : `${d} d ago`;
+  if (h < 24) return rtf.format(-h, "hour");
+  return rtf.format(-Math.floor(h / 24), "day");
 };
 
 export default HotelRequests;

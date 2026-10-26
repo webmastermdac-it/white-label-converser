@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useLanguage } from "@/hooks/useLanguage";
+import { useLanguage, tx } from "@/hooks/useLanguage";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -55,7 +55,7 @@ export const BookingTab = ({ booking, setB, tl }: { booking: Booking; setB: (k: 
 /** Booking engine settings for a hotel bot; autosaves only hotel_profile.booking */
 const HotelBookingSettings = ({ botId, onSaved }: { botId: string | null; onSaved?: (b: Booking) => void }) => {
   const { lang } = useLanguage();
-  const tl = (it: string, en: string) => (lang === "it" ? it : en);
+  const tl = (it: string, en: string) => tx(en, it);
   const [booking, setBooking] = useState<Booking | null>(null);
   const [status, setStatus] = useState<Status>("idle");
   const timer = useRef<number>();

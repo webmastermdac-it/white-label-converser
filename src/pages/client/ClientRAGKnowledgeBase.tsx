@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useAuth } from "@/contexts/AuthContext";
-import { useLanguage } from "@/hooks/useLanguage";
+import { useLanguage, tx } from "@/hooks/useLanguage";
 import { usePlanConfig } from "@/hooks/usePlanConfig";
 import { UpgradeModal } from "@/components/UpgradeModal";
 import { Button } from "@/components/ui/button";
@@ -72,7 +72,7 @@ const EcommerceKBStatus: React.FC<{ clientId: string }> = ({ clientId }) => {
   const [syncing, setSyncing] = useState(false);
   const { toast } = useToast();
   const { lang } = useLanguage();
-  const t = (it: string, en: string) => lang === "it" ? it : en;
+  const tl = (it: string, en: string) => tx(en, it);
 
   useEffect(() => {
     supabase
@@ -87,7 +87,7 @@ const EcommerceKBStatus: React.FC<{ clientId: string }> = ({ clientId }) => {
     setSyncing(true);
     try {
       await supabase.functions.invoke("sync-products", { body: { client_id: clientId } });
-      toast({ title: t("Sincronizzazione avviata", "Sync started") });
+      toast({ title: tl("Sincronizzazione avviata", "Sync started") });
     } catch (err: any) {
       toast({ title: err.message, variant: "destructive" });
     } finally {
@@ -99,12 +99,12 @@ const EcommerceKBStatus: React.FC<{ clientId: string }> = ({ clientId }) => {
     return (
       <div className="flex items-center gap-2 p-3 rounded-lg bg-secondary/50 text-xs text-muted-foreground">
         <Store className="w-4 h-4" />
-        {t("Nessuna integrazione configurata.", "No integration configured.")}
+        {tl("Nessuna integrazione configurata.", "No integration configured.")}
         <button
           className="ml-auto text-primary underline"
           onClick={() => window.location.href = "/dashboard/ecommerce"}
         >
-          {t("Configura ora →", "Configure now →")}
+          {tl("Configura ora →", "Configure now →")}
         </button>
       </div>
     );
@@ -116,7 +116,7 @@ const EcommerceKBStatus: React.FC<{ clientId: string }> = ({ clientId }) => {
       <div className="flex-1 min-w-0">
         <p className="text-xs font-medium text-foreground capitalize">{config.platform}</p>
         <p className="text-[10px] text-muted-foreground">
-          {config.last_sync_at ? `${t("Sync", "Sync")}: ${new Date(config.last_sync_at).toLocaleDateString()}` : ""}
+          {config.last_sync_at ? `${tl("Sync", "Sync")}: ${new Date(config.last_sync_at).toLocaleDateString()}` : ""}
         </p>
       </div>
       <Badge variant={config.sync_status === "success" ? "default" : "destructive"} className="text-[10px]">
@@ -202,7 +202,7 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
   const [savingPrompt, setSavingPrompt] = useState(false);
   const [activeArea, setActiveArea] = useState<"hub" | "faq" | "knowledge" | "instructions">("hub");
 
-  const t = (it: string, en: string) => lang === "it" ? it : en;
+  const tl = (it: string, en: string) => tx(en, it);
   const isFree = planConfig?.plan_name === "free";
   const isAdmin = role === "super_admin";
 
@@ -320,10 +320,10 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
         );
         if (error) throw error;
       }
-      toast({ title: "✅", description: t("FAQ salvate!", "FAQs saved!") });
+      toast({ title: "✅", description: tl("FAQ salvate!", "FAQs saved!") });
       fetchData();
     } catch (err: any) {
-      toast({ title: "Errore", description: err.message, variant: "destructive" });
+      toast({ title: tx("Error", "Errore"), description: err.message, variant: "destructive" });
     }
     setSavingFaqs(false);
   };
@@ -352,11 +352,11 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
     const valid = fileArr.filter(f => {
       const ext = f.name.split(".").pop()?.toLowerCase() || "";
       if (!allowed.includes(ext)) {
-        toast({ title: `${f.name}: ${t("Formato non supportato", "Unsupported format")}`, variant: "destructive" });
+        toast({ title: `${f.name}: ${tl("Formato non supportato", "Unsupported format")}`, variant: "destructive" });
         return false;
       }
       if (f.size > 50 * 1024 * 1024) {
-        toast({ title: `${f.name}: ${t("File troppo grande (max 50MB)", "File too large (max 50MB)")}`, variant: "destructive" });
+        toast({ title: `${f.name}: ${tl("File troppo grande (max 50MB)", "File too large (max 50MB)")}`, variant: "destructive" });
         return false;
       }
       return true;
@@ -379,7 +379,7 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
         toast({ title: `${file.name}: ${err.message}`, variant: "destructive" });
       }
     }
-    toast({ title: t(`${valid.length} file caricati`, `${valid.length} files uploaded`) });
+    toast({ title: tx("{0} files uploaded", "{0} file caricati", [valid.length]) });
     setUploading(false);
     setKbTab("sources");
     fetchData();
@@ -413,11 +413,8 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
 
       if (existing) {
         toast({
-          title: t("URL già presente", "URL already exists"),
-          description: t(
-            `"${existing.name}" è già nella Knowledge Base (stato: ${existing.status}). Usa il tasto Rielabora se vuoi aggiornarlo.`,
-            `"${existing.name}" is already in the Knowledge Base (status: ${existing.status}). Use Reprocess to update it.`
-          ),
+          title: tl("URL già presente", "URL already exists"),
+          description: tx("\"{0}\" is already in the Knowledge Base (status: {1}). Use Reprocess to update it.", "\"{0}\" è già nella Knowledge Base (stato: {1}). Usa il tasto Rielabora se vuoi aggiornarlo.", [existing.name, existing.status]),
           variant: "destructive",
         });
         setUploading(false);
@@ -429,8 +426,8 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
       });
       if (scrapeErr || !scrapeData?.content?.trim()) {
         toast({
-          title: t("Impossibile leggere il sito", "Cannot read website"),
-          description: t(
+          title: tl("Impossibile leggere il sito", "Cannot read website"),
+          description: tl(
             "Il sito potrebbe avere protezioni anti-bot. Prova a copiare il testo manualmente nel tab 'Testo'.",
             "The site may have anti-bot protection. Try copying text manually in the 'Text' tab."
           ),
@@ -447,7 +444,7 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
       await supabase.from("knowledge_base" as any).update({ source_url: scrapeData.content } as any).eq("id", (source as any).id);
       setUrlInput("");
       processSource((source as any).id);
-      toast({ title: t("URL aggiunto", "URL added") });
+      toast({ title: tl("URL aggiunto", "URL added") });
       fetchData();
       setKbTab("sources");
     } catch (err: any) {
@@ -466,7 +463,7 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
       const urlMatches = text.match(/<loc>(.*?)<\/loc>/g) || [];
       const urls = urlMatches.map(m => normalizeUrl(m.replace(/<\/?loc>/g, ""))).slice(0, 50);
       if (!urls.length) {
-        toast({ title: t("Nessun URL trovato nella sitemap", "No URLs found in sitemap"), variant: "destructive" });
+        toast({ title: tl("Nessun URL trovato nella sitemap", "No URLs found in sitemap"), variant: "destructive" });
         setUploading(false);
         return;
       }
@@ -481,11 +478,8 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
 
       if (!newUrls.length) {
         toast({
-          title: t("Tutte le pagine già presenti", "All pages already indexed"),
-          description: t(
-            `Tutte le ${urls.length} pagine della sitemap sono già nella Knowledge Base.`,
-            `All ${urls.length} sitemap pages are already in the Knowledge Base.`
-          ),
+          title: tl("Tutte le pagine già presenti", "All pages already indexed"),
+          description: tx("All {0} sitemap pages are already in the Knowledge Base.", "Tutte le {0} pagine della sitemap sono già nella Knowledge Base.", [urls.length]),
         });
         setUploading(false);
         return;
@@ -508,9 +502,9 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
       }
       setSitemapInput("");
       toast({
-        title: t(`${addedCount} pagine importate`, `${addedCount} pages imported`),
+        title: tx("{0} pages imported", "{0} pagine importate", [addedCount]),
         description: skippedCount > 0
-          ? t(`${skippedCount} pagine già presenti ignorate.`, `${skippedCount} already existing pages skipped.`)
+          ? tx("{0} already existing pages skipped.", "{0} pagine già presenti ignorate.", [skippedCount])
           : undefined,
       });
       fetchData();
@@ -533,7 +527,7 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
         url: l.url, title: l.title || new URL(l.url).pathname, selected: false,
       }));
       setCrawledPages(links);
-      if (!links.length) toast({ title: t("Nessuna pagina trovata", "No pages found"), variant: "destructive" });
+      if (!links.length) toast({ title: tl("Nessuna pagina trovata", "No pages found"), variant: "destructive" });
     } catch (err: any) {
       toast({ title: err.message, variant: "destructive" });
     } finally { setAnalyzing(false); }
@@ -579,9 +573,9 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
       } catch { continue; }
     }
     toast({
-      title: t(`${addedCount} pagine importate`, `${addedCount} pages imported`),
+      title: tx("{0} pages imported", "{0} pagine importate", [addedCount]),
       description: skippedCount > 0
-        ? t(`${skippedCount} pagine già presenti ignorate.`, `${skippedCount} already existing pages skipped.`)
+        ? tx("{0} already existing pages skipped.", "{0} pagine già presenti ignorate.", [skippedCount])
         : undefined,
     });
     setCrawlImporting(false);
@@ -597,12 +591,12 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
     try {
       const { data: source, error } = await supabase
         .from("knowledge_base" as any)
-        .insert({ chatbot_id: chatbotId, name: freeTextName.trim() || t("Testo libero", "Free text"), type: "txt", source_url: freeText.trim(), status: "processing" } as any)
+        .insert({ chatbot_id: chatbotId, name: freeTextName.trim() || tl("Testo libero", "Free text"), type: "txt", source_url: freeText.trim(), status: "processing" } as any)
         .select().single();
       if (error) throw error;
       setFreeText(""); setFreeTextName("");
       processSource((source as any).id);
-      toast({ title: t("Testo aggiunto", "Text added") });
+      toast({ title: tl("Testo aggiunto", "Text added") });
       fetchData();
       setKbTab("sources");
     } catch (err: any) {
@@ -611,12 +605,12 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
   };
 
   const handleDelete = async (source: KBSource) => {
-    if (!confirm(t("Eliminare questa fonte?", "Delete this source?"))) return;
+    if (!confirm(tl("Eliminare questa fonte?", "Delete this source?"))) return;
     try {
       await supabase.from("knowledge_chunks" as any).delete().eq("knowledge_base_id", source.id);
       if (source.file_path) await supabase.storage.from("kb-documents").remove([source.file_path]);
       await supabase.from("knowledge_base" as any).delete().eq("id", source.id);
-      toast({ title: t("Fonte eliminata", "Source deleted") });
+      toast({ title: tl("Fonte eliminata", "Source deleted") });
       fetchData();
     } catch (err: any) { toast({ title: err.message, variant: "destructive" }); }
   };
@@ -653,7 +647,7 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
       setSelectedIds(new Set());
       fetchData();
     } catch (err: any) {
-      toast({ title: "Errore", description: err.message, variant: "destructive" });
+      toast({ title: tx("Error", "Errore"), description: err.message, variant: "destructive" });
     } finally {
       setBulkDeleting(false);
     }
@@ -692,7 +686,7 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
       });
       if (error) throw error;
       setSearchResults(data?.chunks || []);
-      if (!data?.chunks?.length) toast({ title: t("Nessun risultato trovato", "No results found"), variant: "destructive" });
+      if (!data?.chunks?.length) toast({ title: tl("Nessun risultato trovato", "No results found"), variant: "destructive" });
     } catch (err: any) {
       toast({ title: err.message, variant: "destructive" });
     } finally { setSearching(false); }
@@ -708,9 +702,9 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
         .update({ knowledge_base: systemPromptRef.current } as any)
         .eq("id", chatbotId);
       if (error) throw error;
-      toast({ title: "✅", description: t("Istruzioni salvate!", "Instructions saved!") });
+      toast({ title: "✅", description: tl("Istruzioni salvate!", "Instructions saved!") });
     } catch (err: any) {
-      toast({ title: "Errore", description: err.message, variant: "destructive" });
+      toast({ title: tx("Error", "Errore"), description: err.message, variant: "destructive" });
     }
     setSavingPrompt(false);
   };
@@ -768,23 +762,23 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
       color: "#F59E0B",
       stars: 3,
       title: "FAQ",
-      subtitle: t("Risposte esatte a domande specifiche", "Exact answers to specific questions"),
+      subtitle: tl("Risposte esatte a domande specifiche", "Exact answers to specific questions"),
     },
     {
       key: "knowledge" as const,
       icon: BookOpen,
       color: "#3B82F6",
       stars: 2,
-      title: t("Documenti", "Documents"),
-      subtitle: t("Documenti che il bot cerca quando nessuna FAQ corrisponde", "Documents the bot searches when no FAQ matches"),
+      title: tl("Documenti", "Documents"),
+      subtitle: tl("Documenti che il bot cerca quando nessuna FAQ corrisponde", "Documents the bot searches when no FAQ matches"),
     },
     {
       key: "instructions" as const,
       icon: FileText,
       color: "#A855F7",
       stars: 1,
-      title: t("Istruzioni", "Instructions"),
-      subtitle: t("Testo libero usato come ultima risorsa", "Free text used as a last resort"),
+      title: tl("Istruzioni", "Instructions"),
+      subtitle: tl("Testo libero usato come ultima risorsa", "Free text used as a last resort"),
     },
   ];
 
@@ -797,7 +791,7 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
             Knowledge Base
           </h1>
           <p className="text-muted-foreground text-sm mt-1">
-            {t(
+            {tl(
               "Gestisci le fonti di conoscenza del tuo chatbot. Le risposte seguono un ordine di priorità: FAQ → Documenti → Istruzioni.",
               "Manage your chatbot's knowledge sources. Responses follow a priority order: FAQ → Knowledge → Instructions."
             )}
@@ -809,20 +803,20 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
         <div className="flex items-center gap-3 rounded-lg border border-primary/25 bg-primary/5 px-3 py-2.5">
           <Lock className="h-4 w-4 shrink-0 text-primary" />
           <p className="min-w-0 flex-1 text-xs font-medium text-foreground">
-            {t(
+            {tl(
               "3 funzionalità avanzate disponibili con Pro — Documenti, Ricerca Avanzata, Ecommerce e Catalogo",
               "3 advanced features available with Pro — Documents, Advanced Search, Ecommerce & Catalog"
             )}
           </p>
           <Button variant="outline" size="sm" onClick={() => showUpgrade("pro")} className="h-7 shrink-0 text-xs">
-            {t("Passa a Pro", "Upgrade to Pro")}
+            {tl("Passa a Pro", "Upgrade to Pro")}
           </Button>
           <Button
             variant="ghost"
             size="icon"
             className="h-7 w-7 shrink-0"
             onClick={() => setUpgradeBannerDismissed(true)}
-            aria-label={t("Chiudi", "Dismiss")}
+            aria-label={tl("Chiudi", "Dismiss")}
           >
             <X className="h-3.5 w-3.5" />
           </Button>
@@ -834,7 +828,7 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
         <div className="glass rounded-lg px-3 py-2.5 border-warning/30 flex items-center gap-2.5">
           <Loader2 className="w-4 h-4 animate-spin text-warning" />
           <p className="text-xs font-medium text-foreground">
-            {t(`${processingSources} fonte/i in elaborazione...`, `${processingSources} source(s) processing...`)}
+            {tx("{0} source(s) processing...", "{0} fonte/i in elaborazione...", [processingSources])}
           </p>
         </div>
       )}
@@ -873,7 +867,7 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
           onClick={() => setActiveArea("hub")}
           className="gap-2 self-start text-muted-foreground hover:text-foreground"
         >
-          ← {t("Torna alla Conoscenza", "Back to Knowledge")}
+          ← {tl("Torna alla Conoscenza", "Back to Knowledge")}
         </Button>
       )}
 
@@ -886,25 +880,25 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
           num={1}
           icon="📋"
           title="FAQ"
-          subtitle={t(
+          subtitle={tl(
             "Risposte esatte a domande specifiche — vengono sempre usate per prime",
             "Exact answers to specific questions — always used first"
           )}
           stars={3}
-          starLabel={t("Priorità alta", "High priority")}
+          starLabel={tl("Priorità alta", "High priority")}
         />
 
         {faqs.map((faq, idx) => (
           <div key={idx} className="flex gap-2 items-start group mb-3">
             <div className="flex-1 space-y-1.5">
               <Input
-                placeholder={t("Domanda...", "Question...")}
+                placeholder={tl("Domanda...", "Question...")}
                 value={faq.question}
                 onChange={(e) => updateFaqEntry(idx, "question", e.target.value)}
                 className="bg-secondary border-border text-sm"
               />
               <Textarea
-                placeholder={t("Risposta...", "Answer...")}
+                placeholder={tl("Risposta...", "Answer...")}
                 value={faq.answer}
                 onChange={(e) => updateFaqEntry(idx, "answer", e.target.value)}
                 rows={2}
@@ -921,8 +915,8 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
         {maxFaqs !== -1 && faqs.length >= maxFaqs ? (
           <div className="mb-3">
             <LockedProFeature
-              title={t(`Limite di ${maxFaqs} FAQ raggiunto`, `${maxFaqs} FAQ limit reached`)}
-              description={t("Più FAQ disponibili con il piano Pro", "More FAQs available on Pro plan")}
+              title={tx("{0} FAQ limit reached", "Limite di {0} FAQ raggiunto", [maxFaqs])}
+              description={tl("Più FAQ disponibili con il piano Pro", "More FAQs available on Pro plan")}
               onUpgrade={() => showUpgrade("pro")}
             />
           </div>
@@ -932,18 +926,18 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
           <Button variant="outline" size="sm" onClick={addFaqEntry} className="gap-1.5 border-border text-foreground">
             {maxFaqs !== -1 && faqs.length >= maxFaqs
               ? <><Lock className="w-3.5 h-3.5" /> Upgrade</>
-              : <><Plus className="w-3.5 h-3.5" /> {t("Aggiungi FAQ", "Add FAQ")}</>
+              : <><Plus className="w-3.5 h-3.5" /> {tl("Aggiungi FAQ", "Add FAQ")}</>
             }
           </Button>
           <Button size="sm" onClick={saveFaqs} disabled={savingFaqs} className="gap-1.5 ml-auto gradient-primary text-white border-0">
             {savingFaqs ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
-            {t("Salva FAQ", "Save FAQs")}
+            {tl("Salva FAQ", "Save FAQs")}
           </Button>
         </div>
 
         <p className="text-[11px] text-muted-foreground mt-3 flex items-center gap-1">
           <Info className="w-3 h-3 shrink-0" />
-          {t("Le FAQ vengono cercate per prime — se la domanda corrisponde, il bot risponde immediatamente senza usare l'AI.",
+          {tl("Le FAQ vengono cercate per prime — se la domanda corrisponde, il bot risponde immediatamente senza usare l'AI.",
             "FAQs are searched first — if the question matches, the bot responds immediately without using AI.")}
         </p>
       </div>
@@ -957,31 +951,31 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
         <PriorityHeader
           num={2}
           icon="📚"
-          title={t("Documenti", "Documents")}
-          subtitle={t(
+          title={tl("Documenti", "Documents")}
+          subtitle={tl(
             "Documenti che il bot cerca quando nessuna FAQ corrisponde",
             "Documents the bot searches when no FAQ matches"
           )}
           stars={2}
-          starLabel={t("Priorità media", "Medium priority")}
+          starLabel={tl("Priorità media", "Medium priority")}
         />
 
         {isFree || !canUploadDocs ? (
           <div className="space-y-2">
             <LockedProFeature
-              title={t("Caricamento documenti e PDF", "Document and PDF upload")}
-              description={t("Disponibile con il piano Pro", "Available on Pro plan")}
+              title={tl("Caricamento documenti e PDF", "Document and PDF upload")}
+              description={tl("Disponibile con il piano Pro", "Available on Pro plan")}
               onUpgrade={() => showUpgrade("pro")}
             />
             <LockedProFeature
-              title={t("Fonti RAG e Ricerca Avanzata", "RAG sources and Advanced Search")}
-              description={t("Disponibile con il piano Pro", "Available on Pro plan")}
+              title={tl("Fonti RAG e Ricerca Avanzata", "RAG sources and Advanced Search")}
+              description={tl("Disponibile con il piano Pro", "Available on Pro plan")}
               onUpgrade={() => showUpgrade("pro")}
             />
             {chatbotVertical === "ecommerce" && (
               <LockedProFeature
-                title={t("🛒 Product Catalog", "🛒 Catalogo Prodotti")}
-                description={t("Disponibile con il piano Pro", "Available on Pro plan")}
+                title={tl("🛒 Catalogo prodotti", "🛒 Product Catalog")}
+                description={tl("Disponibile con il piano Pro", "Available on Pro plan")}
                 onUpgrade={() => showUpgrade("pro")}
               />
             )}
@@ -991,8 +985,8 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
             {/* Stats row */}
             <div className="grid grid-cols-3 gap-3">
               {[
-                { icon: Database, value: sources.length, label: t("Fonti", "Sources"), iconCls: "text-primary" },
-                { icon: CheckCircle2, value: readySources, label: t("Pronte", "Ready"), iconCls: "text-success" },
+                { icon: Database, value: sources.length, label: tl("Fonti", "Sources"), iconCls: "text-primary" },
+                { icon: CheckCircle2, value: readySources, label: tl("Pronte", "Ready"), iconCls: "text-success" },
                 { icon: FileText, value: totalChunks, label: "Chunks", iconCls: "text-primary" },
               ].map((stat, i) => (
                 <div key={i} className="rounded-lg bg-secondary/50 px-3 py-2 flex items-center gap-2">
@@ -1005,8 +999,8 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
 
             {docLimitReached && (
               <LockedProFeature
-                title={t(`Limite di ${maxDocuments} documenti raggiunto`, `${maxDocuments} document limit reached`)}
-                description={t("Più documenti disponibili con il piano Pro", "More documents available on Pro plan")}
+                title={tx("{0} document limit reached", "Limite di {0} documenti raggiunto", [maxDocuments])}
+                description={tl("Più documenti disponibili con il piano Pro", "More documents available on Pro plan")}
                 onUpgrade={() => showUpgrade("pro")}
               />
             )}
@@ -1017,26 +1011,26 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button size="sm" className="gap-1.5">
-                        <Plus className="w-3.5 h-3.5" /> {t("Aggiungi contenuto", "Add content")}
+                        <Plus className="w-3.5 h-3.5" /> {tl("Aggiungi contenuto", "Add content")}
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="start">
-                      <DropdownMenuItem onClick={() => setKbTab("upload")}>📄 {t("Carica file", "Upload file")}</DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => setKbTab("web")}>🌐 {t("Sito Web", "Website")}</DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => setKbTab("text")}>✏️ {t("Testo", "Text")}</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => setKbTab("upload")}>📄 {tl("Carica file", "Upload file")}</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => setKbTab("web")}>🌐 {tl("Sito Web", "Website")}</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => setKbTab("text")}>✏️ {tl("Testo", "Text")}</DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 ) : (
                   <div className="flex items-center gap-2">
                     <Button variant="ghost" size="sm" onClick={() => setKbTab("sources")} className="gap-1.5">
-                      ← {t("Torna alle fonti", "Back to sources")}
+                      ← {tl("Torna alle fonti", "Back to sources")}
                     </Button>
                     <span className="text-xs text-muted-foreground">
                       {kbTab === "upload"
-                        ? t("Carica file", "Upload file")
+                        ? tl("Carica file", "Upload file")
                         : kbTab === "web"
-                        ? t("Sito Web", "Website")
-                        : t("Testo", "Text")}
+                        ? tl("Sito Web", "Website")
+                        : tl("Testo", "Text")}
                     </span>
                   </div>
                 )}
@@ -1060,7 +1054,7 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
                       <Upload className={`w-6 h-6 ${dragging ? "text-primary animate-bounce" : "text-muted-foreground"}`} />
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-foreground">{t("Trascina i file qui o clicca", "Drag files here or click")}</p>
+                      <p className="text-sm font-medium text-foreground">{tl("Trascina i file qui o clicca", "Drag files here or click")}</p>
                       <p className="text-xs text-muted-foreground mt-1">PDF, DOCX, TXT, MD, CSV, XLSX · Max 50MB</p>
                     </div>
                   </div>
@@ -1077,8 +1071,8 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
                 <div className="space-y-3">
                   <div className="flex gap-1 p-1 rounded-lg bg-muted/50 w-fit">
                     {([
-                      { key: "single" as const, icon: "📄", label: t("Pagina singola", "Single page") },
-                      { key: "crawl" as const, icon: "🕷️", label: t("Scansiona sito", "Scan site") },
+                      { key: "single" as const, icon: "📄", label: tl("Pagina singola", "Single page") },
+                      { key: "crawl" as const, icon: "🕷️", label: tl("Scansiona sito", "Scan site") },
                       { key: "sitemap" as const, icon: "🗺️", label: "Sitemap XML" },
                     ]).map(mode => (
                       <button key={mode.key} onClick={() => setWebMode(mode.key)}
@@ -1096,7 +1090,7 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
                         className="bg-secondary border-border text-sm" onKeyDown={(e) => e.key === "Enter" && handleAddUrl()} />
                       <Button onClick={handleAddUrl} disabled={uploading || !urlInput.trim()} className="gap-1.5 shrink-0">
                         {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Globe className="w-4 h-4" />}
-                        {t("Importa", "Import")}
+                        {tl("Importa", "Import")}
                       </Button>
                     </div>
                   )}
@@ -1108,16 +1102,16 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
                           className="bg-secondary border-border text-sm" onKeyDown={(e) => e.key === "Enter" && handleAnalyzeSite()} />
                         <Button onClick={handleAnalyzeSite} disabled={analyzing || !crawlerUrl.trim()} className="gap-1.5 shrink-0">
                           {analyzing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
-                          {t("Analizza", "Analyze")}
+                          {tl("Analizza", "Analyze")}
                         </Button>
                       </div>
                       {crawledPages.length > 0 && (
                         <div className="space-y-2">
                           <div className="flex items-center justify-between">
-                            <p className="text-xs font-medium text-foreground">{crawledPages.length} {t("pagine trovate", "pages found")}</p>
+                            <p className="text-xs font-medium text-foreground">{crawledPages.length} {tl("pagine trovate", "pages found")}</p>
                             <div className="flex gap-2">
-                              <button onClick={() => selectAllCrawl(true)} className="text-[11px] text-primary hover:underline">{t("Seleziona tutto", "Select all")}</button>
-                              <button onClick={() => selectAllCrawl(false)} className="text-[11px] text-muted-foreground hover:underline">{t("Deseleziona", "Deselect")}</button>
+                              <button onClick={() => selectAllCrawl(true)} className="text-[11px] text-primary hover:underline">{tl("Seleziona tutto", "Select all")}</button>
+                              <button onClick={() => selectAllCrawl(false)} className="text-[11px] text-muted-foreground hover:underline">{tl("Deseleziona", "Deselect")}</button>
                             </div>
                           </div>
                           <div className="max-h-48 overflow-y-auto space-y-1 rounded-lg border border-border p-2">
@@ -1139,7 +1133,7 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
                           )}
                           <Button onClick={handleImportCrawledPages} disabled={crawlImporting || !crawledPages.some(p => p.selected)} className="w-full gap-1.5">
                             {crawlImporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
-                            {t("Importa selezionate", "Import selected")}
+                            {tl("Importa selezionate", "Import selected")}
                           </Button>
                         </div>
                       )}
@@ -1152,7 +1146,7 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
                         className="bg-secondary border-border text-sm" onKeyDown={(e) => e.key === "Enter" && handleAddSitemap()} />
                       <Button onClick={handleAddSitemap} disabled={uploading || !sitemapInput.trim()} className="gap-1.5 shrink-0">
                         {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Map className="w-4 h-4" />}
-                        {t("Importa", "Import")}
+                        {tl("Importa", "Import")}
                       </Button>
                     </div>
                   )}
@@ -1162,13 +1156,13 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
               {/* TEXT TAB */}
               <TabsContent value="text">
                 <div className="space-y-3">
-                  <Input placeholder={t("Nome (opzionale)", "Name (optional)")} value={freeTextName}
+                  <Input placeholder={tl("Nome (opzionale)", "Name (optional)")} value={freeTextName}
                     onChange={(e) => setFreeTextName(e.target.value)} className="bg-secondary border-border text-sm" />
-                  <Textarea placeholder={t("Incolla qui il testo...", "Paste text here...")} value={freeText}
+                  <Textarea placeholder={tl("Incolla qui il testo...", "Paste text here...")} value={freeText}
                     onChange={(e) => setFreeText(e.target.value)} rows={6} className="bg-secondary border-border text-sm resize-none" />
                   <Button onClick={handleAddFreeText} disabled={uploading || !freeText.trim()} className="w-full gap-1.5">
                     {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileText className="w-4 h-4" />}
-                    {t("Aggiungi testo", "Add text")}
+                    {tl("Aggiungi testo", "Add text")}
                   </Button>
                 </div>
               </TabsContent>
@@ -1179,7 +1173,7 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
                   {sources.length === 0 ? (
                     <div className="flex flex-col items-center py-8 text-center">
                       <Database className="w-10 h-10 text-muted-foreground/20 mb-3" />
-                      <p className="text-sm text-muted-foreground">{t("Nessuna fonte aggiunta", "No sources added")}</p>
+                      <p className="text-sm text-muted-foreground">{tl("Nessuna fonte aggiunta", "No sources added")}</p>
                     </div>
                   ) : (
                     <>
@@ -1190,14 +1184,14 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
                             checked={selectedIds.size === sources.length && sources.length > 0}
                             onCheckedChange={toggleSelectAll}
                           />
-                          <span className="text-xs text-muted-foreground">{t("Seleziona tutti", "Select all")}</span>
+                          <span className="text-xs text-muted-foreground">{tl("Seleziona tutti", "Select all")}</span>
                         </label>
                         {selectedIds.size > 0 && (
                           <div className="flex items-center gap-2">
-                            <span className="text-xs text-muted-foreground">{selectedIds.size} {t("selezionate", "selected")}</span>
+                            <span className="text-xs text-muted-foreground">{selectedIds.size} {tl("selezionate", "selected")}</span>
                             <Button variant="destructive" size="sm" onClick={handleBulkDelete} disabled={bulkDeleting} className="gap-1.5 h-7 text-xs">
                               {bulkDeleting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
-                              {t("Elimina selezionate", "Delete selected")}
+                              {tl("Elimina selezionate", "Delete selected")}
                             </Button>
                           </div>
                         )}
@@ -1235,7 +1229,7 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
                               )}
                             </div>
                             {/* Priority stars */}
-                            <div className="flex items-center gap-0.5" title={t("Priorità", "Priority")}>
+                            <div className="flex items-center gap-0.5" title={tl("Priorità", "Priority")}>
                               {[1, 2, 3].map((star) => (
                                 <button
                                   key={star}
@@ -1288,13 +1282,13 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
                       {previewSource?.status === "error" ? (
                         <div className="space-y-3">
                           <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive whitespace-pre-wrap">
-                            {previewSource.error_message || t("Errore sconosciuto", "Unknown error")}
+                            {previewSource.error_message || tl("Errore sconosciuto", "Unknown error")}
                           </div>
                           <Button
                             onClick={() => { if (previewSource) { handleReprocess(previewSource); setPreviewSource(null); } }}
                             className="gap-1.5"
                           >
-                            <RefreshCw className="w-4 h-4" /> {t("Riprova", "Retry")}
+                            <RefreshCw className="w-4 h-4" /> {tl("Riprova", "Retry")}
                           </Button>
                         </div>
                       ) : loadingPreview ? (
@@ -1303,14 +1297,14 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
                         </div>
                       ) : previewChunks.length === 0 ? (
                         <p className="text-sm text-muted-foreground py-8 text-center">
-                          {t("Nessun contenuto indicizzato ancora.", "No indexed content yet.")}
+                          {tl("Nessun contenuto indicizzato ancora.", "No indexed content yet.")}
                         </p>
                       ) : (
                         <div className="space-y-2 overflow-y-auto pr-1" style={{ maxHeight: "60vh" }}>
                           {previewChunks.map((chunk) => (
                             <div key={chunk.chunk_index} className="rounded-lg border border-border bg-secondary/40 p-3">
                               <p className="text-[10px] text-muted-foreground uppercase font-medium mb-1.5">
-                                {t("Chunk", "Chunk")} #{chunk.chunk_index}
+                                {tl("Chunk", "Chunk")} #{chunk.chunk_index}
                               </p>
                               <p className="text-sm text-foreground/80 whitespace-pre-wrap">{chunk.content}</p>
                             </div>
@@ -1324,10 +1318,10 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
                   <div className="border-t border-border pt-4 space-y-3">
                     <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
                       <Search className="w-4 h-4 text-primary" />
-                      {t("Test Ricerca Semantica", "Semantic Search Test")}
+                      {tl("Test Ricerca Semantica", "Semantic Search Test")}
                     </h4>
                     <div className="flex gap-2">
-                      <Input placeholder={t("Cerca nella knowledge base...", "Search the knowledge base...")} value={searchQuery}
+                      <Input placeholder={tl("Cerca nella knowledge base...", "Search the knowledge base...")} value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)} className="bg-secondary border-border text-sm"
                         onKeyDown={(e) => e.key === "Enter" && handleSearchTest()} />
                       <Button onClick={handleSearchTest} disabled={searching || !searchQuery.trim()} className="gap-1.5 shrink-0">
@@ -1360,8 +1354,8 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
                   clientId ? <EcommerceKBStatus clientId={clientId} /> : null
                 ) : (
                   <LockedProFeature
-                    title={t("🛒 Product Catalog", "🛒 Catalogo Prodotti")}
-                    description={t("Disponibile con il piano Pro", "Available on Pro plan")}
+                    title={tl("🛒 Catalogo prodotti", "🛒 Product Catalog")}
+                    description={tl("Disponibile con il piano Pro", "Available on Pro plan")}
                     onUpgrade={() => showUpgrade("pro")}
                   />
                 )}
@@ -1382,13 +1376,13 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
         <PriorityHeader
           num={isFree ? 2 : 3}
           icon="⚙️"
-          title={t("Istruzioni", "Instructions")}
-          subtitle={t(
+          title={tl("Istruzioni", "Instructions")}
+          subtitle={tl(
             "Comportamento generale — usato come ultima risorsa",
             "General behavior — used as last resort"
           )}
           stars={1}
-          starLabel={t("Priorità bassa", "Low priority")}
+          starLabel={tl("Priorità bassa", "Low priority")}
         />
 
         <div className="space-y-3">
@@ -1400,18 +1394,18 @@ const ClientRAGKnowledgeBase = ({ overrideClientId, overrideChatbotId, section }
             }}
             rows={10}
             className="min-h-[180px] resize-y"
-            aria-label={t("Testo delle istruzioni", "Instructions text")}
-            placeholder={t("Scrivi le istruzioni del bot...", "Write your bot's instructions...")}
+            aria-label={tl("Testo delle istruzioni", "Instructions text")}
+            placeholder={tl("Scrivi le istruzioni del bot...", "Write your bot's instructions...")}
           />
           <Button onClick={saveInstructions} disabled={savingPrompt} className="gradient-primary text-white border-0 glow-sm w-full h-11">
             {savingPrompt ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
-            {t("Salva Istruzioni", "Save Instructions")}
+            {tl("Salva Istruzioni", "Save Instructions")}
           </Button>
         </div>
 
         <p className="text-[11px] text-muted-foreground mt-3 flex items-center gap-1">
           <Info className="w-3 h-3 shrink-0" />
-          {t(
+          {tl(
             "Scrivi qui le informazioni principali della tua attività: chi sei, prodotti e servizi, argomenti vietati, contatti e orari. Questo testo viene usato come ultima risorsa, dopo FAQ e Knowledge Base.",
             "Describe here: who you are, your products/services, forbidden topics, contact info and hours. This text is used as a last-resort source, after FAQ and Knowledge Base."
           )}

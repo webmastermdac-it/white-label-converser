@@ -5,7 +5,7 @@ import { Download, FileText, Plus, QrCode, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useLanguage } from "@/hooks/useLanguage";
+import { useLanguage, tx } from "@/hooks/useLanguage";
 import type { HotelProfile } from "@/lib/hotelProfile";
 
 interface Props {
@@ -21,7 +21,7 @@ export const DEFAULT_QUICK_REPLIES = ["Pulizia/asciugamani", "Late check-out", "
 
 const HotelQrTab = ({ profile, embedToken, enabled, onChange, onDownloaded, onUpgrade }: Props) => {
   const { lang } = useLanguage();
-  const tl = (it: string, en: string) => lang === "it" ? it : en;
+  const tl = (it: string, en: string) => tx(en, it);
   const [roomsText, setRoomsText] = useState("101-120");
   const [busy, setBusy] = useState(false);
   const replies = profile.in_stay_quick_replies.length ? profile.in_stay_quick_replies : DEFAULT_QUICK_REPLIES;

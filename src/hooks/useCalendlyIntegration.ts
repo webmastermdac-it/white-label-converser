@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { useLanguage } from "@/hooks/useLanguage";
+import { useLanguage, tx } from "@/hooks/useLanguage";
 import { useActiveModule } from "@/hooks/useActiveModule";
 import { toast } from "@/hooks/use-toast";
 
@@ -17,7 +17,6 @@ export function useCalendlyIntegration(clientIdOverride?: string | null, botIdOv
   const { clientId: authClientId } = useAuth();
   const clientId = clientIdOverride ?? authClientId;
   const { lang } = useLanguage();
-  const isIt = lang === "it";
   const { botId: activeBotId } = useActiveModule();
   const targetBotId = botIdOverride ?? activeBotId;
 
@@ -64,7 +63,7 @@ export function useCalendlyIntegration(clientIdOverride?: string | null, botIdOv
       toast({ title: "Error", description: error.message, variant: "destructive" });
       return;
     }
-    toast({ title: isIt ? "Calendly salvato!" : "Calendly saved!" });
+    toast({ title: tx("Calendly saved!", "Calendly salvato!") });
   };
 
   return { botId, botName, calendlyUrl, setCalendlyUrl, bookingButtonLabel, setBookingButtonLabel, primaryColor, vertical, loading, saving, save, reload: load };

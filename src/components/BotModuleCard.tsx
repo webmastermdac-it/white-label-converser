@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { useLanguage } from "@/hooks/useLanguage";
+import { useLanguage, tx } from "@/hooks/useLanguage";
 import { MODULES, MODULE_IDS, toModuleId, type ModuleId } from "@/lib/modules";
 import { MODULE_CHANGED_EVENT } from "@/hooks/useActiveModule";
 import {
@@ -35,13 +35,13 @@ const BotModuleCard = ({ chatbotId, canChange }: BotModuleCardProps) => {
     setPendingModule(null);
     const { error } = await supabase.from("chatbot_configs").update({ business_vertical: next }).eq("id", chatbotId);
     if (error) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
+      toast({ title: tx("Error", "Errore"), description: error.message, variant: "destructive" });
       return;
     }
     setCurrent(next);
     setPicking(false);
     window.dispatchEvent(new Event(MODULE_CHANGED_EVENT));
-    toast({ title: lang === "it" ? "Modulo aggiornato" : "Module updated" });
+    toast({ title: tx("Module updated", "Modulo aggiornato") });
   };
 
   const m = current ? MODULES[current] : null;
@@ -56,23 +56,21 @@ const BotModuleCard = ({ chatbotId, canChange }: BotModuleCardProps) => {
             </div>
           )}
           <div>
-            <p className="text-xs text-muted-foreground">{lang === "it" ? "Tipo di bot" : "Bot type"}</p>
+            <p className="text-xs text-muted-foreground">{tx("Bot type", "Tipo di bot")}</p>
             <p className="font-semibold text-foreground">{m ? m.name[lang] : "…"}</p>
             {m && <p className="text-sm text-muted-foreground">{m.description[lang]}</p>}
           </div>
         </div>
         {canChange && (
           <Button variant="outline" size="sm" onClick={() => setPicking((p) => !p)}>
-            {lang === "it" ? "Cambia tipo" : "Change type"}
+            {tx("Change type", "Cambia tipo")}
           </Button>
         )}
       </div>
 
       {!canChange && (
         <p className="text-xs text-muted-foreground">
-          {lang === "it"
-            ? "Il tipo di bot è impostato dal tuo consulente. Per cambiarlo contatta il supporto."
-            : "The bot type is set by your consultant. To change it, contact support."}
+          {tx("The bot type is set by your consultant. To change it, contact support.", "Il tipo di bot è impostato dal tuo consulente. Per cambiarlo contatta il supporto.")}
         </p>
       )}
 
@@ -101,16 +99,14 @@ const BotModuleCard = ({ chatbotId, canChange }: BotModuleCardProps) => {
       <AlertDialog open={!!pendingModule} onOpenChange={(o) => !o && setPendingModule(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>{lang === "it" ? "Cambiare modulo?" : "Change module?"}</AlertDialogTitle>
+            <AlertDialogTitle>{tx("Change module?", "Cambiare modulo?")}</AlertDialogTitle>
             <AlertDialogDescription>
-              {pendingModule && (lang === "it"
-                ? `Il bot passerà al modulo "${MODULES[pendingModule].name.it}". Menu, checklist e integrazioni consigliate cambieranno. Dati e contenuti già salvati restano invariati.`
-                : `The bot will switch to the "${MODULES[pendingModule].name.en}" module. Menu, checklist and recommended integrations will change. Saved data and content stay unchanged.`)}
+              {pendingModule && (tx("The bot will switch to the \"{0}\" module. Menu, checklist and recommended integrations will change. Saved data and content stay unchanged.", "Il bot passerà al modulo \"{1}\". Menu, checklist e integrazioni consigliate cambieranno. Dati e contenuti già salvati restano invariati.", [MODULES[pendingModule].name.en, MODULES[pendingModule].name.it]))}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>{lang === "it" ? "Annulla" : "Cancel"}</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmModuleChange}>{lang === "it" ? "Conferma" : "Confirm"}</AlertDialogAction>
+            <AlertDialogCancel>{tx("Cancel", "Annulla")}</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmModuleChange}>{tx("Confirm", "Conferma")}</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

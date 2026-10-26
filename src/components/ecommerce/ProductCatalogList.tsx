@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { useLanguage } from "@/hooks/useLanguage";
+import { useLanguage, tx, appLocale } from "@/hooks/useLanguage";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -30,7 +30,6 @@ interface ProductRow {
 const ProductCatalogList = ({ refreshKey = 0 }: { refreshKey?: number }) => {
   const { clientId } = useAuth();
   const { lang } = useLanguage();
-  const isIt = lang === "it";
 
   const [rows, setRows] = useState<ProductRow[]>([]);
   const [total, setTotal] = useState(0);
@@ -84,7 +83,7 @@ const ProductCatalogList = ({ refreshKey = 0 }: { refreshKey?: number }) => {
           <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
           <Input
             className="pl-9"
-            placeholder={isIt ? "Cerca prodotto..." : "Search product..."}
+            placeholder={tx("Search product...", "Cerca prodotto...")}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
@@ -94,9 +93,9 @@ const ProductCatalogList = ({ refreshKey = 0 }: { refreshKey?: number }) => {
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">{isIt ? "Tutti gli stati" : "All statuses"}</SelectItem>
-            <SelectItem value="active">{isIt ? "Attivi" : "Active"}</SelectItem>
-            <SelectItem value="inactive">{isIt ? "Disattivati" : "Inactive"}</SelectItem>
+            <SelectItem value="all">{tx("All statuses", "Tutti gli stati")}</SelectItem>
+            <SelectItem value="active">{tx("Active", "Attivi")}</SelectItem>
+            <SelectItem value="inactive">{tx("Inactive", "Disattivati")}</SelectItem>
           </SelectContent>
         </Select>
         <Select value={stockFilter} onValueChange={(v) => { setStockFilter(v); setPage(0); }}>
@@ -104,9 +103,9 @@ const ProductCatalogList = ({ refreshKey = 0 }: { refreshKey?: number }) => {
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">{isIt ? "Tutte le disponibilità" : "All availability"}</SelectItem>
-            <SelectItem value="in_stock">{isIt ? "Disponibili" : "In stock"}</SelectItem>
-            <SelectItem value="out_of_stock">{isIt ? "Esauriti" : "Out of stock"}</SelectItem>
+            <SelectItem value="all">{tx("All availability", "Tutte le disponibilità")}</SelectItem>
+            <SelectItem value="in_stock">{tx("In stock", "Disponibili")}</SelectItem>
+            <SelectItem value="out_of_stock">{tx("Out of stock", "Esauriti")}</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -115,12 +114,12 @@ const ProductCatalogList = ({ refreshKey = 0 }: { refreshKey?: number }) => {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>{isIt ? "Prodotto" : "Product"}</TableHead>
-              <TableHead>{isIt ? "Categorie" : "Categories"}</TableHead>
-              <TableHead>{isIt ? "Prezzo" : "Price"}</TableHead>
-              <TableHead>{isIt ? "Disponibilità" : "Availability"}</TableHead>
-              <TableHead>{isIt ? "Stato" : "Status"}</TableHead>
-              <TableHead className="text-right">{isIt ? "Aggiornato" : "Updated"}</TableHead>
+              <TableHead>{tx("Product", "Prodotto")}</TableHead>
+              <TableHead>{tx("Categories", "Categorie")}</TableHead>
+              <TableHead>{tx("Price", "Prezzo")}</TableHead>
+              <TableHead>{tx("Availability", "Disponibilità")}</TableHead>
+              <TableHead>{tx("Status", "Stato")}</TableHead>
+              <TableHead className="text-right">{tx("Updated", "Aggiornato")}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -135,7 +134,7 @@ const ProductCatalogList = ({ refreshKey = 0 }: { refreshKey?: number }) => {
               <TableRow>
                 <TableCell colSpan={6} className="py-10 text-center text-sm text-muted-foreground">
                   <Package className="w-5 h-5 mx-auto mb-2 opacity-60" />
-                  {isIt ? "Nessun prodotto trovato" : "No products found"}
+                  {tx("No products found", "Nessun prodotto trovato")}
                 </TableCell>
               </TableRow>
             )}
@@ -179,22 +178,22 @@ const ProductCatalogList = ({ refreshKey = 0 }: { refreshKey?: number }) => {
                 <TableCell>
                   {p.in_stock ? (
                     <Badge className="bg-green-600 hover:bg-green-600 text-[10px]">
-                      {isIt ? "Disponibile" : "In stock"}
+                      {tx("In stock", "Disponibile")}
                       {p.stock_quantity != null && p.stock_quantity > 0 ? ` (${p.stock_quantity})` : ""}
                     </Badge>
                   ) : (
-                    <Badge variant="destructive" className="text-[10px]">{isIt ? "Esaurito" : "Out of stock"}</Badge>
+                    <Badge variant="destructive" className="text-[10px]">{tx("Out of stock", "Esaurito")}</Badge>
                   )}
                 </TableCell>
                 <TableCell>
                   {p.is_active ? (
-                    <Badge variant="outline" className="text-[10px]">{isIt ? "Attivo" : "Active"}</Badge>
+                    <Badge variant="outline" className="text-[10px]">{tx("Active", "Attivo")}</Badge>
                   ) : (
-                    <Badge variant="secondary" className="text-[10px]">{isIt ? "Disattivato" : "Inactive"}</Badge>
+                    <Badge variant="secondary" className="text-[10px]">{tx("Inactive", "Disattivato")}</Badge>
                   )}
                 </TableCell>
                 <TableCell className="text-right text-xs text-muted-foreground whitespace-nowrap">
-                  {p.last_updated ? new Date(p.last_updated).toLocaleDateString(isIt ? "it-IT" : "en-US") : "-"}
+                  {p.last_updated ? new Date(p.last_updated).toLocaleDateString(appLocale()) : "-"}
                 </TableCell>
               </TableRow>
             ))}
@@ -204,15 +203,15 @@ const ProductCatalogList = ({ refreshKey = 0 }: { refreshKey?: number }) => {
 
       <div className="flex items-center justify-between text-xs text-muted-foreground">
         <span>
-          {isIt ? `${total} prodotti` : `${total} products`}
+          {tx("{0} products", "{0} prodotti", [total])}
         </span>
         <div className="flex items-center gap-2">
           <Button size="sm" variant="outline" disabled={page === 0 || loading} onClick={() => setPage((p) => p - 1)}>
-            {isIt ? "Indietro" : "Prev"}
+            {tx("Prev", "Indietro")}
           </Button>
           <span>{page + 1} / {totalPages}</span>
           <Button size="sm" variant="outline" disabled={page + 1 >= totalPages || loading} onClick={() => setPage((p) => p + 1)}>
-            {isIt ? "Avanti" : "Next"}
+            {tx("Next", "Avanti")}
           </Button>
         </div>
       </div>

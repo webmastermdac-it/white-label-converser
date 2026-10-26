@@ -66,8 +66,8 @@ const ClientOverview = () => {
       }
       // After 5 attempts
       toast({
-        title: t("paymentProcessing", "Pagamento in elaborazione"),
-        description: t("paymentProcessingDesc", "Il pagamento è in elaborazione. Aggiorna la pagina tra qualche secondo."),
+        title: t("Payment processing", "Pagamento in elaborazione"),
+        description: t("Your payment is being processed. Refresh the page in a few seconds.", "Il pagamento è in elaborazione. Aggiorna la pagina tra qualche secondo."),
       });
       setSearchParams({}, { replace: true });
     };
@@ -164,7 +164,7 @@ const ClientOverview = () => {
           <div className="flex gap-2 shrink-0">
             <Link to="/dashboard/upgrade">
               <Button size="sm" className="bg-amber-500 hover:bg-amber-600 text-white">
-                {t("upgradeToStarter", "Starter →")}
+                {t("Starter →", "Starter →")}
               </Button>
             </Link>
             <Link to="/dashboard/upgrade">
@@ -274,8 +274,8 @@ const ClientOverview = () => {
               </p>
               <p className="text-xs text-muted-foreground">
                 {vertical === "ecommerce"
-                  ? t("syncedProducts", "Prodotti sincronizzati")
-                  : (vertical === "hotel" || vertical === "hospitality") ? t("bookingConnected", "Prenotazioni collegate") : t("calendlyConnected", "Calendly collegato")}
+                  ? t("Synced products", "Prodotti sincronizzati")
+                  : (vertical === "hotel" || vertical === "hospitality") ? t("Bookings connected", "Prenotazioni collegate") : t("Calendly connected", "Calendly collegato")}
               </p>
             </div>
             <ArrowUpRight className="w-4 h-4 text-muted-foreground ml-auto" />

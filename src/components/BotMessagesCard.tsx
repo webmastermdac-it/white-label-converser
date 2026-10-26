@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { useLanguage, type AppLang } from "@/hooks/useLanguage";
+import { useLanguage, type AppLang, tx } from "@/hooks/useLanguage";
 import { Loader2, Save, Sparkles } from "lucide-react";
 
 const DEFAULT_WELCOME = "Ciao! Sono un assistente virtuale basato su intelligenza artificiale. Come posso aiutarti?";
@@ -32,7 +32,7 @@ const emptyI18n = (): I18n => ({ welcome: {}, fallback: {} });
 const BotMessagesCard = ({ chatbotId }: { chatbotId: string }) => {
   const { toast } = useToast();
   const { t, lang, contentLang } = useLanguage();
-  const tl = (it: string, en: string) => (lang === "it" ? it : en);
+  const tl = (it: string, en: string) => tx(en, it);
   const [welcome, setWelcome] = useState(DEFAULT_WELCOME);
   const [fallback, setFallback] = useState(DEFAULT_FALLBACK);
   const [i18n, setI18n] = useState<I18n>(emptyI18n());
@@ -126,7 +126,7 @@ const BotMessagesCard = ({ chatbotId }: { chatbotId: string }) => {
     }
     const { error } = await persist(welcome, fallback, next);
     setSaving(false);
-    if (error) return toast({ title: "Error", description: error.message, variant: "destructive" });
+    if (error) return toast({ title: tx("Error", "Errore"), description: error.message, variant: "destructive" });
     savedBase.current = { welcome, fallback };
     if (warn) toast({ title: "⚠️", description: tl("Testo salvato, ma la traduzione automatica non è riuscita. Riprova più tardi.", "Text saved, but automatic translation failed. Try again later.") });
     else toast({ title: t("saved"), description: tl("Messaggi aggiornati", "Messages updated") });
@@ -190,7 +190,7 @@ const BotMessagesCard = ({ chatbotId }: { chatbotId: string }) => {
           <Label>{t("welcomeMessage")}</Label>
           {status("welcome")}
         </div>
-        <Textarea value={valueFor("welcome")} onChange={(e) => onEdit("welcome", e.target.value)} placeholder="Ciao! Come posso aiutarti?" rows={2} className="bg-secondary border-border resize-none" />
+        <Textarea value={valueFor("welcome")} onChange={(e) => onEdit("welcome", e.target.value)} placeholder={tx("Hi! How can I help you?", "Ciao! Come posso aiutarti?")} rows={2} className="bg-secondary border-border resize-none" />
       </div>
 
       <div className="pt-2 border-t border-border space-y-2">

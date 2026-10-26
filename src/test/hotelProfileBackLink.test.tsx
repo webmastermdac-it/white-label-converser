@@ -22,6 +22,7 @@ vi.mock("@/hooks/useActiveModule", () => ({ useActiveModule: () => ({ botId: BOT
 vi.mock("@/hooks/usePlanConfig", () => ({ usePlanConfig: () => ({ canUseConciergeRequests: false }) }));
 vi.mock("@/hooks/useLanguage", () => ({
   useLanguage: () => ({ lang: "it", contentLang: "it", setLang: () => {}, t: (s: string) => s, localized: (v: any) => v.it }),
+  tx: (_en: string, it: string, vars?: unknown[]) => (vars ? it.replace(/\{(\d+)\}/g, (_m, i) => String(vars[Number(i)])) : it), appLocale: () => "it-IT", getAppLang: () => "it",
 }));
 
 import HotelProfile from "@/pages/client/hotel/HotelProfile";

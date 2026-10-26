@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { useLanguage } from "@/hooks/useLanguage";
+import { useLanguage, tx } from "@/hooks/useLanguage";
 import { useWidgetUrl } from "@/hooks/useWidgetUrl";
 import { useCalendlyIntegration } from "@/hooks/useCalendlyIntegration";
 import { Button } from "@/components/ui/button";
@@ -72,7 +72,7 @@ const ClientChatbotSettings = ({ adminMode = false, botIdOverride, hideHeader = 
   const currentConciergeItem = conciergeMenu.find((item) => item.key === currentConciergeKey);
   const ConciergeComponent = currentConciergeItem ? MODULE_PAGE_COMPONENTS[currentConciergeItem.href] : undefined;
   const backPath = adminMode ? "/admin/bots" : "/dashboard/bots";
-  const tl = (it: string, en: string) => lang === "it" ? it : en;
+  const tl = (it: string, en: string) => tx(en, it);
   const calendly = useCalendlyIntegration(clientId, botId);
   const supportsCalendly = botModule.integrations.includes("calendly");
 
@@ -112,7 +112,7 @@ const ClientChatbotSettings = ({ adminMode = false, botIdOverride, hideHeader = 
     setSavingGeneral(true);
     const { error } = await supabase.from("chatbot_configs").update({ name, site_url: siteUrl, is_active: isActive } as any).eq("id", botId);
     setSavingGeneral(false);
-    if (error) return toast({ title: "Error", description: error.message, variant: "destructive" });
+    if (error) return toast({ title: tx("Error", "Errore"), description: error.message, variant: "destructive" });
     toast({ title: "✅", description: tl("Impostazioni salvate!", "Settings saved!") });
     void fetchBot();
   };
@@ -122,7 +122,7 @@ const ClientChatbotSettings = ({ adminMode = false, botIdOverride, hideHeader = 
     setSavingLeads(true);
     const { error } = await supabase.from("chatbot_configs").update({ inactivity_timeout_minutes: inactivityTimeout, lead_form_mode: leadFormMode, lead_form_message_count: leadFormMessageCount } as any).eq("id", botId);
     setSavingLeads(false);
-    if (error) return toast({ title: "Error", description: error.message, variant: "destructive" });
+    if (error) return toast({ title: tx("Error", "Errore"), description: error.message, variant: "destructive" });
     toast({ title: "✅", description: tl("Lead e notifiche salvati!", "Leads and notifications saved!") });
     void fetchBot();
   };
@@ -176,7 +176,7 @@ const ClientChatbotSettings = ({ adminMode = false, botIdOverride, hideHeader = 
         {section === "tone" && botId && <ToneOfVoiceCard chatbotId={botId} />}
         {section === "knowledge" && <ClientRAGKnowledgeBase overrideChatbotId={botId} />}
         {section === "leads" && <div className="space-y-6">{!adminMode && supportsCalendly && <div className="flex flex-col gap-3 rounded-xl border border-border bg-card p-4 sm:flex-row sm:items-center"><CalendarDays className="h-5 w-5 text-primary" /><div className="flex-1"><p className="text-sm font-medium text-foreground">{calendly.calendlyUrl ? tl("Calendly connesso", "Calendly connected") : tl("Calendly non connesso", "Calendly not connected")}</p></div><Button variant="outline" asChild><Link to="/dashboard/integrations">{calendly.calendlyUrl ? tl("Gestisci", "Manage") : tl("Configura Calendly", "Configure Calendly")}</Link></Button></div>}<div className="glass space-y-5 rounded-xl p-6"><div className="space-y-3 rounded-xl border border-border bg-secondary/30 p-4"><Label>{tl("Quando una chat è da ritenersi conclusa", "When a chat should be considered ended")}</Label><p className="text-xs text-muted-foreground">{tl("Dopo quanti minuti di inattività la chat viene chiusa automaticamente", "After how many minutes of inactivity the chat is automatically closed")}</p><div className="flex flex-wrap gap-2">{[30,60,90].map((minutes) => <Button key={minutes} type="button" variant="outline" onClick={() => setInactivityTimeout(minutes)} className={`rounded-full ${inactivityTimeout === minutes ? "border-primary bg-primary/15 text-primary" : ""}`}>{inactivityTimeout === minutes && <CheckCircle2 className="mr-1.5 h-4 w-4" />}{minutes} {tl("minuti", "minutes")}</Button>)}</div></div><div className="space-y-3 rounded-xl border border-border bg-secondary/30 p-4"><Label>{tl("Quando mostrare il form per lasciare nome e contatti", "When to show the contact form")}</Label><p className="text-xs text-muted-foreground">{tl("Scegli quando il bot chiede nome ed email al visitatore", "Choose when the bot asks the visitor for name and email")}</p><div className="flex flex-wrap gap-2">{([{id:"immediate",it:"Subito all'inizio della chat",en:"Right at the start of the chat"},{id:"conversational",it:"Conversazionale (il bot chiede nome ed email in chat)",en:"Conversational (bot asks for name and email in chat)"},{id:"after_messages",it:"Dopo un numero di messaggi",en:"After a number of messages"},{id:"smart",it:"Solo su richiesta del bot",en:"Only when the bot asks"}] as const).map((mode) => <Button key={mode.id} type="button" variant="outline" onClick={() => setLeadFormMode(mode.id)} className={`h-auto min-h-11 whitespace-normal rounded-full ${leadFormMode === mode.id ? "border-primary bg-primary/15 text-primary" : ""}`}>{leadFormMode === mode.id && <CheckCircle2 className="mr-1.5 h-4 w-4" />}{tl(mode.it, mode.en)}</Button>)}</div>{leadFormMode === "after_messages" && <div className="flex items-center gap-2"><Input type="number" min={1} max={20} value={leadFormMessageCount} onChange={(event) => setLeadFormMessageCount(Math.min(20, Math.max(1, Number(event.target.value) || 1)))} className="w-20 bg-secondary" /><span className="text-sm text-muted-foreground">{tl("messaggi", "messages")}</span></div>}</div><Button onClick={saveLeads} disabled={savingLeads} className="gap-2"><Save className="h-4 w-4" />{tl("Salva", "Save")}</Button></div>{clientId && <ChatbotConfigForm clientId={clientId} chatbotId={botId} sectionFilter={["notifications"]} />}</div>}
-        {section === "preview" && <div className="space-y-4"><div className="flex items-center justify-between"><p className="text-sm text-muted-foreground">{tl("Anteprima live del widget", "Live widget preview")}</p><Button variant="outline" size="sm" onClick={() => setPreviewKey((key) => key + 1)} className="gap-2"><RefreshCw className="h-3.5 w-3.5" />{tl("Ricarica", "Reload")}</Button></div>{botConfig.embed_token ? <div className="glass overflow-hidden rounded-xl border border-border" style={{ minHeight: 550 }}><iframe key={previewKey} srcDoc={iframeSrcDoc} className="h-full w-full border-0" style={{ minHeight: 550 }} title="Widget Preview" sandbox="allow-scripts allow-same-origin allow-popups allow-forms" /></div> : <div className="glass rounded-xl p-8 text-center text-muted-foreground">{tl("Nessun chatbot configurato", "No chatbot configured")}</div>}</div>}
+        {section === "preview" && <div className="space-y-4"><div className="flex items-center justify-between"><p className="text-sm text-muted-foreground">{tl("Anteprima live del widget", "Live widget preview")}</p><Button variant="outline" size="sm" onClick={() => setPreviewKey((key) => key + 1)} className="gap-2"><RefreshCw className="h-3.5 w-3.5" />{tl("Ricarica", "Reload")}</Button></div>{botConfig.embed_token ? <div className="glass overflow-hidden rounded-xl border border-border" style={{ minHeight: 550 }}><iframe key={previewKey} srcDoc={iframeSrcDoc} className="h-full w-full border-0" style={{ minHeight: 550 }} title={tx("Widget Preview", "Anteprima widget")} sandbox="allow-scripts allow-same-origin allow-popups allow-forms" /></div> : <div className="glass rounded-xl p-8 text-center text-muted-foreground">{tl("Nessun chatbot configurato", "No chatbot configured")}</div>}</div>}
         {section === "concierge" && conciergeMenu.length > 0 && <div className="space-y-4"><div className="flex flex-wrap gap-2">{conciergeMenu.map((item) => { const Icon = item.icon; const selected = currentConciergeKey === item.key; return <Button key={item.key} type="button" variant="outline" onClick={() => setConciergeSection(item.key)} className={`rounded-full ${selected ? "border-primary bg-primary/15 text-primary" : ""}`}><Icon className="mr-1.5 h-4 w-4" />{item.label[lang]}</Button>; })}</div>{ConciergeComponent && botId && <ConciergeComponent key={`${botId}-${currentConciergeKey}`} botIdOverride={botId} />}</div>}
       </>}
     </div>

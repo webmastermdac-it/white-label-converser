@@ -1,6 +1,7 @@
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { KeyRound, ShieldCheck, Info, Check } from "lucide-react";
 import type { Platform } from "@/hooks/useEcommerceIntegration";
+import { tx } from "@/hooks/useLanguage";
 
 type StorePlatform = "woocommerce" | "shopify" | "prestashop";
 
@@ -89,9 +90,7 @@ const PlatformGuide = ({ platform, isIt }: { platform: Platform; isIt: boolean }
       <Alert className="text-xs">
         <Info className="w-3.5 h-3.5" />
         <AlertDescription>
-          {isIt
-            ? "Con questa integrazione il bot conosce prodotti, prezzi e disponibilità. Acquisti dal chatbot e stato ordini richiedono WooCommerce, Shopify o PrestaShop."
-            : "With this integration the bot knows products, prices and availability. Purchases from the chatbot and order status require WooCommerce, Shopify or PrestaShop."}
+          {tx("With this integration the bot knows products, prices and availability. Purchases from the chatbot and order status require WooCommerce, Shopify or PrestaShop.", "Con questa integrazione il bot conosce prodotti, prezzi e disponibilità. Acquisti dal chatbot e stato ordini richiedono WooCommerce, Shopify o PrestaShop.")}
         </AlertDescription>
       </Alert>
     );
@@ -103,22 +102,22 @@ const PlatformGuide = ({ platform, isIt }: { platform: Platform; isIt: boolean }
     <div className="space-y-3">
       <Alert className="text-xs">
         <KeyRound className="w-3.5 h-3.5" />
-        <AlertTitle className="text-xs">{isIt ? "Dove trovare le credenziali" : "Where to find the credentials"}</AlertTitle>
-        <AlertDescription className="text-xs">{isIt ? WHERE[platform].it : WHERE[platform].en}</AlertDescription>
+        <AlertTitle className="text-xs">{tx("Where to find the credentials", "Dove trovare le credenziali")}</AlertTitle>
+        <AlertDescription className="text-xs">{tx(WHERE[platform].en, WHERE[platform].it)}</AlertDescription>
       </Alert>
 
       <Alert className="border-amber-500/40 bg-amber-500/5 [&>svg]:text-amber-500 text-xs">
         <ShieldCheck className="w-3.5 h-3.5" />
-        <AlertTitle className="text-xs">{isIt ? "Permessi necessari" : "Required permissions"}</AlertTitle>
+        <AlertTitle className="text-xs">{tx("Required permissions", "Permessi necessari")}</AlertTitle>
         <AlertDescription className="text-xs">
           <ul className="space-y-1.5 mt-1">
             {perms.map((row) => (
               <li key={row.label.en} className="flex items-start gap-1.5">
                 <Check className="w-3.5 h-3.5 mt-0.5 shrink-0 text-amber-500" />
                 <span>
-                  <span className="font-medium">{isIt ? row.label.it : row.label.en}</span>
+                  <span className="font-medium">{tx(row.label.en, row.label.it)}</span>
                   {" — "}
-                  {isIt ? row.detail.it : row.detail.en}
+                  {tx(row.detail.en, row.detail.it)}
                 </span>
               </li>
             ))}

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { useLanguage } from "@/hooks/useLanguage";
+import { useLanguage, tx } from "@/hooks/useLanguage";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, Circle, ArrowRight, ListChecks } from "lucide-react";
@@ -19,7 +19,7 @@ const manualKey = (botId: string) => `genius-checklist-${botId}`;
 
 const ActivationChecklist = ({ botId, clientId, vertical, calendlyUrl }: Props) => {
   const { lang } = useLanguage();
-  const tl = (it: string, en: string) => (lang === "it" ? it : en);
+  const tl = (it: string, en: string) => tx(en, it);
   const mod = getModule(vertical);
   const [auto, setAuto] = useState<Record<string, boolean> | null>(null);
   const [manual, setManual] = useState<Record<string, boolean>>(() => {

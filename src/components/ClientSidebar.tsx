@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { useLanguage } from "@/hooks/useLanguage";
+import { useLanguage, tx } from "@/hooks/useLanguage";
 import { usePlanConfig } from "@/hooks/usePlanConfig";
 import { useActiveModule } from "@/hooks/useActiveModule";
 import { playNotice, SERVICE_REQUEST_SOUND_KEY } from "@/lib/playNotice";
@@ -30,8 +30,7 @@ const ClientSidebar = ({ openRequests, requestsEnabled, lampEnabled, onLampChang
   const { botId, module: activeModule } = useActiveModule();
   const isFree = planConfig?.plan_name === "free";
   const navigate = useNavigate();
-  const tl = (it: string, en: string) => lang === "it" ? it : en;
-  const isIt = lang === "it";
+  const tl = (it: string, en: string) => tx(en, it);
 
   const isAdmin = role === "super_admin";
   const botItem = isAdmin
@@ -143,14 +142,14 @@ const ClientSidebar = ({ openRequests, requestsEnabled, lampEnabled, onLampChang
 
 
       <nav className="px-2 py-2.5 space-y-0.5 overflow-y-auto">
-        <GroupLabel>{requestsEnabled ? tl("Operatività", "Operations") : isIt ? "Dati" : "Data"}</GroupLabel>
+        <GroupLabel>{requestsEnabled ? tl("Operatività", "Operations") : tx("Data", "Dati")}</GroupLabel>
         {dataNav.map(renderItem)}
       </nav>
 
       <div className="mx-3 border-t border-sidebar-border" />
 
       <nav className="flex-1 px-2 py-2.5 space-y-0.5 overflow-y-auto">
-        <GroupLabel>{isIt ? "Configurazione" : "Configuration"}</GroupLabel>
+        <GroupLabel>{tx("Configuration", "Configurazione")}</GroupLabel>
         {configNav.map(renderItem)}
       </nav>
 

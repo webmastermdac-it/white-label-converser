@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate, useSearchParams } from "react-router-do
 import { supabase } from "@/integrations/supabase/client";
 import { FunctionsHttpError } from "@supabase/supabase-js";
 import { useAuth } from "@/contexts/AuthContext";
-import { useLanguage } from "@/hooks/useLanguage";
+import { useLanguage, tx } from "@/hooks/useLanguage";
 import { useActiveModule } from "@/hooks/useActiveModule";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -27,7 +27,7 @@ type ImportDiagnostics = { links_found: number; en_links_found: number; rooms_wi
 
 const HotelProfile = ({ botIdOverride }: { botIdOverride?: string } = {}) => {
   const { lang } = useLanguage();
-  const tl = (it: string, en: string) => (lang === "it" ? it : en);
+  const tl = (it: string, en: string) => tx(en, it);
   const { clientId } = useAuth();
   const { botId: activeBotId } = useActiveModule();
   const botId = botIdOverride ?? activeBotId;
@@ -267,7 +267,7 @@ const HotelProfile = ({ botIdOverride }: { botIdOverride?: string } = {}) => {
                     </SelectContent>
                   </Select>
                 </F>
-                <F label={tl("Distanza", "Distance")}><Input value={r.distance} onChange={(e) => set({ distance: e.target.value })} placeholder="5 min a piedi" /></F>
+                <F label={tl("Distanza", "Distance")}><Input value={r.distance} onChange={(e) => set({ distance: e.target.value })} placeholder={tx("5 min walk", "5 min a piedi")} /></F>
                 <F label="Link"><Input value={r.link} onChange={(e) => set({ link: e.target.value })} placeholder="https://" /></F>
                 <F label={tl("Descrizione", "Description")} full><Textarea rows={2} value={r.description} onChange={(e) => set({ description: e.target.value })} /></F>
               </Grid>

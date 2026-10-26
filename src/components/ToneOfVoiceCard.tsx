@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { ChevronDown, Loader2, Save, Table2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { useLanguage } from "@/hooks/useLanguage";
+import { useLanguage, tx } from "@/hooks/useLanguage";
 import { useToast } from "@/hooks/use-toast";
 import { TONE_PRESETS } from "@/lib/tonePresets";
 import { Button } from "@/components/ui/button";
@@ -10,7 +10,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 
 const ToneReferenceTable = () => {
   const { lang } = useLanguage();
-  const tl = (it: string, en: string) => lang === "it" ? it : en;
+  const tl = (it: string, en: string) => tx(en, it);
   const [open, setOpen] = useState(false);
   const wrapRef = useRef<HTMLDivElement>(null);
   const [wide, setWide] = useState(false);
@@ -53,7 +53,7 @@ const ToneReferenceTable = () => {
 const ToneOfVoiceCard = ({ chatbotId }: { chatbotId: string }) => {
   const { lang } = useLanguage();
   const { toast } = useToast();
-  const tl = (it: string, en: string) => lang === "it" ? it : en;
+  const tl = (it: string, en: string) => tx(en, it);
   const [tone, setTone] = useState("");
   const [presetId, setPresetId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -77,7 +77,7 @@ const ToneOfVoiceCard = ({ chatbotId }: { chatbotId: string }) => {
     setSaving(true);
     const { error } = await supabase.from("chatbot_configs").update({ tone_of_voice: text || null, tone_preset_id: id } as any).eq("id", chatbotId);
     setSaving(false);
-    if (error) toast({ title: "Errore", description: error.message, variant: "destructive" });
+    if (error) toast({ title: tx("Error", "Errore"), description: error.message, variant: "destructive" });
     else if (notify) toast({ title: "✅", description: tl("Tono salvato!", "Tone saved!") });
   };
 
