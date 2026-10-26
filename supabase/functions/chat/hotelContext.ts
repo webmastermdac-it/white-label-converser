@@ -78,8 +78,12 @@ export function buildHotelContext(raw: any, conversationalLead: boolean, room = 
 
   if (!sections.length) return "";
 
+  const rawCats = Array.isArray(hp.in_stay_quick_replies) ? hp.in_stay_quick_replies.map((x: unknown) => String(x).trim()).filter(Boolean) : [];
+  const cats = rawCats.length ? rawCats : ["Pulizia/asciugamani", "Late check-out", "Taxi/transfer", "Ristorante", "Problema in camera", "Altro"];
+  const requestRule = `GUEST REQUESTS FOR STAFF: when the guest asks for something the staff must do or arrange (cleaning, towels, taxi, a restaurant booking, a late check-out, a problem or breakage in the room, any other service request), reply briefly in the guest's language saying you are passing it to the reception, then append on its own final line the marker [SERVICE_REQUEST:{"category":"<CATEGORY>","message":"<short summary of the request in Italian>"}]. <CATEGORY> MUST be exactly one of: ${cats.map((c: string) => `"${c}"`).join(", ")} — choose the one that best matches the request, use "Altro" if none fits (or the closest one if "Altro" is not listed). Emit the marker only once the request is clear and complete (ask for missing details first, but never the room), and never for plain information questions. The system registers the request after your reply; do not claim it is already done, say reception has been notified.`;
+
   const quoteRule = room
-    ? `The guest is already staying at the property${room ? `, in room ${room}` : ""}. IN-STAY MODE: do not offer quotes, booking links or availability checks (informational links to services and PAGES are allowed). Help with property services, opening hours, local recommendations and guest requests. Never emit [TRIGGER_LEAD_FORM] for a stay request.`
+    ? `The guest is already staying at the property${room ? `, in room ${room}` : ""}. IN-STAY MODE: do not offer quotes, booking links or availability checks (informational links to services and PAGES are allowed). Help with property services, opening hours, local recommendations and guest requests. Never emit [TRIGGER_LEAD_FORM] for a stay request. The room number is ALREADY KNOWN (${room}) from the QR code the guest scanned: NEVER ask the guest which room they are in, and never ask them to confirm it. ${requestRule}`
     : conversationalLead
     ? "If the guest asks about availability or a quote, first collect naturally the arrival and departure dates and the number of adults and children, one question at a time."
     : "If the guest asks about availability or a quote, first ask naturally (if not already given) for arrival and departure dates and the number of adults and children, then append the marker [TRIGGER_LEAD_FORM] on its own final line so they can send the stay request.";

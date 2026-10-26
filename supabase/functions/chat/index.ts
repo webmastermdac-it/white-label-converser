@@ -351,6 +351,7 @@ serve(async (req) => {
       text
         .replace("[TRIGGER_LEAD_FORM]", "")
         .replace(/\[LEAD_DATA:\{[\s\S]*?\}\]/g, "")
+        .replace(/\[SERVICE_REQUEST:\{[\s\S]*?\}\]/g, "")
         .replace(/\[ADD_TO_CART:.*?\]/g, "");
 
     async function postProcess(fullMessage: string) {

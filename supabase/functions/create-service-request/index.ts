@@ -9,6 +9,7 @@ const BodySchema = z.object({
   category: z.string().trim().min(1).max(80),
   message: z.string().trim().max(1000).optional().default(""),
   guest_name: z.string().trim().max(120).optional().default(""),
+  source: z.enum(["form", "chat"]).optional().default("form"),
 });
 
 const reply = (body: unknown, status = 200) => new Response(JSON.stringify(body), {
@@ -39,9 +40,15 @@ Deno.serve(async (req) => {
       ? bot.hotel_profile.in_stay_quick_replies.map((x: unknown) => String(x).trim()).filter(Boolean)
       : [];
     const defaults = ["Pulizia/asciugamani", "Late check-out", "Taxi/transfer", "Ristorante", "Problema in camera", "Altro"];
-    if (![...(configured.length ? configured : defaults)].includes(parsed.data.category)) {
-      return reply({ error: "Invalid category" }, 400);
+    const allowed = configured.length ? configured : defaults;
+    let category = parsed.data.category;
+    if (!allowed.includes(category)) {
+      // Requests written by the guest in chat: the model picks a tag, anything unexpected becomes "Altro".
+      if (parsed.data.source !== "chat") return reply({ error: "Invalid category" }, 400);
+      category = allowed.find((c: string) => /^altro$/i.test(c)) || "Altro";
     }
+    // Origin marker (no schema change): shown as a "Da chat" badge in the dashboard.
+    const storedMessage = parsed.data.source === "chat" ? `[chat] ${parsed.data.message}`.trim() : parsed.data.message;
 
     const room = parsed.data.room || "Reception";
     const since = new Date(Date.now() - 60 * 60 * 1000).toISOString();
@@ -53,8 +60,8 @@ Deno.serve(async (req) => {
       bot_id: bot.id,
       client_id: bot.client_id,
       room,
-      category: parsed.data.category,
-      message: parsed.data.message || null,
+      category,
+      message: storedMessage || null,
       guest_name: parsed.data.guest_name || null,
     }).select("id").single();
     if (error) throw error;
@@ -67,7 +74,7 @@ Deno.serve(async (req) => {
         const body = `<h1 style="margin:0 0 4px;font-size:24px;color:#1A1A1A;">Nuova richiesta ospite</h1>
           <p style="margin:0 0 20px;color:#888888;">${escHtml(bot.name)}</p>
           <div style="background:#F5F5F5;border-radius:8px;padding:16px;">
-            <p><strong>Camera:</strong> ${escHtml(room)}</p><p><strong>Categoria:</strong> ${escHtml(parsed.data.category)}</p>
+            <p><strong>Camera:</strong> ${escHtml(room)}</p><p><strong>Categoria:</strong> ${escHtml(category)}</p>${parsed.data.source === "chat" ? "<p><strong>Origine:</strong> chat con il bot</p>" : ""}
             ${parsed.data.guest_name ? `<p><strong>Ospite:</strong> ${escHtml(parsed.data.guest_name)}</p>` : ""}
             ${parsed.data.message ? `<p><strong>Messaggio:</strong> ${escHtml(parsed.data.message)}</p>` : ""}
           </div>${appUrl ? `<p style="margin-top:24px;text-align:center;"><a href="${escHtml(appUrl)}/dashboard/hotel/requests" style="color:${escHtml(brand.primary_color)};font-weight:700;">Apri richieste ospiti</a></p>` : ""}`;
@@ -77,7 +84,7 @@ Deno.serve(async (req) => {
           body: JSON.stringify({
             from: `${brand.app_name} <noreply@chatbot.your-genius.com>`,
             to: [bot.notification_email],
-            subject: `Camera ${room}: ${parsed.data.category}`,
+            subject: `Camera ${room}: ${category}`,
             html: emailShell(brand, body),
           }),
         });

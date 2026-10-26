@@ -624,8 +624,9 @@
         function read() {
           reader.read().then(function(result) {
             if (result.done) {
-              var clean = fullText.replace("[TRIGGER_LEAD_FORM]", "").replace(/\[LEAD_DATA:\{[\s\S]*?\}\]/g, "").trim();
+              var clean = fullText.replace("[TRIGGER_LEAD_FORM]", "").replace(/\[LEAD_DATA:\{[\s\S]*?\}\]/g, "").replace(/\[SERVICE_REQUEST:[\s\S]*$/, "").trim();
               messages[botIdx] = { role: "assistant", content: clean || t.errorReply };
+              if (ROOM) submitChatServiceRequest(fullText);
                if (!ROOM && fullText.indexOf("[TRIGGER_LEAD_FORM]") !== -1) showLeadForm = true;
               saveMessages(messages);
               render();
@@ -642,14 +643,14 @@
                 var delta = (parsed.choices && parsed.choices[0] && parsed.choices[0].delta && parsed.choices[0].delta.content) || "";
                 if (delta) {
                   fullText += delta;
-                  messages[botIdx] = { role: "assistant", content: fullText.replace("[TRIGGER_LEAD_FORM]", "").replace(/\[LEAD_DATA:\{[\s\S]*?\}\]/g, "").trim() };
+                  messages[botIdx] = { role: "assistant", content: fullText.replace("[TRIGGER_LEAD_FORM]", "").replace(/\[LEAD_DATA:\{[\s\S]*?\}\]/g, "").replace(/\[SERVICE_REQUEST:[\s\S]*$/, "").trim() };
                   render();
                 }
               } catch(e) {}
             }
             read();
           }).catch(function() {
-            messages[botIdx] = { role: "assistant", content: fullText.replace("[TRIGGER_LEAD_FORM]", "").replace(/\[LEAD_DATA:\{[\s\S]*?\}\]/g, "").trim() || t.errorMsg };
+            messages[botIdx] = { role: "assistant", content: fullText.replace("[TRIGGER_LEAD_FORM]", "").replace(/\[LEAD_DATA:\{[\s\S]*?\}\]/g, "").replace(/\[SERVICE_REQUEST:[\s\S]*$/, "").trim() || t.errorMsg };
             saveMessages(messages);
             isLoading = false;
             render();
@@ -660,8 +661,9 @@
       }
       // Fallback: non-streaming JSON response
       return response.json().then(function(data) {
-        var botMsg = data.message || t.errorReply;
+        var botMsg = (data.message || t.errorReply).replace(/\[SERVICE_REQUEST:[\s\S]*$/, "").trim() || t.errorReply;
         messages.push({ role: "assistant", content: botMsg });
+        if (ROOM) submitChatServiceRequest(data.message || "");
          if (!ROOM && data.trigger_lead_form) showLeadForm = true;
         saveMessages(messages);
         isLoading = false;
@@ -675,6 +677,29 @@
       messages.push({ role: "assistant", content: t.errorMsg });
       saveMessages(messages);
       isLoading = false;
+      render();
+    });
+  }
+
+  // The bot asks for staff action with a [SERVICE_REQUEST:{...}] marker: register it and confirm only if saved.
+  function submitChatServiceRequest(fullText) {
+    var m = /\[SERVICE_REQUEST:(\{[\s\S]*?\})\]/.exec(fullText);
+    if (!m) return;
+    var data;
+    try { data = JSON.parse(m[1]); } catch (e) { return; }
+    if (!data || !data.category) return;
+    fetch(SUPABASE_URL + "/functions/v1/create-service-request", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ embed_token: EMBED_TOKEN, room: ROOM, category: String(data.category).slice(0, 80), message: String(data.message || "").slice(0, 900), guest_name: "", source: "chat" }),
+    }).then(function (response) {
+      if (!response.ok) throw new Error("request_failed");
+      messages.push({ role: "assistant", content: ts.successMsg });
+      saveMessages(messages);
+      render();
+    }).catch(function () {
+      messages.push({ role: "assistant", content: t.errorMsg });
+      saveMessages(messages);
       render();
     });
   }

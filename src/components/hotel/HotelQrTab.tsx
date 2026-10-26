@@ -17,12 +17,14 @@ interface Props {
   onUpgrade: () => void;
 }
 
+const DEFAULT_QR_ROOMS = "101-120";
 export const DEFAULT_QUICK_REPLIES = ["Pulizia/asciugamani", "Late check-out", "Taxi/transfer", "Ristorante", "Problema in camera", "Altro"];
 
 const HotelQrTab = ({ profile, embedToken, enabled, onChange, onDownloaded, onUpgrade }: Props) => {
   const { lang } = useLanguage();
   const tl = (it: string, en: string) => tx(en, it);
-  const [roomsText, setRoomsText] = useState("101-120");
+  const roomsText = profile.qr_rooms || DEFAULT_QR_ROOMS;
+  const setRoomsText = (value: string) => onChange({ ...profile, qr_rooms: value });
   const [busy, setBusy] = useState(false);
   const replies = profile.in_stay_quick_replies.length ? profile.in_stay_quick_replies : DEFAULT_QUICK_REPLIES;
   const baseUrl = `${window.location.origin}/c/${embedToken}`;

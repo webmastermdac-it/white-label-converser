@@ -146,8 +146,8 @@ const HotelRequests = ({ botIdOverride }: { botIdOverride?: string } = {}) => {
           <div className="flex items-start gap-4 flex-1 min-w-0">
             <div className="shrink-0 w-16 rounded-lg bg-secondary text-center py-2"><p className="text-[10px] uppercase tracking-wide text-muted-foreground">{tl("camera", "room")}</p><p className="text-lg font-bold text-primary leading-tight break-all">{row.room}</p></div>
             <div className="min-w-0 space-y-1">
-              <p className="font-semibold flex flex-wrap items-center gap-2">{row.category}{urgent && <span className="rounded-full bg-destructive text-destructive-foreground px-2 py-0.5 text-[10px] font-semibold uppercase">{tl("Urgente", "Urgent")}</span>}</p>
-              {row.message && <p className="text-sm text-foreground break-words">{row.message}</p>}
+              <p className="font-semibold flex flex-wrap items-center gap-2">{row.category}{row.message?.startsWith("[chat]") && <span className="rounded-full bg-secondary text-secondary-foreground px-2 py-0.5 text-[10px] font-semibold uppercase">{tl("Da chat", "From chat")}</span>}{urgent && <span className="rounded-full bg-destructive text-destructive-foreground px-2 py-0.5 text-[10px] font-semibold uppercase">{tl("Urgente", "Urgent")}</span>}</p>
+              {row.message && <p className="text-sm text-foreground break-words">{row.message.replace(/^\[chat\]\s*/, "")}</p>}
               <p className="text-xs text-muted-foreground">{row.guest_name ? `${row.guest_name} · ` : ""}<span className={cn(waiting && "text-destructive font-medium")}>{timeAgo(minutes, lang)}{waiting ? ` · ${tl("in attesa da un po'", "waiting for a while")}` : ""}</span></p>
             </div>
           </div>

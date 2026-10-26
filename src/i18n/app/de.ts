@@ -724,6 +724,7 @@ const dict: Record<string, string> = {
   "When a guest writes from the room QR code, the request appears here.": "Wenn ein Gast über den Zimmer-QR-Code schreibt, erscheint die Anfrage hier.",
   "room": "Zimmer",
   "Urgent": "Dringend",
+  "From chat": "Aus dem Chat",
   "waiting for a while": "wartet schon länger",
   "In {0} days the concierge handled {1} conversations, {2}% outside reception hours, and sent {3} guests to your booking engine.": "In {0} Tagen hat der Concierge {1} Konversationen geführt, {2}% außerhalb der Rezeptionszeiten, und {3} Gäste zu Ihrer Buchungsmaschine geleitet.",
   "Quotes requested": "Angefragte Angebote",
