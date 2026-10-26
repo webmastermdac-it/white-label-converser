@@ -36,7 +36,71 @@ const HotelQrTab = ({ profile, embedToken, enabled, onChange, onDownloaded, onUp
   const markDownloaded = () => { onDownloaded(); };
   const downloadPng = async (room?: string) => {
     setBusy(true);
-    const dataUrl = await QRCode.toDataURL(linkFor(room), { width: 1200, margin: 2, errorCorrectionLevel: "H" });
+    const canvas = document.createElement("canvas");
+    canvas.width = 1200;
+    canvas.height = room ? 1500 : 1380;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) { setBusy(false); return; }
+    const font = '"Poppins", Helvetica, Arial, sans-serif';
+    const hotelName = (profile.property.name || "Concierge").toUpperCase();
+    const roomLabel = `${lang === "it" ? "Camera" : "Room"} ${room || ""}`;
+    const left = 16, top = 16, right = 1184, bottom = canvas.height - 16, radius = 36;
+    ctx.beginPath();
+    ctx.moveTo(left + radius, top);
+    ctx.lineTo(right - radius, top);
+    ctx.quadraticCurveTo(right, top, right, top + radius);
+    ctx.lineTo(right, bottom - radius);
+    ctx.quadraticCurveTo(right, bottom, right - radius, bottom);
+    ctx.lineTo(left + radius, bottom);
+    ctx.quadraticCurveTo(left, bottom, left, bottom - radius);
+    ctx.lineTo(left, top + radius);
+    ctx.quadraticCurveTo(left, top, left + radius, top);
+    ctx.closePath();
+    ctx.fillStyle = "#FCFAF5";
+    ctx.fill();
+    ctx.strokeStyle = "#E5DFD0";
+    ctx.lineWidth = 3;
+    ctx.stroke();
+    ctx.fillStyle = "#B7862B";
+    ctx.textBaseline = "middle";
+    let nameSize = 32;
+    const letters = Array.from(hotelName);
+    const spacing = 5;
+    ctx.font = `500 ${nameSize}px ${font}`;
+    const nameWidth = () => letters.reduce((sum, letter) => sum + ctx.measureText(letter).width, 0) + Math.max(0, letters.length - 1) * spacing;
+    while (nameWidth() > 1000 && nameSize > 12) {
+      nameSize -= 1;
+      ctx.font = `500 ${nameSize}px ${font}`;
+    }
+    // Scale exceptionally long property names without clipping their lettering.
+    ctx.save();
+    ctx.translate(600, 135);
+    ctx.scale(Math.min(1, 1000 / Math.max(1, nameWidth())), 1);
+    let letterX = -nameWidth() / 2;
+    for (const letter of letters) {
+      ctx.fillText(letter, letterX, 0);
+      letterX += ctx.measureText(letter).width + spacing;
+    }
+    ctx.restore();
+    ctx.textAlign = "center";
+    ctx.fillStyle = "#12302B";
+    if (room) {
+      ctx.font = `bold 56px ${font}`;
+      ctx.fillText(roomLabel, 600, 240, 1000);
+    }
+    const qrCanvas = document.createElement("canvas");
+    await QRCode.toCanvas(qrCanvas, linkFor(room), {
+      width: 850, margin: 2, errorCorrectionLevel: "H",
+      color: { dark: "#12302B", light: "#00000000" },
+    });
+    const qrY = room ? 330 : 210;
+    ctx.drawImage(qrCanvas, 175, qrY, 850, 850);
+    ctx.font = `500 40px ${font}`;
+    ctx.fillText("Inquadra e scrivi al concierge", 600, qrY + 940, 1000);
+    ctx.fillStyle = "#777777";
+    ctx.font = `400 30px ${font}`;
+    ctx.fillText("Scan and chat with the concierge", 600, qrY + 1000, 1000);
+    const dataUrl = canvas.toDataURL("image/png");
     const a = document.createElement("a");
     a.href = dataUrl;
     a.download = `concierge-${room ? `camera-${room}` : "generale"}.png`;
@@ -53,13 +117,46 @@ const HotelQrTab = ({ profile, embedToken, enabled, onChange, onDownloaded, onUp
       const slot = i % 4;
       const x = slot % 2 === 0 ? 12 : 109;
       const y = slot < 2 ? 12 : 153;
-      const qr = await QRCode.toDataURL(linkFor(rooms[i]), { width: 600, margin: 1, errorCorrectionLevel: "H" });
-      pdf.roundedRect(x, y, 89, 132, 3, 3);
-      pdf.setFontSize(15); pdf.text(profile.property.name || "Concierge", x + 44.5, y + 13, { align: "center" });
-      pdf.addImage(qr, "PNG", x + 17, y + 21, 55, 55);
-      pdf.setFontSize(18); pdf.text(`${tl("Camera", "Room")} ${rooms[i]}`, x + 44.5, y + 87, { align: "center" });
-      pdf.setFontSize(12); pdf.text("Scansiona: concierge 24/7", x + 44.5, y + 101, { align: "center" });
-      pdf.text("Scan: 24/7 concierge", x + 44.5, y + 109, { align: "center" });
+      const qr = await QRCode.toDataURL(linkFor(rooms[i]), {
+        width: 600, margin: 1, errorCorrectionLevel: "H",
+        color: { dark: "#12302B", light: "#00000000" },
+      });
+      pdf.setFillColor("#FCFAF5");
+      pdf.setDrawColor("#E5DFD0");
+      pdf.setLineWidth(0.3);
+      pdf.roundedRect(x, y, 89, 132, 3, 3, "FD");
+      const hotelName = (profile.property.name || "Concierge").toUpperCase();
+      pdf.setFont("helvetica", "normal");
+      pdf.setTextColor("#B7862B");
+      let nameSize = 9;
+      let charSpace = 1.2;
+      pdf.setFontSize(nameSize);
+      const nameWidth = () => pdf.getTextWidth(hotelName) + Math.max(0, hotelName.length - 1) * charSpace * 25.4 / 72;
+      while (nameWidth() > 73 && nameSize > 5) {
+        nameSize -= 0.5;
+        pdf.setFontSize(nameSize);
+      }
+      if (nameWidth() > 73) {
+        const scale = 73 / nameWidth();
+        nameSize *= scale;
+        charSpace *= scale;
+        pdf.setFontSize(nameSize);
+      }
+      pdf.text(hotelName, x + 44.5, y + 15, { align: "center", charSpace });
+      pdf.setCharSpace(0);
+      pdf.setFont("helvetica", "bold");
+      pdf.setTextColor("#12302B");
+      const roomLabel = `${lang === "it" ? "Camera" : "Room"} ${rooms[i]}`;
+      pdf.setFontSize(18);
+      if (pdf.getTextWidth(roomLabel) > 73) pdf.setFontSize(18 * 73 / pdf.getTextWidth(roomLabel));
+      pdf.text(roomLabel, x + 44.5, y + 29, { align: "center" });
+      pdf.addImage(qr, "PNG", x + 17, y + 39, 55, 55);
+      pdf.setFont("helvetica", "normal");
+      pdf.setFontSize(11);
+      pdf.text("Inquadra e scrivi al concierge", x + 44.5, y + 108, { align: "center" });
+      pdf.setTextColor("#777777");
+      pdf.setFontSize(8.5);
+      pdf.text("Scan and chat with the concierge", x + 44.5, y + 117, { align: "center" });
     }
     pdf.save("concierge-qr-camere.pdf");
     markDownloaded();
