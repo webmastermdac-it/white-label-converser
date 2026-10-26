@@ -187,8 +187,6 @@
   var activeStay = -1;
   var stayDraft = null;
   function canShowStay() { return isHotel() && !ROOM && !FULLSCREEN; }
-  // Hotel standard bots never open the lead form on their own (contacts are collected in chat).
-  function noAutoForm() { return canShowStay(); }
   function validStay(raw) {
     if (!raw || typeof raw !== "object") return null;
     function iso(value) {
@@ -640,6 +638,7 @@
         var form = shadow.getElementById("mdac-lead-form");
         if (form) form.scrollIntoView({ block: "nearest" });
       }
+      if (config.lead_form_mode !== "conversational") { btn.disabled = false; openForm(); return; }
       fetch(SUPABASE_URL + "/functions/v1/capture-lead", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -713,7 +712,7 @@
 
     messages.push({ role: "user", content: text });
     userMessageCount++;
-    if (!ROOM && !noAutoForm() && config && config.lead_form_mode === "after_messages" && !leadSent &&
+    if (!ROOM && config && config.lead_form_mode === "after_messages" && !leadSent &&
         userMessageCount >= (config.lead_form_message_count || 3)) {
       showLeadForm = true;
     }
@@ -756,7 +755,7 @@
               var stay = readStay(fullText);
               if (stay) { messages[botIdx].stay = stay; showLeadForm = false; }
               if (ROOM) submitChatServiceRequest(fullText);
-               if (!ROOM && !noAutoForm() && !stay && fullText.indexOf("[TRIGGER_LEAD_FORM]") !== -1) showLeadForm = true;
+               if (!ROOM && !stay && fullText.indexOf("[TRIGGER_LEAD_FORM]") !== -1) showLeadForm = true;
               saveMessages(messages);
               render();
               return;
@@ -796,14 +795,14 @@
         if (stay) { botMessage.stay = stay; showLeadForm = false; }
         messages.push(botMessage);
         if (ROOM) submitChatServiceRequest(data.message || "");
-         if (!ROOM && !noAutoForm() && !stay && data.trigger_lead_form) showLeadForm = true;
+         if (!ROOM && !stay && data.trigger_lead_form) showLeadForm = true;
         saveMessages(messages);
         isLoading = false;
         render();
       });
     })
     .catch(function(err) {
-       if (!ROOM && !noAutoForm() && err && err.error === "plan_limit") {
+       if (!ROOM && err && err.error === "plan_limit") {
         showLeadForm = true;
       }
       messages.push({ role: "assistant", content: t.errorMsg });
@@ -960,7 +959,7 @@
       config = data;
 
       // Lead form timing: show immediately if configured
-       if (!ROOM && !noAutoForm() && config.lead_form_mode === "immediate" && !leadSent) {
+       if (!ROOM && config.lead_form_mode === "immediate" && !leadSent) {
         showLeadForm = true;
       }
 
@@ -998,7 +997,7 @@
         for (var mi = 0; mi < messages.length; mi++) {
           if (messages[mi] && messages[mi].role === "user") userMessageCount++;
         }
-         if (!ROOM && !noAutoForm() && config.lead_form_mode === "after_messages" && !leadSent &&
+         if (!ROOM && config.lead_form_mode === "after_messages" && !leadSent &&
             userMessageCount >= (config.lead_form_message_count || 3)) {
           showLeadForm = true;
         }
