@@ -242,6 +242,8 @@
   var userMessageCount = 0;
   var serviceCategory = "";
   var serviceSending = false;
+  // Testo digitato nel modulo richiesta: sopravvive ai re-render (es. risposta del bot in streaming)
+  var serviceDraft = { message: "", name: "" };
 
   // ── Create Shadow DOM ───────────────────────────────────
   var host = document.createElement("div");
@@ -379,9 +381,18 @@
 .mdac-fullscreen .mdac-input-area,.mdac-fullscreen .mdac-footer{flex-shrink:0;}\
 .mdac-fullscreen .mdac-quick-replies{flex-wrap:wrap;flex-shrink:0;max-height:32vh;overflow-x:hidden;overflow-y:auto;scrollbar-width:auto;}\
 .mdac-fullscreen .mdac-quick-replies::-webkit-scrollbar{display:block;}\
-.mdac-fullscreen .mdac-quick{min-height:36px;max-width:100%;white-space:normal;overflow-wrap:anywhere;}\
-.mdac-fullscreen .mdac-service-form{padding:10px;gap:6px;flex-shrink:0;max-height:45%;overflow-y:auto;}\
-.mdac-fullscreen.mdac-service-open .mdac-footer{display:none;}\
+.mdac-fullscreen .mdac-quick{min-height:44px;padding:10px 14px;font-size:14px;max-width:100%;white-space:normal;overflow-wrap:anywhere;}\
+.mdac-input,.mdac-lead-form input,.mdac-lead-form textarea,.mdac-lead-form select,.mdac-service-form input,.mdac-service-form textarea{font-size:16px;}\
+.mdac-input{padding:10px 12px;}\
+.mdac-send{width:44px;height:44px;}\
+.mdac-fullscreen .mdac-service-form{margin:0;padding:16px 16px calc(16px + env(safe-area-inset-bottom));gap:10px;flex-shrink:0;max-height:75%;overflow-y:auto;border:none;border-top:1px solid #e5e7eb;border-radius:16px 16px 0 0;box-shadow:0 -6px 20px rgba(0,0,0,.08);}\
+.mdac-fullscreen .mdac-service-form>*{flex-shrink:0;}\
+.mdac-fullscreen .mdac-service-form strong{font-size:16px !important;}\
+.mdac-fullscreen .mdac-service-form input,.mdac-fullscreen .mdac-service-form textarea{width:100%;padding:12px;border-radius:10px;}\
+.mdac-fullscreen .mdac-service-form textarea{min-height:76px;resize:none;}\
+.mdac-fullscreen .mdac-service-actions{gap:10px;}\
+.mdac-fullscreen .mdac-service-actions button{min-height:48px;font-size:16px;border-radius:10px;}\
+.mdac-fullscreen.mdac-service-open .mdac-input-area,.mdac-fullscreen.mdac-service-open .mdac-footer{display:none;}\
 .mdac-launcher{bottom:16px;" + (cfg.launcher_position === "bottom-left" ? "left:16px;" : "right:16px;") + "width:54px;height:54px;font-size:24px;}\
 }\
 ";
@@ -493,8 +504,8 @@
     }
     if (serviceCategory) {
       html += '<div class="mdac-service-form"><strong style="font-size:13px;color:#1a1a2e;">' + esc(serviceCategory) + '</strong>';
-      html += '<textarea id="mdac-service-message" rows="2" placeholder="' + ts.messagePlaceholder + '"></textarea>';
-      html += '<input id="mdac-service-name" placeholder="' + ts.namePlaceholder + '" />';
+      html += '<textarea id="mdac-service-message" rows="2" maxlength="1000" placeholder="' + ts.messagePlaceholder + '">' + esc(serviceDraft.message) + '</textarea>';
+      html += '<input id="mdac-service-name" maxlength="120" autocomplete="name" placeholder="' + ts.namePlaceholder + '" value="' + esc(serviceDraft.name) + '" />';
       html += '<div class="mdac-service-actions"><button id="mdac-service-cancel">' + ts.cancelBtn + '</button><button class="primary" id="mdac-service-send"' + (serviceSending ? ' disabled' : '') + '>' + ts.sendBtn + '</button></div></div>';
     }
 
@@ -535,8 +546,21 @@
     if (leadSubmitBtn) leadSubmitBtn.onclick = submitLead;
     if (calendlyBtn) calendlyBtn.onclick = function () { window.open(config.calendly_url, "_blank"); };
     for (var qb = 0; qb < quickBtns.length; qb++) quickBtns[qb].onclick = function () { serviceCategory = this.getAttribute("data-category") || ""; render(); };
-    if (serviceCancel) serviceCancel.onclick = function () { serviceCategory = ""; render(); };
+    if (serviceCancel) serviceCancel.onclick = function () { serviceCategory = ""; serviceDraft = { message: "", name: "" }; render(); };
     if (serviceSend) serviceSend.onclick = submitServiceRequest;
+    var serviceMsgEl = shadow.getElementById("mdac-service-message");
+    var serviceNameEl = shadow.getElementById("mdac-service-name");
+    if (serviceMsgEl) serviceMsgEl.oninput = function () { serviceDraft.message = this.value; };
+    if (serviceNameEl) serviceNameEl.oninput = function () { serviceDraft.name = this.value; };
+    // Mobile: quando la tastiera si apre, tiene in vista il campo attivo e i pulsanti
+    [serviceMsgEl, serviceNameEl].forEach(function (el) {
+      if (!el) return;
+      el.onfocus = function () {
+        if (!isMobileFullscreen()) return;
+        var target = this;
+        setTimeout(function () { try { target.scrollIntoView({ block: "center", behavior: "smooth" }); } catch (e) {} }, 300);
+      };
+    });
 
     // Scroll to bottom
     if (messagesEl) messagesEl.scrollTop = messagesEl.scrollHeight;
@@ -673,6 +697,7 @@
       if (!response.ok) throw new Error("request_failed");
       messages.push({ role: "assistant", content: ts.successMsg });
       serviceCategory = "";
+      serviceDraft = { message: "", name: "" };
       serviceSending = false;
       saveMessages(messages);
       render();
