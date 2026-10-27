@@ -102,7 +102,6 @@ export type Database = {
       }
       chat_sessions: {
         Row: {
-          summary: string | null
           bot_id: string | null
           client_id: string
           ended_at: string | null
@@ -114,9 +113,9 @@ export type Database = {
           session_token: string
           source_url: string | null
           started_at: string
+          summary: string | null
         }
         Insert: {
-          summary?: string | null
           bot_id?: string | null
           client_id: string
           ended_at?: string | null
@@ -128,9 +127,9 @@ export type Database = {
           session_token?: string
           source_url?: string | null
           started_at?: string
+          summary?: string | null
         }
         Update: {
-          summary?: string | null
           bot_id?: string | null
           client_id?: string
           ended_at?: string | null
@@ -142,6 +141,7 @@ export type Database = {
           session_token?: string
           source_url?: string | null
           started_at?: string
+          summary?: string | null
         }
         Relationships: [
           {
@@ -697,7 +697,6 @@ export type Database = {
       }
       leads: {
         Row: {
-          session_id: string | null
           booking: Json | null
           bot_id: string | null
           client_id: string
@@ -708,6 +707,7 @@ export type Database = {
           message: string | null
           name: string
           phone: string | null
+          session_id: string | null
           source: string | null
           source_url: string | null
           status: string
@@ -715,7 +715,6 @@ export type Database = {
           updated_at: string
         }
         Insert: {
-          session_id?: string | null
           booking?: Json | null
           bot_id?: string | null
           client_id: string
@@ -726,6 +725,7 @@ export type Database = {
           message?: string | null
           name: string
           phone?: string | null
+          session_id?: string | null
           source?: string | null
           source_url?: string | null
           status?: string
@@ -733,7 +733,6 @@ export type Database = {
           updated_at?: string
         }
         Update: {
-          session_id?: string | null
           booking?: Json | null
           bot_id?: string | null
           client_id?: string
@@ -744,6 +743,7 @@ export type Database = {
           message?: string | null
           name?: string
           phone?: string | null
+          session_id?: string | null
           source?: string | null
           source_url?: string | null
           status?: string
@@ -763,6 +763,13 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "leads_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "chat_sessions"
             referencedColumns: ["id"]
           },
         ]
@@ -1003,8 +1010,6 @@ export type Database = {
       }
       service_requests: {
         Row: {
-          staff_reply: string | null
-          replied_at: string | null
           bot_id: string
           category: string
           client_id: string
@@ -1012,13 +1017,13 @@ export type Database = {
           guest_name: string | null
           id: string
           message: string | null
+          replied_at: string | null
           resolved_at: string | null
           room: string
+          staff_reply: string | null
           status: string
         }
         Insert: {
-          staff_reply?: string | null
-          replied_at?: string | null
           bot_id: string
           category: string
           client_id: string
@@ -1026,13 +1031,13 @@ export type Database = {
           guest_name?: string | null
           id?: string
           message?: string | null
+          replied_at?: string | null
           resolved_at?: string | null
           room: string
+          staff_reply?: string | null
           status?: string
         }
         Update: {
-          staff_reply?: string | null
-          replied_at?: string | null
           bot_id?: string
           category?: string
           client_id?: string
@@ -1040,8 +1045,10 @@ export type Database = {
           guest_name?: string | null
           id?: string
           message?: string | null
+          replied_at?: string | null
           resolved_at?: string | null
           room?: string
+          staff_reply?: string | null
           status?: string
         }
         Relationships: [
