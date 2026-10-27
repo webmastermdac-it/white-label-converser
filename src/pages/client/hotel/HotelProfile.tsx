@@ -137,7 +137,12 @@ const HotelProfile = ({ botIdOverride }: { botIdOverride?: string } = {}) => {
         <SaveBadge status={status} tl={tl} />
       </div>
 
-      <Tabs value={searchParams.get("tab") || "property"} onValueChange={(tab) => setSearchParams(tab === "property" ? {} : { tab })}>
+      <Tabs value={searchParams.get("tab") || "property"} onValueChange={(tab) => setSearchParams((prev) => {
+        // Keep the other params (e.g. ?section= of the bot settings page that embeds this one)
+        const next = new URLSearchParams(prev);
+        if (tab === "property") next.delete("tab"); else next.set("tab", tab);
+        return next;
+      })}>
         <div className="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0">
           <TabsList className="w-max">
             {tabs.map(([v, l]) => <TabsTrigger key={v} value={v}>{l}</TabsTrigger>)}
