@@ -6,3 +6,4 @@
 - Hotel import link matching lives in a pure helper within the edge function and only returns discovered site URLs, so deterministic matching is testable without network or AI.
 - ClientLayout owns the guest-request subscription and lamp preference, passing state to the sidebar and lamp to avoid duplicate notification sounds.
 - Service-hour checks use a pure local-device-time helper; request-hour saves merge the latest hotel_profile JSON and normalization preserves these settings.
+- Keep jsPDF's transitive DOMPurify dependency on a patched release through the package override so PDF HTML sanitization cannot reinstall the known vulnerable version.
