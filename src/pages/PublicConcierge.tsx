@@ -43,8 +43,8 @@ const PublicConcierge = () => {
   const propertyName = config?.hotel?.property_name || config?.name || "Concierge";
 
   return (
-    <main className="min-h-screen" style={{ backgroundColor: background }}>
-      {!config && <div className="min-h-screen grid place-items-center text-foreground">Concierge…</div>}
+    <main className="h-[100dvh] flex flex-col overflow-x-hidden" style={{ backgroundColor: background }}>
+      {!config && <div className="flex-1 min-h-0 grid place-items-center text-foreground">Concierge…</div>}
       {config && (
         <div className="fixed top-0 inset-x-0 z-10 h-1" style={{ backgroundColor: accent }} aria-hidden="true" />
       )}

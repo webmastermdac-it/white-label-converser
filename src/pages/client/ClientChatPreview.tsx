@@ -29,9 +29,9 @@ const ClientChatPreview = () => {
   }, [clientId]);
 
   const previewHtml = `<!DOCTYPE html>
-<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
 <title>Widget Preview</title>
-<style>body{margin:0;background:#f0f0f0;font-family:sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;color:#666;}
+<style>body{margin:0;background:#f0f0f0;font-family:sans-serif;display:flex;align-items:center;justify-content:center;min-height:100dvh;overflow-x:hidden;color:#666;}
 .hint{text-align:center;padding:2rem;}.hint p{font-size:14px;margin:8px 0;}.hint small{opacity:.6;font-size:12px;}</style>
 </head><body>
 <div class="hint"><p>👇 ${t("widgetPreviewDesc")}</p></div>
