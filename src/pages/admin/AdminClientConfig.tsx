@@ -59,8 +59,8 @@ const AdminClientConfig = () => {
   const selectedBot = bots.find(b => b.id === selectedBotId);
 
   const iframeSrcDoc = selectedBot?.embed_token
-    ? `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Preview</title><style>body{margin:0;background:#f0f0f0;font-family:sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;color:#666;}</style></head><body>
+    ? `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<title>Preview</title><style>body{margin:0;background:#f0f0f0;font-family:sans-serif;display:flex;align-items:center;justify-content:center;min-height:100dvh;overflow-x:hidden;color:#666;}</style></head><body>
 <div style="text-align:center;padding:2rem"><p>👇 Click to open chatbot</p></div>
 <script>try{Object.keys(sessionStorage).forEach(function(k){if(k.startsWith('genius_widget_'))sessionStorage.removeItem(k)});}catch(e){}<\/script>
 <script src="${widgetScriptUrl}" data-token="${selectedBot.embed_token}" async><\/script>
