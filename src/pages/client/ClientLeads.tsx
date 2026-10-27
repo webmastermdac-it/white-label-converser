@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import ChatMessageText from "@/components/chat/ChatMessageText";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage, tx, appLocale } from "@/hooks/useLanguage";
@@ -16,11 +16,9 @@ import {
 import { Download, Search, Filter, Loader2, MessageSquare } from "lucide-react";
 import { getLanguageFlag } from "@/lib/languageFlags";
 import { useActiveModule } from "@/hooks/useActiveModule";
-
-interface Booking { check_in?: string; check_out?: string; adults?: number; children?: number; room_id?: string | null; room_name?: string | null }
-const nightsOf = (b?: Booking | null) => (b?.check_in && b?.check_out ? Math.round((Date.parse(b.check_out) - Date.parse(b.check_in)) / 86400000) : null);
-const fmtDay = (iso?: string) => { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || ""); return m ? `${m[3]}/${m[2]}/${m[1]}` : "—"; };
-const guestsOf = (b?: Booking | null) => (b ? `${b.adults ?? 0}${b.children ? ` + ${b.children}` : ""}` : "—");
+import { fmtDay, guestsOf, isStayRequest, nightsOf, type Booking } from "@/lib/leadStay";
+import LeadReplyButtons from "@/components/leads/LeadReplyButtons";
+import { BedDouble } from "lucide-react";
 
 interface Lead {
   id: string;
@@ -36,7 +34,14 @@ interface Lead {
   booking?: Booking | null;
   session_id?: string | null;
   bot_id?: string | null;
+  source?: string | null;
 }
+
+const StayBadge = () => (
+  <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/15 text-amber-500 border border-amber-500/40 px-2 py-0.5 text-[11px] font-semibold whitespace-nowrap">
+    <BedDouble className="w-3 h-3" />{tx("Stay request", "Richiesta soggiorno")}
+  </span>
+);
 
 const ClientLeads = () => {
   const { clientId } = useAuth();
@@ -75,18 +80,39 @@ const ClientLeads = () => {
     navigate(`/dashboard/chats?session=${sessionId}`);
   };
 
+  const [searchParams, setSearchParams] = useSearchParams();
+  const requestedLead = searchParams.get("lead");
+
   useEffect(() => {
     if (!clientId) return;
-    supabase
+    let active = true;
+    const load = () => supabase
       .from("leads")
       .select("*")
       .eq("client_id", clientId)
       .order("created_at", { ascending: false })
       .then(({ data }) => {
-        setLeads((data || []).map((l: any) => ({ ...l, transcript: Array.isArray(l.transcript) ? l.transcript : [] })));
+        if (!active) return;
+        const rows = (data || []).map((l: any) => ({ ...l, transcript: Array.isArray(l.transcript) ? l.transcript : [] }));
+        setLeads(rows);
+        setSelectedLead((cur) => (cur ? rows.find((r: Lead) => r.id === cur.id) || cur : cur));
         setLoading(false);
       });
+    void load();
+    // New leads and new stay requests appear in the list without a manual refresh.
+    const channel = supabase.channel(`leads-list-${clientId}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "leads", filter: `client_id=eq.${clientId}` }, () => { void load(); })
+      .subscribe();
+    return () => { active = false; void supabase.removeChannel(channel); };
   }, [clientId]);
+
+  // Deep link from the live alert: /dashboard/leads?lead=<id> opens that lead.
+  useEffect(() => {
+    if (!requestedLead || loading) return;
+    const found = leads.find((l) => l.id === requestedLead);
+    if (found) setSelectedLead(found);
+    setSearchParams((p) => { const n = new URLSearchParams(p); n.delete("lead"); return n; }, { replace: true });
+  }, [requestedLead, loading, leads, setSearchParams]);
 
   const updateStatus = async (id: string, status: string) => {
     await supabase.from("leads").update({ status }).eq("id", id);
@@ -187,6 +213,7 @@ const ClientLeads = () => {
                       <span title={getLanguageFlag(lead.language).tooltip}>{getLanguageFlag(lead.language).flag}</span> {lead.name}
                     </p>
                     <p className="text-xs text-muted-foreground">{lead.email}</p>
+                    {isStayRequest(lead) && <div className="mt-1"><StayBadge /></div>}
                   </td>
                   <td className="px-5 py-4 text-sm text-muted-foreground">{lead.phone || "—"}</td>
                   {isHotel && <>
@@ -202,6 +229,7 @@ const ClientLeads = () => {
                   </td>
                   <td className="px-5 py-4 text-xs text-muted-foreground">{new Date(lead.created_at).toLocaleDateString(appLocale())}</td>
                   <td className="px-5 py-4 text-right">
+                    <LeadReplyButtons lead={lead} size="sm" className="justify-end mb-2" />
                     <Select value={lead.status} onValueChange={(v) => { updateStatus(lead.id, v); }}>
                       <SelectTrigger className="w-28 h-7 text-xs bg-secondary border-border" onClick={(e) => e.stopPropagation()}>
                         <SelectValue />
@@ -239,8 +267,10 @@ const ClientLeads = () => {
                   lead.status === "contacted" ? "status-contacted" : "status-closed"
                 }`}>{lead.status.toUpperCase()}</span>
               </div>
+              {isStayRequest(lead) && <StayBadge />}
               <p className="text-xs text-muted-foreground">{lead.email}</p>
               {lead.phone && <p className="text-xs text-muted-foreground">{lead.phone}</p>}
+              <LeadReplyButtons lead={lead} size="sm" />
               {isHotel && lead.booking?.check_in && (
                 <p className="text-xs text-foreground">🛏️ {fmtDay(lead.booking.check_in)} · {nightsOf(lead.booking)} {tl("notti", "nights")} · {guestsOf(lead.booking)} {tl("ospiti", "guests")}{lead.booking.room_name ? ` · ${lead.booking.room_name}` : ""}</p>
               )}
@@ -258,7 +288,7 @@ const ClientLeads = () => {
       <Dialog open={!!selectedLead} onOpenChange={() => setSelectedLead(null)}>
         <DialogContent className="bg-card border-border text-foreground max-w-lg w-[95vw] md:w-full max-h-[90vh] overflow-y-auto rounded-xl">
           <DialogHeader>
-            <DialogTitle className="text-lg">Lead: {selectedLead?.name}</DialogTitle>
+            <DialogTitle className="text-lg flex flex-wrap items-center gap-2">Lead: {selectedLead?.name}{isStayRequest(selectedLead) && <StayBadge />}</DialogTitle>
           </DialogHeader>
           {selectedLead && (
             <div className="space-y-4 pt-2">
@@ -276,6 +306,7 @@ const ClientLeads = () => {
                 )}
                 <div className="col-span-1 sm:col-span-2"><p className="text-xs text-muted-foreground">{t("message")}</p><p className="text-sm text-foreground mt-1">{selectedLead.message || "—"}</p></div>
               </div>
+              <LeadReplyButtons lead={selectedLead} />
               <Button className="w-full h-11 gap-2" variant="outline" disabled={openingChat} onClick={() => openFullChat(selectedLead)}>
                 {openingChat ? <Loader2 className="w-4 h-4 animate-spin" /> : <MessageSquare className="w-4 h-4" />}{tl("Apri la chat completa col chatbot", "Open the full chat with the chatbot")}
               </Button>
