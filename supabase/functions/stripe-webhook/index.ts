@@ -54,6 +54,84 @@ serve(async (req) => {
     if (event.type === "checkout.session.completed") {
       const session = event.data.object as Stripe.Checkout.Session;
 
+      if (!session.metadata?.plan && !session.metadata?.offer && !session.metadata?.type) {
+        log("Ignoring unrelated checkout session", { sessionId: session.id });
+        return new Response(JSON.stringify({ received: true }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+
+      // Checkout pubblici: nessuna creazione di account e nessun impatto sul setup_service.
+      if (session.metadata?.source === "landing_concierge") {
+        const offer = session.metadata.offer;
+        const email = session.customer_details?.email || session.customer_email || "";
+        const phone = session.customer_details?.phone || "";
+        const name = session.customer_details?.name || "";
+        const interval = offer === "pro_month" ? "month" : "year";
+        const esc = (value: unknown) => String(value ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c] || c));
+        const resendKey = Deno.env.get("RESEND_API_KEY");
+        if (resendKey) {
+          try {
+            const sdi = session.custom_fields?.find((f) => f.key === "sdi_pec")?.text?.value || "—";
+            const amount = `${((session.amount_total || 0) / 100).toFixed(2)} ${String(session.currency || "eur").toUpperCase()} IVA inclusa`;
+            const res = await fetch("https://api.resend.com/emails", {
+              method: "POST",
+              headers: { Authorization: `Bearer ${resendKey}`, "Content-Type": "application/json", "Idempotency-Key": `landing-concierge/${session.id}` },
+              body: JSON.stringify({
+                from: "Genius Chatbot <noreply@chatbot.your-genius.com>",
+                to: [Deno.env.get("SETUP_NOTIFY_EMAIL") || "sviluppo@mdac.it"],
+                subject: `Checkout Concierge pagato – ${offer} – ${name || email}`,
+                html: `<h2>Nuovo pagamento Concierge AI</h2><p><b>Offerta:</b> ${esc(offer)}<br/><b>Nome:</b> ${esc(name)}<br/><b>Email:</b> ${esc(email)}<br/><b>Telefono:</b> ${esc(phone)}<br/><b>Importo:</b> ${esc(amount)}<br/><b>SDI/PEC:</b> ${esc(sdi)}</p>${["event", "setup"].includes(offer) ? "<p>Setup professionale da pianificare con il cliente</p>" : ""}`,
+              }),
+            });
+            if (!res.ok) log("Public checkout email error", { status: res.status, body: await res.text() });
+          } catch (err) { log("Public checkout email exception", { message: err instanceof Error ? err.message : "Unknown error" }); }
+        } else log("Public checkout notification unavailable: RESEND_API_KEY missing");
+
+        if (!["event", "pro_year", "pro_month", "setup"].includes(offer)) {
+          log("Unrecognized public offer", { sessionId: session.id, offer });
+          return new Response(JSON.stringify({ received: true }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        }
+        // Exact email match; never interpret customer input as a query pattern.
+        const { data: client, error: clientError } = email
+          ? await supabase.from("clients").select("id").eq("email", email).maybeSingle()
+          : { data: null, error: null };
+        if (clientError) throw clientError;
+        if (!client) {
+          log("Public checkout: no existing client, notification only", { sessionId: session.id });
+          return new Response(JSON.stringify({ received: true }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        }
+        if (offer !== "setup") {
+          let expiresAt: string | null = null;
+          const subscriptionId = typeof session.subscription === "string" ? session.subscription : session.subscription?.id;
+          if (subscriptionId) {
+            try {
+              const sub = await stripe.subscriptions.retrieve(subscriptionId);
+              const periodEnd = (sub.items?.data?.[0] as any)?.current_period_end;
+              if (!periodEnd) throw new Error("current_period_end missing on subscription item");
+              expiresAt = new Date(periodEnd * 1000).toISOString();
+            } catch {
+              const now = new Date();
+              if (interval === "year") now.setFullYear(now.getFullYear() + 1); else now.setMonth(now.getMonth() + 1);
+              expiresAt = now.toISOString();
+            }
+          }
+          const { error } = await supabase.from("clients").update({
+            plan: "pro", plan_interval: interval,
+            stripe_customer_id: typeof session.customer === "string" ? session.customer : session.customer?.id || null,
+            stripe_subscription_id: subscriptionId || null, plan_expires_at: expiresAt,
+          }).eq("id", client.id);
+          if (error) throw error;
+        }
+        if (offer === "event" || offer === "setup") {
+          // Existing UNIQUE stripe_session_id makes webhook retries idempotent.
+          const { error } = await supabase.from("setup_requests").upsert({
+            client_id: client.id, status: "paid", paid_at: new Date().toISOString(), phone,
+            amount_cents: offer === "event" ? 0 : 57000, currency: "eur", stripe_session_id: session.id,
+          }, { onConflict: "stripe_session_id", ignoreDuplicates: true });
+          if (error) throw error;
+        }
+        return new Response(JSON.stringify({ received: true }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+
       // Setup professionale (pagamento singolo): gestito a parte, NON tocca gli abbonamenti
       if (session.metadata?.type === "setup_service") {
         const setupId = session.metadata?.setup_request_id;
@@ -110,7 +188,11 @@ serve(async (req) => {
         customer_details_email: session.customer_details?.email,
       });
 
-      const plan = session.metadata?.plan || "starter";
+      const plan = session.metadata?.plan;
+      if (!plan) {
+        log("Ignoring checkout without a subscription plan", { sessionId: session.id });
+        return new Response(JSON.stringify({ received: true }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
       const interval = session.metadata?.interval || "month";
       const metaClientId = session.metadata?.client_id;
       const email = session.customer_email || session.customer_details?.email;
