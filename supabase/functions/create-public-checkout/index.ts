@@ -70,7 +70,7 @@ serve(async (req) => {
         try { coupon = await stripe.coupons.retrieve("EVENTO_HFTP_990"); }
         catch (err) {
           if (!err || typeof err !== "object" || !("code" in err) || err.code !== "resource_missing") throw err;
-          coupon = await stripe.coupons.create({ id: "EVENTO_HFTP_990", amount_off: 50000, currency: "eur", duration: "once", name: "Evento HFTP – Pro annuale con setup incluso" }, { idempotencyKey: "EVENTO_HFTP_990-create-v1" });
+          coupon = await stripe.coupons.create({ id: "EVENTO_HFTP_990", amount_off: 50000, currency: "eur", duration: "once", name: "Evento HFTP: Pro + setup incluso" }, { idempotencyKey: "EVENTO_HFTP_990-create-v2" });
         }
         if (!coupon.valid || coupon.amount_off !== 50000 || coupon.currency !== "eur" || coupon.duration !== "once" || coupon.applies_to?.products?.length) {
           return json({ error: "Coupon evento non disponibile o non conforme." }, 503);
