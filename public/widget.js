@@ -167,12 +167,12 @@
   };
   var th = hotelLabels[baseLang] || hotelLabels["en"];
   var serviceLabels = {
-    en: { messagePlaceholder: "Optional message", namePlaceholder: "Optional name", cancelBtn: "Cancel", sendBtn: "Send request", replyLabel: "Reply from the property", successMsg: "Request sent to reception." },
-    it: { messagePlaceholder: "Messaggio facoltativo", namePlaceholder: "Nome facoltativo", cancelBtn: "Annulla", sendBtn: "Invia richiesta", replyLabel: "Risposta della struttura", successMsg: "Richiesta inviata alla reception." },
-    fr: { messagePlaceholder: "Message facultatif", namePlaceholder: "Nom facultatif", cancelBtn: "Annuler", sendBtn: "Envoyer la demande", replyLabel: "Réponse de l'établissement", successMsg: "Demande envoyée à la réception." },
-    de: { messagePlaceholder: "Optionale Nachricht", namePlaceholder: "Optionaler Name", cancelBtn: "Abbrechen", sendBtn: "Anfrage senden", replyLabel: "Antwort der Unterkunft", successMsg: "Anfrage an die Rezeption gesendet." },
-    es: { messagePlaceholder: "Mensaje opcional", namePlaceholder: "Nombre opcional", cancelBtn: "Cancelar", sendBtn: "Enviar solicitud", replyLabel: "Respuesta del alojamiento", successMsg: "Solicitud enviada a recepción." },
-    pt: { messagePlaceholder: "Mensagem opcional", namePlaceholder: "Nome opcional", cancelBtn: "Cancelar", sendBtn: "Enviar pedido", replyLabel: "Resposta do alojamento", successMsg: "Pedido enviado à receção." },
+    en: { messagePlaceholder: "Optional message", namePlaceholder: "Optional name", cancelBtn: "Cancel", sendBtn: "Send request", replyLabel: "Reply from the property", afterHoursMsg: "Reception is currently closed: your request will be handled as soon as it opens (at {time}).", successMsg: "Request sent to reception." },
+    it: { messagePlaceholder: "Messaggio facoltativo", namePlaceholder: "Nome facoltativo", cancelBtn: "Annulla", sendBtn: "Invia richiesta", replyLabel: "Risposta della struttura", afterHoursMsg: "La reception è al momento chiusa: la tua richiesta verrà presa in carico non appena sarà aperta (alle {time}).", successMsg: "Richiesta inviata alla reception." },
+    fr: { messagePlaceholder: "Message facultatif", namePlaceholder: "Nom facultatif", cancelBtn: "Annuler", sendBtn: "Envoyer la demande", replyLabel: "Réponse de l'établissement", afterHoursMsg: "La réception est actuellement fermée : votre demande sera prise en charge dès son ouverture (à {time}).", successMsg: "Demande envoyée à la réception." },
+    de: { messagePlaceholder: "Optionale Nachricht", namePlaceholder: "Optionaler Name", cancelBtn: "Abbrechen", sendBtn: "Anfrage senden", replyLabel: "Antwort der Unterkunft", afterHoursMsg: "Die Rezeption ist derzeit geschlossen: Ihre Anfrage wird bearbeitet, sobald sie öffnet (um {time}).", successMsg: "Anfrage an die Rezeption gesendet." },
+    es: { messagePlaceholder: "Mensaje opcional", namePlaceholder: "Nombre opcional", cancelBtn: "Cancelar", sendBtn: "Enviar solicitud", replyLabel: "Respuesta del alojamiento", afterHoursMsg: "La recepción está cerrada en este momento: su solicitud se atenderá en cuanto abra (a las {time}).", successMsg: "Solicitud enviada a recepción." },
+    pt: { messagePlaceholder: "Mensagem opcional", namePlaceholder: "Nome opcional", cancelBtn: "Cancelar", sendBtn: "Enviar pedido", replyLabel: "Resposta do alojamento", afterHoursMsg: "A receção está atualmente fechada: o seu pedido será tratado assim que abrir (às {time}).", successMsg: "Pedido enviado à receção." },
   };
   var ts = serviceLabels[baseLang] || serviceLabels["en"];
   var stayLabels = {
@@ -823,6 +823,11 @@
     } catch (e) { return []; }
   }
   function saveRequests(list) { try { localStorage.setItem(REQ_KEY, JSON.stringify(list.slice(-20))); } catch (e) {} }
+  function afterHoursNotice(d) {
+    if (d && d.after_hours) {
+      messages.push({ role: "assistant", content: "🕘 " + ts.afterHoursMsg.replace("{time}", d.opens_at || "") });
+    }
+  }
   function rememberRequest(id) {
     if (!id) return;
     var list = loadRequests();
@@ -876,6 +881,7 @@
       return response.json().catch(function () { return {}; }).then(function (d) {
         rememberRequest(d && d.request_id);
         messages.push({ role: "assistant", content: ts.successMsg });
+        afterHoursNotice(d);
         saveMessages(messages);
         render();
       });
@@ -896,15 +902,17 @@
     }
     serviceSending = true;
     render();
+    var afterHoursD = null;
     fetch(SUPABASE_URL + "/functions/v1/create-service-request", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ embed_token: EMBED_TOKEN, room: ROOM, category: serviceCategory, message: msg ? msg.value.trim() : "", guest_name: name ? name.value.trim() : "" }),
     }).then(function (response) {
       if (!response.ok) throw new Error("request_failed");
-      return response.json().catch(function () { return {}; }).then(function (d) { rememberRequest(d && d.request_id); });
+      return response.json().catch(function () { return {}; }).then(function (d) { rememberRequest(d && d.request_id); afterHoursD = d; });
     }).then(function () {
       messages.push({ role: "assistant", content: ts.successMsg });
+      afterHoursNotice(afterHoursD);
       serviceCategory = "";
       serviceDraft = { message: "", name: "" };
       serviceSending = false;

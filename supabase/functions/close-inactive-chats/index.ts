@@ -111,7 +111,39 @@ serve(async (req) => {
       }
     }
 
-    return new Response(JSON.stringify({ success: true, sessions_closed: closed, emails_sent: emailsSent }), {
+    // One-sentence summary for closed chats that don't have one yet (shown in the dashboard chat history)
+    let summarized = 0;
+    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    if (LOVABLE_API_KEY) {
+      const { data: pending } = await supabase
+        .from("chat_sessions").select("id, messages")
+        .not("ended_at", "is", null).is("summary", null).order("started_at", { ascending: false }).limit(15);
+      for (const row of (pending || []) as any[]) {
+        const msgs = (Array.isArray(row.messages) ? row.messages : []).filter((m: any) => m && typeof m.content === "string");
+        const userMsgs = msgs.filter((m: any) => m.role === "user");
+        if (!userMsgs.length) { await supabase.from("chat_sessions").update({ summary: "" }).eq("id", row.id); continue; }
+        const convo = msgs.slice(0, 40).map((m: any) => `${m.role === "user" ? "Ospite" : "Bot"}: ${String(m.content).replace(/\[[A-Z_]+[^\]]*\]/g, "").slice(0, 400)}`).join("\n");
+        try {
+          const ai = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+            method: "POST",
+            headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
+            body: JSON.stringify({
+              model: "openai/gpt-5-mini",
+              messages: [
+                { role: "system", content: "Riassumi in UNA sola frase in italiano (massimo 140 caratteri) cosa ha chiesto o voluto il visitatore e come si è conclusa la conversazione. Nessuna premessa, nessun elenco, nessuna virgolette. Non inventare nulla che non sia nella chat." },
+                { role: "user", content: convo },
+              ],
+            }),
+          });
+          if (!ai.ok) { console.error("summary gateway", ai.status); if (ai.status === 402 || ai.status === 429) break; continue; }
+          const out = await ai.json();
+          const text = String(out.choices?.[0]?.message?.content || "").trim().replace(/^["“]|["”]$/g, "").slice(0, 200);
+          if (text) { await supabase.from("chat_sessions").update({ summary: text }).eq("id", row.id); summarized++; }
+        } catch (e) { console.error("summary error", e); }
+      }
+    }
+
+    return new Response(JSON.stringify({ success: true, sessions_closed: closed, emails_sent: emailsSent, summarized }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error: any) {

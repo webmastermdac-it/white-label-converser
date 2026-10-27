@@ -1,6 +1,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { z } from "npm:zod@3.25.76";
+import { isWithinServiceHours, normalizeServiceHours } from "../_shared/serviceHours.ts";
 import { emailShell, escHtml, fetchBrandSettings } from "../_shared/email-template.ts";
 
 const BodySchema = z.object({
@@ -91,7 +92,13 @@ Deno.serve(async (req) => {
       }
     }
 
-    return reply({ success: true, request_id: created.id });
+    // Outside the staffed hours the guest gets an automatic acknowledgement (shown by the widget)
+    const afterHours = !isWithinServiceHours(bot.hotel_profile?.service_hours);
+    return reply({
+      success: true, request_id: created.id,
+      after_hours: afterHours,
+      opens_at: afterHours ? normalizeServiceHours(bot.hotel_profile?.service_hours).start : null,
+    });
   } catch (error) {
     console.error("create-service-request error:", error);
     return reply({ error: "Server error" }, 500);

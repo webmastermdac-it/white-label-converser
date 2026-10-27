@@ -102,6 +102,7 @@ export type Database = {
       }
       chat_sessions: {
         Row: {
+          summary: string | null
           bot_id: string | null
           client_id: string
           ended_at: string | null
@@ -115,6 +116,7 @@ export type Database = {
           started_at: string
         }
         Insert: {
+          summary?: string | null
           bot_id?: string | null
           client_id: string
           ended_at?: string | null
@@ -128,6 +130,7 @@ export type Database = {
           started_at?: string
         }
         Update: {
+          summary?: string | null
           bot_id?: string | null
           client_id?: string
           ended_at?: string | null
