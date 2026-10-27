@@ -10,6 +10,7 @@ import RequestAlertLamp, { useRequestLampPreference } from "@/components/hotel/R
 import { installAudioUnlock } from "@/lib/playNotice";
 import { useNewLeadAlerts } from "@/hooks/useNewLeadAlerts";
 import { useOpenServiceRequests } from "@/hooks/useOpenServiceRequests";
+import { useNewLeadsCount } from "@/hooks/useNewLeadsCount";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/hooks/useLanguage";
 import {
@@ -23,6 +24,7 @@ const ClientLayout = () => {
   const [now, setNow] = useState(() => new Date());
   useEffect(() => installAudioUnlock(), []);
   useNewLeadAlerts();
+  const newLeads = useNewLeadsCount();
   useEffect(() => {
     const timer = window.setInterval(() => setNow(new Date()), 60000);
     return () => window.clearInterval(timer);
@@ -50,7 +52,7 @@ const ClientLayout = () => {
   const clientNav = [
     { label: t("overview"), href: "/dashboard", icon: LayoutDashboard, end: true },
     { label: "I miei Bot", href: "/dashboard/bots", icon: Bot },
-    { label: t("leads"), href: "/dashboard/leads", icon: Inbox },
+    { label: t("leads"), href: "/dashboard/leads", icon: Inbox, badge: newLeads.count, tone: "alert" as const },
     { label: t("chatHistory"), href: "/dashboard/chats", icon: MessageSquare },
     { label: "Analytics", href: "/dashboard/analytics", icon: BarChart3 },
     { label: "E-commerce e Catalogo", href: "/dashboard/ecommerce", icon: Store },
@@ -63,7 +65,7 @@ const ClientLayout = () => {
       <RequestAlertLamp count={count} urgent={urgent} visible={lampVisible} />
       <Seo title="Dashboard | Genius Chatbot" path="/dashboard" noindex />
       <div className="hidden md:block">
-        <ClientSidebar openRequests={count} requestsEnabled={enabled} lampEnabled={lampEnabled} onLampChange={toggleLamp} />
+        <ClientSidebar newLeads={newLeads.count} openRequests={count} requestsEnabled={enabled} lampEnabled={lampEnabled} onLampChange={toggleLamp} />
       </div>
       <MobileNav items={clientNav} subtitle={t("clientPortal")} />
       <main className="flex-1 overflow-auto pt-14 md:pt-0">

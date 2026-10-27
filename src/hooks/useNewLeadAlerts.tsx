@@ -49,7 +49,7 @@ export function useNewLeadAlerts() {
   useEffect(() => {
     if (!clientId) return;
     const notify = (lead: LeadRow, stay: boolean) => {
-      toast.custom((id) => <LeadToast id={id} lead={lead} stay={stay} onOpen={() => navigateRef.current(`/dashboard/leads${lead.id ? `?lead=${lead.id}` : ""}`)} />, { duration: stay ? 40000 : 20000 });
+      toast.custom((id) => <LeadToast id={id} lead={lead} stay={stay} onOpen={() => navigateRef.current(`/dashboard/leads${lead.id ? `?lead=${lead.id}` : ""}`)} />, { id: `lead-${lead.id ?? Date.now()}-${stay ? "stay" : "new"}`, duration: Infinity, dismissible: false });
       if (soundEnabled()) { playNotice(); if (stay) window.setTimeout(() => playNotice(), 1100); }
     };
     const channel = supabase.channel(`new-leads-${clientId}`)

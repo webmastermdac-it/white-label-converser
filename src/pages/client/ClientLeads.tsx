@@ -7,6 +7,7 @@ import { useLanguage, tx, appLocale } from "@/hooks/useLanguage";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
+import { toast as sonnerToast } from "sonner";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle
 } from "@/components/ui/dialog";
@@ -16,6 +17,7 @@ import {
 import { Download, Search, Filter, Loader2, MessageSquare } from "lucide-react";
 import { getLanguageFlag } from "@/lib/languageFlags";
 import { useActiveModule } from "@/hooks/useActiveModule";
+import { notifyLeadsChanged } from "@/hooks/useNewLeadsCount";
 import { fmtDay, guestsOf, isStayRequest, nightsOf, type Booking } from "@/lib/leadStay";
 import LeadReplyButtons from "@/components/leads/LeadReplyButtons";
 import { BedDouble } from "lucide-react";
@@ -106,6 +108,13 @@ const ClientLeads = () => {
     return () => { active = false; void supabase.removeChannel(channel); };
   }, [clientId]);
 
+  // Opening a lead (from the list or the alert) clears its pending live alerts.
+  useEffect(() => {
+    if (!selectedLead) return;
+    sonnerToast.dismiss(`lead-${selectedLead.id}-new`);
+    sonnerToast.dismiss(`lead-${selectedLead.id}-stay`);
+  }, [selectedLead?.id]);
+
   // Deep link from the live alert: /dashboard/leads?lead=<id> opens that lead.
   useEffect(() => {
     if (!requestedLead || loading) return;
@@ -117,6 +126,7 @@ const ClientLeads = () => {
   const updateStatus = async (id: string, status: string) => {
     await supabase.from("leads").update({ status }).eq("id", id);
     setLeads((prev) => prev.map((l) => (l.id === id ? { ...l, status } : l)));
+    notifyLeadsChanged();
   };
 
   const exportCSV = () => {

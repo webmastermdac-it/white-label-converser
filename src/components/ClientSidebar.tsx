@@ -16,7 +16,8 @@ import { cn } from "@/lib/utils";
 import ThemeSelector from "@/components/ThemeSelector";
 import LanguageMenu from "@/components/LanguageMenu";
 
-const ClientSidebar = ({ openRequests, requestsEnabled, lampEnabled, onLampChange }: {
+const ClientSidebar = ({ newLeads = 0, openRequests, requestsEnabled, lampEnabled, onLampChange }: {
+  newLeads?: number;
   openRequests: number;
   requestsEnabled: boolean;
   lampEnabled: boolean;
@@ -52,7 +53,7 @@ const ClientSidebar = ({ openRequests, requestsEnabled, lampEnabled, onLampChang
       ? [{ label: tl("Richieste ospiti", "Guest requests"), href: "/dashboard/hotel/requests", icon: ConciergeBell, badge: openRequests }]
       : []),
     { label: t("overview"), href: "/dashboard", icon: LayoutDashboard, end: true },
-    { label: t("leads"), href: "/dashboard/leads", icon: Inbox },
+    { label: t("leads"), href: "/dashboard/leads", icon: Inbox, badge: newLeads, tone: "alert" as const },
     { label: t("chatHistory"), href: "/dashboard/chats", icon: MessageSquare },
     { label: "Analytics", href: "/dashboard/analytics", icon: BarChart3 },
   ];
@@ -68,7 +69,7 @@ const ClientSidebar = ({ openRequests, requestsEnabled, lampEnabled, onLampChang
     navigate("/login");
   };
 
-  const renderItem = (item: { label: string; href: string; icon: React.ElementType; end?: boolean; badge?: number }) => {
+  const renderItem = (item: { label: string; href: string; icon: React.ElementType; end?: boolean; badge?: number; tone?: "alert" }) => {
     const link = (
       <NavLink
         to={item.href}
@@ -85,7 +86,7 @@ const ClientSidebar = ({ openRequests, requestsEnabled, lampEnabled, onLampChang
       >
         <item.icon className="w-4 h-4 flex-shrink-0" />
         {!collapsed && <span>{item.label}</span>}
-        {!!item.badge && item.badge > 0 && <span className={cn("ml-auto min-w-5 h-5 px-1 rounded-full bg-primary text-primary-foreground text-[11px] grid place-items-center", collapsed && "absolute translate-x-3 -translate-y-3")}>{item.badge > 99 ? "99+" : item.badge}</span>}
+        {!!item.badge && item.badge > 0 && <span className={cn("ml-auto min-w-5 h-5 px-1 rounded-full text-[11px] font-bold grid place-items-center", item.tone === "alert" ? "bg-amber-500 text-black animate-pulse shadow-[0_0_0_3px_rgba(245,158,11,0.25)]" : "bg-primary text-primary-foreground", collapsed && "absolute translate-x-3 -translate-y-3")}>{item.badge > 99 ? "99+" : item.badge}</span>}
       </NavLink>
     );
 

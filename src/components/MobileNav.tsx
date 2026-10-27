@@ -13,6 +13,7 @@ interface NavItem {
   icon: React.ElementType;
   end?: boolean;
   badge?: number;
+  tone?: "alert";
 }
 
 interface MobileNavProps {
@@ -92,7 +93,7 @@ const MobileNav: React.FC<MobileNavProps> = ({ items, subtitle }) => {
                   >
                     <item.icon className="w-5 h-5 flex-shrink-0" />
                     <span>{item.label}</span>
-                    {!!item.badge && <span className="ml-auto min-w-5 h-5 px-1 rounded-full bg-primary text-primary-foreground text-[11px] grid place-items-center">{item.badge > 99 ? "99+" : item.badge}</span>}
+                    {!!item.badge && <span className={cn("ml-auto min-w-5 h-5 px-1 rounded-full text-[11px] font-bold grid place-items-center", item.tone === "alert" ? "bg-amber-500 text-black animate-pulse" : "bg-primary text-primary-foreground")}>{item.badge > 99 ? "99+" : item.badge}</span>}
                   </NavLink>
                 </div>
               ))}

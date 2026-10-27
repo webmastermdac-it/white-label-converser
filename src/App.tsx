@@ -60,7 +60,7 @@ const App = () => (
       <LanguageProvider>
       <AuthProvider>
         <Toaster />
-        <Sonner />
+        <Sonner position="top-right" expand visibleToasts={12} offset={56} />
         <BrowserRouter>
           <Routes>
             <Route path="/login" element={<Login />} />
