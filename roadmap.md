@@ -1,5 +1,5 @@
 # Roadmap
-- [ ] Creare e verificare quattro link pubblici /acquista?offerta= senza login, collegati al checkout Concierge esistente.
+- [x] Creare quattro link pubblici /acquista?offerta= senza login; tutti aprono Stripe nella prova reale, 14 test e controllo traduzioni superati. Pagina da pubblicare per attivare i link sul dominio principale.
 - [x] Creare checkout pubblici Concierge e ramo webhook dedicato; 10 test, build e sessione Stripe evento verificati (99000 centesimi), checkout esistenti invariati.
 - [ ] Configurare SETUP_NOTIFY_EMAIL: secret assente, notifiche attualmente indirizzate al fallback esistente sviluppo@mdac.it.
 - [x] Aggiungere orario di presidio hotel, salvataggio preservando il profilo, avvisi temporizzati e contesto concierge; 32 test e build verificati, chat deployata.
