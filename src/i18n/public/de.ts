@@ -1,5 +1,8 @@
 // Public-site translations (de). Key = English source text. Generated with npm run i18n:check, reviewed.
 const dict: Record<string, string> = {
+  "Secure payment with Stripe": "Sichere Zahlung mit Stripe",
+  "Invalid offer. Return to the offers and choose a plan.": "Ungültiges Angebot. Kehren Sie zu den Angeboten zurück und wählen Sie einen Tarif.",
+  "Unable to open payment. Retry or return to the offers: the offer may no longer be available.": "Die Zahlung konnte nicht geöffnet werden. Versuchen Sie es erneut oder kehren Sie zu den Angeboten zurück: Das Angebot ist möglicherweise nicht mehr verfügbar.",
   "AI Conversations": "KI-Konversationen",
   "Lead Capture": "Lead-Erfassung",
   "Booking": "Terminbuchung",

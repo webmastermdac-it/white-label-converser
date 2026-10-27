@@ -8,3 +8,4 @@
 - Service-hour checks use a pure local-device-time helper; request-hour saves merge the latest hotel_profile JSON and normalization preserves these settings.
 - Keep jsPDF's transitive DOMPurify dependency on a patched release through the package override so PDF HTML sanitization cannot reinstall the known vulnerable version.
 - Public Concierge checkout is isolated in create-public-checkout and a source-discriminated webhook branch; never create accounts automatically and deduplicate setup records by stripe_session_id to preserve existing authenticated checkout flows.
+- Public purchase links use an unprotected /acquista?offerta= route that invokes create-public-checkout and only redirects to HTTPS checkout.stripe.com URLs; pricing and payment rules remain in the existing function.
