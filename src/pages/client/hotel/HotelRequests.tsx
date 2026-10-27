@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import { notifyServiceRequestsChanged } from "@/hooks/useOpenServiceRequests";
 import RequestReply from "@/components/hotel/RequestReply";
 import { DEFAULT_SERVICE_HOURS, SERVICE_HOURS_CHANGED_EVENT, normalizeServiceHours } from "@/lib/serviceHours";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -106,7 +107,16 @@ const HotelRequests = ({ botIdOverride }: { botIdOverride?: string } = {}) => {
   const changeStatus = async (request: ServiceRequest, status: RequestStatus) => {
     const resolved_at = status === "done" ? new Date().toISOString() : null;
     setRows((current) => current.map((r) => r.id === request.id ? { ...r, status, resolved_at } : r));
-    await supabase.from("service_requests").update({ status, resolved_at }).eq("id", request.id);
+    notifyServiceRequestsChanged({ from: request.status, to: status });
+    const { error } = await supabase.from("service_requests").update({ status, resolved_at }).eq("id", request.id);
+    if (error) {
+      // Roll back: the request is still in its previous state.
+      setRows((current) => current.map((r) => r.id === request.id ? { ...r, status: request.status, resolved_at: request.resolved_at } : r));
+      notifyServiceRequestsChanged({ from: status, to: request.status });
+      toast.error(tl("Aggiornamento non riuscito, riprova", "Update failed, please retry"));
+      return;
+    }
+    notifyServiceRequestsChanged();
   };
 
   if (planLoading || loading) return <div className="p-10 flex justify-center"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>;

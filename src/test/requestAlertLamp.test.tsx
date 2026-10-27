@@ -34,7 +34,7 @@ vi.mock("@/integrations/supabase/client", () => ({
   },
 }));
 
-import { useOpenServiceRequests } from "@/hooks/useOpenServiceRequests";
+import { useOpenServiceRequests, notifyServiceRequestsChanged } from "@/hooks/useOpenServiceRequests";
 import RequestAlertLamp, { SERVICE_REQUEST_LAMP_KEY, useRequestLampPreference } from "@/components/hotel/RequestAlertLamp";
 
 let observed: { count: number; urgent: boolean; enabled: boolean };
@@ -116,5 +116,16 @@ describe("Hotel request lamp", () => {
     const { result } = renderHook(() => useOpenServiceRequests(() => true));
     act(() => (state.handlers.INSERT as (p: unknown) => void)({ new: { category: "Taxi", room: "12" } }));
     expect(result.current.count).toBeGreaterThanOrEqual(1);
+  });
+
+  it("switches the lamp off immediately when a request is taken in charge, then reconciles with the database", async () => {
+    state.rows = [{ id: "1", category: "Asciugamani" }];
+    render(<LampHarness />);
+    await screen.findByRole("status");
+    act(() => notifyServiceRequestsChanged({ from: "open", to: "in_progress" }));
+    await waitFor(() => expect(screen.queryByRole("status")).toBeNull());
+    state.rows = [];
+    act(() => notifyServiceRequestsChanged());
+    await waitFor(() => expect(observed.count).toBe(0));
   });
 });
