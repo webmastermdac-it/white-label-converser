@@ -175,6 +175,19 @@
     pt: { messagePlaceholder: "Mensagem opcional", namePlaceholder: "Nome opcional", cancelBtn: "Cancelar", sendBtn: "Enviar pedido", replyLabel: "Resposta do alojamento", afterHoursMsg: "A receção está atualmente fechada: o seu pedido será tratado assim que abrir (às {time}).", successMsg: "Pedido enviado à receção." },
   };
   var ts = serviceLabels[baseLang] || serviceLabels["en"];
+  var categoryLabels = {
+    "pulizia/asciugamani": { en: "Cleaning / towels", fr: "Ménage / serviettes", de: "Reinigung / Handtücher", es: "Limpieza / toallas", pt: "Limpeza / toalhas" },
+    "late check-out": { en: "Late check-out", fr: "Départ tardif", de: "Später Check-out", es: "Salida tardía", pt: "Saída tardia" },
+    "taxi/transfer": { en: "Taxi / transfer", fr: "Taxi / transfert", de: "Taxi / Transfer", es: "Taxi / traslado", pt: "Táxi / transfer" },
+    "ristorante": { en: "Restaurant", fr: "Restaurant", de: "Restaurant", es: "Restaurante", pt: "Restaurante" },
+    "problema in camera": { en: "Problem in the room", fr: "Problème dans la chambre", de: "Problem im Zimmer", es: "Problema en la habitación", pt: "Problema no quarto" },
+    "altro": { en: "Other", fr: "Autre", de: "Sonstiges", es: "Otro", pt: "Outro" }
+  };
+  // Display only: the value sent to reception stays the canonical (Italian) category.
+  function categoryLabel(cat) {
+    var m = categoryLabels[String(cat || "").trim().toLowerCase()];
+    return (m && m[baseLang]) || cat;
+  }
   var stayLabels = {
     it: { label: "RIEPILOGO SOGGIORNO", nights: "notti", night: "notte", room: "Camera", guests: "Ospiti", adults: "adulti", adult: "adulto", children: "bambini", child: "bambino", included: "incluso", breakfastIncluded: "inclusa", parking: "Parcheggio", send: "Invia richiesta alla reception", sent: "Richiesta inviata ✓", from: "Da € {price} a notte (indicativo)", confirm: "Richiesta inviata alla reception, ti ricontatteremo a breve." },
     en: { label: "STAY SUMMARY", nights: "nights", night: "night", room: "Room", guests: "Guests", adults: "adults", adult: "adult", children: "children", child: "child", included: "included", breakfastIncluded: "included", parking: "Parking", send: "Send request to reception", sent: "Request sent ✓", from: "From € {price} per night (indicative)", confirm: "Request sent to reception, we will get back to you shortly." },
@@ -572,11 +585,11 @@
     var quickReplies = (FULLSCREEN && isHotel() && config.hotel.concierge_requests) ? (config.hotel.in_stay_quick_replies || []) : [];
     if (quickReplies.length && !serviceCategory) {
       html += '<div class="mdac-quick-replies">';
-      for (var qi = 0; qi < quickReplies.length; qi++) html += '<button class="mdac-quick" data-category="' + esc(quickReplies[qi]) + '">' + esc(quickReplies[qi]) + '</button>';
+      for (var qi = 0; qi < quickReplies.length; qi++) html += '<button class="mdac-quick" data-category="' + esc(quickReplies[qi]) + '">' + esc(categoryLabel(quickReplies[qi])) + '</button>';
       html += '</div>';
     }
     if (serviceCategory) {
-      html += '<div class="mdac-service-form"><strong style="font-size:13px;color:#1a1a2e;">' + esc(serviceCategory) + '</strong>';
+      html += '<div class="mdac-service-form"><strong style="font-size:13px;color:#1a1a2e;">' + esc(categoryLabel(serviceCategory)) + '</strong>';
       html += '<textarea id="mdac-service-message" rows="2" maxlength="1000" placeholder="' + ts.messagePlaceholder + '">' + esc(serviceDraft.message) + '</textarea>';
       html += '<input id="mdac-service-name" maxlength="120" autocomplete="name" placeholder="' + ts.namePlaceholder + '" value="' + esc(serviceDraft.name) + '" />';
       html += '<div class="mdac-service-actions"><button id="mdac-service-cancel">' + ts.cancelBtn + '</button><button class="primary" id="mdac-service-send"' + (serviceSending ? ' disabled' : '') + '>' + ts.sendBtn + '</button></div></div>';

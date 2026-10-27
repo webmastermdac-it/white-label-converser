@@ -94,7 +94,7 @@ const ClientLeads = () => {
 
   const exportCSV = () => {
     const headers = [t("lead", "Name"), t("email"), t("phone"), t("message"), t("status"), t("source"), t("date")];
-    const rows: any[][] = filtered.map((l) => [l.name, l.email, l.phone, l.message, l.status, l.source_url, new Date(l.created_at).toLocaleString()]);
+    const rows: any[][] = filtered.map((l) => [l.name, l.email, l.phone, l.message, l.status, l.source_url, new Date(l.created_at).toLocaleString(appLocale())]);
     if (isHotel) {
       headers.push(tl("Arrivo", "Arrival"), tl("Partenza", "Departure"), tl("Notti", "Nights"), tl("Adulti", "Adults"), tl("Bambini", "Children"), tl("Camera", "Room"));
       filtered.forEach((l, i) => rows[i].push(l.booking?.check_in || "", l.booking?.check_out || "", nightsOf(l.booking) ?? "", l.booking?.adults ?? "", l.booking?.children ?? "", l.booking?.room_name || ""));
@@ -199,7 +199,7 @@ const ClientLeads = () => {
                       lead.status === "new" ? "status-new" : lead.status === "contacted" ? "status-contacted" : "status-closed"
                     }`}>{lead.status}</span>
                   </td>
-                  <td className="px-5 py-4 text-xs text-muted-foreground">{new Date(lead.created_at).toLocaleDateString()}</td>
+                  <td className="px-5 py-4 text-xs text-muted-foreground">{new Date(lead.created_at).toLocaleDateString(appLocale())}</td>
                   <td className="px-5 py-4 text-right">
                     <Select value={lead.status} onValueChange={(v) => { updateStatus(lead.id, v); }}>
                       <SelectTrigger className="w-28 h-7 text-xs bg-secondary border-border" onClick={(e) => e.stopPropagation()}>
@@ -244,7 +244,7 @@ const ClientLeads = () => {
                 <p className="text-xs text-foreground">🛏️ {fmtDay(lead.booking.check_in)} · {nightsOf(lead.booking)} {tl("notti", "nights")} · {guestsOf(lead.booking)} {tl("ospiti", "guests")}{lead.booking.room_name ? ` · ${lead.booking.room_name}` : ""}</p>
               )}
               <div className="flex items-center justify-between pt-1">
-                <p className="text-xs text-muted-foreground">📅 {new Date(lead.created_at).toLocaleString()}</p>
+                <p className="text-xs text-muted-foreground">📅 {new Date(lead.created_at).toLocaleString(appLocale())}</p>
                 {lead.transcript && lead.transcript.length > 0 && (
                   <button className="text-xs text-primary hover:underline min-h-[44px] flex items-center">{t("View transcript", "Vedi trascrizione")}</button>
                 )}
@@ -266,7 +266,7 @@ const ClientLeads = () => {
                 <div><p className="text-xs text-muted-foreground">{t("email")}</p><p className="text-sm text-foreground mt-1">{selectedLead.email}</p></div>
                 <div><p className="text-xs text-muted-foreground">{t("phone")}</p><p className="text-sm text-foreground mt-1">{selectedLead.phone || "—"}</p></div>
                 <div><p className="text-xs text-muted-foreground">{t("status")}</p><p className="text-sm text-foreground mt-1 capitalize">{selectedLead.status}</p></div>
-                <div><p className="text-xs text-muted-foreground">{t("date")}</p><p className="text-sm text-foreground mt-1">{new Date(selectedLead.created_at).toLocaleString()}</p></div>
+                <div><p className="text-xs text-muted-foreground">{t("date")}</p><p className="text-sm text-foreground mt-1">{new Date(selectedLead.created_at).toLocaleString(appLocale())}</p></div>
                 <div><p className="text-xs text-muted-foreground">{t("source")}</p><p className="text-sm text-foreground mt-1 truncate">{selectedLead.source_url || "—"}</p></div>
                 {isHotel && selectedLead.booking?.check_in && (
                   <div className="col-span-1 sm:col-span-2 rounded-lg bg-secondary/40 p-3 text-sm text-foreground">

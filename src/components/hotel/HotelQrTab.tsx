@@ -5,7 +5,7 @@ import { Download, FileText, Plus, QrCode, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useLanguage, tx } from "@/hooks/useLanguage";
+import { tx } from "@/hooks/useLanguage";
 import type { HotelProfile } from "@/lib/hotelProfile";
 
 interface Props {
@@ -21,7 +21,6 @@ const DEFAULT_QR_ROOMS = "101-120";
 export const DEFAULT_QUICK_REPLIES = ["Pulizia/asciugamani", "Late check-out", "Taxi/transfer", "Ristorante", "Problema in camera", "Altro"];
 
 const HotelQrTab = ({ profile, embedToken, enabled, onChange, onDownloaded, onUpgrade }: Props) => {
-  const { lang } = useLanguage();
   const tl = (it: string, en: string) => tx(en, it);
   const roomsText = profile.qr_rooms || DEFAULT_QR_ROOMS;
   const setRoomsText = (value: string) => onChange({ ...profile, qr_rooms: value });
@@ -43,7 +42,7 @@ const HotelQrTab = ({ profile, embedToken, enabled, onChange, onDownloaded, onUp
     if (!ctx) { setBusy(false); return; }
     const font = '"Poppins", Helvetica, Arial, sans-serif';
     const hotelName = (profile.property.name || "Concierge").toUpperCase();
-    const roomLabel = `${lang === "it" ? "Camera" : "Room"} ${room || ""}`;
+    const roomLabel = `${tx("Room", "Camera")} ${room || ""}`;
     const left = 16, top = 16, right = 1184, bottom = canvas.height - 16, radius = 36;
     ctx.beginPath();
     ctx.moveTo(left + radius, top);
@@ -146,7 +145,7 @@ const HotelQrTab = ({ profile, embedToken, enabled, onChange, onDownloaded, onUp
       pdf.setCharSpace(0);
       pdf.setFont("helvetica", "bold");
       pdf.setTextColor("#12302B");
-      const roomLabel = `${lang === "it" ? "Camera" : "Room"} ${rooms[i]}`;
+      const roomLabel = `${tx("Room", "Camera")} ${rooms[i]}`;
       pdf.setFontSize(18);
       if (pdf.getTextWidth(roomLabel) > 73) pdf.setFontSize(18 * 73 / pdf.getTextWidth(roomLabel));
       pdf.text(roomLabel, x + 44.5, y + 29, { align: "center" });

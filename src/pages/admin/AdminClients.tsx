@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useLanguage, tx } from "@/hooks/useLanguage";
+import { useLanguage, tx, appLocale } from "@/hooks/useLanguage";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -192,7 +192,7 @@ const AdminClients = () => {
                       </SelectContent>
                     </Select>
                   </td>
-                  <td className="px-5 py-4 text-sm text-muted-foreground">{new Date(client.created_at).toLocaleDateString()}</td>
+                  <td className="px-5 py-4 text-sm text-muted-foreground">{new Date(client.created_at).toLocaleDateString(appLocale())}</td>
                   <td className="px-5 py-4">
                     <div className="flex items-center justify-end gap-2">
                       <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-primary w-8 h-8" onClick={() => window.open(`/admin/clients/${client.id}`, '_blank')}>

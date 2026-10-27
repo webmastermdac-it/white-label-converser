@@ -4,6 +4,7 @@ import { useActiveModule } from "@/hooks/useActiveModule";
 import { usePlanConfig } from "@/hooks/usePlanConfig";
 import { toast } from "sonner";
 import { playNotice, soundEnabled } from "@/lib/playNotice";
+import { tx } from "@/hooks/useLanguage";
 
 /** Open service requests of the active hotel bot, live via Realtime. */
 export function useOpenServiceRequests(canPlaySound: () => boolean = () => true) {
@@ -43,7 +44,7 @@ export function useOpenServiceRequests(canPlaySound: () => boolean = () => true)
         // Show it right away; load() below reconciles with the database.
         setCount((c) => c + 1);
         if (/^problema/i.test((row.category || "").trim())) setUrgent(true);
-        toast.info(`${row.category || "Nuova richiesta"}${row.room ? ` · ${row.room}` : ""}`, { description: "Nuova richiesta da un ospite" });
+        toast.info(`${row.category || tx("New request", "Nuova richiesta")}${row.room ? ` · ${row.room}` : ""}`, { description: tx("New request from a guest", "Nuova richiesta da un ospite") });
         void load();
         if (soundAllowed.current() && soundEnabled()) playNotice();
       })
