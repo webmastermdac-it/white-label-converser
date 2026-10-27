@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useLanguage } from "@/hooks/useLanguage";
+import { useLanguage, appLocale } from "@/hooks/useLanguage";
 import { useAdminClientFilter } from "@/contexts/AdminClientFilterContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -63,7 +63,7 @@ const AdminLeads = () => {
 
   const exportCSV = () => {
     const headers = [t("lead", "Name"), t("email"), t("phone"), t("message"), t("status"), t("client"), t("source"), t("date")];
-    const rows = filtered.map((l) => [l.name, l.email, l.phone, l.message, l.status, l.clients?.name || "", l.source_url, new Date(l.created_at).toLocaleString()]);
+    const rows = filtered.map((l) => [l.name, l.email, l.phone, l.message, l.status, l.clients?.name || "", l.source_url, new Date(l.created_at).toLocaleString(appLocale())]);
     const csv = [headers, ...rows].map((r) => r.map((c) => `"${c}"`).join(",")).join("\n");
     const blob = new Blob([csv], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
@@ -140,7 +140,7 @@ const AdminLeads = () => {
                       lead.status === "contacted" ? "status-contacted" : "status-closed"
                     }`}>{lead.status}</span>
                   </td>
-                  <td className="px-5 py-4 text-xs text-muted-foreground">{new Date(lead.created_at).toLocaleDateString()}</td>
+                  <td className="px-5 py-4 text-xs text-muted-foreground">{new Date(lead.created_at).toLocaleDateString(appLocale())}</td>
                   <td className="px-5 py-4 text-right">
                     <Select value={lead.status} onValueChange={(v) => { updateStatus(lead.id, v); }} >
                       <SelectTrigger className="w-28 h-7 text-xs bg-secondary border-border" onClick={(e) => e.stopPropagation()}>
@@ -182,7 +182,7 @@ const AdminLeads = () => {
               <p className="text-xs text-muted-foreground">{lead.email}</p>
               {lead.phone && <p className="text-xs text-muted-foreground">{lead.phone}</p>}
               <div className="flex items-center justify-between pt-1">
-                <p className="text-xs text-muted-foreground">📅 {new Date(lead.created_at).toLocaleString()}</p>
+                <p className="text-xs text-muted-foreground">📅 {new Date(lead.created_at).toLocaleString(appLocale())}</p>
                 {lead.transcript && lead.transcript.length > 0 && (
                   <button className="text-xs text-primary hover:underline min-h-[44px] flex items-center">{t("View transcript", "Vedi trascrizione")}</button>
                 )}
@@ -221,7 +221,7 @@ const AdminLeads = () => {
                 </div>
                 <div>
                   <Label className="text-muted-foreground text-xs">{t("date")}</Label>
-                  <p className="text-sm text-foreground mt-1">{new Date(selectedLead.created_at).toLocaleString()}</p>
+                  <p className="text-sm text-foreground mt-1">{new Date(selectedLead.created_at).toLocaleString(appLocale())}</p>
                 </div>
               </div>
 

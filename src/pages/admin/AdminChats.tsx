@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { useAdminClientFilter } from "@/contexts/AdminClientFilterContext";
+import { appLocale } from "@/hooks/useLanguage";
 
 interface ChatSession {
   id: string;
@@ -154,7 +155,7 @@ const AdminChats = () => {
                     {duration(session)}
                   </td>
                   <td className="px-5 py-4 text-xs text-muted-foreground">
-                    {new Date(session.started_at).toLocaleString()}
+                    {new Date(session.started_at).toLocaleString(appLocale())}
                   </td>
                   <td className="px-5 py-4 text-right">
                     <Button
