@@ -9,6 +9,7 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import HotelProfile from "@/pages/client/hotel/HotelProfile";
 import HotelRequests from "@/pages/client/hotel/HotelRequests";
 import PublicConcierge from "@/pages/PublicConcierge";
+import PublicPurchase from "@/pages/PublicPurchase";
 import AdminLayout from "@/layouts/AdminLayout";
 import ClientLayout from "@/layouts/ClientLayout";
 
@@ -76,6 +77,7 @@ const App = () => (
             <Route path="/chatbot-sito-aziendale" element={<VerticalLanding verticalId="general" />} />
             <Route path="/setup-assistito" element={<SetupAssistito />} />
             <Route path="/c/:embed_token" element={<PublicConcierge />} />
+            <Route path="/acquista" element={<PublicPurchase />} />
 
             {/* Admin Routes */}
             <Route
