@@ -7,3 +7,4 @@
 - ClientLayout owns the guest-request subscription and lamp preference, passing state to the sidebar and lamp to avoid duplicate notification sounds.
 - Service-hour checks use a pure local-device-time helper; request-hour saves merge the latest hotel_profile JSON and normalization preserves these settings.
 - Keep jsPDF's transitive DOMPurify dependency on a patched release through the package override so PDF HTML sanitization cannot reinstall the known vulnerable version.
+- Public Concierge checkout is isolated in create-public-checkout and a source-discriminated webhook branch; never create accounts automatically and deduplicate setup records by stripe_session_id to preserve existing authenticated checkout flows.
