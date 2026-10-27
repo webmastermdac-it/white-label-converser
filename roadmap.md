@@ -1,4 +1,5 @@
 # Roadmap
+- [ ] Creare e verificare checkout pubblici Concierge (quattro offerte) e ramo webhook dedicato senza modificare i checkout esistenti.
 - [x] Aggiungere orario di presidio hotel, salvataggio preservando il profilo, avvisi temporizzati e contesto concierge; 32 test e build verificati, chat deployata.
 - [x] Aggiungere e verificare la lampada hotel persistente, urgenza e interruttore condiviso (test e prova visiva isolata desktop/mobile).
 
