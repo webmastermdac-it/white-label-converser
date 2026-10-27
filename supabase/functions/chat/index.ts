@@ -451,6 +451,7 @@ ${isHotelStandard ? `5. Dopo che il visitatore ha fornito un recapito (email o t
                 transcript: messages,
                 source_url,
                 lang,
+                session_token,
               });
               leadAlreadyCaptured = true;
               console.log("[chat] conversational lead captured");
@@ -934,9 +935,14 @@ async function createConversationalLead(
   botConfig: any,
   lead: {
     name: string; email: string; phone: string; message: string;
-    transcript: any[]; source_url?: string; lang: string;
+    transcript: any[]; source_url?: string; lang: string; session_token?: string;
   }
 ) {
+  let sessionId: string | null = null;
+  if (lead.session_token) {
+    const { data: sessRow } = await supabase.from("chat_sessions").select("id").eq("session_token", lead.session_token).maybeSingle();
+    sessionId = sessRow?.id ?? null;
+  }
   const { data: clientData } = await supabase
     .from("clients").select("plan").eq("id", botConfig.client_id).single();
   const clientPlan = clientData?.plan || "free";
@@ -958,6 +964,7 @@ async function createConversationalLead(
   }
 
   const { error: leadError } = await supabase.from("leads").insert({
+    session_id: sessionId,
     client_id: botConfig.client_id,
     bot_id: botConfig.id,
     name: lead.name,

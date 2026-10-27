@@ -10,11 +10,12 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import RequestReply from "@/components/hotel/RequestReply";
 import { DEFAULT_SERVICE_HOURS, SERVICE_HOURS_CHANGED_EVENT, normalizeServiceHours } from "@/lib/serviceHours";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 type RequestStatus = "open" | "in_progress" | "done";
-type ServiceRequest = { id: string; room: string; category: string; message: string | null; guest_name: string | null; status: RequestStatus; created_at: string; resolved_at: string | null };
+type ServiceRequest = { id: string; room: string; category: string; message: string | null; guest_name: string | null; status: RequestStatus; created_at: string; resolved_at: string | null; staff_reply?: string | null; replied_at?: string | null };
 const statuses: RequestStatus[] = ["open", "in_progress", "done"];
 
 const HotelRequests = ({ botIdOverride }: { botIdOverride?: string } = {}) => {
@@ -76,7 +77,7 @@ const HotelRequests = ({ botIdOverride }: { botIdOverride?: string } = {}) => {
 
   const load = async () => {
     if (!botId || !canUseConciergeRequests) { setLoading(false); return; }
-    const { data } = await supabase.from("service_requests").select("id, room, category, message, guest_name, status, created_at, resolved_at")
+    const { data } = await supabase.from("service_requests").select("id, room, category, message, guest_name, status, created_at, resolved_at, staff_reply, replied_at")
       .eq("bot_id", botId).order("created_at", { ascending: false });
     setRows((data || []) as ServiceRequest[]); setLoading(false);
   };
@@ -149,6 +150,7 @@ const HotelRequests = ({ botIdOverride }: { botIdOverride?: string } = {}) => {
               <p className="font-semibold flex flex-wrap items-center gap-2">{row.category}{row.message?.startsWith("[chat]") && <span className="rounded-full bg-secondary text-secondary-foreground px-2 py-0.5 text-[10px] font-semibold uppercase">{tl("Da chat", "From chat")}</span>}{urgent && <span className="rounded-full bg-destructive text-destructive-foreground px-2 py-0.5 text-[10px] font-semibold uppercase">{tl("Urgente", "Urgent")}</span>}</p>
               {row.message && <p className="text-sm text-foreground break-words">{row.message.replace(/^\[chat\]\s*/, "")}</p>}
               <p className="text-xs text-muted-foreground">{row.guest_name ? `${row.guest_name} · ` : ""}<span className={cn(waiting && "text-destructive font-medium")}>{timeAgo(minutes, lang)}{waiting ? ` · ${tl("in attesa da un po'", "waiting for a while")}` : ""}</span></p>
+              <RequestReply requestId={row.id} reply={row.staff_reply ?? null} repliedAt={row.replied_at ?? null} onSaved={(reply, at) => setRows((cur) => cur.map((r) => r.id === row.id ? { ...r, staff_reply: reply, replied_at: at } : r))} />
             </div>
           </div>
           <Button size="sm" variant={tab === "done" ? "outline" : "default"} className="sm:shrink-0" onClick={() => changeStatus(row, action.next)}><Icon className="w-3.5 h-3.5 mr-1" />{action.label}</Button>

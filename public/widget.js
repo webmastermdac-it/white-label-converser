@@ -167,12 +167,12 @@
   };
   var th = hotelLabels[baseLang] || hotelLabels["en"];
   var serviceLabels = {
-    en: { messagePlaceholder: "Optional message", namePlaceholder: "Optional name", cancelBtn: "Cancel", sendBtn: "Send request", successMsg: "Request sent to reception." },
-    it: { messagePlaceholder: "Messaggio facoltativo", namePlaceholder: "Nome facoltativo", cancelBtn: "Annulla", sendBtn: "Invia richiesta", successMsg: "Richiesta inviata alla reception." },
-    fr: { messagePlaceholder: "Message facultatif", namePlaceholder: "Nom facultatif", cancelBtn: "Annuler", sendBtn: "Envoyer la demande", successMsg: "Demande envoyée à la réception." },
-    de: { messagePlaceholder: "Optionale Nachricht", namePlaceholder: "Optionaler Name", cancelBtn: "Abbrechen", sendBtn: "Anfrage senden", successMsg: "Anfrage an die Rezeption gesendet." },
-    es: { messagePlaceholder: "Mensaje opcional", namePlaceholder: "Nombre opcional", cancelBtn: "Cancelar", sendBtn: "Enviar solicitud", successMsg: "Solicitud enviada a recepción." },
-    pt: { messagePlaceholder: "Mensagem opcional", namePlaceholder: "Nome opcional", cancelBtn: "Cancelar", sendBtn: "Enviar pedido", successMsg: "Pedido enviado à receção." },
+    en: { messagePlaceholder: "Optional message", namePlaceholder: "Optional name", cancelBtn: "Cancel", sendBtn: "Send request", replyLabel: "Reply from the property", successMsg: "Request sent to reception." },
+    it: { messagePlaceholder: "Messaggio facoltativo", namePlaceholder: "Nome facoltativo", cancelBtn: "Annulla", sendBtn: "Invia richiesta", replyLabel: "Risposta della struttura", successMsg: "Richiesta inviata alla reception." },
+    fr: { messagePlaceholder: "Message facultatif", namePlaceholder: "Nom facultatif", cancelBtn: "Annuler", sendBtn: "Envoyer la demande", replyLabel: "Réponse de l'établissement", successMsg: "Demande envoyée à la réception." },
+    de: { messagePlaceholder: "Optionale Nachricht", namePlaceholder: "Optionaler Name", cancelBtn: "Abbrechen", sendBtn: "Anfrage senden", replyLabel: "Antwort der Unterkunft", successMsg: "Anfrage an die Rezeption gesendet." },
+    es: { messagePlaceholder: "Mensaje opcional", namePlaceholder: "Nombre opcional", cancelBtn: "Cancelar", sendBtn: "Enviar solicitud", replyLabel: "Respuesta del alojamiento", successMsg: "Solicitud enviada a recepción." },
+    pt: { messagePlaceholder: "Mensagem opcional", namePlaceholder: "Nome opcional", cancelBtn: "Cancelar", sendBtn: "Enviar pedido", replyLabel: "Resposta do alojamento", successMsg: "Pedido enviado à receção." },
   };
   var ts = serviceLabels[baseLang] || serviceLabels["en"];
   var stayLabels = {
@@ -812,6 +812,54 @@
     });
   }
 
+  // ── Replies from the property to guest requests (polled while the chat is open) ──
+  var REQ_KEY = "genius_widget_requests_" + EMBED_TOKEN;
+  var replyTimer = null;
+  function loadRequests() {
+    try {
+      var all = JSON.parse(localStorage.getItem(REQ_KEY) || "[]");
+      var cutoff = Date.now() - 48 * 3600 * 1000;
+      return all.filter(function (r) { return r && r.id && r.at > cutoff; });
+    } catch (e) { return []; }
+  }
+  function saveRequests(list) { try { localStorage.setItem(REQ_KEY, JSON.stringify(list.slice(-20))); } catch (e) {} }
+  function rememberRequest(id) {
+    if (!id) return;
+    var list = loadRequests();
+    list.push({ id: id, at: Date.now(), seen: "" });
+    saveRequests(list);
+    startReplyPolling();
+  }
+  function checkReplies() {
+    var list = loadRequests();
+    if (!list.length) return;
+    fetch(SUPABASE_URL + "/functions/v1/service-request-replies", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ embed_token: EMBED_TOKEN, ids: list.map(function (r) { return r.id; }) }),
+    }).then(function (res) { return res.ok ? res.json() : null; }).then(function (data) {
+      if (!data || !data.requests) return;
+      var fresh = loadRequests(), changed = false;
+      data.requests.forEach(function (row) {
+        if (!row.staff_reply || !row.replied_at) return;
+        for (var i = 0; i < fresh.length; i++) {
+          if (fresh[i].id === row.id && fresh[i].seen !== row.replied_at) {
+            fresh[i].seen = row.replied_at;
+            messages.push({ role: "assistant", content: "💬 " + ts.replyLabel + ": " + row.staff_reply });
+            changed = true;
+          }
+        }
+      });
+      if (changed) { saveRequests(fresh); saveMessages(messages); render(); }
+    }).catch(function () {});
+  }
+  function startReplyPolling() {
+    if (replyTimer || !loadRequests().length) return;
+    checkReplies();
+    replyTimer = setInterval(function () { if (!document.hidden) checkReplies(); }, 8000);
+  }
+
+
   // The bot asks for staff action with a [SERVICE_REQUEST:{...}] marker: register it and confirm only if saved.
   function submitChatServiceRequest(fullText) {
     var m = /\[SERVICE_REQUEST:(\{[\s\S]*?\})\]/.exec(fullText);
@@ -825,9 +873,12 @@
       body: JSON.stringify({ embed_token: EMBED_TOKEN, room: ROOM, category: String(data.category).slice(0, 80), message: String(data.message || "").slice(0, 900), guest_name: "", source: "chat" }),
     }).then(function (response) {
       if (!response.ok) throw new Error("request_failed");
-      messages.push({ role: "assistant", content: ts.successMsg });
-      saveMessages(messages);
-      render();
+      return response.json().catch(function () { return {}; }).then(function (d) {
+        rememberRequest(d && d.request_id);
+        messages.push({ role: "assistant", content: ts.successMsg });
+        saveMessages(messages);
+        render();
+      });
     }).catch(function () {
       messages.push({ role: "assistant", content: t.errorMsg });
       saveMessages(messages);
@@ -851,6 +902,8 @@
       body: JSON.stringify({ embed_token: EMBED_TOKEN, room: ROOM, category: serviceCategory, message: msg ? msg.value.trim() : "", guest_name: name ? name.value.trim() : "" }),
     }).then(function (response) {
       if (!response.ok) throw new Error("request_failed");
+      return response.json().catch(function () { return {}; }).then(function (d) { rememberRequest(d && d.request_id); });
+    }).then(function () {
       messages.push({ role: "assistant", content: ts.successMsg });
       serviceCategory = "";
       serviceDraft = { message: "", name: "" };
@@ -1015,6 +1068,7 @@
       try { sessionStorage.setItem(WELCOME_KEY, welcomeMsg); } catch(e) {}
 
       render();
+      startReplyPolling();
     })
     .catch(function (err) {
       console.error("[Genius Widget] Failed to load config:", err);

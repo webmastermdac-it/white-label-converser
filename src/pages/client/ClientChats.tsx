@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/hooks/useLanguage";
@@ -22,6 +23,8 @@ const ClientChats = () => {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<ChatSession | null>(null);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const requestedSession = searchParams.get("session");
 
   useEffect(() => {
     if (!clientId) return;
@@ -35,6 +38,13 @@ const ClientChats = () => {
         setLoading(false);
       });
   }, [clientId]);
+
+  // Deep link from a lead: open that conversation directly
+  useEffect(() => {
+    if (!requestedSession) return;
+    const found = sessions.find((s) => s.id === requestedSession);
+    if (found) setSelected(found);
+  }, [requestedSession, sessions]);
 
   const filtered = sessions.filter((s) =>
     s.source_url.toLowerCase().includes(search.toLowerCase())
@@ -94,7 +104,7 @@ const ClientChats = () => {
         )}
       </div>
 
-      <Dialog open={!!selected} onOpenChange={() => setSelected(null)}>
+      <Dialog open={!!selected} onOpenChange={() => { setSelected(null); if (requestedSession) setSearchParams((p) => { const n = new URLSearchParams(p); n.delete("session"); return n; }, { replace: true }); }}>
         <DialogContent className="bg-card border-border text-foreground max-w-lg max-h-[70vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{t("chatTranscript")}</DialogTitle>

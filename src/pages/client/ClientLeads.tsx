@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage, tx, appLocale } from "@/hooks/useLanguage";
@@ -11,7 +12,7 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue
 } from "@/components/ui/select";
-import { Download, Search, Filter, Loader2 } from "lucide-react";
+import { Download, Search, Filter, Loader2, MessageSquare } from "lucide-react";
 import { getLanguageFlag } from "@/lib/languageFlags";
 import { useActiveModule } from "@/hooks/useActiveModule";
 
@@ -32,6 +33,8 @@ interface Lead {
   created_at: string;
   language?: string;
   booking?: Booking | null;
+  session_id?: string | null;
+  bot_id?: string | null;
 }
 
 const ClientLeads = () => {
@@ -47,6 +50,29 @@ const ClientLeads = () => {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
+  const navigate = useNavigate();
+  const [openingChat, setOpeningChat] = useState(false);
+
+  // Opens the full conversation of the lead in the chat history. Older leads have no session link:
+  // fall back to the session of the same bot that was active when the lead was created.
+  const openFullChat = async (lead: Lead) => {
+    setOpeningChat(true);
+    let sessionId = lead.session_id || null;
+    if (!sessionId && lead.bot_id) {
+      const created = new Date(lead.created_at).getTime();
+      const { data } = await supabase.from("chat_sessions").select("id, started_at, last_message_at, ended_at")
+        .eq("bot_id", lead.bot_id).lte("started_at", lead.created_at)
+        .order("started_at", { ascending: false }).limit(5);
+      const match = (data || []).find((s: any) => {
+        const end = Date.parse(s.ended_at || s.last_message_at || s.started_at);
+        return Math.abs(end - created) < 10 * 60 * 1000;
+      });
+      sessionId = match?.id || null;
+    }
+    setOpeningChat(false);
+    if (!sessionId) { toast({ title: tl("Chat completa non trovata per questo lead", "Full chat not found for this lead"), variant: "destructive" }); return; }
+    navigate(`/dashboard/chats?session=${sessionId}`);
+  };
 
   useEffect(() => {
     if (!clientId) return;
@@ -249,6 +275,9 @@ const ClientLeads = () => {
                 )}
                 <div className="col-span-1 sm:col-span-2"><p className="text-xs text-muted-foreground">{t("message")}</p><p className="text-sm text-foreground mt-1">{selectedLead.message || "—"}</p></div>
               </div>
+              <Button className="w-full h-11 gap-2" variant="outline" disabled={openingChat} onClick={() => openFullChat(selectedLead)}>
+                {openingChat ? <Loader2 className="w-4 h-4 animate-spin" /> : <MessageSquare className="w-4 h-4" />}{tl("Apri la chat completa col chatbot", "Open the full chat with the chatbot")}
+              </Button>
               {selectedLead.transcript.length > 0 && (
                 <div>
                   <p className="text-xs text-muted-foreground mb-2">{t("chatTranscript")}</p>

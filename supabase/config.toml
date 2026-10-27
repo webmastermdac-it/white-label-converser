@@ -52,3 +52,6 @@ verify_jwt = false
 
 [functions.create-setup-checkout]
 verify_jwt = false
+
+[functions.service-request-replies]
+verify_jwt = false

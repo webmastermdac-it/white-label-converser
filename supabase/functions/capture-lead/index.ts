@@ -148,9 +148,17 @@ serve(async (req) => {
       if ((count || 0) >= maxLeads) leadLimitReached = true;
     }
 
+    // Link the lead to its chat session so the dashboard can open the full conversation
+    let sessionId: string | null = null;
+    if (session_token) {
+      const { data: sessRow } = await supabase.from("chat_sessions").select("id").eq("session_token", session_token).maybeSingle();
+      sessionId = sessRow?.id ?? null;
+    }
+
     const { data: leadData, error: leadError } = await supabase
       .from("leads")
       .insert({
+        session_id: sessionId,
         client_id: botConfig.client_id,
         bot_id: botConfig.id,
         name, email, phone, message, transcript,

@@ -694,6 +694,7 @@ export type Database = {
       }
       leads: {
         Row: {
+          session_id: string | null
           booking: Json | null
           bot_id: string | null
           client_id: string
@@ -711,6 +712,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          session_id?: string | null
           booking?: Json | null
           bot_id?: string | null
           client_id: string
@@ -728,6 +730,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          session_id?: string | null
           booking?: Json | null
           bot_id?: string | null
           client_id?: string
@@ -997,6 +1000,8 @@ export type Database = {
       }
       service_requests: {
         Row: {
+          staff_reply: string | null
+          replied_at: string | null
           bot_id: string
           category: string
           client_id: string
@@ -1009,6 +1014,8 @@ export type Database = {
           status: string
         }
         Insert: {
+          staff_reply?: string | null
+          replied_at?: string | null
           bot_id: string
           category: string
           client_id: string
@@ -1021,6 +1028,8 @@ export type Database = {
           status?: string
         }
         Update: {
+          staff_reply?: string | null
+          replied_at?: string | null
           bot_id?: string
           category?: string
           client_id?: string
