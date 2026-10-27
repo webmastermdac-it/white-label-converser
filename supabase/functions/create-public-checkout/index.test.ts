@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 
 const loadHandler = (file: string, stripe: object, admin: object, now = Date.parse("2026-10-27T17:10:00Z"), fetcher = async () => new Response("{}")) => {
-  const source = readFileSync(new URL(file, import.meta.url), "utf8").replace(/^import .*;\n/gm, "");
+  const source = readFileSync(new URL(file, import.meta.url), "utf8").replace(/^import .*;\n/gm, "").replace(/const corsHeaders = \{[\s\S]*?\};/, "");
   const js = new Bun.Transpiler({ loader: "ts" }).transformSync(source);
   let handler: (req: Request) => Promise<Response> = async () => new Response("missing", { status: 500 });
   class FakeStripe { constructor() { return stripe; } }
