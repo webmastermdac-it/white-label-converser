@@ -464,6 +464,8 @@ ${isHotelStandard ? `5. Dopo che il visitatore ha fornito un recapito (email o t
 
       const cleanMessage = stripMarkers(fullMessage).trim() + cartLinkMarkdown;
       const stayMarker = staySummaryEnabled ? (fullMessage.match(/\[STAY_SUMMARY:\{[\s\S]*?\}\]/)?.[0] || "") : "";
+      // The widget registers the request itself: forward the marker (it is hidden from the guest's view).
+      const serviceMarker = fullMessage.match(/\[SERVICE_REQUEST:\{[\s\S]*?\}\]/)?.[0] || "";
       const triggerLead = !conversationalLead && !stayMarker && fullMessage.indexOf("[TRIGGER_LEAD_FORM]") !== -1;
 
       // Save session in background
@@ -471,7 +473,7 @@ ${isHotelStandard ? `5. Dopo che il visitatore ha fornito un recapito (email o t
         saveSession(supabase, session_token, botConfig, [...messages, { role: "assistant", content: cleanMessage }], source_url, lang, conversationalLead && leadAlreadyCaptured);
       }
 
-      return { cleanMessage, triggerLead, stayMarker };
+      return { cleanMessage, triggerLead, stayMarker, serviceMarker };
     }
 
     // ══════════════════════════════════════════════════════
@@ -539,7 +541,7 @@ ${isHotelStandard ? `5. Dopo che il visitatore ha fornito un recapito (email o t
 
             console.log(`[chat] ⏱ AI call (stream complete): ${Date.now() - tAi}ms`);
 
-            const { cleanMessage, triggerLead, stayMarker } = await postProcess(acc);
+            const { cleanMessage, triggerLead, stayMarker, serviceMarker } = await postProcess(acc);
             if (cleanMessage.startsWith(sent)) {
               const tail = cleanMessage.slice(sent.length);
               if (tail) controller.enqueue(sseChunk(tail));
@@ -551,6 +553,7 @@ ${isHotelStandard ? `5. Dopo che il visitatore ha fornito un recapito (email o t
               controller.enqueue(sseChunk("[TRIGGER_LEAD_FORM]"));
             }
             if (stayMarker) controller.enqueue(sseChunk(stayMarker));
+            if (serviceMarker) controller.enqueue(sseChunk("\n" + serviceMarker));
             controller.enqueue(encoder.encode("data: [DONE]\n\n"));
             console.log(`[chat] ⏱ total request: ${Date.now() - tStart}ms`);
           } catch (streamErr) {
@@ -615,11 +618,11 @@ ${isHotelStandard ? `5. Dopo che il visitatore ha fornito un recapito (email o t
     console.log(`[chat] ⏱ AI call (non-streaming, incl. tools): ${Date.now() - tAi}ms`);
 
     const fullMessage = aiMessage?.content || "";
-    const { cleanMessage, triggerLead, stayMarker } = await postProcess(fullMessage);
+    const { cleanMessage, triggerLead, stayMarker, serviceMarker } = await postProcess(fullMessage);
     console.log(`[chat] ⏱ total request: ${Date.now() - tStart}ms`);
 
     return jsonResp({
-      message: cleanMessage + (stayMarker ? "\n" + stayMarker : ""),
+      message: cleanMessage + (stayMarker ? "\n" + stayMarker : "") + (serviceMarker ? "\n" + serviceMarker : ""),
       source: (faqSource || responseSource) as ResponseSource,
       trigger_lead_form: triggerLead,
     });
