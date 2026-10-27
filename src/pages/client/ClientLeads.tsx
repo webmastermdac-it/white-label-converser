@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import ChatMessageText from "@/components/chat/ChatMessageText";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -281,10 +282,10 @@ const ClientLeads = () => {
               {selectedLead.transcript.length > 0 && (
                 <div>
                   <p className="text-xs text-muted-foreground mb-2">{t("chatTranscript")}</p>
-                  <div className="space-y-2 max-h-60 overflow-y-auto p-3 bg-secondary rounded-lg">
+                  <div className="space-y-2 max-h-60 overflow-y-auto overflow-x-hidden p-3 bg-secondary rounded-lg min-w-0">
                     {selectedLead.transcript.map((msg: any, i: number) => (
                       <div key={i} className={`text-xs p-2 rounded-lg ${msg.role === "user" ? "bg-primary/10 text-foreground ml-4" : "bg-card text-muted-foreground mr-4"}`}>
-                        <span className="font-medium capitalize">{msg.role}: </span>{msg.content}
+                        <span className="font-medium capitalize">{msg.role}:</span><ChatMessageText content={msg.content} />
                       </div>
                     ))}
                   </div>

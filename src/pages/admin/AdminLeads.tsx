@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import ChatMessageText from "@/components/chat/ChatMessageText";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage, appLocale } from "@/hooks/useLanguage";
 import { useAdminClientFilter } from "@/contexts/AdminClientFilterContext";
@@ -228,10 +229,10 @@ const AdminLeads = () => {
               {selectedLead.transcript && selectedLead.transcript.length > 0 && (
                 <div>
                   <Label className="text-muted-foreground text-xs">{t("chatTranscript")}</Label>
-                  <div className="mt-2 space-y-2 max-h-60 overflow-y-auto p-3 bg-secondary rounded-lg">
+                  <div className="mt-2 space-y-2 max-h-60 overflow-y-auto overflow-x-hidden p-3 bg-secondary rounded-lg min-w-0">
                     {selectedLead.transcript.map((msg: any, i: number) => (
                       <div key={i} className={`text-xs p-2 rounded-lg ${msg.role === "user" ? "bg-primary/10 text-foreground ml-4" : "bg-card text-muted-foreground mr-4"}`}>
-                        <span className="font-medium capitalize">{msg.role}: </span>{msg.content}
+                        <span className="font-medium capitalize">{msg.role}:</span><ChatMessageText content={msg.content} />
                       </div>
                     ))}
                   </div>

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import ChatMessageText from "@/components/chat/ChatMessageText";
 import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -133,20 +134,20 @@ const ClientChats = () => {
       </div>
 
       <Dialog open={!!selected} onOpenChange={() => { setSelected(null); if (requestedSession) setSearchParams((p) => { const n = new URLSearchParams(p); n.delete("session"); return n; }, { replace: true }); }}>
-        <DialogContent className="bg-card border-border text-foreground max-w-lg max-h-[70vh] overflow-y-auto">
+        <DialogContent className="bg-card border-border text-foreground max-w-lg max-h-[70vh] overflow-y-auto overflow-x-hidden">
           <DialogHeader>
             <DialogTitle>{t("chatTranscript")}</DialogTitle>
           </DialogHeader>
           {selected && (
-            <div className="space-y-3 pt-2">
-              <p className="text-sm font-medium text-foreground">{chatSummary(selected, noTopic)}</p>
+            <div className="space-y-3 pt-2 min-w-0">
+              <p className="text-sm font-medium text-foreground [overflow-wrap:anywhere]">{chatSummary(selected, noTopic)}</p>
               {(() => { const lead = leadOf(selected); return lead ? <p className="text-xs text-primary">👤 {lead.name}{lead.email ? ` · ${lead.email}` : ""}</p> : null; })()}
-              <div className="space-y-2">
+              <div className="flex flex-col gap-2 min-w-0">
                 {selected.messages.map((msg: any, i: number) => (
-                  <div key={i} className={`text-sm p-3 rounded-xl max-w-[85%] ${
-                    msg.role === "user" ? "chat-bubble-user ml-auto" : "chat-bubble-bot"
+                  <div key={i} className={`text-sm p-3 rounded-xl max-w-[85%] min-w-0 w-fit ${
+                    msg.role === "user" ? "chat-bubble-user self-end" : "chat-bubble-bot self-start"
                   }`}>
-                    {msg.content}
+                    <ChatMessageText content={msg.content} />
                   </div>
                 ))}
               </div>

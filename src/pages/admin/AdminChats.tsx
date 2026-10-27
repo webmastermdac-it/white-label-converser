@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import ChatMessageText from "@/components/chat/ChatMessageText";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2, MessageSquare, Search, Trash2, Mail } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -185,17 +186,17 @@ const AdminChats = () => {
           {selected && (
             <div className="space-y-4">
               <p className="text-xs text-muted-foreground">Source: {selected.source_url || "Direct"}</p>
-              <div className="space-y-2">
+              <div className="flex flex-col gap-2 min-w-0">
                 {selected.messages.length === 0 ? (
                   <p className="text-sm text-muted-foreground">Nessun messaggio in questa sessione.</p>
                 ) : selected.messages.map((msg: any, i: number) => (
                   <div
                     key={i}
-                    className={`text-sm p-3 rounded-xl max-w-[85%] whitespace-pre-wrap ${
-                      msg.role === "user" ? "chat-bubble-user ml-auto" : "chat-bubble-bot"
+                    className={`text-sm p-3 rounded-xl max-w-[85%] min-w-0 w-fit ${
+                      msg.role === "user" ? "chat-bubble-user self-end" : "chat-bubble-bot self-start"
                     }`}
                   >
-                    {msg.content}
+                    <ChatMessageText content={msg.content} />
                   </div>
                 ))}
               </div>
