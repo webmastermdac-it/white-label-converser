@@ -2,7 +2,7 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { z } from "npm:zod@3.25.76";
 
-// Public endpoint used by the guest widget: returns the property's reply for the
+// Public endpoint used by the guest widget: returns the property's replies for the
 // requests the guest itself created (request ids are unguessable UUIDs kept in the guest's browser).
 const BodySchema = z.object({
   embed_token: z.string().regex(/^[a-f0-9]{16,128}$/i),
@@ -28,7 +28,16 @@ Deno.serve(async (req) => {
       .select("id, status, staff_reply, replied_at")
       .eq("bot_id", bot.id).in("id", parsed.data.ids);
     if (error) throw error;
-    return reply({ requests: data || [] });
+    // Every staff message of the thread, oldest first (the guest only ever sees the property's side here).
+    const { data: messages, error: messagesError } = await admin.from("service_request_messages")
+      .select("id, request_id, body, closes_request, created_at")
+      .eq("bot_id", bot.id).eq("author", "staff").in("request_id", parsed.data.ids)
+      .order("created_at", { ascending: true });
+    if (messagesError) throw messagesError;
+    return reply({
+      // staff_reply / replied_at stay in the payload so widget copies cached before this change keep working.
+      requests: (data || []).map((r) => ({ ...r, messages: (messages || []).filter((m) => m.request_id === r.id) })),
+    });
   } catch (error) {
     console.error("service-request-replies error:", error);
     return reply({ error: "Server error" }, 500);

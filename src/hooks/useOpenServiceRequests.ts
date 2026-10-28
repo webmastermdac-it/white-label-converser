@@ -53,7 +53,16 @@ export function useOpenServiceRequests(canPlaySound: () => boolean = () => true)
         void load();
         if (soundAllowed.current() && soundEnabled()) playNotice();
       })
-      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "service_requests", filter: `bot_id=eq.${botId}` }, () => { void load(); })
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "service_requests", filter: `bot_id=eq.${botId}` }, (payload) => {
+        // A guest follow-up in an existing thread alerts the staff like a new request (the request is open again).
+        const row = (payload?.new ?? {}) as { category?: string; room?: string | null; last_guest_message_at?: string | null };
+        const previous = (payload?.old ?? {}) as { last_guest_message_at?: string | null };
+        if (row.last_guest_message_at && row.last_guest_message_at !== previous.last_guest_message_at) {
+          toast.info(`${tx("Guest reply", "Replica dell'ospite")}${row.room ? ` · ${row.room}` : ""}`, { description: row.category });
+          if (soundAllowed.current() && soundEnabled()) playNotice();
+        }
+        void load();
+      })
       .subscribe((status) => {
         // Rows inserted between the first load and the subscription (or during a reconnect) must not be missed.
         if (status === "SUBSCRIBED" || status === "CHANNEL_ERROR" || status === "TIMED_OUT") void load();

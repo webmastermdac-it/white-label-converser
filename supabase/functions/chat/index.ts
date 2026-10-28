@@ -3,6 +3,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { buildHotelContext } from "./hotelContext.ts";
 import { baseLangOf, resolveReplyLang } from "./language.ts";
+import { buildActiveRequestContext, canFollowUp } from "../_shared/requestThread.ts";
 import {
   fetchBrandSettings, newLeadEmail, newLeadSubject, fetchCustomTemplate,
   renderCustomTemplate, replaceSubjectVars, resolveClientOwnerLocale,
@@ -23,7 +24,7 @@ serve(async (req) => {
   const tStart = Date.now();
 
   try {
-    const { messages, embed_token, session_token, source_url, language, stream, room } = await req.json();
+    const { messages, embed_token, session_token, source_url, language, stream, room, active_request_id } = await req.json();
     const lang = language || "en";
     const safeRoom = typeof room === "string" ? room.trim().slice(0, 40) : "";
 
@@ -293,6 +294,25 @@ serve(async (req) => {
       }
     }
 
+    // ── In-stay guest request thread: tell the AI which request the guest is answering about ──
+    // Only for QR/room chats; the request must belong to this bot and still accept follow-ups.
+    if (hotelContext && safeRoom && typeof active_request_id === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(active_request_id)) {
+      try {
+        const { data: activeRequest } = await supabase.from("service_requests")
+          .select("id, status, category, message, created_at, resolved_at")
+          .eq("id", active_request_id).eq("bot_id", botConfig.id).maybeSingle();
+        if (activeRequest && canFollowUp(activeRequest)) {
+          const { data: threadRows } = await supabase.from("service_request_messages")
+            .select("author, body, created_at").eq("request_id", activeRequest.id)
+            .order("created_at", { ascending: false }).limit(8);
+          hotelContext += buildActiveRequestContext(activeRequest, (threadRows || []).reverse());
+        }
+      } catch (e) {
+        // Never block the chat: without the context the AI behaves as before.
+        console.error("[chat] active request context error:", e);
+      }
+    }
+
     const instructions = botConfig.knowledge_base || "You are a helpful assistant.";
     const toneBlock = (botConfig as any).tone_of_voice?.trim() ? `## Tono di voce\n${(botConfig as any).tone_of_voice.trim()}\n\n` : "";
     // Platform base rules: always appended last, cannot be disabled by the client prompt.
@@ -377,6 +397,7 @@ ${isHotelStandard ? `5. Dopo che il visitatore ha fornito un recapito (email o t
         .replace("[TRIGGER_LEAD_FORM]", "")
         .replace(/\[LEAD_DATA:\{[\s\S]*?\}\]/g, "")
         .replace(/\[SERVICE_REQUEST:\{[\s\S]*?\}\]/g, "")
+        .replace(/\[REQUEST_FOLLOWUP:\{[\s\S]*?\}\]/g, "")
         .replace(/\[STAY_SUMMARY:\{[\s\S]*?\}\]/g, "")
         .replace(/\[ADD_TO_CART:.*?\]/g, "");
 
@@ -465,7 +486,7 @@ ${isHotelStandard ? `5. Dopo che il visitatore ha fornito un recapito (email o t
       const cleanMessage = stripMarkers(fullMessage).trim() + cartLinkMarkdown;
       const stayMarker = staySummaryEnabled ? (fullMessage.match(/\[STAY_SUMMARY:\{[\s\S]*?\}\]/)?.[0] || "") : "";
       // The widget registers the request itself: forward the marker (it is hidden from the guest's view).
-      const serviceMarker = fullMessage.match(/\[SERVICE_REQUEST:\{[\s\S]*?\}\]/)?.[0] || "";
+      const serviceMarker = fullMessage.match(/\[SERVICE_REQUEST:\{[\s\S]*?\}\]/)?.[0] || fullMessage.match(/\[REQUEST_FOLLOWUP:\{[\s\S]*?\}\]/)?.[0] || "";
       const triggerLead = !conversationalLead && !stayMarker && fullMessage.indexOf("[TRIGGER_LEAD_FORM]") !== -1;
 
       // Save session in background

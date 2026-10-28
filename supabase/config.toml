@@ -56,5 +56,8 @@ verify_jwt = false
 [functions.service-request-replies]
 verify_jwt = false
 
+[functions.service-request-followup]
+verify_jwt = false
+
 [functions.create-public-checkout]
 verify_jwt = false

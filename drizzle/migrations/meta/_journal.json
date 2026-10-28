@@ -127,6 +127,13 @@
       "when": 1790931514343,
       "tag": "0017_update_setup_request_amount_default",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1791017914343,
+      "tag": "0018_service_request_threads",
+      "breakpoints": true
     }
   ]
 }

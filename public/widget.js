@@ -167,12 +167,12 @@
   };
   var th = hotelLabels[baseLang] || hotelLabels["en"];
   var serviceLabels = {
-    en: { messagePlaceholder: "Optional message", namePlaceholder: "Optional name", cancelBtn: "Cancel", sendBtn: "Send request", replyLabel: "Reply from the property", afterHoursMsg: "Reception is currently closed: your request will be handled as soon as it opens (at {time}).", successMsg: "Request sent to reception." },
-    it: { messagePlaceholder: "Messaggio facoltativo", namePlaceholder: "Nome facoltativo", cancelBtn: "Annulla", sendBtn: "Invia richiesta", replyLabel: "Risposta della struttura", afterHoursMsg: "La reception è al momento chiusa: la tua richiesta verrà presa in carico non appena sarà aperta (alle {time}).", successMsg: "Richiesta inviata alla reception." },
-    fr: { messagePlaceholder: "Message facultatif", namePlaceholder: "Nom facultatif", cancelBtn: "Annuler", sendBtn: "Envoyer la demande", replyLabel: "Réponse de l'établissement", afterHoursMsg: "La réception est actuellement fermée : votre demande sera prise en charge dès son ouverture (à {time}).", successMsg: "Demande envoyée à la réception." },
-    de: { messagePlaceholder: "Optionale Nachricht", namePlaceholder: "Optionaler Name", cancelBtn: "Abbrechen", sendBtn: "Anfrage senden", replyLabel: "Antwort der Unterkunft", afterHoursMsg: "Die Rezeption ist derzeit geschlossen: Ihre Anfrage wird bearbeitet, sobald sie öffnet (um {time}).", successMsg: "Anfrage an die Rezeption gesendet." },
-    es: { messagePlaceholder: "Mensaje opcional", namePlaceholder: "Nombre opcional", cancelBtn: "Cancelar", sendBtn: "Enviar solicitud", replyLabel: "Respuesta del alojamiento", afterHoursMsg: "La recepción está cerrada en este momento: su solicitud se atenderá en cuanto abra (a las {time}).", successMsg: "Solicitud enviada a recepción." },
-    pt: { messagePlaceholder: "Mensagem opcional", namePlaceholder: "Nome opcional", cancelBtn: "Cancelar", sendBtn: "Enviar pedido", replyLabel: "Resposta do alojamento", afterHoursMsg: "A receção está atualmente fechada: o seu pedido será tratado assim que abrir (às {time}).", successMsg: "Pedido enviado à receção." },
+    en: { messagePlaceholder: "Optional message", namePlaceholder: "Optional name", cancelBtn: "Cancel", sendBtn: "Send request", replyLabel: "Reply from the property", afterHoursMsg: "Reception is currently closed: your request will be handled as soon as it opens (at {time}).", successMsg: "Request sent to reception.", closingMsg: "If you need anything else, just write to me here.", followupSentMsg: "Message forwarded to reception." },
+    it: { messagePlaceholder: "Messaggio facoltativo", namePlaceholder: "Nome facoltativo", cancelBtn: "Annulla", sendBtn: "Invia richiesta", replyLabel: "Risposta della struttura", afterHoursMsg: "La reception è al momento chiusa: la tua richiesta verrà presa in carico non appena sarà aperta (alle {time}).", successMsg: "Richiesta inviata alla reception.", closingMsg: "Se hai altre esigenze scrivimi pure qui.", followupSentMsg: "Messaggio inoltrato alla reception." },
+    fr: { messagePlaceholder: "Message facultatif", namePlaceholder: "Nom facultatif", cancelBtn: "Annuler", sendBtn: "Envoyer la demande", replyLabel: "Réponse de l'établissement", afterHoursMsg: "La réception est actuellement fermée : votre demande sera prise en charge dès son ouverture (à {time}).", successMsg: "Demande envoyée à la réception.", closingMsg: "Si vous avez d'autres besoins, écrivez-moi simplement ici.", followupSentMsg: "Message transmis à la réception." },
+    de: { messagePlaceholder: "Optionale Nachricht", namePlaceholder: "Optionaler Name", cancelBtn: "Abbrechen", sendBtn: "Anfrage senden", replyLabel: "Antwort der Unterkunft", afterHoursMsg: "Die Rezeption ist derzeit geschlossen: Ihre Anfrage wird bearbeitet, sobald sie öffnet (um {time}).", successMsg: "Anfrage an die Rezeption gesendet.", closingMsg: "Wenn Sie noch etwas brauchen, schreiben Sie mir einfach hier.", followupSentMsg: "Nachricht an die Rezeption weitergeleitet." },
+    es: { messagePlaceholder: "Mensaje opcional", namePlaceholder: "Nombre opcional", cancelBtn: "Cancelar", sendBtn: "Enviar solicitud", replyLabel: "Respuesta del alojamiento", afterHoursMsg: "La recepción está cerrada en este momento: su solicitud se atenderá en cuanto abra (a las {time}).", successMsg: "Solicitud enviada a recepción.", closingMsg: "Si necesita algo más, escríbame aquí.", followupSentMsg: "Mensaje enviado a recepción." },
+    pt: { messagePlaceholder: "Mensagem opcional", namePlaceholder: "Nome opcional", cancelBtn: "Cancelar", sendBtn: "Enviar pedido", replyLabel: "Resposta do alojamento", afterHoursMsg: "A receção está atualmente fechada: o seu pedido será tratado assim que abrir (às {time}).", successMsg: "Pedido enviado à receção.", closingMsg: "Se precisar de mais alguma coisa, escreva-me aqui.", followupSentMsg: "Mensagem encaminhada à receção." },
   };
   var ts = serviceLabels[baseLang] || serviceLabels["en"];
   var categoryLabels = {
@@ -398,6 +398,8 @@
 .mdac-bubble{padding:10px 14px;border-radius:16px;font-size:13.5px;line-height:1.5;word-break:break-word;}\
 .mdac-msg.user .mdac-bubble{background:" + pc + ";color:#fff;border-bottom-right-radius:4px;}\
 .mdac-msg.bot .mdac-bubble{background:#fff;color:#1a1a2e;border:1px solid #e5e7eb;border-bottom-left-radius:4px;}\
+.mdac-msg.staff .mdac-bubble{background:#fff8e8;border:1px solid #f0d9a8;border-left:3px solid " + pc + ";}\
+.mdac-msg.staff .mdac-msg-avatar{background:#fdecc8;}\
 .mdac-msg-avatar{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;}\
 .mdac-bubble strong{font-weight:700;}\
 .mdac-bubble em{font-style:italic;}\
@@ -521,10 +523,11 @@
     html += '<div class="mdac-messages" id="mdac-messages">';
     for (var i = 0; i < messages.length; i++) {
       var m = messages[i];
-      var cls = m.role === "user" ? "user" : "bot";
+      var staffMsg = isStaffMessage(m);
+      var cls = m.role === "user" ? "user" : (staffMsg ? "bot staff" : "bot");
       html += '<div class="mdac-msg ' + cls + '">';
       if (m.role !== "user") {
-        html += '<div class="mdac-msg-avatar">' + avatarSmall + '</div>';
+        html += '<div class="mdac-msg-avatar">' + (staffMsg ? "🏨" : avatarSmall) + '</div>';
       }
       if (m.role === "user") {
         html += '<div class="mdac-bubble">' + esc(m.content) + '</div>';
@@ -746,6 +749,7 @@
         source_url: window.location.href,
         language: widgetLang,
         room: FULLSCREEN ? ROOM : "",
+        active_request_id: FULLSCREEN && ROOM ? activeRequestId() : "",
       }),
     })
     .then(function(response) {
@@ -765,7 +769,7 @@
         function read() {
           reader.read().then(function(result) {
             if (result.done) {
-              var clean = hideStay(fullText).replace("[TRIGGER_LEAD_FORM]", "").replace(/\[LEAD_DATA:\{[\s\S]*?\}\]/g, "").replace(/\[SERVICE_REQUEST:[\s\S]*$/, "").trim();
+              var clean = hideStay(fullText).replace("[TRIGGER_LEAD_FORM]", "").replace(/\[LEAD_DATA:\{[\s\S]*?\}\]/g, "").replace(/\[(?:SERVICE_REQUEST|REQUEST_FOLLOWUP):[\s\S]*$/, "").trim();
               messages[botIdx] = { role: "assistant", content: clean || t.errorReply };
               var stay = readStay(fullText);
               if (stay) { messages[botIdx].stay = stay; showLeadForm = false; }
@@ -786,14 +790,14 @@
                 var delta = (parsed.choices && parsed.choices[0] && parsed.choices[0].delta && parsed.choices[0].delta.content) || "";
                 if (delta) {
                   fullText += delta;
-                  messages[botIdx] = { role: "assistant", content: hideStay(fullText).replace("[TRIGGER_LEAD_FORM]", "").replace(/\[LEAD_DATA:\{[\s\S]*?\}\]/g, "").replace(/\[SERVICE_REQUEST:[\s\S]*$/, "").trim() };
+                  messages[botIdx] = { role: "assistant", content: hideStay(fullText).replace("[TRIGGER_LEAD_FORM]", "").replace(/\[LEAD_DATA:\{[\s\S]*?\}\]/g, "").replace(/\[(?:SERVICE_REQUEST|REQUEST_FOLLOWUP):[\s\S]*$/, "").trim() };
                   render();
                 }
               } catch(e) {}
             }
             read();
           }).catch(function() {
-            messages[botIdx] = { role: "assistant", content: hideStay(fullText).replace("[TRIGGER_LEAD_FORM]", "").replace(/\[LEAD_DATA:\{[\s\S]*?\}\]/g, "").replace(/\[SERVICE_REQUEST:[\s\S]*$/, "").trim() || t.errorMsg };
+            messages[botIdx] = { role: "assistant", content: hideStay(fullText).replace("[TRIGGER_LEAD_FORM]", "").replace(/\[LEAD_DATA:\{[\s\S]*?\}\]/g, "").replace(/\[(?:SERVICE_REQUEST|REQUEST_FOLLOWUP):[\s\S]*$/, "").trim() || t.errorMsg };
             saveMessages(messages);
             isLoading = false;
             render();
@@ -804,7 +808,7 @@
       }
       // Fallback: non-streaming JSON response
       return response.json().then(function(data) {
-        var botMsg = hideStay(data.message || t.errorReply).replace(/\[SERVICE_REQUEST:[\s\S]*$/, "").trim() || t.errorReply;
+        var botMsg = hideStay(data.message || t.errorReply).replace(/\[(?:SERVICE_REQUEST|REQUEST_FOLLOWUP):[\s\S]*$/, "").trim() || t.errorReply;
         var botMessage = { role: "assistant", content: botMsg };
         var stay = readStay(data.message || "");
         if (stay) { botMessage.stay = stay; showLeadForm = false; }
@@ -828,8 +832,13 @@
   }
 
   // ── Replies from the property to guest requests (polled while the chat is open) ──
+  // Staff messages are shown with the 🛎️ mark so the guest can tell the property from the AI assistant.
   var REQ_KEY = "genius_widget_requests_" + EMBED_TOKEN;
+  var STAFF_MARK = "🛎️";
   var replyTimer = null;
+  function isStaffMessage(m) {
+    return !!m && m.role === "assistant" && typeof m.content === "string" && (m.content.indexOf(STAFF_MARK) === 0 || m.content.indexOf("💬") === 0);
+  }
   function loadRequests() {
     try {
       var all = JSON.parse(localStorage.getItem(REQ_KEY) || "[]");
@@ -838,6 +847,20 @@
     } catch (e) { return []; }
   }
   function saveRequests(list) { try { localStorage.setItem(REQ_KEY, JSON.stringify(list.slice(-20))); } catch (e) {} }
+  // The request the guest is most likely talking about: the one the property answered last, else the newest.
+  function activeRequestId() {
+    var list = loadRequests(), best = null, bestAt = -1;
+    for (var i = 0; i < list.length; i++) {
+      var at = Math.max(list[i].at || 0, list[i].touch || 0);
+      if (at >= bestAt) { best = list[i]; bestAt = at; }
+    }
+    return best ? best.id : "";
+  }
+  function touchRequest(id) {
+    var list = loadRequests();
+    for (var i = 0; i < list.length; i++) { if (list[i].id === id) list[i].touch = Date.now(); }
+    saveRequests(list);
+  }
   function afterHoursNotice(d) {
     if (d && d.after_hours) {
       messages.push({ role: "assistant", content: "🕘 " + ts.afterHoursMsg.replace("{time}", d.opens_at || "") });
@@ -846,9 +869,14 @@
   function rememberRequest(id) {
     if (!id) return;
     var list = loadRequests();
-    list.push({ id: id, at: Date.now(), seen: "" });
+    list.push({ id: id, at: Date.now(), seen: "", seenIds: [] });
     saveRequests(list);
     startReplyPolling();
+  }
+  function staffMessageText(msg) {
+    var text = "🛎️ **" + ts.replyLabel + "**\n" + msg.body;
+    if (msg.closes_request) text += "\n\n" + ts.closingMsg;
+    return text;
   }
   function checkReplies() {
     var list = loadRequests();
@@ -861,14 +889,19 @@
       if (!data || !data.requests) return;
       var fresh = loadRequests(), changed = false;
       data.requests.forEach(function (row) {
-        if (!row.staff_reply || !row.replied_at) return;
-        for (var i = 0; i < fresh.length; i++) {
-          if (fresh[i].id === row.id && fresh[i].seen !== row.replied_at) {
-            fresh[i].seen = row.replied_at;
-            messages.push({ role: "assistant", content: "💬 " + ts.replyLabel + ": " + row.staff_reply });
-            changed = true;
-          }
-        }
+        var entry = null;
+        for (var i = 0; i < fresh.length; i++) { if (fresh[i].id === row.id) entry = fresh[i]; }
+        if (!entry) return;
+        if (!entry.seenIds) entry.seenIds = [];
+        (row.messages || []).forEach(function (msg) {
+          if (entry.seenIds.indexOf(msg.id) !== -1) return;
+          // Entries saved by the previous widget version only know the time of the last reply they showed.
+          if (entry.seen && msg.created_at <= entry.seen) { entry.seenIds.push(msg.id); return; }
+          entry.seenIds.push(msg.id);
+          entry.touch = Date.now();
+          messages.push({ role: "assistant", content: staffMessageText(msg) });
+          changed = true;
+        });
       });
       if (changed) { saveRequests(fresh); saveMessages(messages); render(); }
     }).catch(function () {});
@@ -881,21 +914,67 @@
 
 
   // The bot asks for staff action with a [SERVICE_REQUEST:{...}] marker: register it and confirm only if saved.
+  // A guest answering about a request already sent produces [REQUEST_FOLLOWUP:{...}]: it joins the same thread.
   function submitChatServiceRequest(fullText) {
-    var m = /\[SERVICE_REQUEST:(\{[\s\S]*?\})\]/.exec(fullText);
+    var m = /\[(SERVICE_REQUEST|REQUEST_FOLLOWUP):(\{[\s\S]*?\})\]/.exec(fullText);
     if (!m) return;
     var data;
-    try { data = JSON.parse(m[1]); } catch (e) { return; }
-    if (!data || !data.category) return;
+    try { data = JSON.parse(m[2]); } catch (e) { return; }
+    if (!data) return;
+    if (m[1] === "REQUEST_FOLLOWUP") {
+      submitFollowup(String(data.message || "").slice(0, 900));
+      return;
+    }
+    if (!data.category) return;
+    postChatRequest(String(data.category).slice(0, 80), String(data.message || "").slice(0, 900));
+  }
+
+  function lastGuestText() {
+    for (var i = messages.length - 1; i >= 0; i--) {
+      if (messages[i].role === "user" && messages[i].content) return String(messages[i].content);
+    }
+    return "";
+  }
+
+  function postChatRequest(category, message) {
     fetch(SUPABASE_URL + "/functions/v1/create-service-request", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ embed_token: EMBED_TOKEN, room: ROOM, category: String(data.category).slice(0, 80), message: String(data.message || "").slice(0, 900), guest_name: "", source: "chat" }),
+      body: JSON.stringify({ embed_token: EMBED_TOKEN, room: ROOM, category: category, message: message, guest_name: "", source: "chat" }),
     }).then(function (response) {
       if (!response.ok) throw new Error("request_failed");
       return response.json().catch(function () { return {}; }).then(function (d) {
         rememberRequest(d && d.request_id);
         messages.push({ role: "assistant", content: ts.successMsg });
+        afterHoursNotice(d);
+        saveMessages(messages);
+        render();
+      });
+    }).catch(function () {
+      messages.push({ role: "assistant", content: t.errorMsg });
+      saveMessages(messages);
+      render();
+    });
+  }
+
+  // The guest wrote again about a request already sent: same thread, no new request.
+  function submitFollowup(summary) {
+    var requestId = activeRequestId();
+    // The guest's own words reach the staff; the AI summary is only a fallback.
+    var text = (lastGuestText() || summary).slice(0, 1000);
+    if (!text) return;
+    // No request remembered (cleared browser data) or expired: register it as a new request instead.
+    if (!requestId) { postChatRequest("Altro", text.slice(0, 900)); return; }
+    fetch(SUPABASE_URL + "/functions/v1/service-request-followup", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ embed_token: EMBED_TOKEN, request_id: requestId, message: text }),
+    }).then(function (response) {
+      if (response.status === 409 || response.status === 404) { postChatRequest("Altro", text.slice(0, 900)); return null; }
+      if (!response.ok) throw new Error("followup_failed");
+      return response.json().catch(function () { return {}; }).then(function (d) {
+        touchRequest(requestId);
+        messages.push({ role: "assistant", content: ts.followupSentMsg });
         afterHoursNotice(d);
         saveMessages(messages);
         render();

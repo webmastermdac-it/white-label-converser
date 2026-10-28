@@ -1008,6 +1008,61 @@ export type Database = {
           },
         ]
       }
+      service_request_messages: {
+        Row: {
+          author: string
+          bot_id: string
+          body: string
+          client_id: string
+          closes_request: boolean
+          created_at: string
+          id: string
+          request_id: string
+        }
+        Insert: {
+          author: string
+          bot_id: string
+          body: string
+          client_id: string
+          closes_request?: boolean
+          created_at?: string
+          id?: string
+          request_id: string
+        }
+        Update: {
+          author?: string
+          bot_id?: string
+          body?: string
+          client_id?: string
+          closes_request?: boolean
+          created_at?: string
+          id?: string
+          request_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_request_messages_bot_id_fkey"
+            columns: ["bot_id"]
+            isOneToOne: false
+            referencedRelation: "chatbot_configs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_request_messages_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_request_messages_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "service_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       service_requests: {
         Row: {
           bot_id: string
@@ -1016,6 +1071,7 @@ export type Database = {
           created_at: string
           guest_name: string | null
           id: string
+          last_guest_message_at: string | null
           message: string | null
           replied_at: string | null
           resolved_at: string | null
@@ -1030,6 +1086,7 @@ export type Database = {
           created_at?: string
           guest_name?: string | null
           id?: string
+          last_guest_message_at?: string | null
           message?: string | null
           replied_at?: string | null
           resolved_at?: string | null
@@ -1044,6 +1101,7 @@ export type Database = {
           created_at?: string
           guest_name?: string | null
           id?: string
+          last_guest_message_at?: string | null
           message?: string | null
           replied_at?: string | null
           resolved_at?: string | null

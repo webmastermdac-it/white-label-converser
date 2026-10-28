@@ -11,13 +11,15 @@ import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { notifyServiceRequestsChanged } from "@/hooks/useOpenServiceRequests";
-import RequestReply from "@/components/hotel/RequestReply";
+import RequestReply, { type ThreadMessage } from "@/components/hotel/RequestReply";
 import { DEFAULT_SERVICE_HOURS, SERVICE_HOURS_CHANGED_EVENT, normalizeServiceHours } from "@/lib/serviceHours";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 type RequestStatus = "open" | "in_progress" | "done";
-type ServiceRequest = { id: string; room: string; category: string; message: string | null; guest_name: string | null; status: RequestStatus; created_at: string; resolved_at: string | null; staff_reply?: string | null; replied_at?: string | null };
+type ServiceRequest = { id: string; bot_id: string; client_id: string; room: string; category: string; message: string | null; guest_name: string | null; status: RequestStatus; created_at: string; resolved_at: string | null; staff_reply?: string | null; replied_at?: string | null; last_guest_message_at?: string | null };
 const statuses: RequestStatus[] = ["open", "in_progress", "done"];
+/** The guest wrote in the thread after the last staff reply (or after the request was created). */
+const hasGuestReply = (r: ServiceRequest) => !!r.last_guest_message_at && Date.parse(r.last_guest_message_at) > Date.parse(r.replied_at || r.created_at);
 
 const HotelRequests = ({ botIdOverride }: { botIdOverride?: string } = {}) => {
   const { lang } = useLanguage();
@@ -27,6 +29,7 @@ const HotelRequests = ({ botIdOverride }: { botIdOverride?: string } = {}) => {
   const { canUseConciergeRequests, loading: planLoading } = usePlanConfig();
   const navigate = useNavigate();
   const [rows, setRows] = useState<ServiceRequest[]>([]);
+  const [thread, setThread] = useState<Record<string, ThreadMessage[]>>({});
   const [loading, setLoading] = useState(true);
   const [room, setRoom] = useState("all");
   const [tab, setTab] = useState<RequestStatus>("open");
@@ -78,9 +81,16 @@ const HotelRequests = ({ botIdOverride }: { botIdOverride?: string } = {}) => {
 
   const load = async () => {
     if (!botId || !canUseConciergeRequests) { setLoading(false); return; }
-    const { data } = await supabase.from("service_requests").select("id, room, category, message, guest_name, status, created_at, resolved_at, staff_reply, replied_at")
+    const { data } = await supabase.from("service_requests").select("id, bot_id, client_id, room, category, message, guest_name, status, created_at, resolved_at, staff_reply, replied_at, last_guest_message_at")
       .eq("bot_id", botId).order("created_at", { ascending: false });
-    setRows((data || []) as ServiceRequest[]); setLoading(false);
+    setRows((data || []) as ServiceRequest[]);
+    // Newest messages first so the row limit can only cut the oldest ones, then grouped per request in reading order.
+    const { data: msgs } = await supabase.from("service_request_messages").select("id, request_id, author, body, closes_request, created_at")
+      .eq("bot_id", botId).limit(2000).order("created_at", { ascending: false });
+    const grouped: Record<string, ThreadMessage[]> = {};
+    for (const m of ((msgs || []) as ThreadMessage[]).reverse()) (grouped[m.request_id] ||= []).push(m);
+    setThread(grouped);
+    setLoading(false);
   };
 
   useEffect(() => {
@@ -96,6 +106,18 @@ const HotelRequests = ({ botIdOverride }: { botIdOverride?: string } = {}) => {
       })
       .on("postgres_changes", { event: "UPDATE", schema: "public", table: "service_requests", filter: `bot_id=eq.${botId}` }, (payload) => {
         setRows((current) => current.map((r) => r.id === payload.new.id ? payload.new as ServiceRequest : r));
+        // The guest wrote again in the same thread: bring it to the staff's eye like a new request.
+        const previous = (payload.old ?? {}) as Partial<ServiceRequest>;
+        const row = payload.new as ServiceRequest;
+        if (row.last_guest_message_at && row.last_guest_message_at !== previous.last_guest_message_at) {
+          setNow(Date.now());
+          setHighlighted((cur) => new Set(cur).add(row.id));
+          timers.current.push(window.setTimeout(() => setHighlighted((cur) => { const n = new Set(cur); n.delete(row.id); return n; }), 8000));
+        }
+      })
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "service_request_messages", filter: `bot_id=eq.${botId}` }, (payload) => {
+        const m = payload.new as ThreadMessage;
+        setThread((cur) => (cur[m.request_id] || []).some((x) => x.id === m.id) ? cur : { ...cur, [m.request_id]: [...(cur[m.request_id] || []), m] });
       }).subscribe();
     return () => { void supabase.removeChannel(channel); };
   }, [botId, canUseConciergeRequests]);
@@ -157,10 +179,15 @@ const HotelRequests = ({ botIdOverride }: { botIdOverride?: string } = {}) => {
           <div className="flex items-start gap-4 flex-1 min-w-0">
             <div className="shrink-0 w-16 rounded-lg bg-secondary text-center py-2"><p className="text-[10px] uppercase tracking-wide text-muted-foreground">{tl("camera", "room")}</p><p className="text-lg font-bold text-primary leading-tight break-all">{row.room}</p></div>
             <div className="min-w-0 space-y-1">
-              <p className="font-semibold flex flex-wrap items-center gap-2">{row.category}{row.message?.startsWith("[chat]") && <span className="rounded-full bg-secondary text-secondary-foreground px-2 py-0.5 text-[10px] font-semibold uppercase">{tl("Da chat", "From chat")}</span>}{urgent && <span className="rounded-full bg-destructive text-destructive-foreground px-2 py-0.5 text-[10px] font-semibold uppercase">{tl("Urgente", "Urgent")}</span>}</p>
+              <p className="font-semibold flex flex-wrap items-center gap-2">{row.category}{row.message?.startsWith("[chat]") && <span className="rounded-full bg-secondary text-secondary-foreground px-2 py-0.5 text-[10px] font-semibold uppercase">{tl("Da chat", "From chat")}</span>}{urgent && <span className="rounded-full bg-destructive text-destructive-foreground px-2 py-0.5 text-[10px] font-semibold uppercase">{tl("Urgente", "Urgent")}</span>}{hasGuestReply(row) && <span className="rounded-full bg-amber-500 text-white px-2 py-0.5 text-[10px] font-semibold uppercase">{tl("Replica dell'ospite", "Guest reply")}</span>}</p>
               {row.message && <p className="text-sm text-foreground break-words">{row.message.replace(/^\[chat\]\s*/, "")}</p>}
               <p className="text-xs text-muted-foreground">{row.guest_name ? `${row.guest_name} · ` : ""}<span className={cn(waiting && "text-destructive font-medium")}>{timeAgo(minutes, lang)}{waiting ? ` · ${tl("in attesa da un po'", "waiting for a while")}` : ""}</span></p>
-              <RequestReply requestId={row.id} reply={row.staff_reply ?? null} repliedAt={row.replied_at ?? null} onSaved={(reply, at) => setRows((cur) => cur.map((r) => r.id === row.id ? { ...r, staff_reply: reply, replied_at: at } : r))} />
+              <RequestReply request={row} messages={thread[row.id] || []} onSent={(message, patch) => {
+                setThread((cur) => (cur[row.id] || []).some((x) => x.id === message.id) ? cur : { ...cur, [row.id]: [...(cur[row.id] || []), message] });
+                setRows((cur) => cur.map((r) => r.id === row.id ? { ...r, ...patch } : r));
+                // A reply that closes the request leaves the "to handle" counter at once.
+                if (patch.status === "done") notifyServiceRequestsChanged({ from: row.status, to: "done" });
+              }} />
             </div>
           </div>
           <Button size="sm" variant={tab === "done" ? "outline" : "default"} className="sm:shrink-0" onClick={() => changeStatus(row, action.next)}><Icon className="w-3.5 h-3.5 mr-1" />{action.label}</Button>

@@ -12,7 +12,7 @@ vi.mock("@/hooks/useLanguage", () => ({ useLanguage: () => ({ lang: "it", conten
 vi.mock("@/integrations/supabase/client", () => ({ supabase: {
   from: () => {
     const query = {
-      select: () => query, eq: () => query,
+      select: () => query, eq: () => query, limit: () => query,
       maybeSingle: () => Promise.resolve({ data: { hotel_profile: state.profile }, error: null }),
       order: () => Promise.resolve({ data: [], error: null }),
       update: (payload: { hotel_profile: Record<string, unknown> }) => {
