@@ -814,6 +814,7 @@ const dict: Record<string, string> = {
   "No recent activity": "Sem atividade recente",
   "Concierge results": "Resultados do Concierge",
   "Conversations and leads": "Conversas e leads",
+  "Enable request sound": "Ativar o som dos pedidos",
 };
 
 export default dict;

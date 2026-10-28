@@ -25,6 +25,22 @@ export const installAudioUnlock = () => {
   return () => ["pointerdown", "touchstart", "keydown", "click"].forEach((e) => window.removeEventListener(e, unlock, true));
 };
 
+/** True while the browser still blocks audio (no click on the page yet): request sounds would be silent. */
+export const isAudioLocked = (): boolean => {
+  try { const ctx = getCtx(); return !!ctx && ctx.state !== "running"; } catch { return false; }
+};
+
+/** Calls back whenever the audio lock changes (also once right away). Returns the unsubscribe function. */
+export const subscribeAudioLock = (cb: (locked: boolean) => void): (() => void) => {
+  let ctx: AudioContext | null = null;
+  try { ctx = getCtx(); } catch { /* audio not available */ }
+  if (!ctx) { cb(false); return () => {}; }
+  const notify = () => cb(ctx!.state !== "running");
+  ctx.addEventListener("statechange", notify);
+  notify();
+  return () => ctx!.removeEventListener("statechange", notify);
+};
+
 const beep = (ctx: AudioContext, start: number) => {
   const osc = ctx.createOscillator();
   const gain = ctx.createGain();

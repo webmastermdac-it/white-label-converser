@@ -7,7 +7,8 @@ import { Outlet } from "react-router-dom";
 import ClientSidebar from "@/components/ClientSidebar";
 import MobileNav from "@/components/MobileNav";
 import RequestAlertLamp, { useRequestLampPreference } from "@/components/hotel/RequestAlertLamp";
-import { installAudioUnlock } from "@/lib/playNotice";
+import { installAudioUnlock, soundEnabled } from "@/lib/playNotice";
+import EnableSoundPrompt from "@/components/hotel/EnableSoundPrompt";
 import { useNewLeadAlerts } from "@/hooks/useNewLeadAlerts";
 import { useOpenServiceRequests } from "@/hooks/useOpenServiceRequests";
 import { useNewLeadsCount } from "@/hooks/useNewLeadsCount";
@@ -63,6 +64,7 @@ const ClientLayout = () => {
   return (
     <div className={cn("flex min-h-screen bg-background", lampVisible && "request-lamp-layout pt-9")}>
       <RequestAlertLamp count={count} urgent={urgent} visible={lampVisible} />
+      <EnableSoundPrompt visible={enabled && soundEnabled()} />
       <Seo title="Dashboard | Genius Chatbot" path="/dashboard" noindex />
       <div className="hidden md:block">
         <ClientSidebar newLeads={newLeads.count} openRequests={count} requestsEnabled={enabled} lampEnabled={lampEnabled} onLampChange={toggleLamp} />
