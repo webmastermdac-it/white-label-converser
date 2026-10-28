@@ -7,6 +7,7 @@ import { useLanguage, tx } from "@/hooks/useLanguage";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Loader2, MessageSquare, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { chatDurationMinutes, formatChatDuration } from "@/lib/chatDuration";
 
 interface ChatSession {
   id: string;
@@ -81,9 +82,7 @@ const ClientChats = () => {
 
   const duration = (s: ChatSession) => {
     if (!s.ended_at) return t("active");
-    const ms = new Date(s.ended_at).getTime() - new Date(s.started_at).getTime();
-    const mins = Math.floor(ms / 60000);
-    return mins < 1 ? "< 1 min" : `${mins} min`;
+    return formatChatDuration(chatDurationMinutes(s.started_at, s.ended_at));
   };
 
   return (

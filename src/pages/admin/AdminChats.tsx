@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { toast } from "sonner";
 import { useAdminClientFilter } from "@/contexts/AdminClientFilterContext";
 import { appLocale } from "@/hooks/useLanguage";
+import { chatDurationMinutes, formatChatDuration } from "@/lib/chatDuration";
 
 interface ChatSession {
   id: string;
@@ -56,9 +57,7 @@ const AdminChats = () => {
 
   const duration = (s: ChatSession) => {
     if (!s.ended_at) return "Active";
-    const ms = new Date(s.ended_at).getTime() - new Date(s.started_at).getTime();
-    const mins = Math.floor(ms / 60000);
-    return mins < 1 ? "< 1 min" : `${mins} min`;
+    return formatChatDuration(chatDurationMinutes(s.started_at, s.ended_at));
   };
 
   const handleDelete = async (session: ChatSession) => {
