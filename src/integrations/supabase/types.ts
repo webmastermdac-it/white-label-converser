@@ -1011,8 +1011,8 @@ export type Database = {
       service_request_messages: {
         Row: {
           author: string
-          bot_id: string
           body: string
+          bot_id: string
           client_id: string
           closes_request: boolean
           created_at: string
@@ -1021,8 +1021,8 @@ export type Database = {
         }
         Insert: {
           author: string
-          bot_id: string
           body: string
+          bot_id: string
           client_id: string
           closes_request?: boolean
           created_at?: string
@@ -1031,8 +1031,8 @@ export type Database = {
         }
         Update: {
           author?: string
-          bot_id?: string
           body?: string
+          bot_id?: string
           client_id?: string
           closes_request?: boolean
           created_at?: string
