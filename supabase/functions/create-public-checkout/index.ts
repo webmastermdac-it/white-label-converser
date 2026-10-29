@@ -43,7 +43,7 @@ serve(async (req) => {
     if (offer !== "event") params.allow_promotion_codes = true;
     if (offer === "setup") {
       const rates = await stripe.taxRates.list({ active: true, limit: 100 });
-      let rate = rates.data.find((r) => r.inclusive && r.percentage === 22 && r.country === "IT" && r.display_name === "IVA");
+      let rate = rates.data.find((r: any) => r.inclusive && r.percentage === 22 && r.country === "IT" && r.display_name === "IVA");
       if (!rate) rate = await stripe.taxRates.create({
         display_name: "IVA", description: "IVA 22%", percentage: 22, inclusive: true, country: "IT", jurisdiction: "IT",
       }, { idempotencyKey: "public-checkout-iva22-inclusive-v1" });
