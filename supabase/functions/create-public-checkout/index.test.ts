@@ -1,3 +1,4 @@
+// @ts-nocheck -- Bun test file; excluded from Deno type checking.
 import { describe, expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 
